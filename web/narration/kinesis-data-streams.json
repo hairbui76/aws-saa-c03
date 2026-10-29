@@ -1,0 +1,15 @@
+{
+ "Kinesis Data Streams": {
+  "sig": "8-4xiwth",
+  "steps": [
+   "Sơ đồ này cho thấy Kinesis Data Streams: rất nhiều producer đẩy dữ liệu vào các shard, rồi nhiều consumer đọc ra độc lập. Điểm khác SQS là dữ liệu nằm lại trong rolling window, đọc lại được chứ không bị xóa sau khi xử lý.",
+   "Bắt đầu với một producer là EC2 gửi vào Shard 1. Mỗi shard nhận vào 1 MB mỗi giây, tối đa 1.000 record mỗi giây, và cho đọc ra 2 MB mỗi giây. Ở đầu kia, một consumer EC2 hoặc on-prem đọc mỗi giây theo kiểu real-time.",
+   "Thêm producer là server on-prem và thêm Shard 2. Phía consumer, Lambda có thể được invoke tự động mỗi khi có record mới xuất hiện trong stream.",
+   "Mobile app cũng là producer. Stream bắt đầu với một shard, cần scale thì thêm shard, throughput tăng tuyến tính nhưng chi phí cũng tăng. Một consumer khác như dashboard có thể đọc mỗi giờ và replay dữ liệu cũ.",
+   "IoT sensor và click stream là nguồn dữ liệu kinh điển. Rolling window mặc định 24 giờ, tăng được tới 365 ngày nhưng tốn thêm phí, mỗi record tối đa 1 MB. Muốn giữ dữ liệu sau window thì nối Kinesis Data Firehose để đẩy sang S3.",
+   "Các producer gửi dữ liệu vào stream bằng PutRecord. Đây là public service, đã HA sẵn trong region nên bạn không phải lo replication hay network access.",
+   "Consumer đọc từ bất kỳ vị trí nào trong window, mỗi consumer đọc toàn bộ stream ở tốc độ riêng của mình. Vì vậy Kinesis rất hợp cho analytics và dashboard.",
+   "Khi đi thi, nhớ nhé: đề nói ingestion of data, hàng nghìn sensor, real-time khoảng 200 mili giây, nhiều consumer hay replay thì chọn Kinesis Data Streams; còn worker pool, decoupling, asynchronous thì chọn SQS. Cần lưu lâu dài thì thêm Firehose sang S3, nhưng Firehose chỉ near real-time; thiếu throughput thì thêm shard hoặc dùng on-demand mode."
+  ]
+ }
+}

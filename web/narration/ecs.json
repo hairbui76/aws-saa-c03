@@ -1,0 +1,15 @@
+{
+ "ECS": {
+  "sig": "8-167xa7w",
+  "steps": [
+   "Sơ đồ này cho thấy cách ECS ghép các khái niệm lại với nhau: container definition nằm trong task definition, task definition được service quản lý, rồi tất cả được deploy vào một cluster chạy EC2 mode hoặc Fargate.",
+   "Từ task definition, ta tạo service definition để chạy nhiều bản sao, ví dụ 3 task, tự thay task lỗi và gắn load balancer. Nếu chỉ run task lẻ thì không tự scale và không tự HA.",
+   "Tiếp theo service được deploy vào ECS cluster. Nhớ rằng thứ được deploy vào cluster luôn là task hoặc service, áp dụng cho cả EC2 mode lẫn Fargate.",
+   "Bên trong, container definition web trỏ tới image trên ECR hoặc Docker Hub và expose port 80. Task role cấp temporary credentials để gọi S3 hoặc DynamoDB, còn ALB phân phối tải qua ba bản sao task.",
+   "Một task có thể gồm nhiều container, ví dụ thêm một container definition cho database. Mỗi container definition chỉ cần nhớ hai thứ: image và port.",
+   "Task definition còn khai báo resources là CPU và memory cho cả task, cùng với networking mode mà task sẽ dùng.",
+   "Cuối cùng là compatibility, cho biết task chạy được trên EC2 mode, Fargate, hay cả hai.",
+   "Khi đi thi, nhớ nhé: container cần gọi S3 hoặc DynamoDB thì dùng Task Role, không nhúng access key, không dựa vào instance role của host. Và đừng nhầm task execution role, vốn dành cho ECS agent hoặc Fargate pull image từ ECR và gửi log tới CloudWatch Logs."
+  ]
+ }
+}

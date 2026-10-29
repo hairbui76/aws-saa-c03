@@ -1,0 +1,27 @@
+{
+ "Containers Fundamentals": {
+  "sig": "7-1dj6cmh",
+  "steps": [
+   "Sơ đồ này so sánh hai cách chạy ứng dụng cô lập: máy ảo với OS virtualization bên trái, và container bên phải. Câu hỏi then chốt là mỗi ứng dụng có thật sự cần một bản sao OS riêng không.",
+   "Bên phía máy ảo, ta có ba ứng dụng cần chạy cô lập với nhau. Đây chính là phần ta thực sự quan tâm, còn mọi thứ bên dưới chỉ là chi phí để chạy chúng.",
+   "Bên phía container, mỗi ứng dụng được đóng gói cùng thư viện và dependency của nó. Mỗi container là một process cô lập có file system riêng, nên cùng phần cứng chạy được nhiều ứng dụng hơn.",
+   "Đây là khác biệt lớn nhất. Mỗi máy ảo phải kèm một guest OS đầy đủ, có thể chiếm 60 đến 70 phần trăm disk. Còn container chỉ cần một container engine như Docker ở giữa.",
+   "Máy ảo chạy trên hypervisor, trên EC2 là Nitro. Còn container dùng chung host OS Linux cho phần nặng như kernel, networking và file I/O, nên không phải nhân bản OS.",
+   "Cả hai mô hình đều nằm trên cùng một lớp hardware. Điểm khác nằm ở việc tài nguyên phần cứng đó bị tiêu tốn vào đâu.",
+   "Khi đi thi, nhớ rằng VM nghĩa là ba app thì ba bản OS trùng lặp và khởi động chậm. Thấy từ lightweight, portable, consistent thì nghĩ tới container, nhưng nếu cần kernel hoặc OS riêng, khác nhau thì chọn VM."
+  ]
+ },
+ "Containers Fundamentals - image": {
+  "sig": "8-mn3o2w",
+  "steps": [
+   "Sơ đồ này cho thấy Docker image được ghép từ các layer read-only dùng chung, và mỗi container chỉ thêm một layer read write mỏng của riêng nó, cùng quy trình build, push, pull.",
+   "Trên cùng image là layer 3 chứa script và tùy chỉnh. Phía trên nữa, mỗi container có layer read write riêng, nơi ghi log và dữ liệu phát sinh khi chạy.",
+   "Bên dưới là layer 2, nơi cập nhật hệ thống và cài Apache. Layer này chỉ chứa phần khác biệt so với layer bên dưới.",
+   "Dưới cùng là layer 1, base image centos 7. Cả ba layer đều read-only, chỉ lưu một lần và mọi container dùng chung, nên tiết kiệm disk rất lớn.",
+   "Bước một là build: Dockerfile được xử lý tuần tự từng directive, như FROM, RUN, COPY, và mỗi directive thường tạo ra một layer mới trong image.",
+   "Bước hai, image được push lên registry, ví dụ Docker Hub hoặc ECR trên AWS, có thể public hoặc private, để phân phối đi nơi khác.",
+   "Bước ba, các container host pull image về để chạy. Một image có thể sinh ra nhiều container trên nhiều host khác nhau.",
+   "Khi đi thi, nhớ rằng base ở dưới, tùy chỉnh ở trên, và container chỉ khác nhau ở layer read write. Layer này mất khi xóa container nên cần storage ngoài như EFS. EXPOSE chỉ khai báo port, map thật bằng tham số p hoặc port mapping trong ECS."
+  ]
+ }
+}

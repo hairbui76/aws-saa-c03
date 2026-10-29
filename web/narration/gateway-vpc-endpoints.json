@@ -1,0 +1,10 @@
+{
+ "Gateway VPC Endpoints": {
+  "sig": "3-gyy0gb",
+  "steps": [
+   "Sơ đồ này nói về Gateway VPC Endpoint, cách để resource private trong một VPC không có Internet Gateway hay NAT Gateway vẫn truy cập được S3 và DynamoDB. Nó miễn phí, HA sẵn, chỉ dùng trong VPC và cùng region.",
+   "Hai EC2 chỉ có private IP gửi traffic tới VPC Router, nơi route table có route prefix list của S3 trỏ tới endpoint, do AWS tự thêm. Endpoint không thuộc AZ nào và không có Security Group. Đi thi nhớ: tạo endpoint ở mỗi AZ là sai, còn on-premises qua VPN hoặc Direct Connect hay VPC peer không dùng được nó, phải chọn interface endpoint cho S3.",
+   "Cuối cùng traffic đi từ VPC Router qua Gateway Endpoint tới S3 bằng đường private, không qua Internet. Endpoint policy giới hạn bucket được truy cập, còn bucket policy với điều kiện aws:SourceVpce bắt bucket chỉ nhận request từ đúng endpoint này."
+  ]
+ }
+}

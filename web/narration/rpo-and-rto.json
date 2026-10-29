@@ -1,0 +1,16 @@
+{
+ "RPO and RTO": {
+  "sig": "9-ma92iz",
+  "steps": [
+   "Sơ đồ này đặt RPO và RTO trên cùng một dòng thời gian. RPO nhìn về quá khứ, tức là mất bao nhiêu dữ liệu, còn RTO nhìn về tương lai, tức là hệ thống ngừng bao lâu tới khi bàn giao.",
+   "Quy trình RTO bắt đầu từ việc phát hiện sự cố. Cần monitoring tin cậy và đánh thức đúng người có quyền quyết định, sau đó mới điều tra xem sửa nhanh được hay phải restore.",
+   "Nếu phải restore, ta đụng tới hệ thống backup: loại backup nào, tape ở đâu, có quy trình được kiểm thử không, và ai thực hiện. Thiếu quy trình lúc nửa đêm rất dễ sai sót.",
+   "Tiếp theo là restore vào đâu: máy dự phòng, máy ảo, DR site, hay phải mua phần cứng mới. Riêng việc đặt phần cứng mới có thể kéo dài thêm nhiều ngày.",
+   "Cuối cùng là business test và user test rồi mới bàn giao. Bước này không nhanh nhưng bắt buộc, vì đồng hồ RTO chỉ dừng khi bàn giao hệ thống đã kiểm thử.",
+   "Giờ xem ví dụ: backup mỗi 6 giờ, nên mất tối đa bằng khoảng cách giữa hai backup thành công. Song song, chiến lược Backup and Restore có RPO và RTO tính bằng giờ, rẻ nhất, rồi tới Pilot Light khoảng chục phút.",
+   "Sự cố xảy ra lúc 22 giờ, recovery point gần nhất là 21 giờ, nên thực tế mất 1 giờ dữ liệu. Ở phía chiến lược, Warm Standby đưa mức phục hồi xuống còn vài phút.",
+   "Với RTO 13 giờ, đồng hồ chạy từ lúc sự cố và phải bàn giao trước 11 giờ sáng hôm sau. Còn Multi-site Active Active cho RPO và RTO gần bằng 0, nhưng đắt nhất.",
+   "Khi đi thi, nhớ nhé: mất tối đa bao nhiêu phút dữ liệu là RPO, giải bằng backup hoặc replication dày hơn. Khôi phục trong bao lâu là RTO. Và luôn chọn giải pháp rẻ nhất vẫn đáp ứng yêu cầu."
+  ]
+ }
+}

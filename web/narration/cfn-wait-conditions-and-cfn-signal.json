@@ -1,0 +1,26 @@
+{
+ "CFN Wait Conditions and cfn-signal": {
+  "sig": "8-1vhb46p",
+  "steps": [
+   "Sơ đồ này so sánh hai cách: mặc định CloudFormation không chờ gì cả, còn với CreationPolicy và cfn-signal, stack đứng chờ đủ số success signal trong timeout, tối đa 12 giờ, rồi mới hoàn tất.",
+   "Đầu tiên là luồng mặc định. Stack yêu cầu EC2 service tạo instance, và CloudFormation chỉ biết những gì EC2 service báo lại, tức là instance đã running.",
+   "Ngay khi EC2 báo running, resource chuyển sang CREATE_COMPLETE, dù ứng dụng bên trong chưa hề sẵn sàng.",
+   "Giờ sang luồng có CreationPolicy. Instance vẫn running như thường, nhưng resource không tự hoàn tất mà đứng chờ ở trạng thái CREATE_IN_PROGRESS.",
+   "Bên trong instance, user data chạy cfn-init, rồi dòng cuối gọi cfn-signal với tham số e là exit code của lệnh trước. Các pseudo parameter giúp nó báo về đúng stack, đúng resource, đúng region.",
+   "Có ba kết cục: đủ success signal trong timeout thì CREATE_COMPLETE; nhận failure signal khi exit code khác 0 thì fail tường minh; hết timeout mà chưa đủ thì fail ngầm định. Với ASG, đặt Count bằng 3 để chờ cả ba instance báo về.",
+   "Quay lại luồng mặc định để thấy vấn đề: trong OS, bootstrap có thể vẫn đang chạy hoặc đã lỗi, nhưng CloudFormation hoàn toàn không biết gì.",
+   "Khi đi thi, nhớ demo này: chỉ thêm CreationPolicy và một dòng cfn-signal, stack lâu hơn khoảng 6 đến 7 phút nhưng web dùng được ngay khi hoàn tất. Và hết timeout nghĩa là thất bại, không phải bỏ qua."
+  ]
+ },
+ "CFN Wait Conditions and cfn-signal - waitcondition": {
+  "sig": "6-1jcas99",
+  "steps": [
+   "Sơ đồ này nói về WaitCondition và WaitConditionHandle, một cổng chờ tín hiệu tổng quát, nhận được signal cả từ hệ thống bên ngoài và còn trả dữ liệu về stack.",
+   "WaitConditionHandle là một logical resource riêng, nhiệm vụ duy nhất là sinh ra presigned URL. Credentials đã nằm sẵn trong URL nên bên gửi không cần AWS credentials.",
+   "Bên gửi có thể là EC2 dùng cfn-signal, hoặc hệ thống ngoài như server on-prem hay hệ thống cấp license. Họ POST một JSON gồm Status, Reason, UniqueId và Data vào URL đó.",
+   "Signal gửi vào URL sẽ được WaitCondition đếm. Ở đây nó trỏ tới handle bằng Ref, timeout 300 giây và cần Count bằng 1.",
+   "Khi đủ Count, cổng mở và resource phía sau có DependsOn WaitCondition mới được tạo. Phần Data lấy ra bằng GetAtt để dùng ở chỗ khác. Nếu hết timeout hoặc status là FAILURE thì stack fail.",
+   "Khi đi thi, nhớ: CreationPolicy gắn trên EC2 hoặc ASG, được AWS ưu tiên và không trả dữ liệu. Cần chờ hệ thống ngoài hoặc đưa dữ liệu vào stack thì chọn WaitCondition."
+  ]
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "Egress-Only Internet Gateway": {
+  "sig": "6-d3i6fh",
+  "steps": [
+   "Sơ đồ này nói về Egress-Only Internet Gateway. Trong AWS, mọi địa chỉ IPv6 đều publicly routable và không dùng NAT, nên cần một cách cho instance IPv6 đi ra mà không bị Internet gọi vào.",
+   "Egress-Only IGW được gắn vào VPC, tự động highly available trên mọi AZ. Instance đi ra được, response quay về nhờ tính stateful, còn host trên Internet tự khởi tạo kết nối vào thì bị từ chối.",
+   "Ví dụ điển hình: instance IPv6 cần tải bản cập nhật phần mềm. Traffic đi qua Egress-Only IGW tới update server IPv6, và phản hồi được phép quay về.",
+   "Hai instance IPv6 ở hai AZ khác nhau gửi traffic tới VPC Router. Route table cần có default route IPv6 là hai dấu hai chấm trên 0, với target là eigw-id.",
+   "Nhờ route đó, VPC Router mới đẩy traffic tới Egress-Only IGW. Nhớ nhé, chỉ tạo và gắn gateway thôi là chưa đủ, phải có route thì mới chạy.",
+   "Khi đi thi, nhớ: IPv6 cần ra Internet mà không cho Internet vào thì chọn Egress-Only IGW. Đừng chọn NAT Gateway vì nó chỉ cho IPv4, cũng đừng chọn Internet Gateway thường vì nó cho traffic hai chiều."
+  ]
+ }
+}

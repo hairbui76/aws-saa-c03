@@ -1,0 +1,12 @@
+{
+ "Lab - Serverless App Pet-Cuddle-o-Tron": {
+  "sig": "5-1ax22wx",
+  "steps": [
+   "Sơ đồ này là kiến trúc của lab Pet-Cuddle-o-Tron, dựng hoàn toàn serverless ở us-east-1. Dữ liệu đi từ trình duyệt qua S3, API Gateway, Lambda, rồi tới Step Functions để gửi email hoặc SMS nhắc chủ về ôm thú cưng.",
+   "Trình duyệt của Bob tải trang web tĩnh từ S3, rồi file serverless.js gửi request POST tới API Gateway kiểu REST, Regional, có bật CORS. Mỗi thành phần assume một IAM role riêng, với trust policy đúng service principal.",
+   "API Gateway chuyển request sang api_lambda qua Lambda proxy integration; hàm này validate dữ liệu rồi gọi StartExecution. State machine chờ, rẽ nhánh, rồi invoke Lambda gửi email hoặc publish SNS trực tiếp để gửi SMS, đồng thời ghi log ALL vào CloudWatch Logs.",
+   "Ở nhánh email, email_reminder_lambda dùng boto3 gọi SES để gửi email. Nhớ là tài khoản mới đang ở sandbox, nên cả địa chỉ gửi lẫn địa chỉ nhận đều phải được verify trước.",
+   "Lời nhắc khi làm lab: đừng quên bật CORS trên resource và đừng chọn nhầm proxy resource; SES và SNS SMS mới tạo đều ở sandbox. Khi dọn dẹp, xóa S3, rồi API, hai Lambda, state machine, cuối cùng là hai CloudFormation stack chứa role."
+  ]
+ }
+}

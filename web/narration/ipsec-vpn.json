@@ -1,0 +1,18 @@
+{
+ "IPSec VPN": {
+  "sig": "11-lok2vt",
+  "steps": [
+   "Sơ đồ này cho thấy IPsec dựng một tunnel an toàn qua Internet bằng hai phase IKE. Asymmetric dùng để thỏa thuận key, còn symmetric key mới là thứ mã hóa dữ liệu khối lớn.",
+   "Phase 1 bắt đầu bằng việc hai peer xác thực nhau bằng pre-shared key hoặc certificate. Sau đó mỗi bên gửi DH public key của mình cho bên kia một cách công khai.",
+   "Điểm hay của Diffie-Hellman là mỗi bên dùng private key của mình và public key đối phương để tự tính ra cùng một DH key. Key này không bao giờ đi qua mạng.",
+   "Từ DH key và key material đã trao đổi, hai bên sinh ra Phase 1 symmetric key. Kết quả là IKE SA, tức Phase 1 tunnel, dùng để bảo vệ các trao đổi tiếp theo.",
+   "Sang Phase 2, mọi thứ chạy bên trong tunnel Phase 1 nên rất nhanh. Một peer gửi danh sách cipher suite mà nó hỗ trợ.",
+   "Peer còn lại chọn phương thức tốt nhất mà cả hai cùng hỗ trợ rồi báo lại, để hai đầu thống nhất cách mã hóa dữ liệu.",
+   "Dựa trên DH key và key material, hai bên sinh ra IPsec symmetric key, và tạo thành một cặp IPsec SA, đó chính là Phase 2 tunnel.",
+   "Giờ thì interesting traffic, tức traffic khớp các rule đã định, được mã hóa bằng IPsec key và đi qua tunnel một cách an toàn.",
+   "Từ router site 1, traffic đi vào IPsec SA. Mỗi chiều có một SA riêng. Khi hết traffic, Phase 2 bị hủy nhưng Phase 1 vẫn giữ, nên dựng lại rất nhanh.",
+   "Ở đầu kia là Peer 2, có thể là router chi nhánh khác hoặc phía AWS. Đây chính là nền tảng của Site-to-Site VPN trên AWS.",
+   "Khi đi thi, nhớ rằng route-based dùng một cặp SA cho mỗi prefix, đơn giản, còn policy-based mỗi policy một cặp SA với key riêng, linh hoạt nhưng phức tạp. Và vì mã hóa tốn CPU, VPN bị giới hạn khoảng 1.25 Gbps mỗi tunnel, nên đề hay so với Direct Connect."
+  ]
+ }
+}

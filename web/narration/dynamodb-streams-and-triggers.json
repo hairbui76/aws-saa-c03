@@ -1,0 +1,15 @@
+{
+ "DynamoDB Streams and Triggers": {
+  "sig": "8-1m8yqlt",
+  "steps": [
+   "Sơ đồ này nói về DynamoDB Streams kết hợp Lambda để tạo database trigger serverless. Mỗi thay đổi item thành một stream record có thứ tự, giữ 24 giờ, và Lambda chạy theo sự kiện, không cần polling.",
+   "Đầu tiên, ứng dụng ghi vào table bằng Put, Update hoặc Delete. Lưu ý Streams phải được bật riêng cho từng table, vì mặc định nó đang tắt.",
+   "Mỗi thay đổi đó được thêm vào DynamoDB Stream thành một record, sắp theo thứ tự thời gian và giữ trong cửa sổ trượt 24 giờ.",
+   "Tiếp theo, Lambda được invoke và nhận record làm event. Chính lần invoke này là trigger, nên ta chỉ tốn compute khi dữ liệu thực sự thay đổi.",
+   "Lambda có thể làm nhiều việc: gửi push notification qua SNS cho app chat, làm báo cáo analytics, hoặc tổng hợp như đếm phiếu bình chọn và tồn kho.",
+   "Giờ xem ví dụ về view type. Trước thay đổi, item có PK, SK và bốn attribute từ a1 đến a4.",
+   "Sau khi update xóa a4, item chỉ còn a1 đến a3. KEYS_ONLY chỉ cho khóa, NEW_IMAGE cho item sau, OLD_IMAGE cho item trước, còn NEW_AND_OLD_IMAGES cho cả hai nên không cần đọc lại table. Với insert thì phần old trống, với delete thì phần new trống.",
+   "Khi đi thi, thấy đề nói làm gì đó khi item DynamoDB thay đổi, event-driven, không polling thì chọn Streams cộng Lambda. Nhớ 24 giờ, bốn view type, Streams là nền cho Global Tables, còn thay đổi object S3 thì dùng S3 Events, sự kiện dịch vụ AWS thì dùng EventBridge."
+  ]
+ }
+}

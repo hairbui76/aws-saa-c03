@@ -1,0 +1,31 @@
+{
+ "GuardDuty": {
+  "sig": "10-1a0tt5y",
+  "steps": [
+   "Sơ đồ này nói về Amazon GuardDuty, dịch vụ giám sát mối đe dọa liên tục. Nó tự đọc log DNS, VPC Flow Logs và CloudTrail, dùng machine learning cùng threat intelligence để tạo ra finding.",
+   "GuardDuty bật một lần là chạy liên tục, khác với assessment theo đợt của Inspector. Nó tự học hành vi bình thường, đối chiếu với danh sách IP và domain độc hại, và bạn có thể whitelist các IP tin cậy.",
+   "Khi phát hiện hoạt động bất thường hoặc trái phép, GuardDuty tạo một finding và gửi sang EventBridge, trước đây gọi là CloudWatch Events.",
+   "Từ EventBridge có hai hướng phản ứng: gửi tới SNS để báo cho team hoặc hệ thống SIEM bên ngoài, và gọi Lambda để tự động khắc phục.",
+   "Ví dụ Lambda gọi API AWS để thêm rule explicit deny vào NACL, chặn IP đang có dấu hiệu xâm nhập. Nhớ là bản thân GuardDuty không chặn, Lambda mới là bên chặn.",
+   "Nguồn đầu tiên là DNS logs từ Route 53 resolver, giúp phát hiện instance truy vấn domain độc hại. Với nhiều account, account administrator mời các account khác làm member, hoặc quản lý qua AWS Organizations.",
+   "VPC Flow Logs cung cấp metadata của traffic đi qua VPC như IP, port và bytes. Bạn không cần tự bật flow logs, GuardDuty lấy luồng dữ liệu độc lập.",
+   "CloudTrail event logs cho GuardDuty biết các API call đang diễn ra trong account, và cũng không cần bạn tự tạo trail.",
+   "CloudTrail management events là các sự kiện ở mức control plane, ví dụ thay đổi cấu hình tài nguyên trong account.",
+   "Cuối cùng là CloudTrail S3 data events, ghi lại tương tác với object trong S3. Khi đi thi, thấy đề nói phân tích DNS, VPC Flow Logs và CloudTrail để tìm mối đe dọa thì chọn GuardDuty."
+  ]
+ },
+ "GuardDuty - phan biet": {
+  "sig": "9-1f3p9ae",
+  "steps": [
+   "Sơ đồ này giúp phân biệt các dịch vụ bảo mật hay bị nhầm. Hãy đọc từ khóa trong đề để chọn dịch vụ, và chú ý dịch vụ nào chỉ phát hiện, dịch vụ nào chặn thật.",
+   "Hoạt động bất thường thì là GuardDuty, lỗ hổng CVE là Inspector, dữ liệu nhạy cảm trong S3 là Macie, lịch sử cấu hình là AWS Config, ai gọi API là CloudTrail, tấn công web là WAF, còn DDoS là Shield.",
+   "GuardDuty chỉ phát hiện, không tự chặn. Muốn khắc phục thì cần thêm EventBridge và Lambda.",
+   "Inspector quét và báo cáo lỗ hổng trên EC2 và container, nhưng không tự vá hay chặn gì cả.",
+   "Macie phát hiện và phân loại dữ liệu nhạy cảm như PII hay thẻ tín dụng trong S3.",
+   "AWS Config ghi nhận cấu hình và đánh giá compliance, nhưng không ngăn được thay đổi và cũng không phát hiện tấn công.",
+   "CloudTrail chỉ ghi log các API call; việc phân tích log đó để tìm mối đe dọa là của GuardDuty.",
+   "WAF thì chặn thật ở Layer 7, như SQL injection, XSS, chặn theo IP hoặc quốc gia và rate limit.",
+   "Shield chặn và giảm thiểu DDoS Layer 3 và 4. Khi đi thi, nếu đề muốn ngăn hành động thì nghĩ tới IAM policy, SCP, WAF hoặc Shield, chứ không phải GuardDuty hay Config."
+  ]
+ }
+}

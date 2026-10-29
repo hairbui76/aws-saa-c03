@@ -1,0 +1,28 @@
+{
+ "Compare - Security Groups vs NACL": {
+  "sig": "8-ps21yh",
+  "steps": [
+   "Sơ đồ này so sánh hai lớp lọc traffic trong VPC. Gói tin từ ngoài vào phải qua NACL ở biên subnet trước, rồi mới tới Security Group gắn trên ENI.",
+   "Đầu tiên, traffic từ Internet đi vào VPC thông qua Internet Gateway, hay IGW.",
+   "Từ IGW, gói tin chạm tới NACL ở ranh giới subnet. NACL là stateless, nên request và response được xét như hai luồng riêng biệt.",
+   "Qua được NACL, gói tin tiếp tục tới EC2-A, nơi Security Group trên ENI của nó kiểm tra thêm một lần nữa.",
+   "Còn khi EC2-A nói chuyện với EC2-B trong cùng subnet, traffic không băng qua ranh giới subnet nên NACL không ảnh hưởng, chỉ có Security Group lọc thôi.",
+   "Security Group gắn vào ENI, là stateful nên response tự được cho qua. Nó chỉ có rule allow, xét mọi rule cùng lúc, và tham chiếu được Security Group khác.",
+   "NACL gắn vào subnet, stateless, có cả allow lẫn deny, xét rule theo số thứ tự từ nhỏ đến lớn. Nó chỉ hiểu IP, CIDR, port và protocol, không tham chiếu logical resource.",
+   "Khi đi thi, nhớ mô hình chuẩn: dùng Security Group để allow, dùng NACL để deny bad actor. Và NAT Gateway không gắn được Security Group, nên muốn lọc nó thì chỉ có NACL."
+  ]
+ },
+ "Compare - Security Groups vs NACL - rules": {
+  "sig": "8-dwt79o",
+  "steps": [
+   "Sơ đồ này đếm số rule cần cho luồng Bob đi tới Web rồi tới App. NACL stateless cần rule cho cả request và response trên mỗi NACL, còn Security Group chỉ cần rule cho request.",
+   "Bob từ Internet gửi request TCP 443 tới web subnet, nên NACL-web cần một rule inbound cho port 443.",
+   "Response trả về Bob đi ra dải ephemeral 1024 đến 65535, cần rule outbound trên NACL-web. Rồi web gọi app trên port 1337, cần outbound 1337 ở NACL-web và inbound 1337 ở NACL-app.",
+   "Response từ app quay về web cũng phải mở: outbound ephemeral trên NACL-app và inbound ephemeral trên NACL-web. Tổng cộng là 6 rule trên 2 NACL.",
+   "Giờ xem phía Security Group. SG-web chỉ cần một rule inbound port 443 từ 0.0.0.0 trên 0 để Bob truy cập được.",
+   "Response về Bob tự được phép vì Security Group là stateful. SG-app chỉ cần một rule inbound 1337 với source là SG-web, nên scale rất tốt khi instance thay đổi IP.",
+   "Response từ App về Web cũng tự được cho qua. Vậy Security Group chỉ cần đúng 2 rule so với 6 rule của NACL.",
+   "Lời nhắc khi đi thi: muốn chặn một IP xấu cụ thể thì dùng NACL deny với số rule nhỏ hơn rule allow, vì Security Group không có deny."
+  ]
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "R53 Simple Routing": {
+  "sig": "10-syeb9r",
+  "steps": [
+   "Sơ đồ này nói về Simple Routing, policy mặc định và đơn giản nhất của Route 53: mỗi tên chỉ có một record, record đó chứa nhiều value, và không có health check.",
+   "Ưu điểm lớn nhất của Simple Routing là dễ cài đặt và dễ quản lý, vì bạn chỉ cần tạo một record rồi điền các IP vào là xong.",
+   "Nhược điểm là không có health check, nên Route 53 không biết server nào đang chết và vẫn có thể trả về IP của server hỏng, như 1.2.3.5 ở đây.",
+   "Hãy nhớ kỹ: Simple là policy duy nhất của Route 53 không hỗ trợ health check. Mọi policy khác đều dùng health check để chọn record.",
+   "Đây là các web server phía sau. Server 1.2.3.3 vẫn chạy bình thường, còn 1.2.3.5 đã chết, nhưng Route 53 hoàn toàn không hay biết điều đó.",
+   "Client gửi query cho record www kiểu A tới hosted zone animals4life.org. Zone này chỉ có đúng một record www, chứa ba value là 1.2.3.3, 1.2.3.4 và 1.2.3.5.",
+   "Route 53 trả về tất cả value trong cùng một response, theo thứ tự ngẫu nhiên. Nó không lọc gì cả, kể cả IP của server đã chết.",
+   "Client nhận về danh sách đầy đủ ba địa chỉ IP. Từ đây, việc chọn server nào hoàn toàn do phía client quyết định.",
+   "Client tự chọn một value, ở đây là 1.2.3.4, rồi kết nối thẳng tới server đó. Nếu xui chọn trúng 1.2.3.5 thì kết nối sẽ thất bại.",
+   "Khi đi thi, nếu đề nhắc tới health check hoặc tự động bỏ server lỗi thì đừng chọn Simple; nhiều server ngang hàng có health check thì chọn Multivalue. Simple hợp khi chỉ route tới một service duy nhất, như một web server."
+  ]
+ }
+}

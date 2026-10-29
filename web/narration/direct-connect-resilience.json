@@ -1,0 +1,27 @@
+{
+ "Direct Connect Resilience": {
+  "sig": "7-trtuwd",
+  "steps": [
+   "Sơ đồ này cho thấy một Direct Connect đơn lẻ thực chất là chuỗi bảy điểm lỗi. Đoạn từ Region tới DX location do AWS lo nên luôn HA, còn từ DX location trở ra là trách nhiệm thiết kế của bạn.",
+   "AWS Region nối tới DX location bằng nhiều đường tốc độ cao, coi như luôn HA. Nhưng AWS DX router chứa DX port của bạn chỉ có một, nên nó là single point of failure.",
+   "Từ AWS DX router, cross connect nối sang customer DX router. Cross connect chỉ là một sợi cáp, còn customer DX router thường không có thiết bị dự phòng, nên cả hai đều là điểm lỗi.",
+   "Tiếp theo là extension, cáp telco chôn dưới đường kéo về văn phòng, rất dễ bị đào đứt. Cuối chuỗi là customer premises và customer router, thêm hai điểm lỗi nữa.",
+   "Mức đầu tiên là không resilient, dính cả bảy điểm lỗi. Nâng lên hai port cùng một location, AWS đặt trên hai DX router khác nhau, chịu được lỗi một router hoặc một extension, nhưng không chịu được mất cả location.",
+   "Mức tốt hơn là dùng hai DX location nối về hai customer premises khác nhau, lý tưởng là cách xa nhau. Khi mất cả một location, hệ thống vẫn chạy nhưng ở mức resilience giảm.",
+   "Mức extreme là hai location, mỗi nơi hai port, về hai premises, mỗi premises hai router. Thiết kế này chịu được mất cả một location cùng lúc với một cặp router, đổi lại chi phí và độ phức tạp cao nhất."
+  ]
+ },
+ "Direct Connect Resilience - resilient": {
+  "sig": "8-4in8q0",
+  "steps": [
+   "Đây là thiết kế DX resilient tối đa: hai DX location, mỗi nơi hai port, nối về hai customer premises cách xa nhau. Mỗi nhánh dùng thiết bị và tuyến cáp riêng.",
+   "AWS Region nối tới bốn AWS DX router A, B, C, D, chia ở hai DX location. Mỗi port nằm trên một thiết bị riêng để không có router nào là điểm lỗi chung.",
+   "Mỗi AWS DX router có cross connect riêng tới một customer DX router riêng, nên mỗi location có hai customer DX router làm dự phòng cho nhau.",
+   "Các extension chạy từ customer DX router về customer router ở hai premises. Vì đi giữa các địa điểm khác nhau nên chúng khác tuyến cáp, một lần đào đường không cắt được hết.",
+   "Kết quả là hệ thống chịu được việc mất cả một DX location, và đồng thời thêm lỗi một cặp router ở location còn lại.",
+   "Khi đi thi, nhớ bẫy này: hai DX ở cùng một location vẫn còn single point of failure chính là location đó. Muốn HA thật thì chọn nhiều DX location.",
+   "Nếu đề yêu cầu HA nhưng tiết kiệm chi phí, hãy chọn DX primary cộng Site-to-Site VPN qua Internet làm backup, dùng BGP để chọn đường primary.",
+   "Cuối cùng, nhớ rằng khi đặt hai port trong cùng một location, AWS sẽ đặt chúng trên hai AWS DX router khác nhau, như cặp A và B, hoặc C và D."
+  ]
+ }
+}

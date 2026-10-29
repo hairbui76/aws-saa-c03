@@ -1,0 +1,18 @@
+{
+ "Digital Signatures": {
+  "sig": "11-19ozxm4",
+  "steps": [
+   "Sơ đồ này nói về chữ ký số: kết hợp hash với chữ ký bằng private key để chứng minh integrity, tức dữ liệu không bị sửa, và authenticity, tức đúng Bob đã ký. Dữ liệu gốc vẫn giữ nguyên.",
+   "Đầu tiên, Bob đưa bản hợp đồng qua hash function để tạo ra một hash duy nhất cho đúng tài liệu đó.",
+   "Nhưng hash thôi chưa chứng minh được ai tạo ra nó, nên Bob ký lên hash để tạo thành signature.",
+   "Bob ký bằng private key của mình, thứ chỉ Bob biết. Vì vậy không ai khác có thể làm giả signature này.",
+   "Bob gộp signature với tài liệu gốc thành signed data rồi gửi qua Internet, email hoặc lưu lên cloud storage. Chữ ký chỉ là lớp phủ thêm, dữ liệu vẫn đọc bình thường.",
+   "Phía người nhận tải về và tách ra phần dữ liệu gốc để kiểm tra.",
+   "Người nhận tự hash dữ liệu bằng đúng cùng hash function mà Bob đã dùng, để có một hash tự tính.",
+   "Phần signature cũng được tách ra, và hash tự tính sẽ được đem so sánh. Khớp thì tài liệu không bị sửa và đúng Bob ký; không khớp thì đã bị sửa hoặc không phải Bob.",
+   "Người nhận dùng public key của Bob để verify signature, thu được hash gốc của Bob. Chắc chắn do Bob tạo, vì chỉ Bob có private key.",
+   "Cuối cùng so hash gốc của Bob với hash tự tính. Nếu tài liệu bị sửa dù chỉ một chút, hai hash sẽ khác nhau ngay.",
+   "Khi đi thi nhớ nhé: private key ký, public key verify, ngược với mã hóa. Public key phân phối càng rộng càng khó giả mạo, tạo chain of trust cho TLS và DNSSEC. Trên AWS, gặp CloudTrail log file integrity validation, KMS asymmetric Sign và Verify, hay CloudFront signed URL thì nghĩ ngay tới chữ ký số."
+  ]
+ }
+}

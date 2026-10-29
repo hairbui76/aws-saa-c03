@@ -1,0 +1,12 @@
+{
+ "CloudFormation Basics": {
+  "sig": "5-rss7qj",
+  "steps": [
+   "Sơ đồ này cho thấy luồng cơ bản của CloudFormation: từ template viết bằng YAML hoặc JSON, tạo ra stack chứa logical resource, rồi CFN tạo physical resource thật trong account và giữ hai bên luôn khớp nhau.",
+   "Khi Create stack, mỗi logical resource như Instance, SecurityGroup hay InstanceRole được CFN dựa vào Type để tạo ra tài nguyên thật tương ứng, ví dụ một EC2 instance có ID riêng trong account.",
+   "Đây là cấu trúc template. Chỉ có Resources là bắt buộc, các section khác như Parameters, Mappings, Conditions hay Outputs đều tùy chọn. Nhớ là Description phải đứng ngay sau AWSTemplateFormatVersion.",
+   "Sửa template rồi Update stack thì CFN thêm, sửa hoặc xóa physical resource tương ứng; Delete stack thì CFN tự dọn sạch. Một template tạo được nhiều stack. Lưu ý template có IAM resource phải tick CAPABILITY_IAM hoặc CAPABILITY_NAMED_IAM.",
+   "Mẹo khi đi thi: muốn template portable giữa các region thì đừng hard-code AMI ID, hãy dùng SSM public parameter để lấy AMI mới nhất, hoặc dùng Mappings làm bảng tra cứu."
+  ]
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "DynamoDB Global Tables": {
+  "sig": "9-r50pkd",
+  "steps": [
+   "Sơ đồ này nói về DynamoDB Global Tables, giải pháp replication multi-master giữa nhiều region. Ở đây ta có ba region: us-east-1, London và Sydney, mỗi nơi giữ một replica table ngang hàng.",
+   "Người dùng ở Mỹ, Anh và Úc đều kết nối tới replica table gần mình nhất, và quan trọng là họ được cả đọc lẫn ghi ngay tại chỗ, nên latency rất thấp.",
+   "Các replica table đồng bộ dữ liệu với nhau theo kiểu bất đồng bộ, thường dưới một giây tùy tải từng region, nên dùng được cho cả ứng dụng đòi hỏi cao.",
+   "Đây là điểm cốt lõi: multi-master nghĩa là không có table nào là primary, cũng không có read replica chỉ đọc. Mọi table đều ngang hàng và nhận cả read lẫn write.",
+   "Nếu cùng một item bị ghi ở hai region gần như đồng thời, DynamoDB áp dụng last writer wins: bản ghi mới nhất thắng và được replicate đè lên mọi replica khác. Đơn giản và dễ dự đoán.",
+   "Về consistency: đọc trong chính region vừa ghi thì chọn được strongly consistent hoặc eventual. Còn đọc từ region khác thì luôn là eventually consistent, vì replication bất đồng bộ.",
+   "Cách dựng khá đơn giản: tạo DynamoDB table ở từng region, rồi từ một table bất kỳ thêm các table còn lại vào global table. Hậu trường, replication dựa trên DynamoDB Streams.",
+   "Ba use case chính là: global high availability khi một region sập, hiệu năng toàn cầu kết hợp Route 53 latency routing, và DR với RPO và RTO gần như bằng không.",
+   "Khi đi thi, nhớ nhé: NoSQL cần đọc và ghi ở nhiều region, kiểu active-active, thì chọn Global Tables. Nếu là relational hoặc SQL toàn cầu với một region ghi thì chọn Aurora Global Database. Và ứng dụng không chịu được eventual consistency giữa các region thì phải cẩn thận."
+  ]
+ }
+}

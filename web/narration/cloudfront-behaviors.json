@@ -1,0 +1,13 @@
+{
+ "CloudFront Behaviors": {
+  "sig": "6-1bwfk74",
+  "steps": [
+   "Sơ đồ này cho thấy cách CloudFront chọn behavior cho từng request theo path pattern. Distribution giữ các setting chung, còn behavior quyết định origin, cache, TTL và việc nội dung là public hay private.",
+   "Người dùng gửi request lấy file ảnh img cat.jpg tới edge location. Việc đầu tiên là so khớp đường dẫn này với path pattern của các behavior trong distribution.",
+   "Đường dẫn khớp img sao, nên đi vào behavior riêng: restricted với trusted key group, TTL riêng và chỉ cho HTTPS. Mọi request không khớp gì khác rơi vào default behavior sao, public và redirect HTTP sang HTTPS.",
+   "Mỗi behavior trỏ tới origin riêng để origin fetch. Behavior ảnh lấy từ S3 bucket private, còn default behavior lấy từ S3 public hoặc API phía sau ALB.",
+   "Đây là các setting ở mức distribution: price class, AWS WAF web ACL, alternate domain name, SSL certificate từ ACM ở us-east-1, security policy, HTTP versions, logging và default root object.",
+   "Khi đi thi, nhớ rằng mọi caching control, TTL và restrict viewer access đều nằm ở behavior, cùng origin, viewer protocol policy và Lambda@Edge. Behavior cụ thể hơn được ưu tiên, và default behavior sao luôn tồn tại."
+  ]
+ }
+}

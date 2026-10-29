@@ -1,0 +1,26 @@
+{
+ "Storage Fundamentals": {
+  "sig": "6-17j2l72",
+  "steps": [
+   "Sơ đồ này so sánh ba loại storage: block, file và object, xem loại nào mount được, loại nào boot được. Điểm mấu chốt là chỉ block storage mới boot được.",
+   "Block là tập block có địa chỉ, không cấu trúc, nên OS phải tự tạo file system rồi mount. File thì có sẵn cây thư mục, truy cập qua mạng bằng đường dẫn. Object là tập phẳng, lấy dữ liệu bằng key.",
+   "Block vừa mount vừa boot được. File mount được nhưng không boot được vì OS không có quyền truy cập mức thấp. Object thì không mount, cũng không boot.",
+   "Trong AWS, block storage là EBS và Instance Store. File storage là EFS và FSx cho Windows hoặc Lustre. Còn object storage chính là S3.",
+   "Cần boot hoặc hiệu năng cao trong OS thì chọn block. Cần chia sẻ file system cho nhiều server thì chọn file. Cần lưu trữ quy mô web với rất nhiều người truy cập đồng thời thì chọn object.",
+   "Khi đi thi nhớ nhé: Instance Store gắn trực tiếp, rất nhanh nhưng ephemeral, mất dữ liệu khi đĩa hoặc host hỏng. EBS gắn qua mạng, persistent, sống sót qua sự cố EC2 host."
+  ]
+ },
+ "Storage Fundamentals - perf": {
+  "sig": "8-73n3xe",
+  "steps": [
+   "Sơ đồ này nói về hiệu năng storage, với công thức throughput bằng IO size nhân IOPS. Ba chỉ số ràng buộc nhau, và hiệu năng cuối cùng do mắt xích yếu nhất trong chuỗi I/O quyết định.",
+   "Chuỗi I/O bắt đầu từ application, gửi yêu cầu đọc ghi xuống operating system.",
+   "Tiếp theo, operating system chuyển yêu cầu xuống storage subsystem để xử lý.",
+   "Từ storage subsystem, dữ liệu đi qua lớp transport, có thể là mạng hoặc SATA bus. Với network storage, latency ở đây ảnh hưởng rất lớn.",
+   "Sau transport, dữ liệu tới storage interface, một mắt xích nữa có thể trở thành nút cổ chai.",
+   "Cuối cùng là ổ đĩa và công nghệ đĩa. Bất kỳ mắt xích nào yếu nhất trong chuỗi này đều giới hạn hiệu năng toàn bộ.",
+   "Ví dụ block 16 KB nhân 100 IOPS cho throughput 1.6 MB mỗi giây, giống cỡ bánh xe nhân vòng tua ra tốc độ xe. Nhưng block 1 MB chưa chắc đạt 100 MB mỗi giây, vì có throughput cap và block lớn thì IOPS giảm.",
+   "Lời nhắc khi đi thi: đề có thể cho IOPS đủ nhưng throughput lại bị giới hạn bởi instance hoặc loại volume. Và với network storage, latency mạng cao sẽ làm IOPS giảm mạnh."
+  ]
+ }
+}

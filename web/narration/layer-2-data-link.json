@@ -1,0 +1,24 @@
+{
+ "Layer 2 Data Link": {
+  "sig": "7-rtwzw2",
+  "steps": [
+   "Sơ đồ này cho thấy hai việc chính của Layer 2: bọc packet L3 vào Ethernet frame, và dùng CSMA CD để chia sẻ môi trường truyền một cách lịch sự trước khi giao frame cho L1.",
+   "Đầu tiên, IP packet từ Layer 3 được bọc vào phần payload của frame, gọi là encapsulation. Khi đã có frame cần gửi, Layer 2 sẽ lắng nghe xem trên môi trường có carrier hay không.",
+   "Nếu đang có carrier, nghĩa là ai đó đang truyền, thiết bị sẽ chờ rồi nghe lại. Nếu không có carrier, frame được giao cho Layer 1 để biến thành tín hiệu và truyền đi.",
+   "Nhưng hai thiết bị có thể cùng thấy môi trường trống và truyền cùng lúc. Lúc đó xảy ra collision, nên Layer 2 phải kiểm tra xem có va chạm hay không.",
+   "Không có collision thì frame gửi xong. Nếu có, thiết bị phát jam signal rồi chờ một khoảng random backoff, và mỗi lần va chạm tiếp thì khoảng chờ sẽ dài hơn.",
+   "Sau backoff, thiết bị quay lại bước nghe carrier để thử lại. Vì thời gian chờ ngẫu nhiên và tăng dần nên xác suất trùng nhau giảm, giúp nhiều thiết bị cùng tồn tại trên một mạng.",
+   "Cuối cùng là cấu trúc frame. Preamble và SFD báo đầu frame, Destination MAC cho biết đích, toàn F là broadcast. Source MAC để bên nhận trả lời, EtherType chỉ giao thức L3, còn FCS dùng CRC phát hiện frame hỏng."
+  ]
+ },
+ "Layer 2 Data Link - switch": {
+  "sig": "5-bgzivi",
+  "steps": [
+   "Sơ đồ này so sánh hub ở Layer 1 với switch ở Layer 2, khi máy Top gửi một frame có MAC đích là máy Left.",
+   "Ở cả hai bên, máy Top gửi frame vào thiết bị trung tâm: bên trái là hub, bên phải là switch.",
+   "Hub là multi-port repeater nên lặp frame ra mọi port, các máy không phải đích phải tự discard. Còn switch chỉ gửi frame ra đúng port của máy Left.",
+   "Switch làm được vậy nhờ MAC address table. Nó học MAC nguồn của mỗi frame đi vào port nào, rồi dùng bảng đó để forward frame tới đúng port đích.",
+   "Khi đi thi, nhớ rằng hub lặp cả lỗi và collision, chỉ có một collision domain. Switch store-and-forward, mỗi port là một collision domain. Trong VPC không có broadcast hay multicast L2, trừ multicast qua Transit Gateway, và MAC đi theo ENI."
+  ]
+ }
+}

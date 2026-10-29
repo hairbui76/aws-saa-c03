@@ -1,0 +1,18 @@
+{
+ "Regional and Global Architecture": {
+  "sig": "11-1f4p0bd",
+  "steps": [
+   "Sơ đồ này cho thấy một hệ thống lớn như Netflix thực chất là các khối regional độc lập ghép lại, cộng thêm một tầng global lo việc đưa khách tới region phù hợp.",
+   "Người dùng khắp thế giới trước tiên hỏi Route 53 qua DNS để biết gõ tên miền thì trỏ về đâu, và Route 53 còn dùng health check để theo dõi sức khỏe từng region.",
+   "Khi region chính us-east-1 khỏe, mọi session được đưa về web tier ở đây, tức ALB hoặc API Gateway, điểm vào regional che giấu toàn bộ hạ tầng phía sau.",
+   "Bên trong region, compute như EC2, Lambda hoặc ECS xử lý chức năng chính, dùng storage, app services, và hỏi cache trước, chỉ khi cache miss mới đọc vào database.",
+   "Nếu region chính gặp sự cố, health check phát hiện và Route 53 failover, chuyển khách sang web tier ở region phụ. Đó chính là nhiệm vụ cô lập lỗi regional của tầng global.",
+   "Region phụ có bản sao đầy đủ: web tier chuyển tới compute, compute đọc từ database replica, nên vẫn phục vụ được khách khi region chính hỏng.",
+   "Song song đó, CloudFront là CDN ở tầng global, các edge location cache nội dung ngay gần người dùng để phân phối nhanh hơn.",
+   "Khi edge chưa có nội dung, CloudFront kéo từ origin, ví dụ S3 chứa phim của Netflix, rồi cache lại cho những lần sau.",
+   "Nhắc lại caching pattern: hỏi cache trước, miss mới đọc DB. Cache nằm trong memory nên nhanh và rẻ, offload read giúp giảm chi phí database.",
+   "Region phụ là một khối regional độc lập, giống hệt region chính. Tư duy theo kiểu tập hợp các region giúp thiết kế nền tảng lớn dễ hơn nhiều.",
+   "Khi đi thi, hãy xác định ngay hệ thống là một region, một region kèm DR, hay multi-region active, vì đáp án khác nhau. Discovery và failover dùng Route 53 với health check, content delivery dùng CloudFront."
+  ]
+ }
+}

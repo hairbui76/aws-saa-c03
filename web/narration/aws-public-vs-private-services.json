@@ -1,0 +1,15 @@
+{
+ "AWS Public vs Private Services": {
+  "sig": "8-syj4mu",
+  "steps": [
+   "Sơ đồ này chia AWS thành ba network zone: Public Internet, AWS Public Zone và AWS Private Zone chứa các VPC. Nhớ nhé, public hay private là chuyện đường mạng, không phải chuyện quyền.",
+   "Đầu tiên, laptop ở nhà gọi S3. Vì S3 có public endpoint, ở đâu có Internet thì gói tin đi qua Internet tới AWS Public Zone và quay về được.",
+   "Giờ tới EC2 trong VPC B. Nhờ Internet Gateway gắn vào VPC và một public IPv4, instance này có thể đi ra ngoài.",
+   "Khi EC2 gọi S3 qua Internet Gateway, lưu lượng đi thẳng vào AWS Public Zone, nằm trọn trên mạng AWS.",
+   "Còn khi EC2 muốn tới các dịch vụ Internet bình thường như Gmail hay web shop, nó đi qua IGW ra Public Internet. So sánh lại: laptop tới S3 thì đi qua Internet, còn EC2 tới S3 thì không chạm Internet.",
+   "Với On-premises muốn vào thẳng EC2 trong VPC, đường này chỉ tồn tại khi bạn cấu hình một kết nối riêng.",
+   "AWS Public Zone là mạng của AWS nối với Internet nhưng không phải một phần của Internet. Còn VPC A thì cô lập hoàn toàn với VPC B, Internet và Public Zone nếu bạn không cấu hình cho phép.",
+   "Khi đi thi, nhớ: EC2 ra Internet cần public IPv4, được IGW dịch một đối một sang private IP. On-premises vào VPC phải dùng Site-to-Site VPN hoặc Direct Connect. S3 tuy là public service nhưng vẫn cần IAM hoặc bucket policy. Subnet private muốn tới S3 mà không cần IGW hay NAT thì dùng VPC Endpoint."
+  ]
+ }
+}

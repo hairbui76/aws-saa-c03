@@ -1,0 +1,15 @@
+{
+ "R53 Geolocation Routing": {
+  "sig": "8-6adq0l",
+  "steps": [
+   "Sơ đồ này nói về Geolocation Routing của Route 53. Ý chính là Route 53 trả record khớp vị trí cụ thể nhất của user, chứ không phải record gần nhất.",
+   "Khi có query, Route 53 kiểm tra IP, thường là IP của resolver, để xác định vị trí user. Nếu user ở Mỹ, bước đầu tiên là tìm record được tag theo đúng US state.",
+   "Nếu có record khớp state thì trả luôn, vì state là mức cụ thể nhất. Nếu không khớp, Route 53 chuyển sang tìm record theo country, dùng mã quốc gia ISO.",
+   "Khớp country thì trả record country và dừng lại. Không khớp thì Route 53 mở rộng thêm một mức nữa, tìm record theo continent.",
+   "Có record continent khớp thì trả về. Nếu vẫn không có, Route 53 kiểm tra xem bạn có tạo record default hay không, đây là record catch-all và hoàn toàn tùy chọn.",
+   "Có default thì user nhận record default. Còn nếu không có default, Route 53 trả NO ANSWER, nghĩa là user không nhận được câu trả lời nào cả.",
+   "Xem vài ví dụ nhé. User ở UK mà chỉ có record Canada thì vẫn NO ANSWER. User ở Texas không có record Texas nhưng có record US thì nhận record US. Thêm default thì ai cũng có câu trả lời.",
+   "Khi đi thi, nhớ rằng nếu đề nói gần nhất hoặc latency thấp nhất thì đừng chọn Geolocation, hãy chọn Latency hoặc Geoproximity. Geolocation dùng cho nội dung theo quốc gia, ngôn ngữ, giới hạn thị trường và tuân thủ pháp lý."
+  ]
+ }
+}

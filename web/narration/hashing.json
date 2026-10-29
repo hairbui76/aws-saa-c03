@@ -1,0 +1,11 @@
+{
+ "Hashing": {
+  "sig": "4-woroha",
+  "steps": [
+   "Sơ đồ này nói về hashing: một hàm biến dữ liệu kích thước bất kỳ thành giá trị có độ dài cố định và chỉ đi một chiều. Ta sẽ xem hai ứng dụng là lưu mật khẩu và kiểm tra file tải về.",
+   "Hai mật khẩu chỉ khác đúng một chữ cái cuối cùng cùng đi qua hàm SHA2-256. Client chỉ gửi hash của mật khẩu, server chỉ lưu và so sánh hash. Với file tải về, người dùng tự hash rồi so với hash tác giả công bố.",
+   "Kết quả là hai hash có cùng độ dài nhưng khác nhau hoàn toàn, dù dữ liệu chỉ lệch một ký tự. Nếu attacker dump database, họ chỉ có hash và không suy ngược được mật khẩu, chỉ còn cách brute-force.",
+   "Khi đi thi, nhớ rằng muốn biết hash công bố có bị sửa và có đúng của tác giả không thì dùng Digital Signatures. MD5 có collision nên hãy chọn SHA-256 trở lên, và hash là integrity chứ không phải encryption, không giải mã được."
+  ]
+ }
+}

@@ -1,0 +1,24 @@
+{
+ "Compare - VPN vs Direct Connect": {
+  "sig": "5-1prg60l",
+  "steps": [
+   "Sơ đồ này so sánh hai cách nối on-premises vào AWS: Site-to-Site VPN là đường logic mã hóa IPsec qua internet, còn Direct Connect là port vật lý riêng tại DX location, không mã hóa.",
+   "Từ router của khách hàng có hai lối đi. Một là IPsec tunnel chạy qua public internet, hai là đi tới router của khách hàng hoặc partner, nối bằng cáp quang cross-connect tại DX location.",
+   "Tunnel VPN kết thúc ở VGW, vốn có hai endpoint ở hai AZ nên phía AWS đã HA sẵn. Còn đường DX đi vào AWS DX router với port 1, 10 hoặc 100 Gbps, hoàn toàn không qua internet.",
+   "Từ DX router, Private VIF đi vào VGW và VPC, còn Public VIF dẫn tới dịch vụ public như S3, SQS, DynamoDB. Lưu ý DX không đi ra được internet công cộng.",
+   "Khi đi thi, nhớ nhé: VPN dựng trong vài giờ, rẻ, có mã hóa, nhưng chỉ khoảng 1.25 Gbps mỗi tunnel và latency biến động. DX mất tuần đến tháng, nhanh và ổn định, nhưng không mã hóa, không resilient sẵn, và data vào miễn phí."
+  ]
+ },
+ "Compare - VPN vs Direct Connect - decision": {
+  "sig": "7-13nlepa",
+  "steps": [
+   "Đây là cây quyết định chọn VPN, Direct Connect hay kết hợp. Hãy đọc từ khóa trong đề theo thứ tự: độ gấp, băng thông và latency, mã hóa, rồi đến HA.",
+   "Câu hỏi đầu tiên: có cần kết nối ngay không? Nếu có, chọn Site-to-Site VPN, có thể đặt DX song song. Nhớ rằng một CGW là single point of failure, muốn fully HA cần hai router và hai đường internet.",
+   "Nếu không gấp, xét băng thông. Không cần quá 1.25 Gbps hay latency ổn định thì VPN vừa rẻ vừa mã hóa sẵn. Cần thì chọn Direct Connect.",
+   "Đã chọn Direct Connect, hãy hỏi tiếp: đề có yêu cầu mã hóa không? Vì bản thân DX không mã hóa lưu lượng.",
+   "Nếu cần mã hóa, chạy VPN trên DX, tức IPsec qua Public VIF. Sau đó tiếp tục xét đến yêu cầu HA.",
+   "Nếu cần HA mà muốn tiết kiệm, thêm VPN làm backup cho DX. Nếu cần HA tối đa, dùng nhiều DX ở nhiều DX location khác nhau.",
+   "Lời nhắc khi đi thi: DX không có resilience sẵn, một cáp đứt là mất kết nối. Và đừng sa bẫy, DX không bao giờ là đáp án khi cần kết nối gấp, cũng không tự mã hóa."
+  ]
+ }
+}

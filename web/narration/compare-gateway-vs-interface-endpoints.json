@@ -1,0 +1,25 @@
+{
+ "Compare - Gateway vs Interface Endpoints": {
+  "sig": "8-vkkpjt",
+  "steps": [
+   "Sơ đồ này so sánh gateway endpoint và interface endpoint. Cả hai đều giúp resource private gọi dịch vụ AWS public mà không cần public IP, Internet Gateway hay NAT, nhưng khác nhau ở cơ chế, HA, Security Group và phạm vi truy cập.",
+   "Bên trái là gateway endpoint, bên phải là interface endpoint, loại này được xây dựng trên công nghệ PrivateLink. Ta sẽ đi qua từng tiêu chí, so sánh song song hai bên.",
+   "Gateway endpoint dẫn traffic bằng routing: AWS tự thêm route dùng prefix list trỏ tới endpoint. Interface endpoint thì không dùng routing, mà dựa vào DNS, tên dịch vụ được resolve ra private IP của một ENI nằm trong subnet.",
+   "Gateway endpoint chỉ hỗ trợ đúng hai dịch vụ là S3 và DynamoDB. Interface endpoint hỗ trợ hầu hết dịch vụ AWS, cả dịch vụ bên thứ ba, trong đó có S3 và nay có cả DynamoDB.",
+   "Gateway endpoint không nằm trong subnet hay AZ nào, nên mặc định đã HA trên mọi AZ của region. Interface endpoint là ENI trong một subnet, tức một AZ, nên muốn HA bạn phải tạo một endpoint ở mỗi AZ.",
+   "Về bảo mật, gateway endpoint không gắn được Security Group, chỉ có endpoint policy. Interface endpoint là ENI nên có cả Security Group lẫn endpoint policy.",
+   "Gateway endpoint chỉ dùng được từ bên trong chính VPC đó. Interface endpoint chỉ là một private IP, nên truy cập được từ on-premises qua VPN hoặc Direct Connect, và từ VPC peer.",
+   "Khi đi thi nhớ: gateway thì app không sửa gì, tạo tức thì, miễn phí; interface thì không sửa app nếu bật Private DNS, tạo mất vài phút, tính phí theo giờ mỗi AZ và theo GB. Bẫy hay gặp: gateway endpoint mỗi AZ là sai, một interface endpoint đủ HA cũng sai, và không endpoint nào cho ra Internet."
+  ]
+ },
+ "Compare - Gateway vs Interface Endpoints - choose": {
+  "sig": "5-rqnt8f",
+  "steps": [
+   "Đây là cây quyết định giúp bạn chọn loại VPC endpoint. Đọc từ trái sang phải, nếu câu hai trả lời không thì chuyển sang câu ba.",
+   "Câu đầu tiên: dịch vụ có phải S3 hoặc DynamoDB không? Nếu không, chỉ còn lựa chọn interface endpoint, cho SNS, SQS, KMS, SSM, ECR, và nhớ tạo một subnet mỗi AZ.",
+   "Nếu là S3 hoặc DynamoDB, hỏi tiếp: có cần truy cập từ on-premises hoặc VPC khác không? Nếu có, dùng interface endpoint cho S3, vì nó chỉ là private IP nên đi được qua VPN, Direct Connect hay peering.",
+   "Nếu chỉ dùng trong VPC, hỏi tiếp có cần kiểm soát bằng Security Group không. Có thì chọn interface endpoint vì ENI gắn được SG; không thì chọn gateway endpoint, miễn phí và HA sẵn.",
+   "Lời nhắc khi thi: hai loại có thể dùng chung trong một VPC, ví dụ gateway cho S3 và interface cho SNS. Thấy từ khóa PrivateLink hoặc đưa dịch vụ vendor vào VPC thì chọn interface. Còn nếu cần ra Internet thì dùng NAT Gateway cho IPv4 hoặc Egress-Only Internet Gateway cho IPv6."
+  ]
+ }
+}

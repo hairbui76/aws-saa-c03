@@ -1,0 +1,12 @@
+{
+ "Forecast": {
+  "sig": "5-1ldz4zf",
+  "steps": [
+   "Sơ đồ này nói về Amazon Forecast, dịch vụ managed dự báo dữ liệu chuỗi thời gian. Bạn đưa vào dữ liệu lịch sử và dữ liệu liên quan, nhận về dự báo kèm lời giải thích, hoàn toàn không phải dự báo thời tiết.",
+   "Đầu vào gồm historical data, ví dụ món hàng và thời điểm bán, cùng related data như khuyến mãi hay thời tiết. Forecast học xem thế nào là bình thường theo thời gian, và bạn dùng nó như backend service qua console, CLI, API hoặc Python SDK.",
+   "Đầu ra có hai phần. Forecast cho biết nhu cầu tương lai, còn forecast explainability giải thích vì sao nhu cầu thay đổi, chẳng hạn mưa to khiến ít khách đến cửa hàng.",
+   "Use case là mọi dữ liệu time-series có nhiều lịch sử: nhu cầu bán lẻ, supply chain, nhân sự, năng lượng, server capacity và web traffic.",
+   "Khi đi thi, nhớ rằng Forecast không phải dự báo thời tiết, thời tiết chỉ là related data đầu vào. Cần tự xây hoặc train model tùy ý thì chọn SageMaker, còn scale EC2 theo dự đoán thì ASG predictive scaling đơn giản hơn. Dù từ tháng 7 năm 2024 AWS ngừng nhận khách mới, tên Forecast vẫn có thể xuất hiện trong đề."
+  ]
+ }
+}

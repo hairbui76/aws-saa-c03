@@ -1,0 +1,25 @@
+{
+ "Site-to-Site VPN": {
+  "sig": "7-1crnr9q",
+  "steps": [
+   "Sơ đồ này cho thấy thiết kế Site-to-Site VPN đạt full HA, nối VPC trên AWS với mạng on-premises bằng các tunnel IPsec mã hóa chạy qua public Internet.",
+   "Traffic bắt đầu từ EC2 10.16.1.10 đi tới VPC Router. Nhờ route propagation, route tới mạng on-prem 192.168.10.0 trên 24 tự trỏ về VGW, và cả hệ thống dựng được dưới một giờ vì chỉ là cấu hình.",
+   "VPC Router chuyển traffic sang Virtual Private Gateway. VGW là gateway logic gắn với đúng một VPC và làm target trong route table.",
+   "Phía sau VGW là các endpoint vật lý đặt ở các AZ khác nhau, mỗi cái có public IPv4. Mỗi VPN connection có hai endpoint, nên hai connection cho ta bốn endpoint.",
+   "Mỗi endpoint dựng một tunnel IPsec qua Internet tới Customer Gateway. Hai CGW dùng hai ISP và hai tòa nhà khác nhau. Lưu ý mỗi connection chỉ khoảng 1.25 Gbps và latency không ổn định.",
+   "Cả hai CGW cùng nối vào LAN on-prem 192.168.10.0 trên 24. Chỉ cần một tunnel còn up là hai mạng vẫn thông nhau.",
+   "Khi đi thi, nhớ nhé: một connection với một CGW chỉ là partial HA, vì CGW là single point of failure. Muốn full HA thì cần hai CGW, hai VPN connection, tổng cộng bốn tunnel."
+  ]
+ },
+ "Site-to-Site VPN - static vs dynamic": {
+  "sig": "6-1rv8in9",
+  "steps": [
+   "Sơ đồ này so sánh static VPN và dynamic VPN dùng BGP. Kiến trúc giống hệt nhau, chỉ khác ở cách trao đổi route giữa hai bên.",
+   "Với static, bạn tự khai prefix on-prem trên VPN connection và thêm static route. Với dynamic, BGP tự quảng bá route giữa VGW và CGW, và cập nhật ngay khi link up hoặc down.",
+   "Ưu điểm của static là chỉ cần IPsec nên chạy được với hầu hết router. Dynamic thì hỗ trợ failover nhiều connection, kiến trúc HA nâng cao và kết hợp được với Direct Connect.",
+   "Nhược điểm của static là hạn chế load balancing và failover giữa nhiều connection. Còn dynamic đòi hỏi CGW hỗ trợ BGP và cấu hình phức tạp hơn.",
+   "Cả hai loại đều nên bật route propagation để route on-prem tự vào VPC route table. Bẫy thi hay gặp: router on-prem không hỗ trợ BGP thì chỉ dùng được static VPN.",
+   "Tóm lại, static chỉ có tunnel IPsec. Dynamic chạy thêm phiên BGP trên TCP 179, với VGW dùng Amazon ASN và CGW dùng ASN của bạn."
+  ]
+ }
+}

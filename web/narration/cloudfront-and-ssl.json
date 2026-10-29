@@ -1,0 +1,22 @@
+{
+ "CloudFront and SSL": {
+  "sig": "5-znz85y",
+  "steps": [
+   "Sơ đồ này nói về hai chặng TLS của CloudFront: chặng viewer từ người dùng tới edge, và chặng origin từ edge tới origin. Cả hai đều cần cert public tin cậy, không được self-signed.",
+   "Ở chặng viewer, trình duyệt hiện đại dùng SNI trên IP chung, miễn phí, còn trình duyệt cũ không có SNI cần dedicated IP, khoảng 600 đô mỗi tháng. Viewer protocol policy đặt trên behavior, phổ biến nhất là redirect HTTP sang HTTPS.",
+   "Ở chặng origin, S3 tự lo cert và bạn không thay được. ALB dùng cert public từ ACM hoặc CA ngoài. Còn EC2 hay on-prem phải cài tay cert từ CA bên ngoài, vì ACM không hỗ trợ.",
+   "Khi dùng tên riêng như cdn.catagram.io, bạn thêm alternate domain name, gắn cert ACM ở us-east-1 khớp tên đó, rồi tạo bản ghi Alias trong Route 53 trỏ về distribution. Cert là bắt buộc, kể cả khi không dùng HTTPS.",
+   "Khi đi thi, nhớ ba tên phải khớp nhau: alternate domain name, tên trên cert và tên DNS record. Và self-signed cert không bao giờ dùng được ở cả hai chặng."
+  ]
+ },
+ "CloudFront and SSL - SNI": {
+  "sig": "5-1nx3soc",
+  "steps": [
+   "Sơ đồ này giải thích vì sao có SNI và dedicated IP. Mấu chốt là TLS handshake diễn ra trước khi Host header ở Layer 7 được gửi đi.",
+   "Với client cũ, lúc handshake server phải đưa cert ngay mà chưa biết client muốn site nào. Còn trình duyệt hiện đại gửi luôn tên miền qua SNI ngay trong handshake.",
+   "Không có SNI thì Host header đến sau khi tunnel đã lập, quá muộn để chọn cert. Có SNI thì server dựa vào tên được gửi để chọn đúng cert.",
+   "Kết quả là không có SNI thì mỗi IP chỉ phục vụ một site HTTPS, nên CloudFront phải cấp dedicated IP ở mỗi edge, khoảng 600 đô mỗi tháng. Có SNI thì nhiều site dùng chung IP, miễn phí và là mặc định.",
+   "Mẹo thi: nếu đề hỏi chi phí khi phải hỗ trợ trình duyệt cũ không có SNI, đáp án là dedicated IP và có tính phí. Các trường hợp còn lại cứ dùng SNI miễn phí."
+  ]
+ }
+}

@@ -1,0 +1,24 @@
+{
+ "R53 Health Checks": {
+  "sig": "4-1rppv1l",
+  "steps": [
+   "Sơ đồ này cho thấy cách Route 53 health check hoạt động. Health check là một đối tượng tạo riêng, record chỉ tham chiếu tới nó, và kết quả được quyết định bằng cách các checker toàn cầu bỏ phiếu.",
+   "Các health checker ở Mỹ, châu Âu, châu Á và Nam Mỹ cùng kiểm tra endpoint catagram, mỗi checker mặc định 30 giây một lần, hoặc 10 giây nếu dùng Fast. Cần 3 lần pass hoặc fail liên tiếp mới đổi trạng thái, để tránh báo động vì lỗi lẻ tẻ.",
+   "Nếu từ 18% checker trở lên báo healthy thì health check là healthy và record được trả về, ngược lại record thường bị loại. Lưu ý, nếu firewall, Security Group hoặc WAF chặn IP của checker thì sẽ báo unhealthy giả; còn disable health check thì luôn được coi là healthy.",
+   "Có ba loại health check. Endpoint kiểm tra trực tiếp IP hoặc domain; CloudWatch alarm dựa trên metric trong OS hoặc app, dùng được cho tài nguyên private; còn Calculated gộp nhiều health check con thành sức khỏe toàn ứng dụng."
+  ]
+ },
+ "R53 Health Checks - check types": {
+  "sig": "8-7kucx",
+  "steps": [
+   "Sơ đồ này so sánh ba kiểu endpoint health check: TCP, HTTP hoặc HTTPS, và string matching. Mỗi kiểu thêm một bước vào kiểu trước, nên kiểu sau chính xác hơn.",
+   "Bước đầu tiên luôn là kết nối TCP. Kiểu TCP chỉ cần kết nối trong 10 giây, nên chỉ biết cổng đang mở. Hai kiểu HTTP thì yêu cầu TCP trong 4 giây, rồi nhận status 2xx hoặc 3xx trong 2 giây.",
+   "Với kiểu HTTP thường, có status hợp lệ là đủ, nghĩa là biết web server có trả lời. Kiểu string matching còn đòi nhận body trong 2 giây tiếp theo, và chuỗi tìm kiếm phải nằm trọn trong 5,120 byte đầu.",
+   "Nhờ kiểm tra cả nội dung trả về, string matching biết trang có đúng nội dung hay không, nên đây là kiểu chính xác nhất.",
+   "Hàng đầu tiên là kiểu TCP, đơn giản nhất nhưng kém chính xác nhất.",
+   "Hàng thứ hai là HTTP hoặc HTTPS, phù hợp hơn cho web app vì kiểm tra cả status code.",
+   "Hàng cuối là HTTP hoặc HTTPS kèm string matching, kiểm tra luôn nội dung trong body.",
+   "Mẹo khi đi thi: đề yêu cầu kiểm tra nội dung trang chứ không chỉ server còn sống thì chọn string matching. Và nhớ health check Route 53 chỉ tới được endpoint public, tài nguyên private thì dùng CloudWatch alarm health check."
+  ]
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "EC2 Basics": {
+  "sig": "6-1nv8olh",
+  "steps": [
+   "Sơ đồ này nói về các trạng thái của EC2 instance và bạn phải trả tiền gì ở mỗi trạng thái. Ý chính: stopped vẫn tốn tiền EBS, chỉ terminate mới hết sạch chi phí, và terminate thì không quay lại được.",
+   "Mọi thứ bắt đầu khi bạn launch một instance từ AMI. Instance sẽ vào trạng thái pending trước, lúc AWS đang chuẩn bị host và khởi động hệ điều hành.",
+   "Khi chuẩn bị xong, instance chuyển sang running. Trong demo, status check cần khoảng 3 phút để đạt 2 trên 2 checks passed.",
+   "Ở trạng thái running, bạn trả tiền CPU, kể cả khi idle, cộng với memory, network và EBS storage. Từ đây bạn có thể stop instance, hoặc terminate thẳng luôn.",
+   "Khi stopped, CPU, memory và network không tốn tiền, nhưng EBS storage vẫn bị tính vì ổ đĩa chứa OS và dữ liệu vẫn được cấp phát. Bạn có thể start lại, còn terminate thì root EBS bị xóa theo mặc định và không khôi phục được.",
+   "Khi đi thi, nhớ bẫy này: instance stopped mà vẫn bị tính tiền thì đó là chi phí EBS. Muốn hết sạch thì terminate và xóa cả snapshot, Elastic IP liên quan. Cũng nhớ EC2 là IaaS, private service, launch vào một subnet nên chỉ AZ resilient."
+  ]
+ },
+ "EC2 Basics - connect": {
+  "sig": "8-p6znlg",
+  "steps": [
+   "Sơ đồ này nói về quan hệ giữa AMI và instance, và cách đăng nhập bằng key pair. AWS giữ public key, còn bạn giữ private key, thứ chỉ tải về được đúng một lần.",
+   "Khi launch, AWS đặt public key lên instance. Với Linux, bạn SSH qua port 22 và private key xác thực trực tiếp. Với Windows, bạn RDP qua port 3389, nhưng private key chỉ dùng để giải mã mật khẩu Administrator.",
+   "Cả hai đường kết nối đều đi tới instance, nơi bạn chịu trách nhiệm từ OS trở lên. Ngoài ra, từ một instance đang có, bạn có thể tạo ra một AMI mới.",
+   "Chiều ngược lại, bạn dùng AMI để launch instance, giống như dùng một server image hay USB cài hệ điều hành.",
+   "Thành phần đầu tiên của AMI là permissions: public cho mọi người, owner luôn được dùng ngầm định, hoặc chia sẻ explicit cho các AWS account cụ thể.",
+   "Thành phần thứ hai là boot volume, tức ổ C trên Windows hoặc root volume trên Linux, có thể kèm thêm data volume. AMI luôn có ít nhất một boot volume.",
+   "Thành phần thứ ba là block device mapping, cho biết volume nào gắn với device ID nào mà OS nhìn thấy, tức volume nào là boot và volume nào là data.",
+   "Một lưu ý thực tế: nếu gặp lỗi unprotected private key file thì chạy chmod 400 cho file key. Và nhớ rằng nếu không chia sẻ, AMI là private, chỉ owner dùng được."
+  ]
+ }
+}

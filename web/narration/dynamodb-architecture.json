@@ -1,0 +1,23 @@
+{
+ "DynamoDB Architecture": {
+  "sig": "7-9we8nq",
+  "steps": [
+   "Sơ đồ này cho thấy kiến trúc DynamoDB. Bạn không quản lý server hay cluster nào cả, thứ AWS giao cho bạn chính là cái table, và dữ liệu tự sao chép qua nhiều AZ trên SSD.",
+   "DynamoDB là public service, nên client trên Internet gọi thẳng vào endpoint public qua console, CLI hoặc API. Còn EC2 hay Lambda trong VPC thì đi qua Gateway VPC Endpoint hoặc Internet Gateway.",
+   "Từ Gateway VPC Endpoint, request tới endpoint DynamoDB rồi vào table. Bạn trả tiền theo từng table, gồm capacity, tức là tốc độ, cộng với storage, không có chi phí hạ tầng nền.",
+   "Bên dưới, table tự sao chép dữ liệu ra các storage node SSD ở nhiều AZ, hoàn toàn mặc định. Item tối đa 400 KB, số item không giới hạn, và như item PK bằng 2 này, có thể không có attribute nào.",
+   "Item này có partition key là 1, sort key là MON, kèm các attribute Temp, Wind và Sunny. Với composite key, tổ hợp PK cộng SK phải là duy nhất.",
+   "Item tiếp theo cùng PK bằng 1 nhưng sort key là TUE, nên vẫn hợp lệ. Để ý nó có bộ attribute khác hẳn, vì DynamoDB không có schema cứng ngoài primary key.",
+   "Khi đi thi, nhớ: truy cập riêng tư dùng Gateway Endpoint, chỉ có S3 và DynamoDB. NoSQL, key value, serverless thì chọn DynamoDB; SQL, relational, JOIN thì không. Multi-AZ có sẵn, đa region dùng Global Tables, cần microsecond thì thêm DAX."
+  ]
+ },
+ "DynamoDB Architecture - backup": {
+  "sig": "4-1v1kpr9",
+  "steps": [
+   "Sơ đồ này so sánh hai kiểu backup của DynamoDB. On-demand là bản full do bạn tự tạo và tự xóa, còn PITR ghi liên tục và restore tới từng giây trong 35 ngày.",
+   "On-demand backup giống manual snapshot của RDS, bạn chủ động tạo và nó tồn tại tới khi bạn xóa. PITR thì tắt mặc định, phải bật riêng cho từng table, sau đó tự ghi mọi thay đổi trong cửa sổ 35 ngày.",
+   "Bản on-demand có thể restore cùng region hoặc sang region khác, được chọn giữ hay bỏ index và đổi cấu hình encryption. PITR luôn restore ra một table mới, tại thời điểm bất kỳ với độ mịn 1 giây.",
+   "Lời nhắc khi đi thi: đề hỏi khôi phục về thời điểm bất kỳ trong vài tuần qua thì bật PITR. Còn nếu cần DR đa region gần như không mất dữ liệu, Global Tables tốt hơn restore backup cross-region."
+  ]
+ }
+}

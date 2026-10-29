@@ -1,0 +1,21 @@
+{
+ "Enhanced Networking and EBS Optimized": {
+  "sig": "5-8cclg6",
+  "steps": [
+   "Sơ đồ này so sánh hai cách EC2 xử lý mạng: bên trái là không có enhanced networking, bên phải là có enhanced networking dùng SR-IOV, nơi mỗi instance có card mạng logic riêng.",
+   "Bên trái, các instance chỉ có virtual NIC và đều phải đi qua host điều phối bằng phần mềm. Bên phải, NIC vật lý tự chia thành các logical NIC, mỗi instance được độc quyền một card.",
+   "Ở cách cũ, host đứng giữa rồi mới đẩy ra một NIC vật lý không hề biết gì về ảo hóa, nên mọi gói tin đều tốn CPU của host và chậm hơn.",
+   "Hệ quả là khi host bận, latency tăng vọt và băng thông dao động. Còn với SR-IOV, ta có băng thông cao hơn, PPS cao hơn, latency thấp và ổn định, và đây là điều kiện bắt buộc cho cluster placement group.",
+   "Khi đi thi, nhớ rằng ENA là driver enhanced networking hiện nay, tới 100 Gbps và hơn. Nếu đề nói HPC cần MPI thì chọn EFA. Tính năng này mặc định bật hoặc miễn phí trên instance hiện đại."
+  ]
+ },
+ "Enhanced Networking and EBS Optimized - ebs": {
+  "sig": "4-1d7rapc",
+  "steps": [
+   "Sơ đồ này nói về EBS optimized. Vì EBS là block storage đi qua mạng, nếu không tối ưu thì data và EBS phải tranh nhau cùng một đường.",
+   "Bên trái là instance đời cũ chỉ có một đường mạng dùng chung cho cả data và EBS. Bên phải, instance EBS optimized tách ra băng thông data và băng thông riêng cho EBS.",
+   "Ở bên trái, cả lưu lượng ra Internet lẫn tới EBS volume đều chen trên cùng một đường nên ảnh hưởng lẫn nhau. Bên phải, mỗi loại đi đường riêng nên không còn tranh chấp.",
+   "Khi đi thi, nhớ đây là cài đặt theo từng instance, đa số type hiện đại bật mặc định và miễn phí. Nó cần cho gp2, gp3, io1, io2 nhưng không tăng IOPS của volume; nếu volume chậm, hãy kiểm tra EBS optimized và giới hạn băng thông EBS của instance type."
+  ]
+ }
+}

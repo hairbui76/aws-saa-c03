@@ -1,0 +1,14 @@
+{
+ "R53 Weighted Routing": {
+  "sig": "7-gdcj92",
+  "steps": [
+   "Sơ đồ này nói về Weighted Routing của Route 53. Mỗi record cùng tên có một weight, và xác suất được trả về bằng weight của nó chia cho tổng weight. Nếu chọn trúng record unhealthy thì Route 53 bỏ qua và chọn lại.",
+   "Giả sử lần này Route 53 chọn trúng record 1.2.3.5, có weight 20, tức khoảng 20 phần trăm số lần. Bây giờ nó cần kiểm tra xem record này có healthy không.",
+   "Kết quả health check của 1.2.3.5 được đưa về điểm quyết định. Lưu ý, health check không loại record khỏi phép tính, nên tổng weight vẫn giữ nguyên.",
+   "Nếu record healthy thì Route 53 trả ngay record đó cho client. Nếu không, nó lặp lại quá trình chọn theo weight cho tới khi được một record healthy.",
+   "Toàn bộ bắt đầu từ một query cho www. Record 1.2.3.3 có weight 40, nên xác suất là 40 trên 100. Tổng không bắt buộc bằng 100, dùng 100 chỉ cho dễ hình dung.",
+   "Record 1.2.3.4 cũng có weight 40, nên cũng được trả về khoảng 40 phần trăm số lần, giống hệt 1.2.3.3.",
+   "Khi đi thi nhớ nhé: weight bằng 0 nghĩa là record không bao giờ được trả, trừ khi tất cả đều bằng 0 thì mọi record được xét như nhau. Đề hỏi gửi 5 phần trăm traffic sang bản mới bằng DNS thì chọn Weighted, còn cần load balancing thật thì dùng ELB."
+  ]
+ }
+}

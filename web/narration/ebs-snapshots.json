@@ -1,0 +1,22 @@
+{
+ "EBS Snapshots": {
+  "sig": "6-ga1cf0",
+  "steps": [
+   "Sơ đồ này cho thấy EBS snapshot hoạt động kiểu incremental. Volume EBS chỉ bền trong một AZ, còn snapshot lưu trên S3 do AWS quản lý nên bền ở cấp region.",
+   "Tại thời điểm t1, volume 10 GiB đang đầy, ta chụp Snap A. Snapshot đầu tiên là bản full, nhưng chỉ copy dữ liệu đã dùng, nên lưu đủ 10 GiB.",
+   "Sang t2, có 4 GiB dữ liệu thay đổi. Snap B chỉ lưu đúng 4 GiB mới đó, nên nhỏ và nhanh hơn nhiều so với bản đầu.",
+   "Snap B không chép lại 6 GiB không đổi mà tham chiếu chúng ở Snap A. Rồi tới t3, volume thêm 2 GiB thành 12 GiB, và Snap C chỉ lưu 2 GiB mới.",
+   "Snap C tham chiếu 4 GiB đã đổi ở Snap B và 6 GiB không đổi ở Snap A. Nhờ vậy mỗi snapshot vẫn đầy đủ dữ liệu mà không tốn chỗ trùng lặp.",
+   "Khi đi thi nhớ nhé: xóa snapshot cũ không làm hỏng snapshot sau, vì EBS tự di chuyển dữ liệu cần thiết. Snapshot tính tiền theo GB-tháng dữ liệu đã dùng, nên chụp dày không nhất thiết đắt."
+  ]
+ },
+ "EBS Snapshots - restore": {
+  "sig": "4-oywwx3",
+  "steps": [
+   "Sơ đồ này nói về hiệu năng khi restore từ snapshot. Dữ liệu được nạp lazily từ S3, nên lần đọc đầu chậm, và có hai cách khắc phục.",
+   "Từ snapshot trên S3, ta tạo volume mới, dữ liệu nạp dần trong nền. Cách một là bật Fast Snapshot Restore cho các AZ, volume khởi tạo đầy đủ ngay, nhưng tốn phí và giới hạn 50 FSR set mỗi region.",
+   "Nếu đọc vào block chưa nạp, EBS phải kéo từ S3 nên chậm, gọi là first-read penalty. Cách hai là dùng dd đọc trước mọi block trong OS, miễn phí nhưng tốn công quản trị.",
+   "Để so sánh, volume mới trống, không tạo từ snapshot, đạt hiệu năng đầy đủ ngay lập tức. Đề thi hỏi volume restore chậm lúc đầu thì nghĩ ngay tới FSR hoặc dd."
+  ]
+ }
+}

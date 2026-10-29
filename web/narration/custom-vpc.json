@@ -1,0 +1,12 @@
+{
+ "Custom VPC": {
+  "sig": "5-1xia3f7",
+  "steps": [
+   "Sơ đồ này cho thấy một custom VPC vừa tạo tên a4l-vpc1 ở region us-east-1, dải IPv4 10.16.0.0 trên 16 cùng IPv6 trên 56 do AWS cấp. VPC là regional, trải trên mọi AZ, nhưng lúc này chỉ là cái vỏ rỗng.",
+   "Nhìn vào ba AZ, bạn thấy chưa có subnet nào cả. Khác với default VPC, custom VPC không tự tạo subnet; và nhớ rằng subnet mới là tài nguyên cấp AZ, còn VPC là cấp region.",
+   "Dù rỗng, VPC vẫn có sẵn VPC Router có tính sẵn sàng cao, Route 53 Resolver ở địa chỉ base cộng 2 là 10.16.0.2, cùng main route table, default NACL và DHCP option set. Tenancy nên để default, và lưu ý custom VPC mặc định tắt enableDnsHostnames, nên hãy bật lên.",
+   "Mũi tên ra AWS Public Zone và Internet bị chặn vì chưa có Internet Gateway. Muốn ra internet, ta phải thêm IGW, route và public IP một cách tường minh.",
+   "Lời nhắc khi đi thi: custom VPC mặc định riêng tư hoàn toàn, không gì vào ra nếu chưa cấu hình. Chính vì vậy VPC là ranh giới cách ly, giới hạn blast radius khi có tài nguyên bị khai thác."
+  ]
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "S3 Performance Optimization": {
+  "sig": "5-1q1o17k",
+  "steps": [
+   "Sơ đồ này so sánh hai cách upload lên S3: single PUT mặc định và Multipart Upload, giúp upload nhanh hơn và đáng tin cậy hơn.",
+   "Bên trái, file 5 GB đi trong một stream duy nhất qua PutObject; đứt ở 4,5 GB là mất trắng. Bên phải, file được chia thành nhiều part, tối đa 10.000 part.",
+   "Các part upload song song và độc lập, part 3 bị lỗi thì chỉ cần gửi lại riêng nó. Cuối cùng S3 ghép tất cả lại thành một object.",
+   "Single PUT tối đa 5 GB và một stream thường không dùng hết băng thông. Multipart nên dùng từ 100 MB, bắt buộc khi lớn hơn 5 GB, mỗi part từ 5 MB tới 5 GB.",
+   "Nhớ thêm khi đi thi: S3 tự scale ít nhất 3.500 request ghi và 5.500 request đọc mỗi giây cho mỗi prefix, nên chia nhiều prefix. Còn byte-range fetch giúp tải xuống song song."
+  ]
+ },
+ "S3 Performance Optimization - acceleration": {
+  "sig": "5-19jcn1",
+  "steps": [
+   "Sơ đồ này nói về S3 Transfer Acceleration: thay vì đi public internet suốt chặng dài, dữ liệu vào edge location gần nhất rồi chạy trên AWS global network tới bucket.",
+   "Team ở Úc upload dataset, chặng đầu chỉ đi public internet một quãng ngắn tới edge location ở Sydney, ít mạng trung gian.",
+   "Nếu không có acceleration, dữ liệu phải đi qua ISP và nhiều router tới tận London, đường đi do ISP quyết định nên chậm và chập chờn. Lưu ý: download có cache thì dùng CloudFront, app TCP hoặc UDP thì dùng Global Accelerator.",
+   "Từ edge location, dữ liệu chạy trên mạng riêng của AWS như tàu tốc hành, ít hop, độ trễ thấp và ổn định tới bucket.",
+   "Khi đi thi nhớ: tính năng mặc định tắt, bật ở mức bucket, tên bucket không được có dấu chấm, và phải gọi đúng accelerate endpoint. Càng xa, mạng càng kém thì càng có lợi."
+  ]
+ }
+}

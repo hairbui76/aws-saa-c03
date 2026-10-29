@@ -1,0 +1,17 @@
+{
+ "Lambda@Edge": {
+  "sig": "10-w8m1t9",
+  "steps": [
+   "Sơ đồ này nói về Lambda@Edge, tính năng của CloudFront cho phép gắn Lambda function vào bốn điểm trên một behavior. Function chạy ở edge location, nằm trong AWS public zone, nên bị giới hạn hơn Lambda thường.",
+   "Đầu tiên ta đặt viewer và điểm số bốn, viewer response. Function ở đây chạy ngay trước khi edge trả response về cho người dùng, ví dụ để thêm security header.",
+   "Khi viewer gửi request, function viewer request chạy ngay sau khi edge nhận được request. Vì chạy cho mọi request nên nó phải rất nhẹ và nhanh.",
+   "Sau đó request đi vào edge location, nơi CloudFront tra cache xem object đã có sẵn hay chưa.",
+   "Nếu cache hit, edge trả response ngay và bỏ qua hai chặng phía origin. Nếu cache miss, request đi tới function origin request, chạy trước khi CloudFront gọi origin.",
+   "Từ origin request, CloudFront chuyển request tới origin, có thể là S3, API Gateway hoặc một custom origin.",
+   "Origin trả kết quả về, và function origin response chạy ngay sau khi CloudFront nhận response từ origin, cho phép chỉnh sửa trước khi lưu cache.",
+   "Response sau khi qua origin response được đưa về edge, edge lưu vào cache nếu vừa fetch từ origin.",
+   "Cuối cùng response đi qua function viewer response rồi mới tới viewer, khép lại đủ bốn chặng của luồng.",
+   "Khi đi thi, nhớ phía viewer chỉ có 128 MB và timeout 5 giây, phía origin có memory như Lambda thường và 30 giây. A/B testing dùng viewer request, còn migrate S3 origin, nội dung theo thiết bị hoặc quốc gia dùng origin request. Chỉ Node.js và Python, không vào VPC, không layers."
+  ]
+ }
+}

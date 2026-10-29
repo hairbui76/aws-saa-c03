@@ -1,0 +1,13 @@
+{
+ "CloudWatch Logs": {
+  "sig": "6-1mhgfo2",
+  "steps": [
+   "Sơ đồ này nói về CloudWatch Logs, một dịch vụ public và regional để lưu trữ và giám sát log. Cấu trúc đi từ log event, tới log stream, rồi log group, và cuối cùng là metric filter.",
+   "Log đi vào bằng ba cách: các AWS service tích hợp sẵn như Lambda, VPC Flow Logs, CloudTrail; CloudWatch Agent cho log bên trong EC2 hoặc server on-prem; và AWS SDK ghi trực tiếp từ code. Mỗi instance có một log stream riêng, gồm các event có timestamp và message.",
+   "Trên log group, ta định nghĩa metric filter. Nó liên tục quét log event của mọi stream trong group để tìm một pattern, ví dụ các lần đăng nhập SSH thất bại.",
+   "Mỗi lần pattern khớp, metric filter tăng một đơn vị cho một CloudWatch metric. Như vậy nội dung log đã được biến thành con số có thể theo dõi.",
+   "Từ metric đó, ta đặt alarm. Khi vượt ngưỡng, alarm gửi thông báo qua SNS cho admin hoặc kích hoạt một hành động trong AWS hay hệ thống bên ngoài.",
+   "Khi đi thi, nhớ nhé: muốn lấy log bên trong EC2 hoặc server on-prem thì phải cài CloudWatch Agent, và retention cùng permissions đặt ở log group. Đừng nhầm với CloudTrail, vốn ghi API call và có thể đổ log vào CloudWatch Logs."
+  ]
+ }
+}

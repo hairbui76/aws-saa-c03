@@ -1,0 +1,24 @@
+{
+ "CloudFront OAI and OAC": {
+  "sig": "6-gcjcg7",
+  "steps": [
+   "Sơ đồ này nói về cách khóa S3 origin để chỉ CloudFront đọc được. Nếu không khóa, người dùng đi thẳng tới bucket và mọi signed URL, geo restriction hay WAF trên CloudFront đều vô nghĩa.",
+   "Viewer gửi request GET tới CloudFront distribution đã bật OAC. Nếu bucket policy khớp, viewer sẽ nhận về 200 OK qua chính CloudFront.",
+   "Khi lấy dữ liệu từ origin, CloudFront ký mọi request bằng SigV4 rồi gửi tới REST endpoint của S3 bucket. Chữ ký này giúp S3 biết request thật sự đến từ CloudFront.",
+   "Bucket policy kiểu OAC chỉ cho service principal cloudfront.amazonaws.com gọi s3:GetObject, kèm điều kiện SourceArn bằng ARN của đúng distribution. Ai truy cập thẳng bucket sẽ không khớp, bị implicit deny và nhận 403 Forbidden.",
+   "So sánh nhanh: OAI là cách cũ, một identity ảo gắn vào distribution và không hỗ trợ SSE-KMS. OAC được khuyến nghị, hỗ trợ SSE-KMS, PUT, DELETE và mọi region. Nhớ là cả hai chỉ dùng cho S3 origin, còn website endpoint, EC2, ALB là custom origin.",
+   "Mẹo khi đi thi và khi làm thật: CloudFront không tự sửa bucket policy, bạn phải tự copy policy và dán vào bucket. Đề hỏi chỉ truy cập S3 qua CloudFront, hoặc có SSE-KMS, thì chọn OAC."
+  ]
+ },
+ "CloudFront OAI and OAC - custom origin": {
+  "sig": "6-1p3yiat",
+  "steps": [
+   "Sơ đồ này nói về bảo vệ custom origin, nơi không dùng được OAC hay OAI. Ta có hai lớp: custom header bí mật qua HTTPS toàn tuyến, và firewall chỉ cho IP range của CloudFront, dùng một hoặc kết hợp cả hai.",
+   "Đầu tiên, viewer kết nối tới CloudFront edge bằng HTTPS, được ép bởi viewer protocol policy, để không ai nghe lén trên đoạn này.",
+   "Từ edge đi tới origin cũng dùng HTTPS, và CloudFront chèn thêm một custom header bí mật, ví dụ X-Origin-Verify. Request đi qua firewall hoặc Security Group chỉ mở cho IP range mà AWS công bố của CloudFront.",
+   "Nếu ai đó cố truy cập thẳng origin, IP của họ không thuộc CloudFront nên bị firewall chặn, và vì không biết header bí mật nên cũng bị origin từ chối.",
+   "Request hợp lệ tới custom origin như ALB, EC2 hoặc web server. Origin chỉ phục vụ những request mang đúng header bí mật đó.",
+   "Lời nhắc khi đi thi: vì HTTPS toàn tuyến nên không ai thấy header để giả mạo. Gặp S3 website endpoint, EC2, ALB hay on-prem thì nghĩ ngay tới custom header và giới hạn IP range CloudFront. Hiện nay còn có managed prefix list và VPC origins."
+  ]
+ }
+}

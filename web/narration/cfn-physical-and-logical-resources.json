@@ -1,0 +1,27 @@
+{
+ "CFN Physical and Logical Resources": {
+  "sig": "7-kift5x",
+  "steps": [
+   "Sơ đồ này cho thấy mối quan hệ giữa template, stack và account. Template chỉ mô tả cái gì cần có, còn CloudFormation lo việc tạo physical resource thật và giữ chúng luôn đồng bộ.",
+   "Từ cùng một template YAML hoặc JSON, ta tạo hai stack là app-dev và app-prod. Mỗi stack chứa các logical resource giống nhau, ở đây là Bucket và Instance.",
+   "Với mỗi logical resource Instance, CloudFormation tạo một EC2 instance thật trong account. Logical Bucket của stack prod thì thành một S3 bucket thật, mỗi cái có physical ID riêng.",
+   "Tương tự, logical Bucket của stack dev cũng được CloudFormation tạo thành một S3 bucket riêng. Vậy mỗi stack sở hữu bộ physical resource của chính nó.",
+   "Đây là vòng đời stack. Khi create, mỗi logical tạo ra một physical. Khi sửa template rồi update, logical được thêm, sửa hoặc bỏ, và physical thay đổi theo đúng như vậy.",
+   "Khi delete stack, logical resource bị xóa và thường thì physical resource cũng bị xóa theo, giúp account sạch sẽ. Ngoại lệ là DeletionPolicy Retain hoặc Snapshot để giữ dữ liệu.",
+   "Lời nhắc khi đi thi: template khác stack, một template tạo được nhiều stack ở nhiều region. Mỗi logical ứng với đúng một physical, và chỉ Ref hoặc GetAtt được tới resource đã CREATE_COMPLETE."
+  ]
+ },
+ "CFN Physical and Logical Resources - nonportable": {
+  "sig": "8-1pvt5v7",
+  "steps": [
+   "Sơ đồ này minh họa template non-portable: vì tên bucket và AMI ID bị viết cứng, chạy lại lần hai hoặc đổi region sẽ fail. Thậm chí lần đầu cũng fail nếu tên bucket đã có người dùng.",
+   "Template nonportable.yaml đặt cứng tên bucket và AMI ID của Amazon Linux 2 ở us-east-1. Ta dùng nó tạo stack nonportable1 tại us-east-1.",
+   "Sau khi đổi tên bucket cho duy nhất toàn cầu, stack nonportable1 tạo thành công. Bucket thường xong trước, Instance xong sau, rồi stack chuyển sang CREATE_COMPLETE.",
+   "Giờ ta tạo thêm stack nonportable2, vẫn ở us-east-1 và dùng đúng template đó.",
+   "Stack này fail vì bucket đã tồn tại ở stack khác. Tên đặt cứng nên template chỉ dùng được đúng một lần.",
+   "Tiếp theo thử tạo stack mới ở us-west-2. Lưu ý: tên đặt cứng giới hạn số lần áp template, còn giá trị theo region như AMI ID hay key pair thì giới hạn region.",
+   "Stack fail với lỗi image ID does not exist, vì AMI là tài nguyên theo region. AMI của us-east-1 không có ở us-west-2, nên template bị khóa vào một region.",
+   "Khi đi thi, gặp template chỉ chạy một lần hoặc một region thì nghĩ ngay tới giá trị đặt cứng. Bỏ BucketName để CloudFormation tự đặt tên, lấy ImageId từ parameter, SSM public parameter hoặc Mappings, và debug bằng dòng CREATE_FAILED đầu tiên trong tab Events."
+  ]
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "VPC Subnets": {
+  "sig": "9-rnwfm",
+  "steps": [
+   "Sơ đồ này nói về subnet trong VPC 10.16.0.0 trên 16. Subnet là nơi service thực sự chạy, nằm trọn trong một AZ, nên AZ sập thì subnet cũng sập. Subnet mới tạo luôn là private.",
+   "Giờ mình phóng to subnet sn-db-A, 10.16.16.0 trên 20, có 4,096 IP. Địa chỉ đầu tiên 10.16.16.0 là network address, mạng IP nào cũng giữ địa chỉ này.",
+   "Địa chỉ network cộng 1, tức 10.16.16.1, dành cho VPC Router. Router có một interface trong mọi subnet, nên các tài nguyên như RDS hay EC2 đều đi qua nó.",
+   "Network cộng 2, tức 10.16.16.2, được AWS giữ cho DNS. Chính xác thì DNS nằm ở VPC base cộng 2, nhưng subnet nào AWS cũng giữ địa chỉ này.",
+   "Network cộng 3, tức 10.16.16.3, được AWS giữ làm dự phòng cho tương lai. Bạn không dùng được địa chỉ này.",
+   "Phần còn lại từ 10.16.16.4 đến 10.16.31.254 là dải dùng được, tổng cộng 4,091 IP, tức là tổng số IP trừ đi 5.",
+   "Địa chỉ cuối 10.16.31.255 là broadcast. VPC không hỗ trợ broadcast nhưng vẫn giữ lại, đó là IP bị giữ thứ năm.",
+   "Lời nhắc khi đi thi: một subnet chỉ thuộc đúng một AZ, nên đặt mỗi tier ở nhiều AZ để có HA. CIDR subnet phải nằm trong CIDR VPC, không overlap, từ trên 28 đến trên 16. Subnet trên 28 chỉ dùng được 11 IP, và muốn public cần IGW, route mặc định cùng public IP.",
+   "Cuối cùng, mặc định nhờ route local, các subnet trong cùng VPC định tuyến thẳng tới nhau, nên EC2 app ở hai AZ nói chuyện tự do. Muốn chặn giữa các subnet thì dùng NACL hoặc Security Group."
+  ]
+ }
+}

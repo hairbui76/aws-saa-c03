@@ -1,0 +1,28 @@
+{
+ "Compare - EBS vs Instance Store": {
+  "sig": "10-axf2tw",
+  "steps": [
+   "Sơ đồ này đặt EBS và Instance Store cạnh nhau. Nguyên tắc chung: mặc định chọn EBS, chỉ chọn Instance Store khi cần trên 260,000 IOPS, ứng dụng tự replicate, hoặc muốn tận dụng storage đã nằm sẵn trong giá instance.",
+   "Về vị trí, EBS là ổ gắn qua storage network, nằm cùng AZ với instance. Còn Instance Store gắn vật lý ngay trên EC2 host, nên rất nhanh nhưng phụ thuộc vào host đó.",
+   "EBS là persistent, dữ liệu tồn tại cho tới khi bạn xóa volume. Instance Store thì ephemeral, tức là lưu trữ tạm thời, không nên đặt dữ liệu quan trọng duy nhất ở đây.",
+   "Khi stop rồi start, resize instance hoặc host gặp lỗi, EBS vẫn giữ nguyên dữ liệu. Instance Store thì mất sạch, vì instance có thể được chuyển sang một host khác.",
+   "Riêng khi reboot, cả hai đều giữ dữ liệu. Với Instance Store là vì instance vẫn nằm trên cùng host, nên ổ vật lý vẫn còn đó.",
+   "EBS có vòng đời độc lập: thêm được sau khi launch, detach khỏi instance này rồi attach sang instance khác. Instance Store chỉ thêm được lúc launch và gắn chặt với host.",
+   "Về resilience, EBS được replicate trong AZ và có thể snapshot lên S3 ở mức regional. Instance Store không có snapshot, hỏng phần cứng là mất dữ liệu.",
+   "Hiệu năng EBS có các mốc 16K, 64K, 256K IOPS mỗi volume và khoảng 260K mỗi instance. Instance Store vượt xa, đạt hàng triệu IOPS và tới 16 GB mỗi giây với dòng I3.",
+   "EBS tính tiền theo GB mỗi tháng, cộng thêm IOPS hoặc throughput tùy loại, còn Instance Store đã gồm trong giá instance. Đi thi, thấy persistent, durable, survive stop thì chọn EBS; thấy cache, buffer, scratch, millions of IOPS thì chọn Instance Store.",
+   "Tóm lại bảy tiêu chí cần nhớ: vị trí, persistent, reboot, gắn tháo, resilience, hiệu năng tối đa và chi phí. Khi làm bài, hãy rà nhanh đề bài theo từng tiêu chí này để loại đáp án."
+  ]
+ },
+ "Compare - EBS vs Instance Store - ladder": {
+  "sig": "6-kxc90p",
+  "steps": [
+   "Đây là thang số liệu cần thuộc lòng: 16K, 64K, 256K, 260K rồi hàng triệu IOPS. Vượt mốc nào thì đổi công nghệ, và vượt trần per-instance khoảng 260K thì chỉ còn Instance Store.",
+   "Bậc đầu tiên: gp2 và gp3 đạt tới 16,000 IOPS mỗi volume, cần hơn thì lên io1 hoặc io2 với tối đa 64,000. Về throughput, gp2 và sc1 khoảng 250 MB mỗi giây, st1 lên 500.",
+   "Cần hơn 64,000 IOPS mỗi volume thì dùng io2 Block Express, tới 256,000. Về throughput, gp3, io1 và io2 đạt khoảng 1,000 MB mỗi giây.",
+   "Gộp nhiều EBS volume thành RAID 0 trong OS giúp cộng dồn hiệu năng, nhưng bị chặn ở khoảng 260,000 IOPS mỗi instance. io2 Block Express đạt throughput khoảng 4,000 MB mỗi giây.",
+   "Vượt trần 260,000 IOPS và chấp nhận dữ liệu không persistent thì chỉ còn Instance Store, với hàng triệu IOPS và tới 16 GB mỗi giây trên I3.",
+   "Mẹo thi: đề nói rẻ mà cần EBS thì chọn st1 hoặc sc1, throughput hay streaming thì st1, nhưng boot volume thì loại cả hai. Và nhớ RAID 0 không có redundancy, một volume hỏng là mất cả set."
+  ]
+ }
+}

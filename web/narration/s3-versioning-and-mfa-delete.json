@@ -1,0 +1,17 @@
+{
+ "S3 Versioning and MFA Delete": {
+  "sig": "10-19afod",
+  "steps": [
+   "Sơ đồ này nói về S3 Versioning và MFA Delete. Versioning bật ở mức bucket, giúp giữ lại mọi phiên bản thay vì ghi đè hay xóa hẳn object.",
+   "Mọi bucket khởi đầu ở trạng thái Disabled. Khi bật versioning, bucket chuyển sang Enabled và từ đó mỗi lần upload sẽ tạo một version ID mới.",
+   "Từ Enabled, bạn chỉ có thể suspend rồi bật lại, không bao giờ quay về Disabled. Suspend chỉ dừng tạo version mới, còn version cũ vẫn nằm đó và vẫn bị tính tiền.",
+   "Xóa winkie.jpg mà không chỉ định version ID thì S3 không xóa gì cả, chỉ thêm một delete marker. Còn xóa kèm version ID thì version đó mất vĩnh viễn, và v111111 trở thành current.",
+   "Muốn khôi phục object, bạn chỉ cần xóa chính delete marker đó. Object hiện lại và current version cũ hoạt động trở lại, đây gọi là undelete.",
+   "Để ý chữ current: ban đầu v222222 là current, nhưng sau khi xóa không version ID thì delete marker nằm trên cùng và trở thành current, che mọi version bên dưới.",
+   "Bên dưới vẫn còn đủ cả v111111 và v222222. Nghĩa là thao tác xóa trên object không làm mất dữ liệu nào.",
+   "Khi GET mà không kèm version ID, S3 luôn trả về current version. Muốn lấy bản cũ như v111111, bạn phải truyền version ID cụ thể.",
+   "Lưu ý chi phí: mọi version đều bị tính tiền, ví dụ object 5 GB có 5 version là 25 GB. Hãy dùng lifecycle để expire noncurrent versions. Bucket chưa từng bật versioning thì version ID là null.",
+   "Khi đi thi, nhớ MFA Delete là lớp bảo vệ thêm, bật trong versioning configuration, thực tế chỉ root làm được qua CLI hoặc API. Nó bắt buộc gửi serial thiết bị MFA và mã hiện tại khi đổi trạng thái versioning hoặc xóa vĩnh viễn một version."
+  ]
+ }
+}

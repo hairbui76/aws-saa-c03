@@ -1,0 +1,13 @@
+{
+ "Service-linked Roles and PassRole": {
+  "sig": "6-mzkmdo",
+  "steps": [
+   "Sơ đồ này có hai phần. Bên trái là PassRole, giúp tách người quản lý role và người dùng role. Bên phải là service-linked role, loại role do chính AWS service định nghĩa quyền.",
+   "Bob tạo stack trên CloudFormation và pass một role có sẵn vào. Policy của Bob chỉ có iam:PassRole và iam:ListRoles trên đúng ARN role đó. Bên phải, service X dùng service-linked role với quyền do service định nghĩa sẵn.",
+   "Role mà Bob pass vào do security team tạo và quản lý. Role này có quyền lớn, ví dụ tạo VPC hay EC2, nhưng Bob không được tạo hay sửa nó.",
+   "CloudFormation không dùng quyền của Bob mà dùng quyền của role được pass vào. Tương tự, service-linked role cho phép service gọi các service khác thay bạn.",
+   "Nhờ quyền của role, CloudFormation tạo được các tài nguyên như VPC và EC2, dù Bob không tự tạo trực tiếp được. Đây là cách nâng quyền có kiểm soát.",
+   "Khi đi thi, nhớ rằng service-linked role không xóa được khi service còn dùng nó. Role này được tạo khi service tự tạo, lúc setup, hoặc qua IAM bằng iam:CreateServiceLinkedRole. Nếu đề nói gán role có sẵn mà không được sửa role, hãy chọn iam:PassRole."
+  ]
+ }
+}

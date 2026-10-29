@@ -1,0 +1,15 @@
+{
+ "Snow Family": {
+  "sig": "8-wdcxmq",
+  "steps": [
+   "Sơ đồ này nói về Snow Family, nhóm thiết bị vật lý để chở dữ liệu khi đường mạng quá chậm hoặc quá đắt. Ta sẽ xem vòng đời một job import, rồi cách chọn đúng thiết bị.",
+   "Đầu tiên bạn tạo job trên console, sau đó AWS giao thiết bị tới tận site của bạn. Đây là quy trình vật lý nên không tức thời, và dữ liệu trên thiết bị luôn được mã hóa bằng KMS.",
+   "Khi thiết bị tới nơi, bạn cắm vào mạng nội bộ và nạp dữ liệu. Lưu ý nơi nhận cần có hạ tầng mạng vật lý phù hợp với tốc độ của thiết bị.",
+   "Nạp xong thì gửi trả thiết bị về AWS, và dữ liệu được đưa vào S3. Với khối lượng lớn, chở ổ cứng như vậy thường nhanh và rẻ hơn truyền qua mạng.",
+   "Giờ đến phần chọn lựa. Câu hỏi đầu tiên: mạng có đủ băng thông không? Nếu đủ, cứ chuyển online qua Internet, Direct Connect hoặc DataSync. Nếu không, ta xét tiếp khối lượng và số site.",
+   "Nếu dữ liệu từ 10 PB trở lên và chỉ ở một site duy nhất, chọn Snowmobile, một container trên xe tải chứa tối đa 100 PB. Một xe chỉ tới một nơi, nên nhiều site thì không hợp.",
+   "Nếu cần xử lý dữ liệu tại site, chạy EC2, GPU, hoặc cần nạp nhanh hơn, chọn Snowball Edge với mạng tới 100 Gbps. Nếu chỉ cần lưu trữ, Snowball là đủ. Cả hai hợp với dải 10 TB đến 10 PB, đặt nhiều thiết bị cho nhiều site.",
+   "Khi đi thi, nhớ export chạy ngược lại: thiết bị mang dữ liệu từ AWS tới, bạn chép ra rồi trả lại. Bẫy hay gặp: 10 PB nhưng rải nhiều site thì dùng nhiều Snowball Edge, không phải Snowmobile. Còn cần hybrid lâu dài thì chọn Storage Gateway."
+  ]
+ }
+}

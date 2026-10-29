@@ -1,0 +1,23 @@
+{
+ "AWS Organizations": {
+  "sig": "6-xytrtt",
+  "steps": [
+   "Sơ đồ này cho thấy AWS Organizations gom nhiều account vào một cây phân cấp, đồng thời gộp chi phí về một nơi nhờ consolidated billing.",
+   "Đỉnh cây là organization root, chỉ là một container. Bên dưới có management account, còn gọi là master hoặc payer account, cùng các OU như Prod và Dev để nhóm account.",
+   "Mỗi OU chứa member account, và OU còn có thể chứa OU khác để lồng nhiều cấp. Management account nhận một hóa đơn hàng tháng với một payment method duy nhất.",
+   "Trong OU lồng nhau ta có thêm member khác. Chi phí của mọi member account đều được chuyển lên payer account, nên phòng tài chính chỉ xử lý một hóa đơn.",
+   "Khi vào organization, payment method của member bị gỡ bỏ. Bù lại, mức giảm giá theo volume cùng Reserved Instances và Savings Plans được gộp chung cho cả tổ chức.",
+   "Lúc đi thi nhớ nhé: organization root là container, không phải account root user. OU nhóm account và lồng được, còn IAM group nhóm user và không lồng. Mỗi organization chỉ có đúng một management account."
+  ]
+ },
+ "AWS Organizations - role-switch": {
+  "sig": "5-wnzksj",
+  "steps": [
+   "Sơ đồ này nói về cách đăng nhập nhiều account: thay vì tạo IAM user ở mọi nơi, ta đăng nhập ở một account identity rồi role switch sang các member account.",
+   "Identity có thể là IAM user trong account login, hoặc identity on-premises như Active Directory thông qua Identity Federation. Tất cả đều đăng nhập tại một chỗ duy nhất.",
+   "Từ đó, identity role switch vào OrganizationAccountAccessRole của từng member. Thực chất đây là gọi AssumeRole trong account đích, console chỉ che bớt chi tiết kỹ thuật.",
+   "Có hai cách đưa account vào organization. Invite thì gửi lời mời qua email hoặc account ID và account kia phải accept. Create thì chỉ cần tên và email duy nhất, không cần accept.",
+   "Lời nhắc khi thi: role này trust management account với AdministratorAccess; account được invite phải tự tạo, account được create thì có sẵn. Role switch dùng credentials tạm thời, không dùng được với root user, và nên giữ management account sạch."
+  ]
+ }
+}

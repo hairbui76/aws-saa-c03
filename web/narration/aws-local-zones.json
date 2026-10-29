@@ -1,0 +1,12 @@
+{
+ "AWS Local Zones": {
+  "sig": "5-19eqf65",
+  "steps": [
+   "Sơ đồ này nói về Local Zone, hiểu đơn giản là một AZ đặt gần bạn, gắn với parent region us-west-2 ở Oregon. VPC của region được mở rộng bằng subnet trong Local Zone để chạy EC2 ngay tại thành phố.",
+   "Ba subnet đầu nằm trong các AZ bình thường của region. Subnet thứ tư nằm ở Local Zone Las Vegas, chạy EC2 như thường nhưng đặt sát người dùng, và vẫn nối private với phần còn lại của VPC.",
+   "Tương tự ở Los Angeles, văn phòng kết nối tới Local Zone qua Direct Connect hoặc Internet. Vì khoảng cách vật lý rất ngắn nên độ trễ đạt mức thấp nhất có thể, phù hợp ứng dụng như giao dịch tài chính.",
+   "Một số chức năng vẫn dựa vào parent region. Ví dụ EBS snapshot của volume trong Local Zone được lưu vào S3 ở region cha, nên vẫn hưởng replication qua nhiều AZ như bình thường.",
+   "Khi đi thi, nhớ rằng Local Zone chỉ là một zone, không có resilience sẵn, dịch vụ hạn chế và nhiều thứ phải opt-in. Thấy đề hỏi lowest possible latency cho một thành phố thì chọn Local Zone, và nhìn tên là biết parent region."
+  ]
+ }
+}

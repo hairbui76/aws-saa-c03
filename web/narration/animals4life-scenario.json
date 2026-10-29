@@ -1,0 +1,21 @@
+{
+ "Animals4life Scenario": {
+  "sig": "5-103mgid",
+  "steps": [
+   "Đây là hạ tầng hiện tại của Animals4life, tổ chức cứu hộ động vật giả định của khóa học. Mọi thứ xoay quanh HQ Brisbane, cộng thêm vài pilot cloud cũ trên AWS và Azure.",
+   "Văn phòng London, New York, Seattle và khoảng 100 field worker dùng 3G, 4G hoặc vệ tinh đều phải truy cập về Brisbane, nên rất chậm. Ngoài ra, VPC mới không được overlap với ba dải 192.168.10.0 trên 24, 10.0.0.0 trên 16 và 172.31.0.0 trên 16, nếu không sẽ chặn VPN, Direct Connect và VPC peering.",
+   "Data center ở Brisbane thuê 5 rack, phần cứng đang hỏng dần và sẽ đóng cửa trong 18 tháng. Đây là áp lực buộc doanh nghiệp phải chọn hướng đi mới.",
+   "Mạng LAN on-prem dùng dải 192.168.10.0 trên 24, một dải class C. Hãy nhớ dải này vì nó sẽ là ràng buộc khi chọn CIDR cho VPC.",
+   "Người dùng ở nhiều múi giờ nên hệ thống phải chạy 24 giờ mỗi ngày, 7 ngày mỗi tuần. Sự cố hay bảo trì đều ảnh hưởng trực tiếp đến công việc bảo vệ động vật."
+  ]
+ },
+ "Animals4life Scenario - needs": {
+  "sig": "4-mrdqe6",
+  "steps": [
+   "Sơ đồ này đi từ vấn đề của A4L, tới kết quả mong muốn, rồi tới nhóm dịch vụ AWS sẽ học. Lưu ý ánh xạ này chỉ là gợi ý của note để định hướng.",
+   "Mỗi vấn đề có một mục tiêu tương ứng: data center sắp đóng thì cần lên cloud với dải IP không trùng, người dùng ở xa cần hiệu năng nhanh, hệ thống vừa khít cần co giãn, và đội IT nhỏ cần automation để dựng ứng dụng trong 48 giờ.",
+   "Từ đó ra dịch vụ: VPC Sizing, Site-to-Site VPN và Direct Connect cho mạng; CloudFront và multi-region cho hiệu năng; Auto Scaling Groups và ELB cho HA; Serverless và Lambda cho chi phí nền gần bằng 0; CloudFormation và Organizations cho automation.",
+   "Khi đi thi, hãy đọc kịch bản theo ba cột này: vấn đề, kết quả mong muốn, giải pháp. Để ý từ khóa như cost-conscious thì chọn rẻ, deploy within 48 hours thì loại Direct Connect, và small IT team thì ưu tiên managed service."
+  ]
+ }
+}

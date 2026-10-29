@@ -1,0 +1,15 @@
+{
+ "DynamoDB TTL": {
+  "sig": "8-1dd8f02",
+  "steps": [
+   "Sơ đồ này nói về DynamoDB TTL, tức Time To Live. Ta bật TTL trên table, chọn một attribute chứa epoch time tính bằng giây, và những item không có attribute hợp lệ sẽ không bị ảnh hưởng.",
+   "Ví dụ item này có attribute expiresAt là một con số epoch tính bằng giây. Process 1 định kỳ quét item và so sánh giá trị TTL đó với thời gian hiện tại.",
+   "Nếu TTL nhỏ hơn thời gian hiện tại, item được đánh dấu expired nhưng chưa bị xóa, vẫn query được. Nếu chưa hết hạn thì giữ nguyên, lần quét sau kiểm tra lại. Các process này chạy nền trên từng partition.",
+   "Tiếp theo, Process 2 chạy độc lập, tìm các item đã expired và xóa chúng khỏi table lẫn mọi index của table.",
+   "Nếu table có bật stream, mỗi lần xóa do TTL sẽ sinh ra một bản ghi delete trong DynamoDB Stream, nằm chung với các insert và update bình thường.",
+   "Một hàm Lambda đọc stream và lọc riêng những record bị xóa do TTL, vì chúng mang userIdentity là service dynamodb.amazonaws.com.",
+   "Lambda sau đó ghi item hết hạn sang S3 để lưu trữ, phục vụ audit hoặc khôi phục lại khi cần undelete.",
+   "Khi đi thi, nhớ rằng xóa do TTL miễn phí, không tốn WCU, không ảnh hưởng hiệu năng, nhưng không tức thì nên app nên tự lọc. Thấy tự động xóa item hay session hết hạn thì chọn TTL; muốn archive thì thêm Streams, Lambda và S3; còn object S3 hết hạn là S3 Lifecycle."
+  ]
+ }
+}

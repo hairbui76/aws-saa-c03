@@ -1,0 +1,13 @@
+{
+ "Security Groups": {
+  "sig": "6-13q9k87",
+  "steps": [
+   "Sơ đồ này nói về Security Group, một firewall stateful gắn vào ENI và chỉ có rule allow. Điểm mạnh là rule có thể tham chiếu SG khác hoặc chính nó, nên tự áp dụng khi instance được thêm hoặc bớt.",
+   "Bob từ Internet vào tầng web qua TCP 443 với source 0.0.0.0 trên 0. Trong tầng app, rule self-reference cho phép mọi instance gắn SG A4L-app nói chuyện với nhau, kể cả instance mới do Auto Scaling thêm vào.",
+   "Tầng app chỉ nhận TCP 1337 với source là SG A4L-web. Nghĩa là mọi resource đang gắn SG web đều được gọi vào, không cần hard-code IP hay CIDR, và scale tự động.",
+   "Đây là web instance. Lưu ý SG thực chất gắn vào network interface chính của nó, tức primary ENI, chứ không phải gắn vào instance.",
+   "Thêm một web instance nữa. Chỉ cần gắn SG A4L-web là nó được phép gọi tầng app ngay, không phải sửa rule nào cả.",
+   "Khi đi thi nhớ nhé: SG stateful nên không cần mở ephemeral port 1024 đến 65535. SG gắn vào ENI, không phải subnet, chỉ có allow cộng implicit deny. Muốn chặn một IP xấu cụ thể thì phải dùng NACL."
+  ]
+ }
+}

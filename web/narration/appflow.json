@@ -1,0 +1,17 @@
+{
+ "AppFlow": {
+  "sig": "10-1gjovno",
+  "steps": [
+   "Sơ đồ này nói về Amazon AppFlow, dịch vụ tích hợp dữ liệu fully managed giúp đồng bộ dữ liệu giữa ứng dụng SaaS và AWS, ví dụ lấy dữ liệu từ Slack đổ vào Redshift mà không cần viết code.",
+   "Đầu tiên ta có hai connection, lưu cấu hình và credential cho Slack và Redshift. Connection được định nghĩa tách khỏi flow, nên có thể tái sử dụng cho nhiều flow khác nhau.",
+   "Trong flow, ta khai báo field mapping, tức là lấy trường nào từ Slack và ghi vào cột nào trong Redshift. Destination connector sau đó đẩy dữ liệu vào phía AWS.",
+   "Sau mapping, bạn có thể tùy chọn thêm bước transformation để biến đổi dữ liệu trước khi ghi sang đích.",
+   "Tiếp theo là filter và validation, cũng tùy chọn. Filter giúp chỉ copy dữ liệu cần thiết, còn validation kiểm tra dữ liệu trên đường đi.",
+   "Dữ liệu đã được xử lý đi tới destination connector và được ghi vào Redshift. Vậy là một flow hoàn chỉnh từ nguồn đến đích.",
+   "AppFlow hỗ trợ nhiều nguồn và đích, ví dụ đồng bộ contact record từ Salesforce, hoặc lưu dữ liệu vào S3 để lưu trữ và phân tích.",
+   "Slack cũng là một nguồn SaaS phổ biến, chính là nguồn trong ví dụ của chúng ta.",
+   "Zendesk là ví dụ khác, sao chép support ticket vào S3. Nếu ứng dụng chưa có connector sẵn, bạn tự viết bằng Custom Connector SDK, còn Redshift là đích phân tích quen thuộc.",
+   "Khi đi thi, nhớ nhé: đề nói đồng bộ dữ liệu từ SaaS như Salesforce, Zendesk, Slack vào S3 hoặc Redshift, ít viết code thì chọn AppFlow. Database thì DMS, file on-prem thì DataSync, ETL data lake thì Glue. Cần đường riêng thì dùng PrivateLink, dữ liệu được mã hóa bằng KMS."
+  ]
+ }
+}

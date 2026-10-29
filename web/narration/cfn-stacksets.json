@@ -1,0 +1,15 @@
+{
+ "CFN StackSets": {
+  "sig": "8-1nitx21",
+  "steps": [
+   "Sơ đồ này nói về CloudFormation StackSets: dùng một template duy nhất để triển khai hạ tầng ra nhiều account và nhiều region cùng lúc, ở đây là hai target account, mỗi account có us-east-1 và eu-west-1.",
+   "Mọi thứ bắt đầu ở admin account. Ta lấy một template CloudFormation bình thường, chỉ tạo một S3 bucket, rồi đưa vào StackSet, vốn chỉ là một container quản lý việc triển khai.",
+   "StackSet đi kèm các tham số như concurrent accounts, failure tolerance và retain stacks. Sau đó CloudFormation assume execution role trong từng target account để có quyền tạo tài nguyên ở đó.",
+   "Nhờ role đó, CloudFormation tạo một stack instance cho mỗi cặp account và region đã chọn. Stack instance là tham chiếu tới stack, và vẫn còn lại để ghi lý do lỗi nếu stack tạo thất bại.",
+   "Từ mỗi stack instance, một stack CloudFormation hoàn toàn bình thường được tạo ra, chạy trong đúng một region của một account.",
+   "Cuối cùng mỗi stack tạo resource trong template, tức là bốn S3 bucket, mỗi bucket nằm ở một region của một account.",
+   "Về permission có hai mô hình: self-managed là bạn tự tạo IAM role, còn service-managed dùng AWS Organizations, chọn đích theo OU và role được tạo tự động. Hai account nhân hai region ra bốn stack chỉ với một thao tác.",
+   "Khi đi thi nhớ nhé: xóa stack instance mặc định sẽ xóa luôn stack và resource ở target, muốn giữ thì bật retain stacks. Còn đề hỏi account mới vào OU phải tự có cấu hình, hãy chọn service-managed kèm automatic deployment."
+  ]
+ }
+}

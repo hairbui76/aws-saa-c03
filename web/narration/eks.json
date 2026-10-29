@@ -1,0 +1,24 @@
+{
+ "EKS": {
+  "sig": "6-1w6802n",
+  "steps": [
+   "Sơ đồ này cho thấy kiến trúc EKS: control plane nằm trong VPC do AWS quản lý, còn worker node nằm trong VPC của bạn, trải trên hai AZ.",
+   "EKS control plane gồm kube-apiserver, scheduler và controllers, do AWS vận hành trên nhiều AZ và tự scale theo tải. Admin dùng kubectl qua public endpoint, còn người dùng app đi vào qua load balancer làm ingress.",
+   "AWS inject các ENI của control plane vào VPC của bạn, mỗi AZ một cái. Load balancer thì phân phối traffic của người dùng tới các worker node EC2 đang chạy kubelet và pods.",
+   "Giờ kubelet trên từng worker node nói chuyện với control plane qua các ENI được inject này. Đây chính là đường kube-api traffic giữa hai VPC.",
+   "Phía sau control plane là etcd, cũng do AWS quản lý và phân tán qua nhiều AZ, nên bạn không phải lo backup hay vận hành nó.",
+   "Nhớ khi đi thi: đề nhắc Kubernetes, đã chạy Kubernetes on-prem hoặc muốn tránh vendor lock-in thì chọn EKS. Chỉ cần chạy container trên AWS mà không nhắc Kubernetes thì chọn ECS."
+  ]
+ },
+ "EKS - nodes": {
+  "sig": "6-cgzn2",
+  "steps": [
+   "Sơ đồ này nói về ba kiểu worker node, các nơi có thể chạy EKS và lựa chọn persistent storage. Càng sang phải AWS càng gánh nhiều việc, nhưng hãy chọn theo yêu cầu.",
+   "EKS có thể chạy trên AWS, trên Outposts, ở bất kỳ đâu với EKS Anywhere, hoặc dùng EKS Distro open source. Storage mặc định là ephemeral, nên persistent storage dùng EBS, EFS hoặc FSx.",
+   "Self-managed nodes là EC2 do bạn tự dựng, patch và scale, tính giá EC2 thường, hợp khi cần toàn quyền kiểm soát. Nhớ kiểm tra kiểu node có hỗ trợ GPU, Windows pods hay Outposts không.",
+   "Managed node groups vẫn là EC2, nhưng EKS lo provisioning và lifecycle, hợp khi muốn tự động hóa. Fargate thì không còn instance, không chọn instance type, không lo cluster packing.",
+   "Bạn chỉ cần định nghĩa Fargate profile để pod chạy trên Fargate, nên đây là lựa chọn ít overhead nhất. Nhưng lưu ý, Fargate không hỗ trợ GPU.",
+   "Mẹo thi: nhiều pod trên nhiều AZ cần chia sẻ chung file thì chọn EFS. Cần chạy EKS on-prem thì chọn EKS Anywhere, hoặc EKS on Outposts."
+  ]
+ }
+}

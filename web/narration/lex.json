@@ -1,0 +1,15 @@
+{
+ "Lex": {
+  "sig": "8-pgetlm",
+  "steps": [
+   "Sơ đồ này nói về Amazon Lex, dịch vụ backend để xây chatbot và voice bot. Lex kết hợp ASR và NLU, tự scale, trả tiền theo mức dùng, và dùng cùng công nghệ với Alexa.",
+   "Đầu tiên, người dùng nói hoặc gõ một câu, ví dụ muốn đặt pizza. Nếu là giọng nói, phần ASR sẽ chuyển giọng nói thành văn bản, việc nghe thì đơn giản nhưng làm tốt rất khó.",
+   "Văn bản được chuyển sang NLU để hiểu ý định, ở đây là intent OrderPizza. NLU còn hỗ trợ intent chaining, tức là hiểu câu sau như cỡ extra large đang bổ sung cho câu trước.",
+   "Khi đã đủ thông tin, Lex gọi Lambda để fulfillment, truyền vào intent cùng các slot. Lambda xử lý xong thì trả kết quả lại cho Lex.",
+   "Bên trong Lambda, bạn gọi tới backend hoặc database để thực sự đặt hàng. Đây là cặp đôi Lex với Lambda rất điển hình trong kiến trúc serverless.",
+   "Nếu còn thiếu slot, Lex tự hỏi lại người dùng, chẳng hạn size nào. Sau khi Lambda đặt hàng xong, Lex gửi lời xác nhận đơn về cho người dùng.",
+   "Tóm lại các khái niệm: Bot như PizzaBot nói được một hoặc nhiều ngôn ngữ, intent là hành động muốn làm, sample utterances là các cách nói khác nhau, slot là tham số như Size và Crust, còn fulfillment thường là Lambda.",
+   "Khi đi thi, nhớ rằng contact center hoặc IVR thông minh thì chọn Amazon Connect kết hợp Lex. Và đừng nhầm: Transcribe chỉ chuyển giọng nói thành văn bản, Polly chuyển văn bản thành giọng nói, còn Lex là hội thoại hai chiều."
+  ]
+ }
+}

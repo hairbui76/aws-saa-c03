@@ -1,0 +1,26 @@
+{
+ "Event-Driven Architecture": {
+  "sig": "7-j8tceq",
+  "steps": [
+   "Sơ đồ này kể lại hành trình tiến hóa kiến trúc, từ monolith tới event-driven. Đi từ trái sang phải, các thành phần lỏng dần, chuyển từ đồng bộ sang bất đồng bộ, và cuối cùng chỉ tốn tài nguyên khi có việc.",
+   "Đây là sáu kiểu kiến trúc theo thứ tự: monolithic, tiered, tiered có internal load balancer, queue-based, microservices và cuối cùng là event-driven.",
+   "Hàng này nói về mức coupling. Monolith thì hỏng cùng nhau, scale cùng nhau, tính tiền cùng nhau. Tiered và thêm load balancer vẫn coupled, chỉ khi có queue hoặc event router thì mới thực sự decoupled.",
+   "Về cách giao tiếp, ba kiểu đầu là đồng bộ, nên processing chết thì upload cũng lỗi. Từ queue trở đi là bất đồng bộ, và event-driven thì event được đẩy tới, không ai phải ngồi poll.",
+   "Về scale, monolith chỉ scale dọc cả khối, tiered scale dọc từng tier, thêm load balancer thì scale ngang và có HA. Queue-based scale worker theo độ dài queue, còn event-driven scale theo event.",
+   "Về chi phí, monolith luôn chạy đủ nên đắt nhất, mỗi tier sau load balancer luôn cần ít nhất một instance. Khi đi thi, thấy từ khóa decouple hoặc chịu backlog thì nghĩ tới SQS; internal load balancer không decouple; nhiều producer và consumer cần định tuyến thì chọn EventBridge.",
+   "Tóm lại, hãy nhớ ba trục so sánh: coupling, cách giao tiếp và cách scale. Đề thi thường xoay quanh đúng ba điểm này."
+  ]
+ },
+ "Event-Driven Architecture - flow": {
+  "sig": "7-369a79",
+  "steps": [
+   "Sơ đồ này có hai phần: worker fleet dựa trên queue của CatTube, và kiến trúc event-driven. Queue cắt đứt sự phụ thuộc đồng bộ, còn event router giúp không phải nối queue giữa mọi cặp.",
+   "Bob upload video 4K về mèo Whiskers lên upload tier. Đây là điểm khởi đầu của cả luồng xử lý.",
+   "Upload tier lưu video master vào S3, rồi gửi một message vào SQS chứa vị trí object và các kích thước cần render. Gửi xong là upload tier hết việc, không cần biết processing có chạy hay không.",
+   "Worker EC2 poll queue, lấy message ở đầu, tải video từ S3 về transcode, ghi kết quả lại S3, rồi xóa message khỏi queue.",
+   "Scaling policy theo độ dài queue điều khiển ASG: có message thì desired từ 0 lên 2, queue ngắn lại thì xuống 1, hết thì về 0. Bên phải, các producer như upload, hạ tầng EC2 hay monitoring đẩy event lên event bus.",
+   "Event router quyết định giao event cho consumer nào, như processing, store and manage hay retry upload. Consumer được giao event, xử lý xong thì dừng, nên chỉ tốn tài nguyên khi có event.",
+   "Mẹo thi: message chỉ chứa con trỏ bucket và key cùng metadata, dữ liệu lớn để ở S3 vì SQS tối đa 1 MiB. Cần fan-out tới nhiều subscriber thì dùng SNS kèm nhiều SQS, cần thứ tự nghiêm ngặt hoặc exactly-once thì chọn SQS FIFO."
+  ]
+ }
+}

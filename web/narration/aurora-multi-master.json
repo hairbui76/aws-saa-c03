@@ -1,0 +1,28 @@
+{
+ "Aurora Multi-Master": {
+  "sig": "9-1jv2soa",
+  "steps": [
+   "Sơ đồ này so sánh hai chế độ của Aurora khi writer bị hỏng: single-master mặc định phải promote replica nên có gián đoạn, còn multi-master cho ứng dụng chuyển ngay sang writer còn sống.",
+   "Bắt đầu với single-master. Ứng dụng kết nối qua cluster endpoint, endpoint này dùng cho cả đọc lẫn ghi và luôn trỏ tới primary.",
+   "Giờ primary, instance duy nhất được đọc ghi, bị hỏng. Ngay lúc này mọi truy cập qua cluster endpoint đều bị gián đoạn.",
+   "Primary vốn ghi dữ liệu vào shared cluster volume, phần storage dùng chung của cả cluster, nên dữ liệu không mất khi instance chết.",
+   "Cluster chọn một replica chỉ đọc, promote nó lên thành primary đọc ghi, rồi đổi cluster endpoint trỏ sang đó. Quá trình này cần thời gian.",
+   "Replica cũng dùng chung volume đó, nên failover nhanh hơn RDS thường vì không phải sao chép dữ liệu, nhưng vẫn có khoảng gián đoạn.",
+   "Với multi-master, không có cluster endpoint và không có cân tải. Ứng dụng tự giữ kết nối tới cả hai writer, khi writer A hỏng thì đẩy toàn bộ thao tác sang writer B ngay.",
+   "Cả hai writer đều đọc ghi trên cùng shared cluster volume, nên writer B tiếp quản dữ liệu ngay mà không cần promote gì cả.",
+   "Khi đi thi, nhớ nhé: đề nói Aurora, writer hỏng mà không được gián đoạn, nhiều writer thì chọn multi-master. Chỉ cần failover nhanh thì chọn single-master cộng replica, có thể thêm RDS Proxy. Multi-master chỉ trong một region, khác Global Database."
+  ]
+ },
+ "Aurora Multi-Master - write": {
+  "sig": "7-47mdzs",
+  "steps": [
+   "Sơ đồ này cho thấy một lệnh ghi trong multi-master đi qua quorum thế nào: writer chỉ đề xuất, storage node mới là bên quyết định.",
+   "Mỗi storage node nhận đề xuất và có thể chấp nhận hoặc từ chối, ví dụ từ chối khi một writer khác đang ghi cùng dữ liệu đó.",
+   "Nếu đủ quorum đồng ý, thay đổi được commit và sao chép tới mọi storage node, giống hệt cách single-master hoạt động.",
+   "Còn nếu quorum từ chối, thay đổi bị hủy và lỗi được trả về ứng dụng. Ứng dụng phải tự xử lý hoặc thử lại. Cụm storage gồm 6 node trải trên 3 AZ.",
+   "Giờ xem luồng thực tế. Ứng dụng gửi lệnh ghi thẳng tới writer 1, vì multi-master không có endpoint chung.",
+   "Writer 1 đề xuất commit tới các storage node, rồi chờ quorum trả lời đồng ý hay từ chối.",
+   "Khác biệt chính đây: sau khi commit, writer 1 replicate thay đổi sang writer 2 để cập nhật in-memory cache. Nhờ vậy đọc từ bất kỳ writer nào cũng nhất quán với storage."
+  ]
+ }
+}

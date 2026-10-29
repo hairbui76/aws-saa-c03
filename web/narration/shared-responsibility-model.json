@@ -1,0 +1,28 @@
+{
+ "Shared Responsibility Model": {
+  "sig": "10-g4hhao",
+  "steps": [
+   "Sơ đồ này nói về Shared Responsibility Model. AWS lo bảo mật OF the cloud, tức hạ tầng chạy dịch vụ, còn bạn lo bảo mật IN the cloud, tức những gì bạn đặt lên và cấu hình.",
+   "Đây là các câu hỏi thi kinh điển. Patch OS của EC2 là việc của khách hàng, patch RDS là của AWS, bảo mật vật lý và hypervisor thuộc AWS, còn Security Group, NACL, IAM, mã hóa và dữ liệu thuộc về bạn.",
+   "Bắt đầu phía khách hàng với dữ liệu. Bạn phải tự quản lý, bảo mật và backup dữ liệu của mình, AWS không làm thay phần này.",
+   "Tiếp theo là platform, ứng dụng và IAM. Bạn tự thiết kế, triển khai và kiểm soát ai được truy cập vào tài nguyên nào.",
+   "Lớp này gồm hệ điều hành, cấu hình mạng và firewall. Bạn phải patch OS, cấu hình firewall cục bộ, Security Group và NACL cho đúng.",
+   "Mã hóa cũng là trách nhiệm của bạn: mã hóa phía client, phía server, và bảo vệ traffic mạng bằng chứng chỉ SSL hoặc TLS, kể cả giữa các server với nhau.",
+   "Chuyển sang phía AWS. AWS lo phần mềm vận hành dịch vụ như hypervisor và hệ thống quản trị, bạn không kiểm soát và cũng không cần lo.",
+   "AWS cũng chịu trách nhiệm các dịch vụ nền tảng gồm Compute, Storage, Database và Networking.",
+   "Dưới cùng là phần cứng và hạ tầng toàn cầu: Regions, Availability Zones và Edge Locations, tất cả do AWS bảo mật.",
+   "Khi đi thi, nhớ nhé: RDS là managed service nên AWS patch, còn EC2 là IaaS nên bạn tự patch. Dịch vụ càng managed thì bạn càng ít việc, nhưng dữ liệu và IAM luôn là trách nhiệm của bạn."
+  ]
+ },
+ "Shared Responsibility Model - service models": {
+  "sig": "6-1w6ytcz",
+  "steps": [
+   "Sơ đồ này cho thấy ranh giới trách nhiệm dịch chuyển theo service model. Màu cam là khách hàng lo, màu xanh là AWS lo, và với EC2 ranh giới nằm ngay dưới OS.",
+   "Ta có năm cột từ trái sang phải: on-premises, DC hosted, IaaS như EC2, PaaS và SaaS. Càng sang phải, nhà cung cấp càng gánh nhiều hơn.",
+   "Với on-premises, mọi lớp đều do khách hàng tự quản lý.",
+   "Ở DC hosted và IaaS, khách hàng vẫn lo phần lớn stack, còn SaaS thì provider lo tất cả. Lưu ý với IaaS, bạn lo từ OS trở lên, AWS lo hypervisor, server, mạng vật lý và facilities.",
+   "Phần màu xanh là nhà cung cấp: với DC hosted họ lo facilities, với IaaS thì AWS lo hypervisor trở xuống, còn PaaS thì provider lo cả OS và runtime.",
+   "Cuối cùng là các lớp của stack, từ interface, application, data ở trên, xuống runtime, container, OS, hypervisor, server và facilities. Hãy dùng bảng này để tự hỏi ai lo phần nào cho mỗi dịch vụ mới."
+  ]
+ }
+}

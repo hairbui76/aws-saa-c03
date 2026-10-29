@@ -1,0 +1,13 @@
+{
+ "Cloud Service Models": {
+  "sig": "6-1u3jy2b",
+  "steps": [
+   "Sơ đồ này so sánh năm mô hình dịch vụ, từ On-Premises tới SaaS, xem ai quản lý tầng nào. Mấu chốt là unit of consumption: thứ bạn trả tiền, từ đó trở lên là việc của bạn.",
+   "Với SaaS, unit of consumption chính là ứng dụng. Bạn chỉ dùng app như Netflix hay Office 365, trả phí tháng, không phải đụng tới bất cứ tầng nào bên dưới.",
+   "Với PaaS, bạn tiêu thụ runtime environment, ví dụ một Python runtime. Bạn chỉ quản lý app và data, rất hợp với developer.",
+   "Ở On-Premises, bạn tự lo toàn bộ stack, linh hoạt nhất nhưng đắt và rủi ro. Với IaaS như EC2, bạn thuê VM nên unit là O/S, vendor lo phần dưới, còn PaaS và SaaS giao thêm nhiều tầng hơn cho vendor.",
+   "DC Hosted là bước tiến hóa đầu tiên: bạn đặt thiết bị của mình trong tòa nhà của vendor. Vendor lo Facilities như điện, điều hòa, an ninh, còn bạn trả tiền theo rack space.",
+   "Khi đi thi, nhớ rằng càng sang trái càng linh hoạt, càng sang phải càng ít overhead và rủi ro. Nếu đề nói không muốn quản lý OS hay patching, hãy chọn dịch vụ managed như RDS, Lambda, Fargate thay vì tự chạy trên EC2."
+  ]
+ }
+}

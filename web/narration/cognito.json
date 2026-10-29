@@ -1,0 +1,29 @@
+{
+ "Cognito": {
+  "sig": "8-1j46q9s",
+  "steps": [
+   "Sơ đồ này mô tả kiến trúc Cognito được khuyến nghị: user pool gom mọi kiểu đăng nhập về một loại token, còn identity pool đổi token đó lấy temporary AWS credentials thông qua IAM role.",
+   "Đầu tiên, app gửi yêu cầu đăng nhập tới Cognito User Pool, nơi có sign-up, sign-in, MFA và user directory. Đăng nhập xong, app nhận về JWT, dùng được ngay với API Gateway hoặc app tự quản.",
+   "Muốn truy cập tài nguyên AWS, app gửi JWT sang Cognito Identity Pool. Hãy nhớ: user pool là đăng nhập lấy JWT, còn identity pool là đổi identity lấy temporary credentials, gọi là Web Identity Federation.",
+   "Identity pool được cấu hình ít nhất hai IAM role: authenticated role và unauthenticated role cho guest. Cognito assume role thay mặt user để tạo credentials tạm thời.",
+   "Credentials được trả về app, app dùng chúng để gọi S3, DynamoDB hay SQS. Quyền có được đúng bằng quyền của role, và khi hết hạn thì app chỉ việc xin lại.",
+   "User pool còn hỗ trợ federation với Google, Facebook, Apple, SAML hay OIDC. Dù đăng nhập kiểu nào, kết quả vẫn là một user pool user và một loại token duy nhất.",
+   "Điểm cần khắc ghi: JWT không dùng trực tiếp được với hầu hết dịch vụ AWS, vì chúng cần AWS credentials thật. Đó chính là lý do phải có identity pool.",
+   "Khi đi thi, nhớ rằng khách không cần đăng ký thì dùng unauthenticated role. Ứng dụng hàng triệu user thì dùng Cognito, tuyệt đối không tạo IAM user vì giới hạn 5.000 user mỗi account."
+  ]
+ },
+ "Cognito - compare": {
+  "sig": "9-26wgxf",
+  "steps": [
+   "Sơ đồ này so sánh User Pool và Identity Pool, hai thành phần có tên rất dễ nhầm: một bên lo đăng nhập và trả JWT, bên kia đổi identity lấy AWS credentials.",
+   "Bên trái là User Pool, bên phải là Identity Pool. Ta sẽ đi qua từng tiêu chí để thấy chúng khác nhau thế nào.",
+   "Về mục đích, User Pool lo sign-up, sign-in và quản lý user như một user directory. Identity Pool thì đổi identity lấy quyền truy cập vào tài nguyên AWS.",
+   "Về đầu ra, User Pool trả về JWT, tức user pool token. Identity Pool trả về temporary AWS credentials, có được nhờ Cognito assume một IAM role.",
+   "Nguồn identity của User Pool gồm user nội bộ, social, SAML và OIDC, tất cả quy về một user pool user. Identity Pool nhận token IdP bên ngoài, user pool token, hoặc guest.",
+   "User Pool không cho truy cập dịch vụ AWS trực tiếp, ngoại lệ là API Gateway nhận JWT qua Cognito authorizer. Identity Pool thì có, với quyền bằng quyền của role.",
+   "Với khách chưa đăng nhập, User Pool không hỗ trợ. Identity Pool hỗ trợ guest thông qua unauthenticated role, ví dụ game lưu leaderboard mà không bắt tạo tài khoản.",
+   "User Pool có web UI dựng sẵn, MFA, kiểm tra compromised credentials, account takeover protection và Lambda triggers. Identity Pool cần cấu hình riêng cho mỗi IdP, nên dùng user pool làm IdP duy nhất cho gọn.",
+   "Khi đi thi, thấy sign-in, user directory, JWT, social login thì nghĩ tới User Pool; thấy temporary credentials, federation, guest thì là Identity Pool. Cẩn thận bẫy dùng JWT gọi thẳng S3 hay DynamoDB, đáp án đó sai."
+  ]
+ }
+}

@@ -1,0 +1,15 @@
+{
+ "S3 Lifecycle Configuration": {
+  "sig": "8-1klne5f",
+  "steps": [
+   "Sơ đồ này nói về S3 Lifecycle, nơi transition chỉ đi xuống như thác nước. Mỗi class chỉ chuyển được sang class thấp hơn, và có một ngoại lệ là One Zone-IA không sang được Glacier Instant Retrieval.",
+   "Đỉnh thác là S3 Standard, chuyển xuống Standard-IA. Lưu ý, bằng lifecycle rule thì object phải nằm ở Standard đủ 30 ngày trước khi sang Standard-IA.",
+   "Từ Standard-IA, object có thể đi tiếp xuống Intelligent-Tiering. Nhớ rằng đây vẫn là chuyển theo thời gian, chứ không phải theo mức độ truy cập.",
+   "Intelligent-Tiering lại có thể chuyển xuống One Zone-IA. Để ý dấu không được ở đây, vì từ One Zone-IA có một đường bị cấm.",
+   "Đây là ngoại lệ cần nhớ: One Zone-IA không sang được Glacier Instant Retrieval, nhưng vẫn sang được Glacier Flexible Retrieval và Deep Archive.",
+   "Tiếp tục xuống, Glacier Instant Retrieval sang Glacier Flexible Retrieval, rồi sang Glacier Deep Archive. Deep Archive là đáy, không đi đâu nữa.",
+   "Mỗi lifecycle rule gồm action và criteria, áp cho cả bucket hoặc lọc theo prefix hoặc tag. Transition đổi storage class, expiration xóa object hoặc version. Muốn theo truy cập thì dùng Intelligent-Tiering.",
+   "Khi đi thi, nhớ bậc trên sang được mọi bậc dưới, ví dụ Standard đi thẳng tới Deep Archive. Không bao giờ transition ngược lên, và với bucket versioning hãy expire hoặc transition noncurrent versions để giảm chi phí."
+  ]
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "Interface VPC Endpoints": {
+  "sig": "7-s22137",
+  "steps": [
+   "Sơ đồ này cho thấy cách interface endpoint đưa một dịch vụ AWS public như SNS vào trong VPC dưới dạng một ENI có private IP, nhờ AWS PrivateLink, và traffic được dẫn bằng DNS chứ không bằng route table.",
+   "Đầu tiên, instance EC2 chỉ có private IP hỏi DNS tên mặc định của SNS. Vì Private DNS đang bật, Route 53 private hosted zone trả về 10.0.1.50, chính là IP của ENI endpoint.",
+   "Có IP rồi, instance gửi traffic tới ENI endpoint như mọi IP khác trong VPC. Security Group trên ENI chỉ cho phép cổng 443 từ ứng dụng, điều mà gateway endpoint không làm được.",
+   "Từ ENI, traffic đi tiếp tới SNS qua PrivateLink, hoàn toàn không cần public IP, Internet Gateway hay NAT Gateway.",
+   "Một ENI nằm trong một subnet, tức là chỉ một AZ, nên endpoint không HA mặc định. Vì vậy ta đặt thêm một endpoint ở AZ-B. Nếu tắt Private DNS, ứng dụng phải dùng tên vpce qua tham số endpoint-url.",
+   "Endpoint ở AZ thứ hai cũng chuyển traffic tới SNS, nên nếu một AZ hỏng thì AZ còn lại vẫn phục vụ được.",
+   "Khi đi thi, nhớ rằng interface endpoint chỉ là một private IP, nên dùng được từ on-premises qua VPN hoặc Direct Connect và từ VPC peer, còn gateway endpoint thì không."
+  ]
+ },
+ "Interface VPC Endpoints - dns": {
+  "sig": "6-1o3dcrv",
+  "steps": [
+   "Sơ đồ này so sánh ba trường hợp gọi SNS. Cùng một lệnh, nhưng đường đi phụ thuộc vào tên DNS client dùng và việc Private DNS có bật hay không.",
+   "Trong trường hợp có endpoint nhưng tắt Private DNS, nếu client gọi tên endpoint-specific dạng vpce, DNS sẽ trả về private IP của ENI và traffic đi qua endpoint.",
+   "Cách này chạy được nhưng phải sửa ứng dụng, ví dụ thêm endpoint-url cho CLI. Nếu ứng dụng vẫn dùng tên mặc định thì nó đi ra Internet Gateway như khi không có endpoint.",
+   "Giờ cùng gọi tên mặc định của SNS. Không có endpoint thì DNS trả về public IP, đi qua VPC Router và Internet Gateway. Còn khi bật Private DNS, Route 53 private hosted zone ghi đè tên đó thành private IP của ENI.",
+   "Kết quả: không có endpoint thì instance public chạy được nhưng instance private thất bại vì không có public IP. Bật Private DNS thì mọi client đều đi qua endpoint mà không cần sửa ứng dụng, và tùy chọn này bật mặc định.",
+   "Mẹo thi: tên regional là một tên dùng mọi AZ, còn tên zonal trỏ đúng ENI từng AZ. Private DNS cần VPC bật enableDnsSupport và enableDnsHostnames. Đề nói ứng dụng không sửa được thì chọn bật Private DNS."
+  ]
+ }
+}

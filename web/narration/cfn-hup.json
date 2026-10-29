@@ -1,0 +1,26 @@
+{
+ "cfn-hup": {
+  "sig": "8-jrd6p7",
+  "steps": [
+   "Sơ đồ này nói về cfn-hup, một daemon chạy trên EC2, giúp mỗi lần update stack có thể cập nhật luôn cấu hình bên trong OS mà không cần thay instance.",
+   "Mọi chuyện bắt đầu khi admin sửa template hoặc parameter làm metadata AWS::CloudFormation::Init thay đổi, rồi chạy UpdateStack. Lưu ý cfn-init và user data sẽ không tự chạy lại.",
+   "cfn-hup do bạn tự cài và cấu hình. File cfn-hup.conf khai báo stack, region và interval, còn file hook chỉ ra vùng metadata cần theo dõi và lệnh action sẽ chạy.",
+   "Daemon cfn-hup định kỳ, mặc định 15 phút một lần, hỏi stack xem metadata của logical resource có gì khác so với lần trước không.",
+   "Khi phát hiện metadata đã thay đổi, cfn-hup chạy action đã cấu hình, phổ biến nhất là gọi lại cfn-init để áp lại desired state.",
+   "cfn-init lúc này kết nối tới stack và tải về phần metadata mới nhất vừa được cập nhật.",
+   "Vì cfn-init hoạt động theo kiểu desired state, nó chỉ sửa phần khác biệt, ví dụ backup rồi ghi lại file index.html với nội dung mới.",
+   "Khi đi thi, nhớ rằng chỉ đổi metadata mới kích hoạt cfn-hup. Còn nếu đề hỏi stack phải chờ ứng dụng cấu hình xong, đáp án là CreationPolicy cộng cfn-signal, không phải cfn-hup."
+  ]
+ },
+ "cfn-hup - evolution": {
+  "sig": "6-bxyj7r",
+  "steps": [
+   "Sơ đồ này so sánh bốn bước tiến hóa template trong demo, xem mỗi bước giải quyết được vấn đề gì.",
+   "Câu hỏi thứ nhất: stack có biết khi nào bootstrap xong không? Với user data thuần thì không, stack báo xong sau khoảng 60 giây dù script còn chạy. Thêm cfn-signal thì stack chờ tín hiệu SUCCESS.",
+   "Câu hỏi thứ hai: update stack có cập nhật cấu hình OS không? Ba template đầu đều không, chỉ khi thêm cfn-hup mới cập nhật được mà không thay instance.",
+   "Từ Template 1 sang Template 2, ta thêm CreationPolicy và một dòng cfn-signal cuối user data, nên stack chỉ hoàn tất khi bootstrap thật sự xong.",
+   "Sang Template 3, bootstrapping chuyển sang cfn-init theo kiểu desired state, với packages, files, commands và services, vẫn dùng cfn-signal để báo kết quả.",
+   "Cuối cùng, Template 4 thêm cfn-hup để theo dõi metadata, nên giải quyết được cả hai vấn đề: stack biết khi nào xong, và update stack cập nhật được cấu hình OS."
+  ]
+ }
+}

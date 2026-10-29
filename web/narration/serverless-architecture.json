@@ -1,0 +1,16 @@
+{
+ "Serverless Architecture": {
+  "sig": "9-62xs0",
+  "steps": [
+   "Sơ đồ này đi qua ví dụ PetTube, một ứng dụng chia sẻ video hoàn toàn serverless, không có EC2 nào. Frontend nằm trên S3, danh tính đến từ bên thứ ba qua Cognito, còn xử lý thì dùng S3 event, Lambda và managed service, nên bạn chỉ trả tiền khi có tiêu thụ.",
+   "Julie mở website tĩnh trên S3 và tải về HTML cùng JavaScript. Chính đoạn JavaScript chạy trong trình duyệt là frontend, nên đến đây chưa có compute tự quản nào. Phía dưới là originals bucket, nơi sẽ sinh S3 event để gọi Lambda xử lý.",
+   "Để xác thực, Julie đăng nhập bằng Google và nhận về identity token. Không dùng IAM user vì mỗi account chỉ có tối đa 5,000 IAM user, và người dùng cũng không phải giữ thêm một tài khoản nữa.",
+   "AWS không dùng trực tiếp danh tính bên thứ ba, nên JavaScript gọi Cognito để đổi token Google lấy temporary AWS credentials.",
+   "Với credentials tạm đó, Julie upload video thẳng lên originals bucket. Đến đây hệ thống chỉ có S3, Cognito và Google, hoàn toàn không có server.",
+   "Bucket sinh S3 event và invoke Processing Lambda. Lambda này tạo job trong Elastic Transcoder, mỗi kích thước video cần ra là một job, và job tự đọc video gốc từ originals bucket.",
+   "Mỗi job xuất một object vào transcode bucket, còn metadata được ghi vào DynamoDB. Lambda My Media sẽ dựa vào DynamoDB để biết object nào thuộc về Julie rồi trả về URL.",
+   "Khi Julie muốn xem danh sách video, client gọi Lambda My Media. Function chỉ chạy đúng lúc có yêu cầu, nên lúc không ai dùng thì chi phí compute gần bằng 0.",
+   "Lưu ý khi đi thi: thực tế thường có API Gateway đứng giữa JavaScript và Lambda, và Elastic Transcoder nay đã thay bằng AWS Elemental MediaConvert. Thấy đề nhắc không quản lý server, event-driven, chi phí gần 0 khi rảnh, hãy nghĩ ngay đến S3, API Gateway, Lambda, DynamoDB và Cognito."
+  ]
+ }
+}

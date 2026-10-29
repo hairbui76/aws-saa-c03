@@ -1,0 +1,28 @@
+{
+ "Encryption Fundamentals": {
+  "sig": "9-bklc8v",
+  "steps": [
+   "Sơ đồ này so sánh hai kiểu mã hóa. Symmetric dùng một key chung, nhanh nhưng khó chuyển key, còn asymmetric dùng cặp public key và private key.",
+   "Bắt đầu với asymmetric. Người nhận tự tạo một cặp key, giữ kín private key và thoải mái công bố public key cho bất kỳ ai.",
+   "Người gửi mã hóa bằng public key của người nhận để tạo ciphertext. Điều thú vị là chính public key đó không giải mã được, chỉ private key của người nhận mới làm được.",
+   "Giờ sang symmetric. Người gửi mã hóa plaintext bằng một symmetric key, nhưng bên nhận cần đúng key đó, nên phải chuyển key trước một cách an toàn, và đây là phần khó nhất.",
+   "Ciphertext có thể gửi qua kênh không tin cậy mà vẫn an toàn, vì ở đầu nhận, chỉ ai có cùng key đó mới giải mã được.",
+   "Bên nhận dùng cùng key để giải mã ciphertext, lấy lại plaintext ban đầu. Một key cho cả hai chiều, đơn giản và nhanh.",
+   "Vì nhanh và nhẹ, symmetric rất hợp cho mã hóa ổ đĩa, file, dữ liệu at rest và bulk data. Trong AWS, KMS dùng AES-256, cùng với EBS và S3 encryption.",
+   "Asymmetric thì chậm và tính toán nặng hơn nhiều, nên dùng khi các bên chưa từng gặp nhau, như TLS, SSH với EC2 key pair, hoặc PGP.",
+   "Khi đi thi, nhớ cách làm thực tế của TLS: dùng asymmetric để thỏa thuận một symmetric key, rồi dùng symmetric cho cả phiên để có tốc độ."
+  ]
+ },
+ "Encryption Fundamentals - signing": {
+  "sig": "7-agaavi",
+  "steps": [
+   "Sơ đồ này nói về signing, encryption at rest và in transit. Ký là dùng private key của người gửi, ai cũng xác minh được bằng public key của họ.",
+   "Robot viết chữ OK rồi ký bằng private key của mình, vì encryption không chứng minh ai gửi. Ở phía at rest, một bên giữ key, ví dụ KMS, và ở in transit có client với server.",
+   "Kết quả là chữ OK kèm chữ ký. Còn với at rest, khi ghi xuống ổ đĩa thì dữ liệu được mã hóa, khi đọc vào RAM thì được giải mã.",
+   "Người nhận dùng public key của người gửi để xác minh chữ ký, mà private key thì không bao giờ bị lộ ra ngoài.",
+   "Nếu xác minh thành công, người nhận biết chắc đúng là Robot gửi và nội dung không bị sửa. Đề hỏi chứng minh danh tính thì chọn digital signature.",
+   "Với in transit, dữ liệu giữa client và server được bọc trong một tunnel mã hóa, mã hóa trước khi rời máy và giải mã ở bên nhận.",
+   "Lời nhắc khi thi: in transit có nhiều bên, người ngoài chỉ thấy dữ liệu xáo trộn, trong AWS là TLS, HTTPS với ACM, hoặc VPN. Còn at rest không thay thế được IAM."
+  ]
+ }
+}

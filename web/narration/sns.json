@@ -1,0 +1,12 @@
+{
+ "SNS": {
+  "sig": "5-3q76lw",
+  "steps": [
+   "Sơ đồ này nói về SNS, dịch vụ pub sub messaging. Publisher gửi message vào topic, rồi topic đẩy message tới mọi subscriber, có thể lọc bằng filter policy hoặc fan-out sang nhiều SQS queue.",
+   "Bên trái là các publisher: một API bên ngoài, CloudWatch alarm khi đổi trạng thái, hay ASG và CloudFormation khi có sự kiện. Topic là nơi đặt topic policy, mã hóa SSE qua KMS, và mỗi message tối đa 256 KB.",
+   "Từ topic, message được đẩy tới mọi subscriber: HTTP endpoint, email, SMS, mobile push, Lambda với mỗi message là một lần invoke, và các SQS queue. Subscriber có filter policy thì chỉ nhận message khớp với chức năng của nó.",
+   "Đây là mô hình fan-out. Cùng một job video được nhân ra hai queue, và mỗi Auto Scaling Group xử lý độc lập một biến thể, một bên 720p, một bên 1080p, với buffer riêng.",
+   "Khi đi thi nhớ nhé: SNS là push, SQS là pull. File lớn thì để ở S3 và gửi link, cross-account thì dùng topic policy. Thấy một sự kiện cần nhiều xử lý song song, độc lập thì chọn SNS fan-out sang nhiều SQS."
+  ]
+ }
+}

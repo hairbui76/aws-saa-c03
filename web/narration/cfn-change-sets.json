@@ -1,0 +1,14 @@
+{
+ "CFN Change Sets": {
+  "sig": "7-1a6sl69",
+  "steps": [
+   "Sơ đồ này so sánh hai cách cập nhật stack. Nếu dùng UpdateStack trực tiếp thì thay đổi áp ngay lập tức, còn change set cho bạn xem trước mọi thay đổi và chỉ áp khi bạn chủ động Execute.",
+   "Đầu tiên, ta đưa template phiên bản hai, đã bỏ bucket memes, để tạo một change set. CloudFormation chưa đụng vào stack mà chỉ ghi lại rằng memes sẽ bị Remove. Một stack có thể có nhiều change set để so sánh, nhưng khi execute một cái thì các cái còn lại sẽ bị xóa vì đã lỗi thời.",
+   "Tiếp theo là bước review. Bạn xem tab Changes hoặc JSON changes để biết resource nào được thêm, sửa, xóa và có bị replacement hay không, rồi quyết định có chấp nhận hay không.",
+   "Nếu đồng ý, bạn bấm Execute, lúc này CloudFormation chạy một UpdateStack bình thường và bucket memes bị xóa. Nếu không đồng ý, bạn discard change set và stack giữ nguyên, không có gì thay đổi.",
+   "Giờ nhìn sang cách không dùng change set. Cùng template phiên bản hai đó, ta gọi UpdateStack thẳng vào stack đang chạy.",
+   "Kết quả là bucket memes bị xóa ngay lập tức, không có cơ hội xem trước. Kết quả cuối giống hệt khi execute change set, nhưng bạn mất đi khả năng kiểm soát, rất rủi ro với template lớn.",
+   "Khi đi thi, nhớ ba kiểu tác động: No interruption như đổi tag, Some interruption như EC2 bị reboot, và Replacement tạo ID mới, xóa bản cũ, có thể mất dữ liệu. Change set chỉ xem trước, không bảo vệ dữ liệu, muốn bảo vệ thì dùng DeletionPolicy. Còn drift detection là phát hiện thay đổi làm tay bên ngoài CloudFormation."
+  ]
+ }
+}

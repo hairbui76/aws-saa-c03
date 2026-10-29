@@ -1,0 +1,17 @@
+{
+ "Direct Connect Public VIF and VPN": {
+  "sig": "10-sr2990",
+  "steps": [
+   "Sơ đồ này nói về cách mã hóa traffic trên Direct Connect: chạy IPsec VPN qua Public VIF, vì VPN endpoint có public IP nằm trong AWS Public Zone, nhưng tunnel vẫn đưa traffic private vào VPC.",
+   "Từ phía on-premises, customer router hoặc firewall đóng vai trò customer gateway, có hai đường đi: Direct Connect Public VIF, và public Internet dùng làm backup hoặc dùng tạm trong lúc chờ DX.",
+   "Tunnel IPsec qua Public VIF là đường primary, latency thấp và ổn định, tới hai VPN endpoint ở hai AZ. Cùng Public VIF đó còn tới được VGW hoặc TGW ở region khác qua AWS global network.",
+   "Từ các VPN endpoint, traffic đã giải mã được chuyển vào VGW hoặc TGW gắn với VPC.",
+   "Cuối cùng traffic tới EC2 bằng private IP. Vậy dù đi qua public VIF, kết nối vào VPC vẫn là private và được mã hóa end-to-end.",
+   "Quy tắc chọn VIF rất đơn giản: xem đích là gì. VPN endpoint là public IP, nên phải dùng Public VIF.",
+   "Còn Private VIF chỉ tới được private IP trong VPC, nên không thể chạm tới VPN endpoint. Đây là bẫy hay gặp trong đề thi.",
+   "Phân biệt với MACsec: MACsec chỉ mã hóa một hop ở Layer 2 giữa DX router và thiết bị cross connect, còn IPsec VPN mã hóa end-to-end từ customer gateway tới VGW hoặc TGW.",
+   "Lưu ý khi đi thi: VPN cho bảo mật, DX cho latency ổn định, nhưng throughput vẫn bị giới hạn bởi overhead của VPN, khoảng 1.25 Gbps mỗi tunnel.",
+   "Nhớ thêm rằng VPN là transit agnostic: cấu hình giống hệt nhau dù đi Internet hay Public VIF, nên rất dễ dùng VPN làm cầu nối khi DX đang provision hoặc làm backup cho DX."
+  ]
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "Comprehend": {
+  "sig": "10-o5tk3u",
+  "steps": [
+   "Sơ đồ này nói về Amazon Comprehend, dịch vụ NLP được quản lý hoàn toàn. Nó chỉ nhận văn bản, và một lần gọi trả về nhiều loại insight, mỗi kết quả kèm confidence score từ 0 đến 1.",
+   "Với model Built-in có sẵn của AWS, bạn dùng ngay mà không cần huấn luyện. Insight đầu tiên là Entities, tức người, tổ chức, địa điểm, ngày tháng, số lượng được nhận ra trong văn bản.",
+   "Tiếp theo là Key phrases, những cụm từ chính giúp bạn nắm nhanh văn bản đang nói về điều gì.",
+   "Nếu cần model riêng cho doanh nghiệp, bạn huấn luyện custom classification hoặc custom entity recognition, rồi phục vụ real-time qua endpoint. Comprehend cũng nhận diện ngôn ngữ chủ đạo của văn bản.",
+   "Comprehend còn phát hiện PII như tên, số thẻ tín dụng, số tài khoản ngân hàng, địa chỉ, email, rất hữu ích khi cần che dữ liệu nhạy cảm.",
+   "Về chế độ xử lý, real-time dùng cho workload nhỏ qua console, CLI hoặc API, còn async job xử lý khối lượng lớn từ S3. Sentiment trả về Positive, Negative, Neutral hoặc Mixed.",
+   "Cuối cùng là Syntax, phân tích từ loại của từng từ trong câu.",
+   "Vì chỉ nhận text, nguồn khác phải chuyển đổi trước: audio cuộc gọi đi qua Transcribe, ảnh scan hoặc PDF đi qua Textract, text ngôn ngữ khác qua Translate. Text sẵn từ app như review, email thì vào thẳng Comprehend.",
+   "Sau khi chuyển thành text, kết quả từ Transcribe, Textract và Translate đều đổ vào Comprehend, và Comprehend trả ra các insight kèm confidence score.",
+   "Khi đi thi, nhớ nhé: audio thì Transcribe trước, ảnh scan thì Textract trước, đa ngôn ngữ thì Translate trước. Tìm PII trong text ứng dụng gửi tới là Comprehend, còn quét PII trong cả S3 bucket là Macie."
+  ]
+ }
+}

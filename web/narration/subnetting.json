@@ -1,0 +1,12 @@
+{
+ "Subnetting": {
+  "sig": "5-3bja4i",
+  "steps": [
+   "Sơ đồ này cho thấy cách subnetting hoạt động: cứ tăng prefix thêm 1 thì mạng nhỏ đi một nửa. Ta sẽ chia 10.16.0.0 trên 16 thành bốn subnet trên 18.",
+   "Bắt đầu từ 10.16.0.0 trên 16 với 65.536 địa chỉ. Tăng prefix lên 17, ta được hai nửa: một nửa bắt đầu ở đầu dải, nửa kia bắt đầu ở điểm giữa là 10.16.128.0, mỗi nửa 32.768 IP.",
+   "Tiếp tục chia đôi mỗi mạng trên 17 thành hai mạng trên 18, mỗi mạng 16.384 IP. Nhớ rằng prefix càng lớn thì mạng càng nhỏ, và số subnet lẻ vẫn hợp lệ, ví dụ giữ một trên 17 và hai trên 18.",
+   "Khi thiết kế trên AWS, nhớ ba dải private RFC 1918 là 10.0.0.0 trên 8, 172.16.0.0 trên 12 và 192.168.0.0 trên 16. Default VPC dùng 172.31.0.0 trên 16, VPC cho phép từ trên 28 tới trên 16, mỗi subnet giữ lại 5 IP.",
+   "Lời nhắc khi đi thi: mỗi bước chia đôi chỉ là tăng prefix thêm 1. Và nếu đề hỏi chọn CIDR cho peering, VPN hoặc Transit Gateway, hãy loại ngay đáp án bị overlap với dải đã có."
+  ]
+ }
+}

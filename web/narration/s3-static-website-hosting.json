@@ -1,0 +1,15 @@
+{
+ "S3 Static Website Hosting": {
+  "sig": "8-nur3fl",
+  "steps": [
+   "Sơ đồ này nói về S3 static website hosting, nơi S3 phục vụ object qua HTTP thông thường cho trình duyệt một cách anonymous. Nhớ nhé, bật hosting chưa phải là cấp quyền, ta còn cần tắt Block Public Access và thêm bucket policy public read.",
+   "Đầu tiên là use case offloading. Trình duyệt gửi request tới EC2, app sinh HTML động có dùng database, nhưng các link ảnh trong HTML lại trỏ về S3, vì S3 rẻ hơn compute nhiều cho việc lưu và phân phối media.",
+   "Sau đó trình duyệt tự tải ảnh và video trực tiếp từ bucket bật static hosting qua HTTP. Media thường chiếm hơn 95 phần trăm dung lượng truyền, nên EC2 được giảm tải rất nhiều.",
+   "Giờ xem một request tới website endpoint đi qua đâu. Endpoint này do AWS tự sinh từ tên bucket và region, chỉ hỗ trợ HTTP và truy cập là anonymous. Điểm kiểm tra đầu tiên là Block Public Access.",
+   "Nếu Block Public Access đang bật, request bị trả về 403 Forbidden ngay. Nếu đã tắt, S3 tiếp tục kiểm tra xem có bucket policy cho phép public read hay không.",
+   "Thiếu bucket policy với Principal là sao và action s3 GetObject thì vẫn bị 403, vì bucket vẫn private. Có policy rồi thì S3 mới kiểm tra object được yêu cầu có tồn tại không.",
+   "Nếu object tồn tại, S3 trả về mã 200 cùng object, và khi truy cập đường dẫn gốc thì trả index document. Nếu không tồn tại, người dùng nhận error document, ví dụ error.html.",
+   "Lời nhắc khi đi thi: khi app sự cố hoặc bảo trì, đổi DNS sang trang tĩnh out-of-band trên S3. Muốn custom domain thì tên bucket phải trùng FQDN và dùng Route 53 Alias; cần HTTPS hoặc cache thì thêm CloudFront và ACM."
+  ]
+ }
+}

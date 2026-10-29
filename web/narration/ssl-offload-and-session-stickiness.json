@@ -1,0 +1,30 @@
+{
+ "SSL Offload and Session Stickiness": {
+  "sig": "9-1j4o5nk",
+  "steps": [
+   "Sơ đồ này so sánh ba cách load balancer xử lý HTTPS: Bridging, Pass-through và Offload. Câu hỏi then chốt là ai giữ cert, ai giải mã, và chặng từ LB xuống EC2 có còn mã hóa không.",
+   "Ở chặng đầu, với ALB và Offload, kết nối HTTPS của client bị terminate ngay trên LB nên LB cần cert. Riêng NLB dùng listener TCP, TLS đi xuyên qua và NLB chỉ thấy IP và port.",
+   "Chặng thứ hai mới tạo khác biệt. Bridging mở kết nối HTTPS mới, pass-through giữ nguyên TLS, nên EC2 phải có cert và tốn CPU. Offload gửi HTTP thường, EC2 không cần cert.",
+   "Ưu điểm của Bridging: ALB đọc được HTTP nên route theo path, host, header được, mà dữ liệu vẫn mã hóa trên cả hai chặng.",
+   "Nhược điểm là cert nằm trên LB, tức AWS có thể chạm tới cert, đồng thời phải quản lý cert trên mọi instance và tốn compute cho crypto.",
+   "Pass-through cho mã hóa end-to-end liền mạch. AWS không bao giờ thấy certificate, bạn tự quản lý hoàn toàn và có thể dùng thêm CloudHSM.",
+   "Đổi lại, NLB không bao giờ thấy HTTP nên không load balancing theo nội dung được, và instance vẫn phải làm crypto.",
+   "Offload giúp EC2 nhẹ hẳn vì không cần cert, không làm crypto, nên bạn có thể dùng instance nhỏ hơn và tiết kiệm chi phí.",
+   "Nhược điểm của Offload là chặng LB xuống EC2 đi plaintext trong mạng AWS. Khi thi, nhớ: end-to-end hay cert không được nằm trên LB thì chọn pass-through với NLB; giảm CPU SSL thì offload; cần route L7 và mã hóa tới backend thì bridging."
+  ]
+ },
+ "SSL Offload and Session Stickiness - stickiness": {
+  "sig": "9-1tgke48",
+  "steps": [
+   "Sơ đồ này nói về session stickiness trên ALB: khóa một user vào một instance để ứng dụng lưu session ngay trên server, đổi lại tải sẽ phân phối không đều.",
+   "Bob gửi request đầu tiên, ALB chọn EC2-2 và trả response kèm cookie AWSALB. Từ đó, browser gửi kèm cookie này ở mọi request tiếp theo.",
+   "Nhờ cookie, ALB biết Bob thuộc về EC2-2 và luôn chuyển request của Bob về đúng instance đó, bỏ qua các instance khác.",
+   "Bob chỉ bị dời đi khi EC2-2 fail health check hoặc cookie hết hạn. Lúc đó ALB chuyển Bob sang instance khỏe như EC2-3 và cập nhật cookie.",
+   "Cookie AWSALB do load balancer tự sinh ra, thời hạn bạn chọn từ 1 giây tới 7 ngày, và được cấu hình trong phần attributes của target group.",
+   "Nhược điểm lớn là tải không đều: một user tạo rất nhiều tải vẫn dính vào một server, LB mất khả năng phân phối linh hoạt.",
+   "Cách tốt hơn là làm instance stateless, đưa session ra ngoài như DynamoDB hoặc ElastiCache, rồi tắt stickiness để tải được chia đều.",
+   "Lưu ý NLB không có cookie stickiness, nó chỉ hỗ trợ stickiness theo source IP.",
+   "Khi đi thi, nhớ: user bị logout hay mất giỏ hàng khi qua LB thì bật stickiness. Hỏi giải pháp scalable nhất thì đưa session ra ngoài. Một instance quá tải khi stickiness đang bật thì stickiness chính là nguyên nhân."
+  ]
+ }
+}

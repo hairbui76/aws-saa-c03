@@ -1,0 +1,15 @@
+{
+ "RDS Proxy": {
+  "sig": "8-1ilyrj2",
+  "steps": [
+   "Sơ đồ này nói về RDS Proxy. Ứng dụng luôn kết nối vào proxy, proxy giữ connection pool lâu dài và multiplex nhiều kết nối client lên ít kết nối tới database, tất cả nằm trong VPC.",
+   "Vài điểm chính: RDS Proxy fully managed, tự scale và highly available. Ứng dụng chỉ cần đổi sang proxy endpoint, không phải sửa code, có thể bắt buộc SSL hoặc TLS, và failover nhanh hơn trên 60 phần trăm.",
+   "Lưu ý quan trọng: proxy không phải là cache. Nếu đề bài muốn giảm tải đọc thì hãy nghĩ tới Read Replica hoặc ElastiCache, chứ không phải RDS Proxy.",
+   "Khi failover, client vẫn nối vào proxy và chờ, còn proxy tự kết nối tới primary mới nên không phải đợi CNAME đổi. Với Lambda, có thể dùng IAM authentication qua execution role, còn credential database lấy từ Secrets Manager.",
+   "So sánh nhé: không có proxy, mỗi lần Lambda chạy lại mở và đóng kết nối, dễ gây lỗi too many connections, nhất là với instance T2 hoặc T3. Có proxy thì kết nối trong pool được dùng lại, database chỉ thấy ít kết nối và latency thấp.",
+   "Phía client có ứng dụng EC2 kiểu SaaS mở nhiều kết nối, và Lambda cần kết nối mỗi lần invoke. Tất cả đều nối vào proxy, kết nối này nhanh và không tạo tải lên database.",
+   "Proxy duy trì một số ít kết nối lâu dài tới primary ở AZ B. Khi xảy ra failover, proxy tự chuyển kết nối sang standby ở AZ C vừa được nâng lên, ứng dụng không hề hay biết.",
+   "Cuối cùng, primary replication đồng bộ sang standby. Khi đi thi, gặp Lambda cộng RDS, lỗi too many connections, hoặc cần failover trong suốt với ứng dụng, hãy chọn RDS Proxy, và nhớ nó chỉ truy cập được từ trong VPC."
+  ]
+ }
+}

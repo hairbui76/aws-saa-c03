@@ -1,0 +1,13 @@
+{
+ "Fraud Detector": {
+  "sig": "6-9p7mt1",
+  "steps": [
+   "Sơ đồ này nói về Amazon Fraud Detector, dịch vụ được quản lý hoàn toàn để phát hiện gian lận online ở tầng nghiệp vụ như đăng ký tài khoản, thanh toán, guest checkout và đăng nhập. Bên trái là cách chọn model type, bên phải là luồng chấm điểm qua API.",
+   "Đầu tiên, nếu bài toán là login lạ, phishing hay social engineering thì chọn Account Takeover. Song song đó, bạn upload historical data để huấn luyện model, còn ứng dụng gửi event signup, payment hoặc login vào qua API.",
+   "Nếu không phải chiếm tài khoản, hãy xét dữ liệu: có lịch sử giao dịch thì dùng Transaction Fraud, ví dụ thẻ tín dụng; còn tài khoản mới, ít lịch sử thì dùng Online Fraud. Model sẽ chấm cho mỗi event một fraud score.",
+   "Bản thân score chưa quyết định gì cả. Bạn viết rules, tức decision logic, để phản ứng theo score, tùy hoạt động kinh doanh và mức chấp nhận rủi ro của doanh nghiệp.",
+   "Ví dụ, score thấp thì approve, score vừa thì gửi review thủ công, còn score cao thì block luôn giao dịch hoặc lượt đăng ký đó.",
+   "Khi đi thi, nhớ phân biệt nhé: gian lận nghiệp vụ chọn Fraud Detector, mối đe dọa hạ tầng AWS từ CloudTrail hay VPC Flow Logs là GuardDuty, lọc HTTP layer 7 là WAF, còn danh tính người dùng ứng dụng là Cognito."
+  ]
+ }
+}

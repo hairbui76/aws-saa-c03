@@ -1,0 +1,32 @@
+{
+ "API Gateway": {
+  "sig": "11-15ggzs8",
+  "steps": [
+   "Sơ đồ này cho thấy API Gateway là cửa vào managed đứng giữa client và backend. Mỗi lời gọi đi qua ba pha: Request, Integration rồi Response, kèm cache, throttling, CORS và log theo từng stage.",
+   "Đầu tiên là phía client, có thể là mobile app, web app chạy trên S3 hoặc một API khác. Pha Response sẽ biến đổi kết quả từ backend và trả về cho chúng.",
+   "Client gọi tới endpoint DNS name của API Gateway, bắt đầu pha Request. Ở đây request được xác thực, kiểm tra hợp lệ và biến đổi thành dạng backend hiểu được.",
+   "Trong pha Request, API Gateway kiểm tra quyền bằng IAM, Cognito User Pools hoặc Lambda authorizer. Đồng thời nó tra cache theo stage, nếu cache hit thì khỏi gọi backend, giảm tải và giảm latency.",
+   "Nếu request hợp lệ và cache miss, API Gateway chuyển request tới integration, tức là backend thật sự xử lý công việc.",
+   "Backend xử lý xong thì trả kết quả về pha Response. Lưu ý quan trọng: Lambda đứng sau API Gateway phải trả lời trong 29 giây, không phải 15 phút, quá thì nhận lỗi 504.",
+   "API Gateway tích hợp CloudWatch để lưu log và metric cho cả phía request lẫn response, giúp bạn theo dõi và chẩn đoán sự cố.",
+   "Integration phổ biến nhất là Lambda, tạo nên bộ ba serverless kinh điển gồm S3, API Gateway và Lambda.",
+   "Backend cũng có thể là một HTTP endpoint, chạy trong AWS hoặc ngay tại on-premises, nhờ API Gateway là public service.",
+   "API Gateway còn tích hợp trực tiếp dịch vụ AWS như ghi DynamoDB, gửi SNS hay start Step Functions, nên đôi khi không cần compute ở giữa.",
+   "Khi đi thi, nhớ: client toàn cầu chọn edge-optimized, cùng region chọn regional, chỉ trong VPC chọn private qua interface endpoint. Và khi migration, API Gateway giữ API ổn định trong lúc backend dời từ on-prem lên AWS."
+  ]
+ },
+ "API Gateway - errors": {
+  "sig": "9-10bb9k0",
+  "steps": [
+   "Sơ đồ này cho thấy mỗi mã lỗi của API Gateway xảy ra ở đâu. Lỗi 4XX nghĩa là request phía client có vấn đề, còn 5XX là request hợp lệ nhưng backend gặp sự cố.",
+   "Client gửi request tới API Gateway, và bước đầu tiên là kiểm tra request có hợp lệ hay không.",
+   "Nếu request sai, client nhận 400 Bad Request, một lỗi chung khó chẩn đoán. Nếu hợp lệ, request đi tiếp tới lớp authorizer và WAF.",
+   "Khi authorizer từ chối hoặc WAF lọc mất request, client nhận 403 Access Denied. Vượt qua được thì request tới bước throttling.",
+   "Nếu client gọi vượt ngưỡng throttle đã cấu hình, API Gateway trả 429 Too Many Requests. Còn trong giới hạn thì request tới backend như Lambda hoặc HTTP endpoint.",
+   "Từ đây là vùng 5XX. Nếu Lambda trả về output không hợp lệ, sai định dạng, API Gateway báo 502 Bad Gateway.",
+   "Nếu backend offline hoặc gặp sự cố lớn, bạn nhận 503 Service Unavailable, mã này từng xuất hiện trong đề thi.",
+   "Còn nếu backend xử lý quá 29 giây, integration bị timeout và trả về 504.",
+   "Mẹo khi đi thi: 403 là bị chặn, 429 là gọi quá nhiều, 502 là output Lambda hỏng, 503 là backend sập, 504 là quá 29 giây. Nhớ rằng Lambda chạy được 15 phút nhưng sau API Gateway chỉ có 29 giây."
+  ]
+ }
+}

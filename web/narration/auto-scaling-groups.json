@@ -1,0 +1,13 @@
+{
+ "Auto Scaling Groups": {
+  "sig": "6-o6s8m6",
+  "steps": [
+   "Sơ đồ này nói về Auto Scaling Group. Nó được đặt trong một VPC, trải trên ba subnet ở ba AZ, và luôn giữ số instance đang chạy bằng đúng desired capacity.",
+   "Bob truy cập qua ALB. Launch Template phiên bản 3 cho biết dựng instance như thế nào, còn ASG với min 1, desired 3, max 4 tự launch hoặc terminate. Instance nào unhealthy sẽ bị thay bằng instance mới, đó là self-healing.",
+   "CloudWatch alarm kích hoạt scaling policy, và policy chỉ chỉnh desired capacity của ASG. Vì ASG gắn với target group, instance mới tự đăng ký vào, còn instance bị terminate thì tự được gỡ ra.",
+   "Target Group phân phối traffic tới các EC2 đang chạy. Người dùng không cần biết từng instance, load balancer trừu tượng hóa tất cả, tạo nên kiến trúc elastic.",
+   "ASG cố cân bằng số instance giữa các AZ. Mẹo HA giá rẻ là đặt min, desired, max đều bằng 1 trên nhiều AZ, AZ sập thì dựng lại ở AZ khác. Cooldown mặc định 300 giây giúp tránh scale loạn và tốn tiền.",
+   "Khi đi thi nhớ nhé: policy chỉ đổi desired, còn min và max là ranh giới cứng. Scale theo memory thì cần CloudWatch Agent. Bảo trì một instance thì đặt Standby, không muốn tự cân AZ thì suspend AZRebalance."
+  ]
+ }
+}

@@ -1,0 +1,14 @@
+{
+ "EBS": {
+  "sig": "7-htaali",
+  "steps": [
+   "Sơ đồ này nói về EBS: volume lưu trữ block qua mạng cho EC2, bền vững nhưng chỉ nằm trong một AZ. Ta có hai region là us-east-1 và ap-southeast-2, cùng hai AZ là AZ-A và AZ-B.",
+   "Volume EBS được replicate trong AZ nên hỏng một đĩa không sao, và dữ liệu vẫn còn qua reboot hay stop start. Ta có thể detach rồi attach sang instance khác cùng AZ, nhưng không gắn chéo sang AZ-B được, nên phải tạo snapshot lên S3.",
+   "Snapshot lưu trên S3 được replicate qua ít nhất ba AZ, nên từ đó ta tạo được volume mới ở AZ khác. Lúc tạo còn đổi được loại volume, kích thước và cả encryption.",
+   "Volume mới giờ nằm cùng AZ-B với instance, nên ta attach vào bình thường và thấy đúng dữ liệu cũ.",
+   "Muốn ra khỏi region, ta copy snapshot sang region khác, ví dụ Sydney. Đây là cách làm cho disaster recovery hoặc migration, mang lại khả năng phục hồi toàn cầu.",
+   "Ở region đích, từ bản snapshot copy ta tạo một EBS volume mới rồi gắn vào instance tại đó, y như cách làm giữa các AZ.",
+   "Lời nhắc khi đi thi: mặc định một volume chỉ gắn một instance; nếu đề nói chia sẻ block volume cho cluster thì nghĩ tới Multi-Attach với io1 hoặc io2. Và nhớ EBS tính tiền theo GB-tháng đã provision, không theo dung lượng thực dùng."
+  ]
+ }
+}

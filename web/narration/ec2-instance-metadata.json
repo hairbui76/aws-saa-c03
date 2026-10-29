@@ -1,0 +1,24 @@
+{
+ "EC2 Instance Metadata": {
+  "sig": "5-16h9adu",
+  "steps": [
+   "Sơ đồ này nói về Instance Metadata Service, gọi tắt là IMDS. Đây là nơi phần mềm bên trong instance hỏi thông tin về chính môi trường của nó, như IP, AZ, AMI, Security Group, credentials của role và user data.",
+   "Ứng dụng hoặc script dùng curl hay tool ec2-metadata để gọi tới địa chỉ 169.254.169.254, địa chỉ này chỉ gọi được từ bên trong instance. Với IMDSv1 không có xác thực, nên bất kỳ ai có shell trên instance cũng đọc được.",
+   "Dữ liệu chia theo category. Bạn hỏi public IPv4 và public hostname, lấy credentials tạm của instance role, xem AZ, AMI ID, Security Group. Riêng user data nằm ở đường dẫn latest user-data, khác với meta-data.",
+   "Vì sao phải hỏi metadata để biết public IP? Vì Internet Gateway làm NAT, nên cấu hình OS chỉ có private IPv4 và IPv6, hoàn toàn không thấy public IPv4.",
+   "Khi đi thi, hãy thuộc lòng URL 169.254.169.254 latest meta-data, nhớ mẹo 169.254 lặp lại. Và luôn coi metadata là có thể bị lộ, đừng đặt secret trong user data mà hãy dùng SSM Parameter Store hoặc Secrets Manager."
+  ]
+ },
+ "EC2 Instance Metadata - v2": {
+  "sig": "7-1c72w4h",
+  "steps": [
+   "Sơ đồ này so sánh IMDSv1 mà khóa học dạy với IMDSv2 dùng session token. Hiện nay nhiều AMI và instance mới mặc định đã là IMDSv2-only.",
+   "Với IMDSv2, trước tiên ứng dụng phải gửi request PUT tới đường dẫn latest api token, kèm thời gian sống TTL, để xin một session token.",
+   "IMDS trả về token, và ứng dụng giữ token này để dùng cho các request tiếp theo.",
+   "Từ giờ mỗi request GET đều phải gửi kèm header X-aws-ec2-metadata-token. Có token hợp lệ thì IMDS mới trả metadata.",
+   "Giờ nhìn sang IMDSv1. Ứng dụng, hoặc kẻ lợi dụng lỗ hổng SSRF, chỉ cần gửi một request GET đơn giản tới latest meta-data.",
+   "IMDS trả metadata và cả credentials ngay lập tức, không xác thực, không mã hóa. Vì vậy một lỗ SSRF hay open proxy có thể bị lợi dụng để lấy trộm credentials của role.",
+   "Lời nhắc khi đi thi: nếu đề hỏi cách tăng bảo mật IMDS, hãy chọn bắt buộc IMDSv2, tức IMDSv2 required, hoặc tắt hẳn IMDS. Endpoint vẫn là 169.254.169.254, không đổi."
+  ]
+ }
+}

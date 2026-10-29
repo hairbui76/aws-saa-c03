@@ -1,0 +1,23 @@
+{
+ "Reserved Instances and Savings Plans": {
+  "sig": "5-6tzk4q",
+  "steps": [
+   "Sơ đồ này tách bạch hai lợi ích khác nhau của reservation: giảm giá trên hóa đơn và giữ capacity. Mỗi lựa chọn cho bạn một hoặc cả hai, và đề thi rất hay bẫy ở chỗ Regional RI chỉ giảm giá thôi.",
+   "Đầu tiên ta chia theo trục giảm giá: một bên là các lựa chọn có giảm giá so với On-Demand, bên kia là các lựa chọn không hề giảm giá.",
+   "Nhóm có giữ capacity gồm Zonal RI, vừa giảm giá vừa giữ chỗ nhưng chỉ trong một AZ. Scheduled RI cho khung giờ lặp lại, tối thiểu 1200 giờ mỗi năm, nay AWS ngừng bán. Còn On-Demand Capacity Reservation giữ chỗ không cần cam kết, nhưng trả tiền cho toàn bộ capacity đã đặt.",
+   "Nhóm không giữ capacity gồm Regional RI, giảm giá ở mọi AZ trong region, và Savings Plans, cam kết chi tiêu theo giờ không gắn instance hay AZ. On-Demand thì không cam kết, và khi thiếu tài nguyên sẽ xếp sau Reserved.",
+   "Khi đi thi, nhớ nhé: hệ thống business-critical cần chắc chắn launch được thì phải giữ capacity bằng Zonal RI hoặc On-Demand Capacity Reservation. Khi thiếu tài nguyên, Reserved được đáp ứng trước, rồi tới On-Demand, cuối cùng là Spot."
+  ]
+ },
+ "Reserved Instances and Savings Plans - sp": {
+  "sig": "6-8vn52n",
+  "steps": [
+   "Sơ đồ này minh họa cơ chế Savings Plans với ví dụ cam kết 20 đô mỗi giờ trong 1 hoặc 3 năm. Trong mức cam kết thì tính giá Savings Plan, vượt thì trả giá On-Demand.",
+   "Nếu một giờ dùng vượt mức, phần dư 8 đô sẽ tính theo giá On-Demand. Bên cạnh là Compute Savings Plan, áp dụng cho EC2, Fargate và Lambda, giảm tới khoảng 66 phần trăm và linh hoạt nhất.",
+   "Ngược lại, nếu giờ đó chỉ dùng ít hơn cam kết, phần 5 đô chưa dùng vẫn phải trả. Đây là lý do cần định kỳ xem lại mức sử dụng.",
+   "Xem ba giờ: giờ 1 dùng 15 đô, giờ 2 dùng đúng 20 đô, đều tính giá Savings Plan. Giờ 3 dùng 28 đô thì 20 đô đầu giá Savings Plan. Còn EC2 Instance Savings Plan chỉ cho EC2 trong một family và region, nhưng giảm tới khoảng 72 phần trăm.",
+   "Mẹo thi: tổ chức đang chuyển dần từ EC2 sang Fargate rồi Lambda thì chọn Compute Savings Plan. Nếu chỉ dùng EC2, EC2 Instance Savings Plan sẽ rẻ hơn.",
+   "Cuối cùng, với Compute Savings Plan, usage mỗi giờ được cộng gộp từ EC2, Fargate và Lambda rồi mới so với mức cam kết."
+  ]
+ }
+}

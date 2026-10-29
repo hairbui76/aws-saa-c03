@@ -1,0 +1,25 @@
+{
+ "RDS Security": {
+  "sig": "6-10rp3c9",
+  "steps": [
+   "Sơ đồ này so sánh hai kiểu mã hóa at rest trong RDS: KMS cộng EBS và TDE. Điểm mấu chốt là ai làm việc mã hóa, host hay engine, và ai giữ khóa.",
+   "Client kết nối tới RDS bằng SSL TLS để mã hóa đường truyền. Bên KMS, engine ghi dữ liệu thô, còn KMS key sinh DEK cho RDS host. Bên TDE, chính engine tự mã hóa, khóa có thể nằm trong CloudHSM do khách hàng giữ.",
+   "Với TDE, dữ liệu đã được engine mã hóa trước khi tới host, nên RDS host chỉ thấy dữ liệu đã mã hóa. Nhờ vậy mức độ phải tin tưởng AWS thấp hơn.",
+   "Với KMS, RDS host dùng DEK để mã hóa dữ liệu thô rồi mới ghi xuống EBS volume. Engine hoàn toàn không biết dữ liệu bị mã hóa.",
+   "Khi bật mã hóa bằng KMS, storage, log, snapshot và replica đều được mã hóa bằng cùng một key. Và nhớ là đã bật thì không thể tắt.",
+   "Khi đi thi, nhớ rằng mọi engine đều hỗ trợ SSL TLS và có thể bắt buộc theo từng DB user. Muốn mã hóa DB đang plaintext, hãy tạo snapshot, copy snapshot có bật encryption, rồi restore từ bản copy."
+  ]
+ },
+ "RDS Security - iam-auth": {
+  "sig": "7-18poitz",
+  "steps": [
+   "Sơ đồ này nói về IAM Database Authentication. IAM chỉ thay mật khẩu lúc đăng nhập, còn quyền bên trong database vẫn do local DB user quyết định.",
+   "Ứng dụng chạy trên EC2 hoặc Lambda có IAM role sẽ gọi IAM với lệnh generate-db-auth-token để xin token đăng nhập.",
+   "IAM trả về một auth token, token này chỉ có hiệu lực 15 phút, nên ứng dụng cần xin lại khi hết hạn.",
+   "Ứng dụng đăng nhập RDS bằng DB username cộng token, dùng token thay cho password. Không cần lưu mật khẩu trong code.",
+   "RDS kiểm tra token với IAM, rồi cho kết nối. Nhưng quyền thao tác trong DB vẫn theo local DB user, không phải theo IAM.",
+   "Phần chuẩn bị làm một lần: bật IAM DB authentication trên instance, tạo local DB user xác thực bằng AWS authentication token, và gắn policy ánh xạ IAM identity sang DB user đó.",
+   "Khi đi thi, nhớ rằng IAM không cấp quyền GRANT bên trong DB, đó là bẫy authorization. Đề nói vào DB không dùng password bằng IAM role thì chọn IAM DB auth, và nó chỉ hỗ trợ MySQL, MariaDB, PostgreSQL, Aurora, không cho Oracle hoặc SQL Server."
+  ]
+ }
+}

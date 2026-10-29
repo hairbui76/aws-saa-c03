@@ -1,0 +1,26 @@
+{
+ "AWS Control Tower": {
+  "sig": "7-1cx03kk",
+  "steps": [
+   "Sơ đồ này cho thấy cách Control Tower dựng một landing zone multi-account. Nó không thay Organizations mà điều phối Organizations, IAM Identity Center, CloudFormation, Config, CloudTrail và SNS để tạo ra môi trường chuẩn.",
+   "Trong management account, Control Tower đóng vai nhạc trưởng: dùng IAM Identity Center cho SSO và federation, Organizations cho OU và SCP. Account Factory tạo account vào Sandbox, còn guardrails được áp lên các account đó.",
+   "Organizations tạo Foundational OU tên Security. Trong đó, Log Archive account gom log CloudTrail và Config của mọi account đã enroll, tách biệt và read-only, nên là kho log an toàn.",
+   "Audit account dành cho người làm audit, dùng SNS báo thay đổi governance và CloudWatch theo dõi metric. Dashboard cho một màn hình tổng quan, còn Account Factory tự động tạo account, áp guardrails và cấp dải IP VPC không chồng lấn.",
+   "Bên dưới, Control Tower dùng CloudFormation để tự động hóa mọi thứ, nên bạn sẽ thấy các stack do nó tạo ra trong account.",
+   "Account A và Account B là các account do Account Factory tạo trong Sandbox OU, thường dùng để test, và đều nhận cấu hình baseline giống nhau như khuôn đúc.",
+   "Lưu ý home region luôn dùng được, còn region khác có thể cho phép hoặc chặn tường minh. Khi đi thi, thấy cụm quickly set up hoặc govern a secure multi-account environment, hay landing zone, hãy chọn Control Tower."
+  ]
+ },
+ "AWS Control Tower - guardrails": {
+  "sig": "7-5egebs",
+  "steps": [
+   "Sơ đồ này so sánh hai loại guardrails. Preventative chặn trước bằng SCP, còn detective chỉ phát hiện sau bằng AWS Config rules, và guardrails tự áp lên mọi account trong landing zone.",
+   "Preventative có trạng thái Enforced hoặc Not enabled. Detective thì không chặn gì cả, chỉ kiểm tra và báo cáo tình trạng compliance.",
+   "Ví dụ preventative là cấm dùng region ngoài danh sách hay cấm sửa bucket policy. Ví dụ detective là kiểm tra CloudTrail có bật không, hoặc EC2 nào đang có public IPv4.",
+   "Theo mức độ áp dụng, có Mandatory luôn bật, Strongly recommended là AWS khuyên bật, và Elective là tùy chọn cho yêu cầu đặc thù của tổ chức.",
+   "Khi một request vi phạm rule, ví dụ tạo EC2 ở region bị cấm, SCP của Organizations xử lý. Còn tài nguyên đã tạo hoặc đổi cấu hình thì AWS Config rule kiểm tra compliance.",
+   "Kết quả là SCP chặn hẳn, hành động không xảy ra. Còn Config rule chỉ đánh giá trạng thái là Clear hoặc In violation, tài nguyên vẫn tồn tại.",
+   "Nhắc khi đi thi: preventative bằng SCP, detective bằng AWS Config. Ngày nay AWS gọi guardrails là controls và thêm loại proactive, dùng CloudFormation Hooks kiểm tra tài nguyên trước khi tạo."
+  ]
+ }
+}

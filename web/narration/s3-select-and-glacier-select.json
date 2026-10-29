@@ -1,0 +1,14 @@
+{
+ "S3 Select and Glacier Select": {
+  "sig": "7-1863aul",
+  "steps": [
+   "Sơ đồ này so sánh hai cách lấy dữ liệu từ một object lớn: tải hết về rồi lọc trong app, và dùng S3 Select hoặc Glacier Select để lọc ngay tại service, chỉ trả về và tính phí phần cần thiết.",
+   "Bên phía dùng Select, ứng dụng chủ động gọi API Select và gửi kèm một biểu thức SQL rút gọn, kiểu SELECT với điều kiện WHERE, để nói cho service biết cần lấy phần nào.",
+   "Lúc này chính S3 hoặc Glacier sẽ quét dữ liệu thô của object, ví dụ một file CSV tới 5 TB, và áp biểu thức lọc ngay bên trong service.",
+   "Kết quả là chỉ khoảng 50 GB dữ liệu đã lọc được truyền về ứng dụng. Ít dữ liệu truyền hơn nên vừa nhanh hơn vừa rẻ hơn nhiều.",
+   "Giờ nhìn sang cách không dùng Select. Ứng dụng phải tải nguyên object 5 TB về, nghĩa là tốn thời gian và bị tính phí truyền tải cho đủ cả 5 TB.",
+   "Sau đó app mới tự lọc để giữ lại khoảng 50 GB cần dùng. Nhưng phần thừa đã bị tải và tính phí rồi, nên lọc phía client không tiết kiệm được gì.",
+   "Khi đi thi, nhớ nhé: Select hỗ trợ CSV, JSON và Parquet, nhanh hơn tới 400 phần trăm, rẻ hơn tới 80 phần trăm, app phải chủ động gọi API. Select dùng cho một object, còn truy vấn nhiều object hoặc cả dataset thì chọn Athena hoặc Redshift Spectrum. Lưu ý từ 25 tháng 7 năm 2024 AWS ngừng cung cấp Select cho khách hàng mới."
+  ]
+ }
+}

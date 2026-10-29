@@ -1,0 +1,31 @@
+{
+ "RDS Multi-AZ": {
+  "sig": "10-1hi8lr9",
+  "steps": [
+   "Sơ đồ này nói về RDS Multi-AZ kiểu instance: một primary và một standby đồng bộ ở hai AZ khác nhau trong cùng một region. Mục tiêu là high availability, không phải scale đọc.",
+   "Ứng dụng không kết nối thẳng vào máy chủ, mà luôn đi qua DB endpoint, tức là một tên CNAME do RDS quản lý.",
+   "Mặc định CNAME trỏ tới primary, nên mọi thao tác đọc và ghi đều đổ vào primary ở AZ-A.",
+   "Primary replicate đồng bộ sang standby ở AZ-B. Dữ liệu chỉ được tính là committed khi đã ghi xong ở cả hai bên. Lưu ý standby không phục vụ đọc hay ghi.",
+   "Standby cũng có EBS riêng, chứa cùng database và dữ liệu với primary, vì replication diễn ra ở mức storage.",
+   "Backup được lấy từ standby rồi lưu vào S3 do AWS quản lý, nhờ vậy primary không bị thêm tải hay IO pause khi backup.",
+   "Khi primary hoặc AZ-A gặp sự cố, RDS tự failover bằng cách đổi CNAME sang standby. Vì là thay đổi DNS nên mất khoảng 60 đến 120 giây.",
+   "Tóm lại bốn bước: app resolve CNAME tới primary, replication đồng bộ, backup từ standby, và khi lỗi thì standby trở thành primary mới.",
+   "Failover xảy ra khi AZ outage, primary lỗi, reboot with failover, đổi instance type hoặc patching, giúp giữ availability cả lúc bảo trì.",
+   "Khi đi thi nhớ nhé: Multi-AZ không thuộc free tier, chỉ trong một region, cần cross-region thì dùng read replica, và tắt DNS caching ở app để failover nhanh hơn."
+  ]
+ },
+ "RDS Multi-AZ - cluster": {
+  "sig": "9-sbshit",
+  "steps": [
+   "Sơ đồ này là RDS Multi-AZ DB Cluster, kiểu mới: một writer và hai reader đọc được, trải trên ba AZ. Reader giúp scale đọc một phần và failover nhanh hơn.",
+   "Ứng dụng phải hỗ trợ gửi ghi và đọc tới hai endpoint khác nhau: ghi cùng đọc đi tới cluster endpoint, còn đọc thuần thì đi tới reader endpoint.",
+   "Cluster endpoint trỏ tới writer để đọc và ghi, còn reader endpoint chia tải đọc sang Reader 1 và Reader 2.",
+   "Writer replicate dữ liệu sang cả hai reader, để reader luôn có dữ liệu mới và sẵn sàng thay thế khi writer lỗi.",
+   "Có ba loại endpoint: cluster endpoint cho đọc ghi và quản trị, reader endpoint để cân bằng tải đọc, còn instance endpoint chỉ để test vì không tự chuyển khi lỗi.",
+   "Failover ở kiểu cluster chỉ khoảng 35 giây cộng thời gian apply transaction log, nhanh hơn nhiều so với 60 đến 120 giây của kiểu instance.",
+   "Replication dùng transaction log nên hiệu quả hơn, và một lần ghi được coi là committed khi ít nhất một reader xác nhận.",
+   "Phần cứng dùng Graviton và local NVMe SSD: ghi vào local cực nhanh rồi flush xuống EBS, vừa nhanh vừa có độ bền của EBS.",
+   "Mẹo thi: đừng nhầm với Aurora. RDS cluster chỉ có đúng hai reader và storage riêng từng instance, còn Aurora có tới 15 replica dùng chung cluster volume."
+  ]
+ }
+}

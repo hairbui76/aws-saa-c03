@@ -1,0 +1,13 @@
+{
+ "CFN Deletion Policy": {
+  "sig": "6-9k9e9a",
+  "steps": [
+   "Sơ đồ này nói về DeletionPolicy, thuộc tính đặt trên từng resource, quyết định số phận physical resource khi bạn bỏ nó khỏi template hoặc xóa cả stack. Lưu ý nó không áp dụng khi resource bị replace.",
+   "Ví dụ có một stack gồm EC2, EBS volume và RDS bị xóa, lúc này CloudFormation xem DeletionPolicy. Còn nếu bạn sửa thuộc tính gây replacement, DeletionPolicy không bảo vệ, phải dùng UpdateReplacePolicy.",
+   "Có ba lựa chọn chính: Delete là mặc định, Retain để giữ lại, và Snapshot để chụp bản sao dữ liệu trước khi xóa.",
+   "Với Delete, cả ba resource đều bị xóa và mất dữ liệu. Với Retain, chúng còn nguyên nhưng ra khỏi quản lý của stack. Với Snapshot, EBS và RDS được chụp snapshot rồi mới bị xóa.",
+   "Snapshot chỉ hỗ trợ EBS, ElastiCache, Neptune, RDS và Redshift, còn EC2 instance thì không. Snapshot còn lại sau khi stack mất, bạn phải tự dọn vì vẫn bị tính phí.",
+   "Nhắc khi đi thi: stack termination protection chặn việc xóa cả stack, còn DeletionPolicy quyết định số phận của từng resource. Đừng nhầm hai thứ này nhé."
+  ]
+ }
+}

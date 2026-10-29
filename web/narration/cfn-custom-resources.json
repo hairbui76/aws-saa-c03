@@ -1,0 +1,16 @@
+{
+ "CFN Custom Resources": {
+  "sig": "9-1nmdcxc",
+  "steps": [
+   "Sơ đồ này nói về custom resource trong CloudFormation. Mỗi khi custom resource được tạo, cập nhật hay xóa, CloudFormation gửi event tới ServiceToken, và code xử lý xong sẽ gửi kết quả về ResponseURL.",
+   "Custom resource khai báo kiểu Custom S3Objects, với ServiceToken là ARN của Lambda. Vì nó tham chiếu bucket AnimalPics nên có phụ thuộc ngầm, và CloudFormation gửi event gồm RequestType, ResponseURL cùng các property tới Lambda.",
+   "Lambda rẽ nhánh theo loại request: nếu là Create thì copy object vào bucket, nếu là Delete thì xóa sạch mọi object, kể cả những object người dùng upload tay.",
+   "Xử lý xong, Lambda phải gửi response JSON tới ResponseURL, vốn là một pre-signed S3 URL, với trạng thái SUCCESS hoặc FAILED, kèm PhysicalResourceId và Data nếu cần.",
+   "Khi nhận SUCCESS, CloudFormation đánh dấu resource hoàn tất. Dữ liệu trong Data có thể dùng ở chỗ khác trong template thông qua Fn GetAtt.",
+   "Giờ xem lúc xóa stack. CloudFormation đi ngược chiều phụ thuộc, nên custom resource bị xóa trước tiên, và Lambda nhận event Delete để dọn sạch bucket.",
+   "Tiếp theo Lambda bị xóa, rồi tới IAM role đã cấp cho Lambda quyền đọc bucket nguồn và ghi, xóa bucket đích.",
+   "Cuối cùng mới tới bucket. Lúc này bucket đã trống nên việc xóa thành công, không còn lỗi bucket not empty như trước.",
+   "Nhắc khi đi thi: nếu Lambda quên gửi response, stack sẽ treo ở IN_PROGRESS tới khi hết timeout, mặc định 1 giờ. Và nếu không có custom resource, bucket còn object sẽ khiến xóa stack thất bại; còn chỉ muốn giữ bucket thì dùng DeletionPolicy Retain."
+  ]
+ }
+}

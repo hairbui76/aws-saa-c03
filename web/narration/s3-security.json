@@ -1,0 +1,15 @@
+{
+ "S3 Security": {
+  "sig": "8-v5piqm",
+  "steps": [
+   "Sơ đồ này trả lời câu hỏi: ai vào được một bucket S3? Nhớ điểm xuất phát: S3 private by default, ban đầu chỉ root user của account chủ bucket có quyền, mọi quyền khác phải cấp tường minh.",
+   "Bắt đầu với Account B, tức là cross-account. IAM role bên B cần một identity policy cho phép gọi S3 trên bucket của Account A, đây là bước thứ nhất.",
+   "Nhưng B tự cho phép thì chưa đủ. Request còn phải đi qua bucket policy, một resource policy có phần tử Principal. Mỗi bucket chỉ có một bucket policy, nhưng chứa được nhiều statement.",
+   "Block Public Access là lớp fail-safe nằm trước bucket. Nó chặn truy cập public bất kể policy nói gì, nhưng chỉ với public hoặc anonymous, không ảnh hưởng identity được cấp quyền đúng cách.",
+   "Khi bucket policy bên A cũng cho phép identity của B, request mới tới được bucket. Cross-account luôn cần cả hai phía đồng ý, thiếu một bên là bị từ chối.",
+   "Giờ tới cùng account A: user hoặc role có identity policy cho phép s3 GetObject. Còn người dùng anonymous không đăng nhập thì chỉ vào được khi bucket policy dùng Principal là dấu sao, và Block Public Access phải tắt.",
+   "Với cùng account, chỉ cần identity policy hoặc bucket policy cho phép là đủ, vì quyền được gộp lại. Còn anonymous hoặc cross-account thì bắt buộc phải dùng bucket policy.",
+   "Khi đi thi, nhớ thứ tự: explicit Deny thắng explicit Allow, rồi mới tới implicit Deny; dùng Deny kèm Condition như SourceIp hay MFA để siết quyền. ACL là legacy, gần như luôn là đáp án sai. Đã cấp public mà vẫn bị 403 thì kiểm tra Block Public Access."
+  ]
+ }
+}

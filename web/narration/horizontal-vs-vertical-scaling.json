@@ -1,0 +1,13 @@
+{
+ "Horizontal vs Vertical Scaling": {
+  "sig": "6-199x280",
+  "steps": [
+   "Sơ đồ này so sánh hai cách scale. Bên vertical, một instance được làm to dần lên. Bên horizontal, ta thêm nhiều instance nhỏ đứng sau load balancer, miễn là session nằm ngoài instance.",
+   "Với vertical, ta đổi t3.large lên t3.xlarge, tức là gấp đôi vCPU và memory. Với horizontal, khách hàng không gọi thẳng vào instance mà đi qua Load Balancer để được chia tải.",
+   "Lên tiếp t3.2xlarge thì đã chạm trần, vì không thể to hơn size lớn nhất. Còn bên horizontal, load balancer phân tải cho Instance 1, 2, 3 cho tới N, gần như không giới hạn.",
+   "Đây là điểm mấu chốt: các instance lưu session ra một store bên ngoài như DynamoDB hoặc ElastiCache. Nhờ vậy instance trở nên stateless, người dùng vào instance nào cũng giữ được đăng nhập và giỏ hàng.",
+   "Ưu điểm của vertical là không phải sửa ứng dụng, chạy được cả monolith hay legacy, dù mỗi bước cần resize và reboot. Horizontal thì không gián đoạn, rẻ hơn, và bước scale mịn, từ 5 lên 6 instance chỉ tăng khoảng 20 phần trăm.",
+   "Khi đi thi, nhớ nhé: vertical có downtime, đắt thêm premium, có trần và bước scale thô. Horizontal đòi hỏi ứng dụng stateless với off-host sessions, nếu thấy người dùng bị logout khi scale out thì đưa session ra DynamoDB hoặc ElastiCache."
+  ]
+ }
+}

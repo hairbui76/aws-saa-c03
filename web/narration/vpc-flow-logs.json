@@ -1,0 +1,24 @@
+{
+ "VPC Flow Logs": {
+  "sig": "6-v7x4xr",
+  "steps": [
+   "Sơ đồ này nói về VPC Flow Logs: nó chỉ ghi metadata như IP, port, protocol và kết quả ACCEPT hoặc REJECT, không ghi nội dung packet. Gắn ở VPC, subnet hay ENI thì bắt mọi thứ từ mức đó trở xuống.",
+   "Ở đây Flow Log gắn ở ENI của app instance chỉ bắt đúng instance đó, còn gắn ở private subnet thì bắt cả DB primary lẫn standby. Log được gom theo 1 hoặc 10 phút nên luôn có độ trễ.",
+   "Sau khi gom, log được đẩy tới một trong hai đích: S3 để lưu file và xây pipeline riêng, hoặc CloudWatch Logs khi cần tích hợp, metric filter, alarm hay stream đi tiếp.",
+   "Nếu log nằm trong S3, bạn dùng Athena để truy vấn bằng cú pháp kiểu SQL. Athena là schema-on-read và chỉ tính tiền theo lượng dữ liệu đọc.",
+   "Lưu ý vài loại traffic không bao giờ xuất hiện trong Flow Logs: Instance Metadata ở 169.254.169.254, Time Sync, DHCP, Amazon DNS Resolver và traffic kích hoạt license Windows.",
+   "Khi đi thi, nhớ Flow Logs lọc được ACCEPT, REJECT hoặc ALL. Nếu đề cần xem nội dung packet hoặc giám sát real-time, thì đáp án không phải Flow Logs."
+  ]
+ },
+ "VPC Flow Logs - record": {
+  "sig": "6-irvmuj",
+  "steps": [
+   "Sơ đồ này hướng dẫn đọc một Flow Log record. Bob ping một EC2, và log cho ra một dòng ACCEPT rồi một dòng REJECT, dấu hiệu NACL đang chặn chiều trả lời.",
+   "Trong record, srcaddr là IP của Bob, dstaddr là IP của EC2. Port là 0 0 vì ICMP không có port, protocol bằng 1 là ICMP; nhớ thêm TCP là 6, UDP là 17.",
+   "Vì sao có hai dòng? Security Group là stateful nên thường chỉ một dòng ACCEPT cho cả hội thoại, còn NACL là stateless, xét request và response riêng nên có thể ra hai dòng.",
+   "Đầu tiên, request ping của Bob đi vào và NACL cho phép ICMP inbound, nên dòng thứ nhất ghi ACCEPT.",
+   "Tiếp theo request qua Security Group, nơi ICMP inbound được cho phép, rồi tới EC2. Vì SG stateful nên response cũng tự động được cho đi.",
+   "Nhưng khi response quay ra, NACL không có rule outbound cho phép, nên bị chặn và dòng thứ hai là REJECT. Đi thi thấy ACCEPT rồi REJECT cùng luồng, hãy nghĩ ngay tới NACL."
+  ]
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "EC2 User Data Bootstrapping": {
+  "sig": "6-1yssdyv",
+  "steps": [
+   "Sơ đồ này cho thấy cách một EC2 instance tự cấu hình ở lần launch đầu tiên. EC2 chỉ giao nguyên khối user data, còn cloud-init trong hệ điều hành sẽ chạy nó với quyền root, đúng một lần.",
+   "Đầu tiên, bạn truyền script user data qua Console, API hoặc CloudFormation. EC2 service coi khối này là opaque, nghĩa là không đọc, không kiểm tra gì cả, kể cả lệnh xóa sạch ổ đĩa.",
+   "Tiếp theo, EC2 đưa user data vào instance qua metadata service, tại địa chỉ 169.254.169.254, đường dẫn latest slash user-data, khác với latest slash meta-data dùng cho metadata.",
+   "Lúc boot, cloud-init trong hệ điều hành đọc metadata, thấy user data thì thực thi với quyền root. Nếu có lỗi, hãy xem ngay file cloud-init-output.log trong thư mục var log.",
+   "Có hai kết quả. Script chạy tốt thì instance Running, cấu hình đúng, sẵn sàng phục vụ. Script lỗi thì instance vẫn Running và vẫn pass status checks, nhưng cấu hình đã hỏng, EC2 không hề báo lỗi.",
+   "Khi đi thi, nhớ ba điều: user data chỉ chạy một lần, sửa rồi start lại cũng không chạy lại. Nó không bảo mật, đừng đặt password hay access key. Tối đa 16 KB, và API hoặc CloudFormation cần base64."
+  ]
+ },
+ "EC2 User Data Bootstrapping - boottime": {
+  "sig": "5-1nwg4v6",
+  "steps": [
+   "Sơ đồ này so sánh bốn cách chuẩn bị instance theo boot-time-to-service-time, tức thời gian từ lúc launch tới lúc nhận traffic. Thanh càng dài nghĩa là càng chậm.",
+   "Cách thứ nhất dùng AMI của AWS rồi cấu hình tay. Sau phần provision là vài phút tới vài giờ cài đặt thủ công, rất dễ sai, tuy linh hoạt nhưng không lặp lại nhất quán được.",
+   "Với bootstrapping, script user data tự cài và cấu hình lúc launch. Thời gian rút ngắn nhờ tự động, độ linh hoạt cao vì tham số hóa được, nhưng vẫn phải cài mọi thứ khi khởi động.",
+   "AMI baking cài sẵn mọi thứ vào AMI, nên thời gian sau provision gần như bằng không. Đổi lại độ linh hoạt thấp, vì cấu hình đã được nướng cứng vào AMI.",
+   "Cách tối ưu là kết hợp: bake khoảng 90% phần nặng vào AMI, bootstrap 10% cấu hình cuối. Khi đi thi, gặp câu ASG scale-out chậm vì cài app lâu, hãy chọn bake AMI và trỏ Launch Template vào AMI đó."
+  ]
+ }
+}

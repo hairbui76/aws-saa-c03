@@ -1,0 +1,30 @@
+{
+ "SageMaker": {
+  "sig": "11-kt3bft",
+  "steps": [
+   "Sơ đồ này giới thiệu Amazon SageMaker, nền tảng machine learning được quản lý hoàn toàn, bao phủ cả vòng đời ML. Mọi thứ nằm trong một SageMaker Domain, gồm EFS, users, apps, policies và cấu hình VPC cho một dự án.",
+   "Bắt đầu từ đích đến: ứng dụng gửi inference request tới model endpoint. Endpoint này có thể chạy kiểu serverless hoặc compute chạy liên tục, tùy kiến trúc hosting bạn chọn.",
+   "Vòng đời bắt đầu bằng bước Fetch, lấy dữ liệu, ví dụ từ S3, rồi chuyển sang Clean để làm sạch dữ liệu thô.",
+   "Dữ liệu sạch tiếp tục được Prepare, tức là chuẩn bị đúng định dạng để sẵn sàng đưa vào huấn luyện.",
+   "Khi dữ liệu đã sẵn sàng, ta chuyển sang Train, bước huấn luyện model, thường là phần tốn nhiều tài nguyên tính toán nhất.",
+   "Việc huấn luyện chạy trong Docker container trên ML EC2 instance, loại bắt đầu bằng ml chấm, ví dụ ml.m5.xlarge. AWS có sẵn nhiều pre-built container, hoặc bạn tự dùng container riêng. Sau đó model được Evaluate.",
+   "Model đạt yêu cầu sau đánh giá thì được Deploy, đưa ra môi trường thực tế.",
+   "Bước Deploy tạo ra model endpoint mà ứng dụng gọi tới, đồng thời bắt đầu giai đoạn Monitor và Collect, giám sát model và thu thập dữ liệu mới.",
+   "Dữ liệu mới thu thập được quay lại bước Fetch, khép kín vòng lặp để cải thiện model liên tục.",
+   "SageMaker Studio là IDE cho machine learning, nơi bạn build, train, debug và monitor model trong cùng một môi trường.",
+   "Khi đi thi, nhớ: Studio điều khiển cả vòng đời và phải tạo Domain trước. SageMaker không thu phí riêng, nhưng instance ml chấm, endpoint chạy liên tục và storage có thể rất đắt. Từ tháng 12 năm 2024, dịch vụ được đổi tên thành Amazon SageMaker AI."
+  ]
+ },
+ "SageMaker - choose": {
+  "sig": "7-1bq778a",
+  "steps": [
+   "Sơ đồ này giúp bạn chọn giữa AI service có sẵn và tự build trên SageMaker. Nguyên tắc: bài toán phổ biến đã có API thì dùng AI service cho ít vận hành, chỉ cần model tùy chỉnh mới chọn SageMaker.",
+   "Phân tích ảnh hoặc video thì dùng Rekognition. Phân tích sentiment, entity hay PII trong văn bản thì dùng Comprehend.",
+   "Trích xuất dữ liệu từ tài liệu scan, form, hóa đơn thì dùng Textract. Tìm kiếm tài liệu bằng câu hỏi tự nhiên thì dùng Kendra.",
+   "Chuyển audio thành text thì dùng Transcribe. Xây chatbot hoặc voice bot thì dùng Lex.",
+   "Chuyển text thành giọng nói thì dùng Polly. Dự báo dữ liệu time-series dạng managed thì dùng Forecast.",
+   "Dịch văn bản sang ngôn ngữ khác thì dùng Translate. Phát hiện gian lận online thì dùng Fraud Detector.",
+   "Mẹo thi: tự hỏi có AI service giải đúng bài toán không. Có thì gọi API, không thì dùng SageMaker để data scientist tự build, train, deploy. Thấy đề nói nhận diện khuôn mặt hay chuyển cuộc gọi thành text, hãy chọn AI service."
+  ]
+ }
+}

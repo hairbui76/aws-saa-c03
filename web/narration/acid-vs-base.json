@@ -1,0 +1,17 @@
+{
+ "ACID vs BASE": {
+  "sig": "10-17myobc",
+  "steps": [
+   "Sơ đồ này so sánh hai transaction model ACID và BASE qua lăng kính CAP theorem. ACID giữ dữ liệu luôn đúng nhưng khó scale, còn BASE luôn sẵn sàng, scale lớn và chấp nhận đọc dữ liệu cũ.",
+   "Bên ACID, Atomic nghĩa là giao dịch thành công toàn bộ hoặc không gì cả, như chuyển 10 đô thì trừ A và cộng B phải cùng xảy ra. Bên BASE, Basically Available nghĩa là luôn phản hồi nhưng không hứa dữ liệu mới nhất.",
+   "Consistent nghĩa là giao dịch đưa DB từ trạng thái hợp lệ này sang trạng thái hợp lệ khác, tuân thủ ràng buộc. Ngược lại, Soft state nghĩa là DB không tự ép consistency, trách nhiệm được đẩy sang ứng dụng.",
+   "Isolated đảm bảo các giao dịch chạy song song không ảnh hưởng nhau, như thể chạy tuần tự. Còn Eventually consistent nghĩa là nếu đợi đủ lâu, lần đọc sẽ khớp với lần ghi trước đó.",
+   "Durable nghĩa là đã commit thì dữ liệu bền vững, kể cả khi mất điện hay restart node. Phía BASE, vì DB bớt gánh việc bảo đảm consistency nên scale và hiệu năng rất cao.",
+   "Ví dụ trên AWS: RDS và Aurora theo ACID, hợp với tài chính và giao dịch chặt, nhưng scale hạn chế. DynamoDB theo BASE, mặc định đọc eventually consistent, ứng dụng có thể chủ động chọn strongly consistent read.",
+   "Giờ nhìn qua CAP theorem. Một DB nhiều node trên mạng luôn phải chịu partition, nên chỉ giữ thêm được consistency hoặc availability. Câu hỏi là khi các node mất liên lạc thì làm gì?",
+   "Có hai lựa chọn. Hủy thao tác và trả lỗi, tức là chọn consistency. Hoặc vẫn trả lời dù dữ liệu có thể cũ, tức là chọn availability.",
+   "Lựa chọn hủy thao tác dẫn tới mô hình ACID, ưu tiên consistency. Lựa chọn vẫn trả lời dẫn tới mô hình BASE, ưu tiên availability.",
+   "Khi đi thi, nhớ nhé: thấy BASE thì nghĩ ngay tới NoSQL, thấy ACID thì nghĩ tới RDS. Còn nếu ACID đi cùng DynamoDB, nhiều khả năng đề đang nói về DynamoDB Transactions."
+  ]
+ }
+}

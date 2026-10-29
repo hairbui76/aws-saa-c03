@@ -1,0 +1,12 @@
+{
+ "R53 Routing Policies": {
+  "sig": "5-e4u63h",
+  "steps": [
+   "Sơ đồ này giúp bạn chọn routing policy của Route 53. Điểm mấu chốt: Simple là policy duy nhất không có health check, các policy còn lại cho nhiều record cùng tên, mỗi record một Record ID, và bỏ qua record unhealthy.",
+   "Câu hỏi đầu tiên là có cần health check không. Nếu không, chỉ có một tài nguyên như một web server, chọn Simple: một record nhiều giá trị, trả hết và client tự chọn. Nếu có, ta đi tiếp.",
+   "Nếu mô hình là active-passive, có bản dự phòng, hãy chọn Failover: trả primary khi healthy, còn không thì trả secondary, ví dụ trang bảo trì tĩnh trên S3. Nếu không phải, ta xét tiêu chí chọn record.",
+   "Multivalue trả tối đa 8 record healthy cho active-active đơn giản. Weighted chia traffic theo tỷ lệ, hợp cho canary thử bản mới 5 phần trăm. Latency chọn region độ trễ thấp nhất. Geolocation khớp vị trí user, còn Geoproximity theo khoảng cách và chỉnh bằng bias.",
+   "Khi đi thi nhớ nhé: Geolocation không trả record gần nhất, chỉ trả record khớp vị trí, không khớp và không có default thì NO ANSWER. Gần nhất là Geoproximity. Và DNS cache theo TTL, nên failover không tức thời."
+  ]
+ }
+}

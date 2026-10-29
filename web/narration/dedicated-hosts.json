@@ -1,0 +1,24 @@
+{
+ "Dedicated Hosts": {
+  "sig": "6-x1au8u",
+  "steps": [
+   "Sơ đồ này nói về Dedicated Host, tức là cả một host vật lý cấp trọn cho account của bạn. Mỗi host gắn với một instance family, và cách chia instance khác nhau giữa host cũ với host Nitro.",
+   "Bạn trả tiền cho cả host, theo On-Demand hoặc Reserved 1 hoặc 3 năm, còn instance chạy trên đó không tính thêm. Host A1 cũ có 16 core, bạn chỉ chọn một size, ví dụ 16 medium hoặc 8 large, không trộn được.",
+   "Lý do chính để dùng Dedicated Host là license phần mềm tính theo socket hoặc core vật lý, kiểu BYOL. Bạn thấy được phần cứng thật nên license đúng theo host của mình.",
+   "Với host R5 Nitro có 48 core, bạn trộn nhiều size: host 1 chạy một 12xlarge, một 4xlarge và bốn 2xlarge. Host còn có thể share qua RAM trong Organization, mỗi account chỉ điều khiển instance của mình.",
+   "Host 2 lại chạy bốn 4xlarge cộng bốn 2xlarge, cũng dùng đủ 48 core. Lưu ý Dedicated Host không dùng được với RDS và placement group.",
+   "Mẹo khi đi thi: nếu đề chỉ cần phần cứng không chia sẻ với khách khác mà không nhắc license theo socket hoặc core, thì Dedicated Instance thường đủ và rẻ hơn."
+  ]
+ },
+ "Dedicated Hosts - tenancy": {
+  "sig": "6-1ppcc5f",
+  "steps": [
+   "Sơ đồ này so sánh ba kiểu tenancy: Shared, Dedicated Instance và Dedicated Host. Hai kiểu dedicated đều không chung phần cứng với account khác, nhưng chỉ Dedicated Host cho bạn thấy và kiểm soát host.",
+   "Với shared tenancy mặc định, instance của bạn nằm chung host với khách hàng khác. Đây là cách phổ biến cho đa số workload.",
+   "Với Dedicated Instance, phần cứng chỉ chạy instance của bạn, chỗ trống cũng không ai khác dùng, nhưng AWS lo việc chọn host. Còn Dedicated Host thì host là của bạn và bạn chọn đặt instance lên đâu.",
+   "Chỉ Dedicated Host cho thấy số socket và core vật lý, nên đây là lựa chọn duy nhất phục vụ license BYOL. Hai kiểu còn lại thì không.",
+   "Về tính phí, shared tính theo instance, Dedicated Instance tính theo instance cộng phí dedicated theo region, còn Dedicated Host tính theo cả host và instance không mất thêm phí.",
+   "Khi đi thi, thấy từ khóa socket, core, BYOL hay per-core license thì chọn Dedicated Host. Ngoài bài toán license, Dedicated Host thường đắt và kém linh hoạt, còn compliance đơn thuần thì Dedicated Instance là đủ."
+  ]
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "CloudHSM": {
+  "sig": "5-1lzpqi",
+  "steps": [
+   "Sơ đồ này cho thấy kiến trúc của CloudHSM. Các HSM single-tenant chạy trong một VPC do AWS quản lý mà bạn không nhìn thấy, và được đưa vào VPC của bạn qua ENI ở từng private subnet.",
+   "Trên mỗi EC2 cần cài CloudHSM client chạy nền, sau đó ứng dụng dùng API chuẩn công nghiệp như PKCS#11, JCE hoặc CNG. Để ý mỗi EC2 đều kết nối tới cả hai ENI, không chỉ một.",
+   "Mỗi ENI dẫn tới một HSM vật lý nằm trong một AZ riêng. Đây là thiết bị đạt FIPS 140-2 Level 3 toàn phần, khác với KMS chỉ đạt Level 2 tổng thể theo khóa học.",
+   "Khi gom các HSM thành cluster, chúng tự đồng bộ key, policy và cấu hình quan trọng với nhau. Bạn không phải tự cấu hình việc replicate này.",
+   "Khi đi thi nhớ nhé: một HSM đơn lẻ không HA, cần cluster ít nhất hai HSM ở nhiều AZ và client cân bằng tải qua mọi ENI. AWS chỉ bảo trì phần cứng, không chạm được key, nên mất quyền truy cập HSM là gần như mất key."
+  ]
+ },
+ "CloudHSM - chon": {
+  "sig": "4-1bqw2gf",
+  "steps": [
+   "Sơ đồ này giúp bạn chọn giữa KMS và CloudHSM. Chỉ cần trả lời hai câu hỏi: có cần HSM single-tenant do mình toàn quyền kiểm soát không, và có cần tích hợp dịch vụ AWS không.",
+   "Câu hỏi đầu tiên: đề có yêu cầu FIPS 140-2 Level 3 overall, single-tenant, AWS không được chạm vào key không? Nếu có thì xét tiếp chuyện tích hợp dịch vụ AWS, nếu không thì xem đề có nhắc tới API chuẩn hoặc các use case đặc thù không.",
+   "Nếu vừa cần key trong HSM riêng vừa cần tích hợp native, chọn KMS custom key store; không cần tích hợp thì CloudHSM. Thấy PKCS#11, SSL TLS offload, Oracle TDE hay CA private key thì cũng là CloudHSM, còn lại cứ dùng KMS.",
+   "Một bẫy hay gặp khi đi thi: CloudHSM không dùng được cho S3 SSE. Với S3, bạn chỉ có thể làm client-side encryption, tức là mã hóa object ở máy local trước khi upload."
+  ]
+ }
+}

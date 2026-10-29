@@ -1,0 +1,27 @@
+{
+ "MFA": {
+  "sig": "6-9h6bom",
+  "steps": [
+   "Sơ đồ này nói về MFA, tức là kết hợp nhiều loại factor khác nhau khi đăng nhập. Hai thứ cùng một loại vẫn chỉ là single-factor, và trong AWS, MFA được gán cho từng identity chứ không cho cả account.",
+   "Trước hết là hai loại factor ít gặp hơn. Inherence là thứ bạn là, như vân tay hay khuôn mặt. Location là nơi bạn ở, ví dụ tọa độ hoặc đang dùng mạng công ty hay Wi-Fi nhà.",
+   "Ví dụ đời thường là rút tiền ATM: thẻ là possession, PIN là knowledge, vậy là hai factor. Mã TOTP chỉ dùng một lần và đổi khoảng 30 giây, nên lộ password cùng một mã cũ vẫn không vào được.",
+   "Trong AWS có ba dạng MFA: virtual MFA device trong các app như Google Authenticator hay Authy, hardware TOTP token dạng key fob như Gemalto, và security key FIDO như YubiKey hoặc passkey.",
+   "Đây là phần quan trọng nhất. Username cộng password đều là knowledge nên vẫn là single-factor. Chỉ khi password đi cùng mã TOTP từ app, tức knowledge cộng possession, mới thật sự là MFA. Nhớ là password cộng câu hỏi bảo mật cũng chỉ là single-factor.",
+   "Khi đi thi, hãy nhớ: càng nhiều factor càng an toàn nhưng càng bất tiện, nên mục tiêu là cân bằng giữa security và convenience. Và muốn tăng bảo mật đăng nhập console thì đáp án thường là bật MFA."
+  ]
+ },
+ "MFA - flow": {
+  "sig": "9-4zcrtm",
+  "steps": [
+   "Sơ đồ này mô tả cách gán virtual MFA cho một identity. Secret key được chuyển vào authenticator app qua QR code, sau đó app và AWS cùng tính ra mã TOTP theo thời gian.",
+   "Đầu tiên, bạn đăng nhập bằng identity cần bảo vệ, vào Security credentials và chọn Assign MFA dạng Virtual. AWS sẽ sinh secret key và đóng gói thành QR code. Với production thật, nên cân nhắc hardware token cho root.",
+   "Tiếp theo, bạn quét QR code bằng authenticator app. Việc này thêm một entry mới vào app, chứa secret key cùng username và tên dịch vụ.",
+   "Từ lúc đó, app liên tục sinh mã TOTP 6 số, đổi khoảng 30 giây một lần, dựa trên secret key chung với AWS.",
+   "Bạn nhập hai mã liên tiếp để AWS xác nhận app đã đồng bộ đúng. Thành công thì MFA chính thức gắn vào identity đó.",
+   "Từ đây, mỗi lần đăng nhập console bạn cần cả password, là knowledge, và mã TOTP hiện tại, là possession. Có đủ cả hai thì mới đăng nhập được.",
+   "Trong khóa học, mỗi identity cần một entry riêng. Đầu tiên là root của account General và root của account Production.",
+   "Tiếp theo là iamadmin của General và iamadmin của Production, tổng cộng 4 entry trong cùng một authenticator app, không dùng lại cho nhau.",
+   "Lời nhắc khi đi thi: MFA gắn với identity, không gắn với account, nên bật cho root không bảo vệ iamadmin và ngược lại. Còn nếu mất điện thoại, kẻ nhặt được vẫn cần username, password và mở khóa máy."
+  ]
+ }
+}

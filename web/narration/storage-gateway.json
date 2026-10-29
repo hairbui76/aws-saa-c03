@@ -1,0 +1,22 @@
+{
+ "Storage Gateway": {
+  "sig": "6-jsplwq",
+  "steps": [
+   "Sơ đồ này so sánh bốn mode của Storage Gateway. Phía on-prem nó trình bày iSCSI, NFS hoặc SMB, phía AWS lưu vào EBS snapshot, S3 hoặc Glacier; điểm khác nhau chính là dữ liệu chính nằm ở đâu.",
+   "Phía on-prem, Volume Stored giữ toàn bộ dữ liệu tại chỗ, Volume Cached chỉ giữ dữ liệu hay dùng. Tape Gateway giả làm tape library cho backup server, còn File Gateway cho client mount share qua NFS hoặc SMB.",
+   "Lên AWS, Stored chỉ đẩy bản sao bất đồng bộ thành EBS snapshot. Cached đặt primary trong S3 vùng AWS-managed, Tape đưa tape vào VTL trên S3, còn File Gateway ghi file thành object trong bucket của chính bạn.",
+   "Với Tape Gateway, khi bạn export tape trong phần mềm backup, tape được archive từ VTL sang VTS trên Glacier hoặc Deep Archive, giống như chở tape ra kho offsite. Cần dùng lại thì retrieve về.",
+   "Đây là use case của từng mode. Stored hợp backup, DR, migration và low latency nhưng không mở rộng capacity; Cached dùng cho data center extension; Tape thay tape vật lý; File cho hybrid file share và dùng Lambda, Athena.",
+   "Khi đi thi nhớ nhé: các nét đứt là upload bất đồng bộ tới Storage Gateway endpoint, một public endpoint, nên đi qua internet hoặc qua public VIF của Direct Connect."
+  ]
+ },
+ "Storage Gateway - choose": {
+  "sig": "4-oajtw0",
+  "steps": [
+   "Sơ đồ này giúp chọn mode Storage Gateway theo từ khóa trong đề: volume thì Volume Gateway, tape thì Tape Gateway, file, NFS hoặc SMB thì File Gateway, trừ khi đề có chi tiết loại trừ.",
+   "Đầu tiên xem đề mô tả storage kiểu gì. Block qua iSCSI thì đi nhánh volume, kiến trúc tape backup truyền thống thì chọn Tape Gateway, còn chia sẻ file thì chọn File Gateway.",
+   "Nhánh volume: hết chỗ on-prem thì chọn Cached vì primary ở S3; cần backup, DR, low latency toàn bộ dữ liệu thì chọn Stored. Bẫy hay gặp là Stored không giải quyết thiếu dung lượng. Tape ít dùng thì archive sang VTS, còn File multi-site thì không tự refresh và không có file locking.",
+   "Lời nhắc khi thi: đừng nhầm với dịch vụ khác. Di chuyển hoặc đồng bộ theo lịch là DataSync, chuyển offline lượng cực lớn là Snow Family, còn file system nằm hẳn trong AWS là FSx hoặc EFS."
+  ]
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "CFN DependsOn": {
+  "sig": "6-gqkq99",
+  "steps": [
+   "Sơ đồ này nói về DependsOn trong CloudFormation. Thường thì Ref và GetAtt tự tạo implicit dependency, đúng trong khoảng 99% trường hợp, nhưng Elastic IP lại cần khai báo DependsOn rõ ràng.",
+   "Đầu tiên là các implicit dependency. VPC và InternetGateway độc lập nên tạo song song, còn InternetGatewayAttachment dùng Ref tới cả hai, nên CloudFormation tự biết phải chờ chúng xong trước.",
+   "Elastic IP tên WPEIP cần Internet Gateway đã attach vào VPC, nhưng không có Ref nào nối tới attachment. Vì vậy ta thêm mũi tên DependsOn, một explicit dependency, để ép thứ tự.",
+   "Nếu thiếu DependsOn, CloudFormation có thể tạo EIP trước attachment, hoặc xóa attachment trước EIP, và cả hai đều gây lỗi. Kết quả ngẫu nhiên, stack lúc chạy được lúc không.",
+   "Khi thêm DependsOn InternetGatewayAttachment vào EIP, EIP chỉ được tạo sau khi attachment hoàn tất, và khi xóa thì EIP bị xóa trước, đúng thứ tự ngược lại.",
+   "Khi đi thi, nhớ nhé: stack lúc lỗi lúc không liên quan EIP và IGW thì thêm DependsOn tới IGW attachment. Đã có Ref hoặc GetAtt thì không cần DependsOn thừa, còn chờ bootstrap trong instance thì dùng cfn-signal."
+  ]
+ }
+}

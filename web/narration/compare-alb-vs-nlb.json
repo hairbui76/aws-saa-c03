@@ -1,0 +1,28 @@
+{
+ "Compare - ALB vs NLB": {
+  "sig": "11-foo4fh",
+  "steps": [
+   "Sơ đồ này so sánh ALB và NLB. ALB làm việc ở layer 7, hiểu HTTP nên định tuyến thông minh nhưng luôn cắt kết nối; NLB ở layer 4, nhanh, có IP tĩnh và chuyển thẳng TCP.",
+   "Điểm mạnh đầu tiên: ALB đọc được host, path, header, cookie, query và source IP để áp rule. Còn NLB xử lý được giao thức không phải web như SMTP, SSH, game hay IoT.",
+   "ALB gắn được nhiều cert nhờ SNI, nên gộp nhiều ứng dụng vào một ALB thay vì mỗi app một CLB. NLB thì cực nhanh, hàng triệu request mỗi giây, latency chỉ khoảng 25% của ALB.",
+   "ALB có health check layer 7, gọi một trang cụ thể và so khớp mã phản hồi. NLB có IP tĩnh mỗi AZ, gắn được Elastic IP, rất tiện để khách hàng whitelist trên firewall.",
+   "ALB còn hỗ trợ sticky session bằng cookie, xác thực OIDC hoặc Cognito, và target là Lambda. NLB là nền của PrivateLink để cung cấp dịch vụ cho VPC khác.",
+   "Giờ tới điểm yếu. ALB chỉ nhận HTTP, HTTPS và WebSocket, không có SMTP, SSH hay UDP. Ngược lại NLB không nhìn thấy HTTP, nên không có routing rule và không có stickiness bằng cookie.",
+   "ALB không có IP tĩnh, chỉ có DNS name mà IP phía sau có thể thay đổi. NLB theo khóa học chỉ có health check cơ bản kiểu ICMP hoặc TCP handshake, không hiểu logic ứng dụng.",
+   "ALB chậm hơn NLB vì phải xử lý nhiều tầng hơn trong network stack. Còn NLB mặc định tắt cross-zone load balancing, trong khi ALB thì bật sẵn.",
+   "Mẹo khi đi thi: chọn NLB nếu đề nói unbroken encryption, static IP, hiệu năng cực cao, giao thức không phải HTTP hoặc PrivateLink. Thấy path-based, host-based routing, nhiều domain, xác thực tại LB thì chọn ALB.",
+   "Xem đường đi của kết nối. Client gửi HTTPS tới ALB, cert nằm trên ALB nên SSL bị terminate tại đây. Với NLB dùng TCP listener, gói tin được chuyển thẳng qua, không bị giải mã.",
+   "Phía sau, ALB phải mở một kết nối mới tới EC2, nên mã hóa bị đứt đoạn. NLB giữ TLS nguyên vẹn tới tận EC2, đó chính là mã hóa end-to-end mà đội bảo mật hay yêu cầu."
+  ]
+ },
+ "Compare - ALB vs NLB - rules": {
+  "sig": "5-3ggqbt",
+  "steps": [
+   "Sơ đồ này cho thấy cách ALB rules hoạt động: một ALB phục vụ nhiều app, rule được xét theo priority từ trên xuống, khớp rule nào thì dừng, và kết nối tới target group luôn là kết nối mới.",
+   "Clients kết nối tới listener HTTPS cổng 443. Listener gắn cả cert catagram.io và dogagram.io nhờ SNI, nên một ALB lo được cả hai domain.",
+   "Listener có các rule theo thứ tự: P1 kiểm tra source IP 1.3.3.7, P2 và P3 kiểm tra host header, cuối cùng là default rule bắt mọi request còn lại.",
+   "Khách doanh nghiệp từ IP 1.3.3.7 được forward tới TG corporate với bản app riêng. Catagram.io đi tới TG catagram, dogagram.io bị redirect sang catagram.io, còn lại trả fixed-response như lỗi 503.",
+   "Nhắc khi đi thi: conditions gồm host header, http header, method, path, query string, source IP; actions gồm forward, redirect, fixed-response và authenticate. Một ALB thay nhiều CLB, và routing theo path hay host chỉ có ở ALB."
+  ]
+ }
+}

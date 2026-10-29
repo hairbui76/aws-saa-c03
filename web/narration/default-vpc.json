@@ -1,0 +1,11 @@
+{
+ "Default VPC": {
+  "sig": "4-33c41l",
+  "steps": [
+   "Sơ đồ này cho thấy Default VPC trong region us-east-2 có 3 AZ. AWS tạo sẵn với CIDR 172.31.0.0 trên 16 ở mọi region, mỗi AZ một subnet trên 20, và mỗi region chỉ có tối đa một cái.",
+   "Mỗi subnet tự gán public IPv4 cho EC2 deploy vào, và có 4091 IP khả dụng vì AWS giữ 5 trong 4096 IP. Bên cạnh là bảng so sánh: custom VPC thì nhiều mỗi region, 100% private và hợp cho hybrid.",
+   "Default VPC có sẵn Internet Gateway gắn vào, nối tài nguyên ra Internet và AWS Public Zone. Đây là lý do mọi thứ trong default VPC có thể truy cập công khai ngay.",
+   "Khi đi thi, nhớ rằng subnet nằm trong đúng một AZ nên là AZ resilient, còn VPC trải qua mọi AZ nên là region resilient. Và production thì luôn chọn custom VPC nhé."
+  ]
+ }
+}

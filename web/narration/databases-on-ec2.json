@@ -1,0 +1,24 @@
+{
+ "Databases on EC2": {
+  "sig": "8-svd5ps",
+  "steps": [
+   "Sơ đồ này cho thấy cách đi từ kiến trúc monolith sang tách database ra một EC2 riêng. Tách ra tạo thêm dependency qua mạng và phí cross-AZ, mà vẫn là self-managed nên thua managed DB.",
+   "Trong kiến trúc monolith, instance A4L-WordPress trước hết chạy Apache làm web server, nhận request từ người dùng.",
+   "Trên cùng instance đó là WordPress, tức lớp application, xử lý logic và tạo nội dung trang.",
+   "Và cả MariaDB cũng nằm chung máy. Web, app và database dồn vào một instance trong một AZ, đây là kiến trúc Animals4life dùng tới giờ.",
+   "Khi tách DB ra, chú ý chi phí: traffic giữa các instance cùng AZ qua private IP là miễn phí, còn khác AZ thì mất phí data transfer, nhỏ nhưng có.",
+   "Vì sao thường không nên tự chạy DB trên EC2? Bạn tự patch OS và DB, tự lo backup và DR, chỉ nằm trong một AZ, khó scale theo tải bursty, và tự setup replication. Mặc định hãy chọn RDS, Aurora hoặc DynamoDB.",
+   "Ở kiến trúc tách, instance app chạy Apache và WordPress, với DB_HOST trong wp-config trỏ tới private IP của instance MariaDB, kết nối qua cổng TCP 3306. Nếu hai instance khác AZ thì traffic này có phí.",
+   "Instance MariaDB lưu dữ liệu trên EBS cùng AZ-B. Vì EC2 và EBS đều gắn với một AZ, AZ đó lỗi là database lỗi, nên bạn phải tự lo snapshot hoặc backup lên S3."
+  ]
+ },
+ "Databases on EC2 - when": {
+  "sig": "4-1ab81mp",
+  "steps": [
+   "Sơ đồ này là cây quyết định: khi nào nên chạy database trên EC2. Hầu như luôn chọn managed DB, chỉ chọn EC2 khi yêu cầu vượt ngoài những gì AWS cung cấp.",
+   "Câu hỏi đầu tiên: đề có cần root access, engine hoặc version AWS không có, tổ hợp OS và DB riêng, hay replication đặc thù không? Nếu không, chọn managed DB. Và hãy chất vấn chuyện cần root, vì parameter group của RDS chỉnh được nhiều tham số.",
+   "Nếu chỉ cần OS access cho Oracle hoặc SQL Server, RDS Custom là lựa chọn vừa managed vừa có OS access. Còn engine niche, version hay combo OS và DB mà AWS không có thì DB trên EC2 là hợp lệ.",
+   "Khi đi thi, nhớ rằng chọn DB trên EC2 nghĩa là bạn tự lo hết: patch OS và DB, backup, DR, HA nhiều AZ, replication và scale. Mặc định vẫn ưu tiên managed DB."
+  ]
+ }
+}

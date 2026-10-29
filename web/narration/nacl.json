@@ -1,0 +1,23 @@
+{
+ "NACL": {
+  "sig": "4-1k0rfh5",
+  "steps": [
+   "Sơ đồ này cho thấy cách NACL của web subnet xét bộ rule inbound. Rule được xét từ số nhỏ đến số lớn, gặp rule khớp đầu tiên thì áp ALLOW hoặc DENY rồi dừng ngay.",
+   "Có ba gói tin. Gói từ 203.0.113.5 khớp rule 90 nên bị chặn. Gói HTTPS của Bob không khớp rule 90, đi tới rule 100 và được cho qua. Gói TCP 22 không khớp rule nào nên rơi vào implicit deny.",
+   "Đây là luồng xử lý. Nếu không khớp thì xét tiếp rule số lớn hơn, còn khớp thì ALLOW hoặc DENY và dừng. Cuối cùng luôn có rule sao chặn mọi thứ còn lại.",
+   "Khi đi thi nhớ nhé: DENY phải có số nhỏ hơn rule ALLOW chung. Nếu ALLOW 100 và DENY 200 cùng khớp một IP thì kết quả là ALLOW. NACL chặn được IP xấu, còn Security Group thì không, và rule chỉ dùng IP hoặc CIDR, port, protocol."
+  ]
+ },
+ "NACL - scope": {
+  "sig": "7-tvn34",
+  "steps": [
+   "Sơ đồ này nói về phạm vi của NACL. NACL là firewall stateless ở biên subnet, traffic đi qua subnet khác sẽ qua outbound của NACL nguồn rồi inbound của NACL đích.",
+   "Hai instance A1 và A2 cùng Subnet A nói chuyện trực tiếp, NACL không lọc. Còn khi A1 gửi ra ngoài subnet, gói tin phải qua bộ outbound của NACL-A.",
+   "Gói tin vượt ranh giới sang Subnet B nên tiếp tục bị bộ inbound của NACL-B kiểm tra. Vì stateless, chiều response cũng cần rule ephemeral 1024 đến 65535 ở cả hai NACL.",
+   "Qua được NACL-B thì gói tin mới tới EC2 B1. Như vậy một luồng giữa hai subnet cần rule trên cả hai NACL.",
+   "Default NACL được tạo cùng VPC có rule 100 ALLOW tất cả cộng rule sao DENY, nên thực tế cho qua mọi traffic.",
+   "Ngược lại, custom NACL mới tạo chỉ có rule sao DENY, nên vừa gắn vào subnet là chặn sạch mọi thứ.",
+   "Nhắc khi đi thi: mỗi subnet có đúng một NACL, một NACL gắn được nhiều subnet, không gắn vào instance hay ENI. Và gắn custom NACL mới vào subnet đang chạy sẽ mất toàn bộ kết nối cho tới khi thêm rule."
+  ]
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "CloudFront TTL and Invalidations": {
+  "sig": "6-1ds7k3b",
+  "steps": [
+   "Sơ đồ này cho thấy edge location xử lý một request ra sao dựa vào TTL. Còn TTL thì trả thẳng từ cache, hết TTL thì edge phải hỏi lại origin.",
+   "Mọi thứ bắt đầu khi request tới edge. Câu hỏi đầu tiên edge đặt ra là object này đã có trong cache của mình chưa.",
+   "Có ba nhánh. Không có thì cache miss, edge fetch từ origin rồi lưu lại. Có và còn TTL thì trả ngay. Có nhưng stale thì edge gửi conditional request hỏi origin.",
+   "Nếu origin trả 304 Not Modified, edge dùng tiếp bản cache và đánh dấu current, không truyền lại dữ liệu. Nếu trả 200 OK thì thay bằng object mới. Lưu ý, khi object còn TTL, user vẫn nhận bản cũ dù origin đã cập nhật.",
+   "TTL được đặt trên behavior. Default TTL là 24 giờ, tức 86400 giây, áp dụng cho object không có TTL riêng. Minimum và Maximum TTL tự thân không làm gì, chỉ chặn dưới và chặn trên TTL per-object.",
+   "Khi đi thi, nhớ ba header: Cache-Control max-age và s-maxage tính bằng giây, còn Expires là một ngày giờ cụ thể. Với S3 thì đặt qua object metadata, với custom origin thì ứng dụng hoặc web server chèn header."
+  ]
+ },
+ "CloudFront TTL and Invalidations - update": {
+  "sig": "5-ohjqod",
+  "steps": [
+   "Sơ đồ này so sánh ba cách cập nhật nội dung đã cache: invalidation để sửa lỗi, versioned file names cho cập nhật thường xuyên, và S3 object versioning là cái bẫy.",
+   "Invalidation tạo trên distribution theo pattern, từ một file cụ thể tới toàn bộ với gạch chéo sao. Versioned file names thì upload tên mới như whiskers1 gạch dưới v2 và trỏ app sang. Còn S3 versioning giữ nhiều phiên bản dưới cùng một tên.",
+   "Invalidation làm hết hạn ngay ở mọi edge bất kể TTL, nhưng cần thời gian lan ra. Đổi tên file thì không cần invalidation, cũng tránh được cache trình duyệt. S3 versioning thì vô ích, vì CloudFront cache theo tên nên edge vẫn giữ bản cũ.",
+   "Invalidation tính phí theo path, một wildcard tính là một path, nên hãy invalidate ít lần mà rộng. Versioned names cho log rõ phiên bản, giữ mọi phiên bản và rẻ hơn. S3 versioning chỉ lấy bản mới nhất khi cache miss hoặc stale.",
+   "Lời nhắc khi đi thi: invalidation dùng để sửa lỗi, không phải quy trình thường ngày. Đề hỏi cách cost-effective cho nội dung đổi thường xuyên thì chọn versioned file names, đừng chọn S3 object versioning."
+  ]
+ }
+}

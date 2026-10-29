@@ -1,0 +1,15 @@
+{
+ "S3 Bucket Keys": {
+  "sig": "8-6pma2s",
+  "steps": [
+   "Sơ đồ này so sánh SSE-KMS khi có và không có S3 Bucket Key. Ý chính là KMS chỉ sinh một bucket key có thời hạn, rồi S3 tự sinh DEK cho từng object, nhờ vậy bớt gọi KMS rất nhiều.",
+   "Bắt đầu với bên có Bucket Key. KMS key aws/s3 chỉ thỉnh thoảng mới được gọi để sinh ra một bucket key có thời hạn, gắn về mặt khái niệm với bucket.",
+   "Trong thời gian bucket key còn hiệu lực, S3 dùng nó để tự sinh DEK cho từng object. Phần việc được chuyển từ KMS sang S3, nên không cần gọi KMS cho mỗi object nữa.",
+   "Giờ nhìn sang trường hợp không có Bucket Key. Bob PUT rất nhiều object vào S3, có thể là hàng trăm hoặc hàng trăm nghìn object mỗi giây.",
+   "Lúc này, với mỗi object, S3 phải gọi KMS key aws/s3 một lần GenerateDataKey để lấy một DEK riêng, rồi lưu object cùng DEK đã mã hóa cạnh nhau.",
+   "Vấn đề là phí request KMS tăng theo số object, và GenerateDataKey bị giới hạn khoảng 5.500, 10.000 hoặc 50.000 request mỗi giây tùy region, tính theo account. Vượt trần là bị throttle.",
+   "Khi bật Bucket Key, số lần gọi KMS giảm mạnh, chi phí có thể giảm tới khoảng 99 phần trăm và hết bị throttle, trong khi vẫn giữ lợi ích kiểm soát key của SSE-KMS.",
+   "Nhắc khi đi thi: Bucket Key không hồi tố, object cũ phải copy hoặc mã hóa lại. CloudTrail sẽ thấy ARN bucket thay vì ARN object và ít event KMS hơn. Và nó chỉ liên quan SSE-KMS, không phải SSE-S3 hay SSE-C."
+  ]
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "Aurora": {
+  "sig": "8-v2ar2j",
+  "steps": [
+   "Sơ đồ này cho thấy kiến trúc Aurora cluster: phần compute tách khỏi phần storage, mọi instance dùng chung một cluster volume trải trên ba AZ.",
+   "Ứng dụng có hai địa chỉ kết nối chính. Cluster endpoint dùng để đọc và ghi, còn reader endpoint chỉ đọc và tự cân tải qua các replica.",
+   "Cluster endpoint luôn trỏ tới primary, nơi duy nhất được ghi. Reader endpoint chia lượt đọc cho các replica, và mỗi replica cũng sẵn sàng làm đích failover.",
+   "Các instance không có storage local. Tất cả cùng dùng một cluster volume chỉ SSD, tối đa 128 TiB, và bạn trả tiền theo dung lượng thực dùng.",
+   "Khi primary ghi, dữ liệu được sao chép đồng bộ ra sáu bản trên ba AZ. Việc này diễn ra ở tầng storage nên không tốn CPU của instance.",
+   "Ngoài hai endpoint chính còn có custom endpoint trỏ tới một tập instance bạn tự chọn, và instance endpoint để kết nối thẳng tới từng máy.",
+   "Hãy thuộc các con số: tối đa 15 replica, sáu bản sao trên ba AZ, 128 TiB, tính tiền theo giây tối thiểu 10 phút, backup miễn phí bằng 100% cluster, và không có free tier.",
+   "Khi đi thi, nếu đề cần vừa HA vừa scale đọc mà không muốn trả tiền cho standby ngồi không, hãy chọn Aurora. Failover nhanh vì storage dùng chung, thêm replica không cần cấp phát storage."
+  ]
+ },
+ "Aurora - recovery": {
+  "sig": "7-1wvgwaw",
+  "steps": [
+   "Sơ đồ này so sánh ba cách quay lại hoặc nhân bản dữ liệu trong Aurora: restore, backtrack và fast clone, khác nhau ở việc có tạo cluster mới và có copy dữ liệu hay không.",
+   "Restore từ snapshot luôn tạo ra một cluster mới với endpoint mới. Còn fast clone thì dùng chung dữ liệu gốc, chỉ lưu phần bị sửa theo cơ chế copy-on-write.",
+   "Ví dụ lúc 10 giờ dữ liệu vẫn tốt, nhưng đến 10 giờ 05 phút có người lỡ chạy DROP TABLE.",
+   "Với backtrack, bạn tua lại chính cluster đó về 10 giờ, ngay tại chỗ, không cần tạo database mới.",
+   "Đây là ba lựa chọn đặt cạnh nhau: restore bằng snapshot hoặc point-in-time, backtrack, và fast clone.",
+   "Restore buộc ứng dụng đổi sang endpoint mới. Backtrack giữ nguyên cluster và endpoint, hiện chỉ có ở Aurora MySQL. Fast clone nhanh, ít tốn storage, hợp để test bằng dữ liệu production.",
+   "Khi đi thi, nhớ mô hình high watermark: dùng 50 GiB rồi xóa còn 40 vẫn trả 50. Rollback tại chỗ thì chọn Backtrack, bản sao test nhanh thì chọn Fast clone, còn restore luôn ra cluster mới."
+  ]
+ }
+}

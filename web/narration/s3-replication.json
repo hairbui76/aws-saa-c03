@@ -1,0 +1,26 @@
+{
+ "S3 Replication": {
+  "sig": "7-g56m41",
+  "steps": [
+   "Sơ đồ này cho thấy cách S3 Replication hoạt động, cả CRR khác region lẫn SRR cùng region. Rule nằm trên source bucket, và S3 dùng một IAM role để copy object mới sang destination theo một chiều.",
+   "Đầu tiên, replication configuration được gắn vào source bucket, gồm destination, IAM role, bộ lọc và tùy chọn như RTC. Lưu ý source bucket phải bật versioning.",
+   "Tiếp theo, service S3 assume IAM role này. Trust policy của role cho phép s3.amazonaws.com, còn permissions policy cho phép đọc object ở source và ghi sang destination.",
+   "Role sau đó replicate object sang destination bucket. Với CRR, dữ liệu đi sang region khác qua kênh mã hóa TLS; với SRR, bản sao nằm cùng region, có thể ở account khác như account audit.",
+   "Khi khác account, destination bucket không mặc định tin role của Account A, nên cần bucket policy cho phép role đó ghi vào. Nên đổi ownership sang Account B để account này đọc được object.",
+   "Nếu cần thời gian replicate dự đoán được, bật Replication Time Control. Nó cam kết 99,99% object mới được replicate trong 15 phút, có metrics và notification, nhưng tốn thêm phí.",
+   "Khi đi thi nhớ nhé: versioning bắt buộc ở cả hai bucket, replication chỉ một chiều, và object có sẵn cần S3 Batch Replication. Cùng account thì role tự truy cập được, khác account thì destination cần bucket policy."
+  ]
+ },
+ "S3 Replication - scope": {
+  "sig": "7-1bmxr4q",
+  "steps": [
+   "Sơ đồ này trả lời câu hỏi cái gì được replicate. Mặc định chỉ user events trên object mới được copy, còn nhiều thứ phải bật thêm hoặc không bao giờ được replicate.",
+   "Object ghi mới sau khi bật rule sẽ được copy. Object có sẵn trước đó thì không tự replicate, phải dùng S3 Batch Replication. Phạm vi có thể là cả bucket hoặc lọc theo prefix, tag.",
+   "Object không mã hóa và SSE-S3 replicate bình thường. Thay đổi do Lifecycle là system event nên không được copy. Bạn có thể chọn storage class rẻ hơn ở destination, ví dụ One Zone-IA.",
+   "SSE-KMS replicate được nhưng cần cấu hình thêm và quyền KMS cho role. Object ở Glacier Flexible Retrieval hoặc Deep Archive thì không replicate. Ownership có thể đổi sang destination account.",
+   "Delete marker chỉ được replicate khi bạn bật tùy chọn. Còn xóa hẳn một version cụ thể thì không bao giờ replicate, để chống xóa độc hại. RTC là tùy chọn tính phí cho cam kết 15 phút.",
+   "Về SSE-C, khóa học nói không replicate, dù AWS đã hỗ trợ từ tháng 10 năm 2022. Chiều ngược từ destination về source không có sẵn, muốn hai chiều phải tạo hai rule và dùng replica modification sync.",
+   "Mẹo thi về use case: SRR dùng để gom log, đồng bộ PROD và TEST, hoặc khi dữ liệu không được rời region. CRR dùng cho DR toàn cầu và giảm latency cho người dùng ở xa."
+  ]
+ }
+}

@@ -1,0 +1,24 @@
+{
+ "Shield": {
+  "sig": "5-1x3dgkt",
+  "steps": [
+   "Sơ đồ này cho thấy AWS Shield chặn DDoS theo từng lớp. Shield Standard miễn phí lọc L3 và L4 ở perimeter, tầng L7 cần WAF, còn Shield Advanced phải bật tường minh.",
+   "Traffic DDoS ở cả L3, L4 và L7 đi tới AWS edge như Route 53, CloudFront, Global Accelerator. Shield Advanced giá 3000 đô mỗi tháng cho cả organization, dùng Route 53 health checks để phát hiện dựa trên sức khỏe ứng dụng.",
+   "Ngay tại edge, Shield Standard tự động chặn volumetric L3 và SYN flood L4 cho mọi khách hàng. Shield Advanced mở rộng bảo vệ xuống region perimeter như ALB, NLB, CLB và EC2 có Elastic IP, đồng thời dùng WAF.",
+   "Tầng L7, ví dụ HTTP request flood, được WAF chặn bằng rate-based rule. Chỉ traffic sạch mới đi qua region perimeter tới ứng dụng của bạn.",
+   "Khi đi thi nhớ nhé: Shield Advanced không tự bảo vệ, bạn phải bật cho từng resource hoặc qua Firewall Manager. Và giá tính theo organization, không phải theo từng account."
+  ]
+ },
+ "Shield - compare": {
+  "sig": "7-1mruiw4",
+  "steps": [
+   "Giờ ta so sánh hai bản Shield. Standard là lớp nền miễn phí, còn Advanced trả phí theo organization để có thêm L7, SRT, cost protection và nhiều loại resource.",
+   "Về giá, Standard hoàn toàn miễn phí. Advanced tốn 3000 đô mỗi tháng cho mỗi organization, cam kết 1 năm, tức khoảng 36,000 đô mỗi năm, cộng thêm phí data out.",
+   "Về kích hoạt, Standard tự động chạy nền, bạn không cần làm gì. Advanced thì phải bật tường minh, trong Shield hoặc qua Firewall Manager với Shield Advanced policy.",
+   "Về tầng bảo vệ, Standard chỉ lo L3 và L4. Advanced thêm L7 thông qua WAF, và subscription đã bao gồm phí WAF cơ bản như Web ACL, rule và web request.",
+   "Về resource, Standard bảo vệ perimeter chung, mạnh nhất với Route 53, CloudFront và Global Accelerator. Advanced bảo vệ thêm EC2 có Elastic IP và các load balancer ALB, CLB, NLB.",
+   "Standard không có hỗ trợ thêm nào. Advanced có đội SRT chủ động liên hệ, cost protection bù chi phí scale do tấn công, metrics thời gian thực và protection groups giảm công quản trị.",
+   "Mẹo thi: proactive engagement của SRT bắt buộc cần health-based detection bằng Route 53 health checks. Đề nói miễn phí, không cần làm gì thì chọn Standard; cần chuyên gia, bồi hoàn chi phí hay visibility thì chọn Advanced."
+  ]
+ }
+}

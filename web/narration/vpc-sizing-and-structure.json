@@ -1,0 +1,27 @@
+{
+ "VPC Sizing and Structure": {
+  "sig": "9-1gnl8mj",
+  "steps": [
+   "Sơ đồ này cho thấy cách chia VPC 10.16.0.0 trên 16 thành 16 subnet, theo bốn Availability Zone gồm ba AZ dùng ngay và một AZ dự phòng cho tương lai.",
+   "Công thức rất đơn giản: số subnet bằng số AZ nhân số tier. Bốn AZ nhân bốn tier là web, app, db và một tier spare, ta được 16 subnet.",
+   "Đầu tiên là tier web. Mỗi AZ có một subnet web trên 20 riêng, vì service chạy trong subnet và mỗi subnet chỉ nằm trong đúng một AZ.",
+   "Vì sao lại là trên 20? Chia một dải thành 16 phần thì cần thêm 4 bit, nên prefix subnet bằng prefix VPC cộng 4, từ trên 16 thành trên 20.",
+   "Tiếp theo là tier app, cũng một subnet trên 20 ở mỗi AZ, nằm ngay dưới tier web trong cùng khối địa chỉ của AZ đó.",
+   "Mỗi subnet trên 20 có 4,096 địa chỉ, nhưng AWS giữ lại 5 IP trong mỗi subnet, nên chỉ còn 4,091 IP dùng được.",
+   "Đến tier database, mỗi AZ một subnet trên 20. Đặt db ở nhiều AZ giúp dữ liệu vẫn sẵn sàng khi một AZ gặp sự cố.",
+   "Cuối cùng là tier reserved, để trống cho nhu cầu tương lai. Giữ chỗ từ đầu giúp tránh phải làm lại IP plan, việc rất đau về sau.",
+   "Khi đi thi, nhớ VPC IPv4 nhỏ nhất là trên 28 với 16 IP, lớn nhất là trên 16 với 65,536 IP. Và muốn HA thì đặt mỗi tier ở nhiều AZ."
+  ]
+ },
+ "VPC Sizing and Structure - ip-plan": {
+  "sig": "6-19jky83",
+  "steps": [
+   "Sơ đồ này nói về IP plan cho Animals4life: dùng không gian từ 10.16 đến 10.127, rồi chia lần lượt theo region, account và VPC sao cho không chồng lấn.",
+   "Đây là bảng phân bổ các khối trên 16. Tránh 10.0 đến 10.15 vì quá phổ biến, tránh 10.128 trở lên vì có thể là GCP, phần giữa chia cho từng region.",
+   "Trong mỗi region, 16 khối được chia đều cho bốn account: general, prod, dev và reserved. Đồng thời phải loại các dải đã dùng như on-prem, văn phòng, AWS pilot, Azure trùng Default VPC và GCP.",
+   "Số dải cần được tính theo nhu cầu: 5 region, mỗi region ít nhất 2 dải, nhân 4 account, ra khoảng 40 dải lý tưởng.",
+   "US Region 1 nhận 10.16 đến 10.31. Account general lấy 10.16 đến 10.19, tức bốn VPC, và VPC đầu tiên chính là a4l-vpc1 với 10.16.0.0 trên 16.",
+   "Khi đi thi, nếu peering, VPN hoặc Direct Connect không chạy được, hãy nghĩ ngay tới CIDR chồng lấn và chọn dải không overlap."
+  ]
+ }
+}

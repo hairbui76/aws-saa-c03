@@ -1,0 +1,11 @@
+{
+ "ACM": {
+  "sig": "4-1549nmg",
+  "steps": [
+   "Sơ đồ này cho thấy ACM là dịch vụ regional. Mỗi region có một ACM độc lập, và cert tạo hoặc import ở region nào thì bị khóa ở region đó.",
+   "Cert ở ACM us-west-1 chỉ gắn được cho ALB cùng region, không thể dùng cross-region cho ALB ở us-east-1. CloudFront lấy cert từ us-east-1, còn EC2 thì ACM không deploy lên được, vì ai có quyền root đều lấy được cert.",
+   "Sau khi ACM deploy cert vào distribution, CloudFront đẩy cert ra mọi edge location toàn cầu. Khi đi thi, lỗi không chọn được cert thường do sai region; muốn HTTPS cho EC2 thì đặt ALB phía trước.",
+   "Cuối cùng là chuyện gia hạn. Cert do ACM tạo qua DNS hoặc email validation sẽ được ACM tự gia hạn, còn cert import từ ngoài thì bạn phải tự gia hạn rồi import lại."
+  ]
+ }
+}

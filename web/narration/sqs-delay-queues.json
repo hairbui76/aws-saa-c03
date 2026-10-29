@@ -1,0 +1,13 @@
+{
+ "SQS Delay Queues": {
+  "sig": "6-pu010a",
+  "steps": [
+   "Sơ đồ này so sánh delay queue và visibility timeout. Cả hai đều làm message vô hình, nhưng delay ẩn ngay khi message vào queue, còn visibility timeout ẩn sau khi consumer đã nhận.",
+   "Bắt đầu bằng SendMessage. Với delay queue, message mới vào sẽ vô hình trong DelaySeconds, từ 0 đến 15 phút, nên mọi ReceiveMessage lúc này đều trả về rỗng. Với queue thường, message hiện ra ngay.",
+   "Khi hết thời gian delay, message chuyển sang trạng thái visible, và lúc này consumer mới có thể nhận được nó bằng ReceiveMessage.",
+   "Lưu ý DelaySeconds mặc định là 0, tức là queue thường, còn message timer cho phép đặt delay từng message nhưng không có trên FIFO. Khi consumer nhận message, visibility timeout bắt đầu, mặc định 30 giây, tối đa 12 giờ.",
+   "Nếu xử lý thành công, consumer gọi DeleteMessage để xóa hẳn. Nếu lỗi hoặc crash mà không xóa, message sẽ hiện lại để xử lý lại, đó chính là cơ chế retry tự động.",
+   "Khi đi thi, nhớ nhé: đề nói chờ vài phút rồi mới xử lý, dưới hoặc bằng 15 phút, thì chọn delay queue. Bị xử lý trùng hay worker crash thì là visibility timeout. Chờ hơn 15 phút thì nghĩ tới Step Functions Wait hoặc EventBridge schedule."
+  ]
+ }
+}

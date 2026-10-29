@@ -1,0 +1,23 @@
+{
+ "AWS Budgets": {
+  "sig": "7-1ajfxlj",
+  "steps": [
+   "Sơ đồ này nói về AWS Budgets, công cụ giúp bạn được cảnh báo trước khi hóa đơn vượt mức. Budget so chi tiêu thật hoặc dự báo với ngưỡng phần trăm bạn đặt, rồi gửi alert và có thể chạy Budget Actions.",
+   "Mọi thứ bắt đầu từ usage trong account, như EC2, S3 hay RDS. Mức sử dụng này được ghi thành billing data, nhưng lưu ý dữ liệu có thể cập nhật trễ tới khoảng 24 giờ.",
+   "Từ billing data, bạn có hai hướng. Bills và Cost Explorer để xem và phân tích chi phí chi tiết, còn cost budget, ví dụ monthly, recurring, fixed 10 USD, để theo dõi so với ngưỡng.",
+   "Budget liên tục kiểm tra xem chi tiêu đã chạm ngưỡng phần trăm chưa, theo kiểu Actual hoặc Forecasted. Trong demo, alert 50 phần trăm kiểu Actual sẽ báo khi đã tiêu 5 USD, nên hãy đặt ngưỡng dưới 100 phần trăm để được báo trước.",
+   "Khi chạm ngưỡng, budget gửi cảnh báo qua email hoặc SNS. Ngoài ra bạn có thể bật Budget Actions để tự động áp IAM policy, SCP, hoặc dừng EC2 và RDS nhằm chặn chi tiêu.",
+   "Bên trái là ba billing preferences nên bật: nhận PDF invoice qua email, Free Tier usage alerts, và Billing Alerts cho CloudWatch billing alarm, nhớ bấm Save. Bên phải là bốn loại budget: Cost, Usage, Savings Plans và Reservation.",
+   "Một lời nhắc khi làm bài: Cost Explorer phải được bật trước và cần khoảng 24 giờ để chuẩn bị dữ liệu, nhưng bạn vẫn tạo cost budget ngay được mà không cần chờ."
+  ]
+ },
+ "AWS Budgets - compare": {
+  "sig": "4-vtgsx1",
+  "steps": [
+   "Sơ đồ này giúp bạn chọn đúng công cụ chi phí. Mẹo là đọc động từ trong đề: được báo khi thì chọn Budgets, phân tích xu hướng thì Cost Explorer, còn báo cáo chi tiết nhất là Cost and Usage Report.",
+   "Bốn công cụ, mỗi cái một việc. Budgets đặt ngưỡng và gửi alert theo phần trăm, Cost Explorer vẽ biểu đồ chi phí theo service và thời gian, CUR là file chi tiết nhất, còn CloudWatch billing alarm dựa trên metric EstimatedCharges.",
+   "Hàng dưới là cụm từ hay gặp trong đề. Thông báo khi chi phí sắp hoặc dự báo vượt, hay tự động chặn chi tiêu, đi với Budgets. Với CloudWatch billing alarm, phải bật Receive Billing Alerts và metric chỉ có ở us-east-1.",
+   "Lưu ý khi đi thi: IAM user, kể cả có AdministratorAccess, chỉ xem được billing khi account đã bật IAM user and role access to Billing information, cộng với quyền trong policy."
+  ]
+ }
+}

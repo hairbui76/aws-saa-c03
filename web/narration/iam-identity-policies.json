@@ -1,0 +1,24 @@
+{
+ "IAM Identity Policies": {
+  "sig": "8-q3ympt",
+  "steps": [
+   "Sơ đồ này cho thấy cách AWS đánh giá IAM policy. AWS gom mọi statement khớp từ user, group và resource policy, rồi xét theo thứ tự Deny, Allow, Deny.",
+   "Đầu tiên, AWS gom tất cả statement có cả Action lẫn Resource khớp với request. Câu hỏi đầu tiên luôn là: có explicit deny nào khớp không?",
+   "Nếu có explicit deny, request bị từ chối ngay, không gì ghi đè được. Nếu không có, AWS chuyển sang kiểm tra explicit allow.",
+   "Khi có một explicit allow khớp và không có deny nào, request được cho phép.",
+   "Nếu không có allow nào khớp, request bị implicit deny. Đây là mặc định, vì không ai được cấp quyền thì không có quyền.",
+   "Ví dụ Sally gửi request đọc object trong bucket catgifs. AWS gom statement từ inline policy, managed policy, policy của group Developers và bucket policy, rồi đánh giá cùng lúc. Thứ tự vẫn giữ nguyên dù có bao nhiêu policy.",
+   "Giả sử một statement cho phép s3 sao trên mọi tài nguyên, statement khác deny bucket catgifs và object bên trong. Explicit deny thắng, nên Sally dùng được mọi bucket trừ catgifs.",
+   "Khi đi thi, nhớ rằng identity mới tạo không có quyền gì. Root user là ngoại lệ, nhưng trong member account của Organization thì vẫn bị SCP giới hạn."
+  ]
+ },
+ "IAM Identity Policies - inline-managed": {
+  "sig": "4-1oudlek",
+  "steps": [
+   "Sơ đồ này so sánh inline policy và managed policy. Cả hai đều là JSON policy document, chỉ khác nhau ở cách quản lý: bản sao riêng hay một object dùng chung.",
+   "Bên inline, mỗi user như Sally, Mike, cho tới 300 user đều giữ một bản JSON riêng. Bên managed, một policy có ARN riêng được attach cho nhiều identity như user, group và role.",
+   "Với inline, muốn đổi quyền cho 300 user là phải sửa 300 chỗ. Managed policy chỉ cần sửa một lần là áp ngay cho mọi identity, nên dùng cho quyền mặc định của tổ chức.",
+   "Mẹo thi: inline policy dành cho ngoại lệ, allow hoặc deny đặc biệt cho đúng một identity. Managed có hai loại: AWS managed do AWS duy trì như AdministratorAccess, và customer managed do bạn tự viết cho khớp nhu cầu."
+  ]
+ }
+}

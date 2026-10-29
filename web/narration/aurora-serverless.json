@@ -1,0 +1,14 @@
+{
+ "Aurora Serverless": {
+  "sig": "7-3dsbj0",
+  "steps": [
+   "Sơ đồ này nói về Aurora Serverless thế hệ v1. Thay vì cấp instance cố định, bạn để compute co giãn bằng ACU giữa mức min và max, và client đi qua proxy fleet nên scale không làm rớt kết nối.",
+   "Ứng dụng gửi kết nối vào shared proxy fleet do AWS quản lý. Phía sau, ACU được lấy từ warm pool, vốn stateless và không có storage local, nên gắn vào cluster rất nhanh. Tải thấp thì chạy ở min ACU, tới peak thì thêm hoặc tăng ACU nhưng không vượt max.",
+   "Proxy fleet chuyển kết nối tới các ACU đang gắn, kể cả ACU mới thêm khi tải tăng. Tất cả cùng đọc ghi trên cluster volume 6 bản qua 3 AZ, giống hệt Aurora provisioned. Nếu rảnh đủ N phút, cluster về 0 ACU và chỉ trả tiền storage.",
+   "Mỗi ACU truy cập cluster storage như một instance provisioned. Nhưng chú ý, khi đang pause mà có request mới, cluster phải resume nên có độ trễ, ứng dụng cần chịu được thời gian kết nối lâu.",
+   "Aurora Serverless hợp với tải thất thường hoặc khó đoán, ứng dụng ít dùng hoặc mới chưa rõ tải, môi trường dev test có thể pause khi rảnh, và mô hình multi-tenant nơi chi phí tăng theo doanh thu.",
+   "Điểm mấu chốt là client không nối thẳng vào ACU, proxy môi giới kết nối nên scale in và out trong suốt với ứng dụng. Lưu ý thêm, v1 đã hết hỗ trợ tháng 3 năm 2025; v2 scale theo bước 0.5 ACU, chạy chung cluster với provisioned và cũng hỗ trợ auto-pause về 0.",
+   "Khi đi thi, nhớ rằng việc của bạn chỉ là chọn min và max ACU, trả theo giây cho ACU đang dùng cộng storage. Thấy từ khóa unpredictable, intermittent hay không muốn quản lý capacity thì nghĩ tới Aurora Serverless; còn cần latency thấp ngay request đầu thì đặt min ACU lớn hơn 0 hoặc dùng provisioned."
+  ]
+ }
+}

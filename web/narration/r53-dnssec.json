@@ -1,0 +1,21 @@
+{
+ "R53 DNSSEC": {
+  "sig": "4-urol5",
+  "steps": [
+   "Sơ đồ này cho thấy bật DNSSEC trên Route 53 gồm hai việc: trước tiên ký trong zone bằng KSK và ZSK, sau đó đặt DS record ở zone cha để nối chain of trust.",
+   "Route 53 tạo KSK từ một asymmetric KMS key kiểu customer managed. Còn ZSK thì Route 53 tự tạo và quản lý, đưa public ZSK vào DNSKEY, và dùng private ZSK để ký các record như A hay MX.",
+   "Private KSK ký DNSKEY RRset, tạo ra RRSIG DNSKEY để resolver biết DNSKEY không bị sửa. Hash của public KSK được đặt làm DS record ở zone cha .org, nối từ root xuống animals4life.org.",
+   "Khi đi thi nhớ nhé: KMS key bắt buộc ở us-east-1, KSK dựa trên KMS còn ZSK thì không. DNSSEC đảm bảo toàn vẹn và nguồn gốc của DNS response, chứ không mã hóa query."
+  ]
+ },
+ "R53 DNSSEC - ops": {
+  "sig": "5-1gh7886",
+  "steps": [
+   "Sơ đồ này nói về phần vận hành: zone đã ký xong thì thêm DS ở đâu, giám sát bằng CloudWatch thế nào, và tác dụng của DNSSEC validation trong VPC.",
+   "Câu hỏi đầu tiên là domain có đăng ký qua Route 53 không. Nếu có, vào Registered domains, Manage keys, chọn 257 là KSK, thuật toán 13 rồi dán public key. Nếu không, phải tự thêm DS ở registrar ngoài. Với domain production, làm đúng thứ tự và chờ hết TTL.",
+   "Dù đi đường nào, kết quả là zone .org có DS record và chain of trust thông suốt từ đầu đến cuối. Vì thay đổi phải đi qua TLD nên có thể mất vài phút tới vài giờ.",
+   "Sau khi bật signing, hãy tạo CloudWatch alarm cho DNSSECInternalFailure và DNSSECKeySigningKeysNeedingAction. Cả hai báo lỗi KSK hoặc lỗi tương tác với KMS, cần xử lý ngay. Đồng thời có thể bật validation trên Route 53 Resolver cho EC2 trong VPC.",
+   "Khi validation bật, zone có DNSSEC mà chữ ký sai sẽ không được trả về. Zone không bật DNSSEC, hoặc chữ ký hợp lệ, vẫn trả kết quả bình thường. Đây là điểm hay bị hỏi trong đề thi."
+  ]
+ }
+}

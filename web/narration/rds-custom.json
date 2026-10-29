@@ -1,0 +1,16 @@
+{
+ "RDS Custom": {
+  "sig": "9-1ijtuer",
+  "steps": [
+   "Sơ đồ này nói về RDS Custom, lựa chọn nằm giữa RDS thường và tự chạy database trên EC2. Bạn vẫn có automation của RDS, nhưng tài nguyên nằm trong account của bạn và bạn được vào OS lẫn engine.",
+   "Nhìn ba cột trách nhiệm: RDS thường thì AWS lo OS, patch, backup và HA. RDS Custom thì phần lớn là chia sẻ. Còn database trên EC2, AWS chỉ lo phần hardware.",
+   "Với RDS thường, EC2 host và backup S3 nằm trong môi trường AWS quản lý, bạn không thấy. Với RDS Custom và EC2, bạn sẽ thấy EC2 instance và EBS volume ngay trong account của mình.",
+   "RDS Custom chỉ hỗ trợ Oracle và Microsoft SQL Server, backup và snapshot hiện trong account của bạn. Còn nếu tự chạy trên EC2, bạn tự lo OS, patch, backup, HA và scaling.",
+   "Về quyền truy cập: RDS thường không cho vào OS. RDS Custom cho bạn vào OS và engine qua SSH, RDP hoặc Session Manager. EC2 thì toàn quyền, nhưng bạn tự quản tất cả.",
+   "Muốn tùy chỉnh an toàn, trước hết phải pause automation để RDS không can thiệp, rồi mới tùy chỉnh OS hoặc engine. Đề thi hỏi managed RDS cần quyền OS với Oracle hoặc SQL Server thì chọn RDS Custom; MySQL hoặc PostgreSQL thì phải chạy trên EC2.",
+   "Tùy chỉnh xong, bạn resume full automation để database trở lại trạng thái sẵn sàng cho production.",
+   "Còn với RDS thường, vì tài nguyên nằm bên AWS, kết nối vào VPC của bạn có được là nhờ RDS inject một ENI vào VPC đó.",
+   "Khi đi thi, nhớ quy trình tùy biến an toàn: pause automation, tùy chỉnh, rồi resume. Và dấu hiệu nhận ra RDS Custom là EC2, EBS, backup hiện trong account của bạn."
+  ]
+ }
+}

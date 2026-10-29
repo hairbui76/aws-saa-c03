@@ -1,0 +1,32 @@
+{
+ "ASG Scaling Policies": {
+  "sig": "6-pndcmn",
+  "steps": [
+   "Sơ đồ này cho thấy các kiểu scaling policy của ASG. Điểm cốt lõi là mọi policy chỉ chỉnh desired capacity, còn min và max luôn là ranh giới cứng.",
+   "Ba kiểu dynamic là Simple, Step và Target tracking đều dựa vào CloudWatch metric như CPU, network, ALBRequestCountPerTarget hay số message SQS. Riêng memory và disk thì cần cài CloudWatch Agent. Bên cạnh đó còn có Scheduled theo lịch và Manual do admin tự chỉnh.",
+   "Dù là kiểu nào, kết quả cuối cùng đều là thay đổi desired capacity. Ngoài khóa học, AWS còn có Predictive scaling dùng ML để dự báo tải theo chu kỳ.",
+   "Desired sau đó bị kẹp trong khoảng min và max. Policy muốn thêm hay bớt bao nhiêu cũng không bao giờ vượt ra ngoài giới hạn này.",
+   "Cuối cùng ASG launch hoặc terminate instance để số instance thực tế khớp với desired đã được kẹp.",
+   "Khi đi thi nhớ nhé: giữ CPU trung bình hoặc request mỗi target ổn định thì chọn Target tracking. Queue dài cần thêm worker thì scale theo SQS, biết trước lịch thì Scheduled, còn so Simple với Step thì chọn Step."
+  ]
+ },
+ "ASG Scaling Policies - step": {
+  "sig": "14-1peioer",
+  "steps": [
+   "Sơ đồ này minh họa Step scaling, nơi lượng điều chỉnh đi theo bậc. Vùng từ 40 đến 59 phần trăm là vùng không làm gì, càng lệch xa thì scale càng mạnh.",
+   "Ở bậc cao nhất, CPU từ 80 đến 100 phần trăm, tải đang rất nặng nên ASG thêm hẳn 3 instance.",
+   "CPU từ 70 đến 79 phần trăm thì mức vượt nhẹ hơn, ASG thêm 2 instance.",
+   "CPU từ 60 đến 69 phần trăm chỉ vượt ngưỡng một chút, nên thêm 1 instance là đủ.",
+   "CPU từ 50 đến 59 phần trăm thì không làm gì. So sánh với Simple: vượt 1 phần trăm hay 50 phần trăm cũng chỉ cộng 2, phản ứng không tương xứng với mức tải.",
+   "Chiều scale in cũng có vùng đệm: CPU từ 40 đến 49 phần trăm thì vẫn giữ nguyên, tránh việc thêm bớt liên tục.",
+   "CPU từ 30 đến 39 phần trăm thì bớt 1 instance. Đây là ưu điểm của Step: lệch càng xa thì thêm bớt càng nhiều, rất hợp với tải biến động mạnh.",
+   "CPU từ 20 đến 29 phần trăm thì bớt 2. Nhưng lưu ý min và max là giới hạn cứng, đang 1 instance mà policy muốn trừ 3 thì vẫn giữ 1.",
+   "CPU dưới 20 phần trăm thì bớt 3 instance. Khi thi gặp câu Simple hay Step, hãy chọn Step vì AWS khuyến nghị, trừ khi đề ưu tiên tuyệt đối sự đơn giản.",
+   "Giờ xem diễn biến trên ASG min 1 max 4. Lúc t1 CPU 5 phần trăm, muốn trừ 3 nhưng chạm min nên giữ 1. Lúc t2 CPU vọt lên 100 phần trăm, muốn cộng 3 và lên 4, chạm max.",
+   "Lúc t3 CPU về 55 phần trăm, nằm trong vùng không làm gì, nên ASG giữ nguyên 4 instance.",
+   "Lúc t4 CPU rơi xuống 5 phần trăm, policy trừ 3, desired từ 4 xuống còn 1.",
+   "Lúc t5 CPU vẫn 5 phần trăm, policy lại muốn trừ 3 nhưng đã ở min nên vẫn là 1.",
+   "Lúc t6 CPU lên 60 phần trăm, chỉ vượt ngưỡng nhẹ nên policy cộng 1, desired lên 2. Phản ứng luôn tương xứng với mức thay đổi."
+  ]
+ }
+}

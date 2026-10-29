@@ -1,0 +1,28 @@
+{
+ "DNS Fundamentals": {
+  "sig": "9-17p6tcu",
+  "steps": [
+   "Sơ đồ này cho thấy cách resolver walk the tree, đi từ root xuống. Không server nào biết hết mọi thứ, nhưng mỗi câu trả lời lại đưa resolver tiến gần authoritative name server hơn một bước.",
+   "Client trước tiên kiểm tra hosts file và cache trên máy, sau đó hỏi resolver ở router hoặc ISP về www.netflix.com. Nếu resolver có sẵn trong cache thì trả lời ngay, nhưng đó là câu trả lời non-authoritative.",
+   "Khi cache không có kết quả, tức là cache miss, resolver phải tự đi hỏi, bắt đầu từ root, vì danh sách IP root server được hard-code trong mọi DNS server.",
+   "Root zone được IANA quản lý nội dung, host trên 13 root server IP, mỗi IP thực ra là nhiều server dùng anycast. Root không biết www.netflix.com, nên bảo resolver đi hỏi name server của .com.",
+   "Root chỉ lưu NS records trỏ tới name server của từng TLD registry. Đây là delegation, tầng trên ủy quyền cho tầng dưới, ở đây là .com do VeriSign quản lý.",
+   "Resolver tiếp tục hỏi name server của .com. TLD zone cũng không chứa www.netflix.com, chỉ biết name server nào phụ trách netflix.com và trỏ resolver tới đó.",
+   "TLD zone giữ NS records trỏ tới name server của netflix.com. Chính vì được TLD trỏ tới nên các name server này là authoritative, và zone file của chúng có bản ghi www.",
+   "Cuối cùng resolver hỏi name server của netflix.com và nhận authoritative answer chứa IP. Resolver cache kết quả rồi trả về cho client để kết nối.",
+   "Khi đi thi, nhớ rằng mỗi tầng chỉ giữ NS records trỏ xuống, tạo thành chain of trust làm nền cho DNSSEC. Chỉ name server được TLD trỏ tới mới authoritative, cache là non-authoritative, còn CNAME trả về tên khác nên phải đi lại cây."
+  ]
+ },
+ "DNS Fundamentals - registration": {
+  "sig": "7-1l4x6ot",
+  "steps": [
+   "Sơ đồ này nói về đăng ký domain, nơi registrar và DNS hosting provider là hai vai trò khác nhau. Domain chỉ live khi TLD zone có NS records trỏ tới name server đang host zone của bạn.",
+   "Đầu tiên, người đăng ký trả tiền mua cats.com tại registrar, ví dụ Route 53 Registered domains. Registrar chỉ có một chức năng là cho bạn mua domain.",
+   "Tiếp theo cần zone và name server. Nếu registrar và hosting cùng công ty thì zone được tạo tự động, còn khác công ty thì bạn phải cung cấp NS. Route 53 làm cả hai vai trò.",
+   "Registrar có quan hệ với registry của nhiều TLD, nên nó đăng ký domain với registry .com là VeriSign, kèm thông tin các name server.",
+   "Registry cập nhật .com TLD zone, thêm NS records của cats.com để mọi truy vấn biết tìm zone ở đâu.",
+   "Khi NS records trong TLD zone trỏ tới name server đang host zone, domain chính thức live và có thể được phân giải.",
+   "Mẹo thi: nếu domain mua ở registrar bên thứ ba mà muốn dùng Route 53, hãy tạo hosted zone trên Route 53, rồi cập nhật NS records tại registrar trỏ tới 4 name server của Route 53."
+  ]
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "AMI": {
+  "sig": "8-17322q2",
+  "steps": [
+   "Sơ đồ này cho thấy AMI thực chất là gì: một container logic gồm permissions và block device mapping trỏ tới EBS snapshot, chứ không tự chứa dữ liệu. AMI gắn với region us-east-1 nhưng launch được vào mọi AZ.",
+   "Đầu tiên, ta launch một instance ở AZ A từ AMI gốc của AWS, Community hoặc Marketplace, rồi cài ứng dụng và cấu hình. Instance có boot volume xvda và data volume xvdf.",
+   "Bước ba là Create Image: AWS chụp snapshot cho từng EBS volume. Snapshot lưu trên S3 do AWS quản lý nên vốn đã regional, không bị gắn vào AZ nào.",
+   "Bước bốn, khi launch từ AMI, các snapshot được dùng để tạo volume hoàn toàn mới ngay trong AZ đích, ở đây là AZ B, với đúng device ID như bản gốc.",
+   "Các volume mới gắn vào instance mới, nên instance này có cấu hình storage và phần mềm y hệt bản gốc. Đây chính là ý tưởng AMI baking để launch hàng loạt.",
+   "Phần permissions của AMI quyết định ai được dùng nó: mặc định là private, có thể share cho account hoặc OU cụ thể, hoặc public cho mọi người.",
+   "Block device mapping là bảng nối snapshot ID với device ID gốc, ví dụ snap-boot với xvda và snap-data với xvdf, để AWS biết gắn volume mới vào đâu.",
+   "Khi đi thi nhớ: nên stop instance trước khi Create Image để dữ liệu nhất quán, launch từ AMI cũng là cách chuyển instance sang AZ khác. AMI không sửa được, chi phí là dung lượng snapshot, và deregister không xóa snapshot."
+  ]
+ },
+ "AMI - copy": {
+  "sig": "5-117rmg5",
+  "steps": [
+   "Sơ đồ này nói về copy AMI sang region khác và chia sẻ AMI. Copy AMI nghĩa là copy cả snapshot, tạo ra một AMI hoàn toàn mới với ID mới ở region đích.",
+   "AMI ami-aaa ở us-east-1 trỏ tới snapshot của nó. Khi copy sang us-east-2, ta nhận được ami-bbb, một AMI khác hẳn với ID riêng, không phải cùng một AMI.",
+   "Snapshot cũng được copy sang đích. Có thể bật mã hóa trong lúc copy, còn snapshot đã mã hóa thì được mã hóa lại bằng KMS key của us-east-2, vì KMS key là regional.",
+   "Về chia sẻ: mặc định AMI là private, chỉ account sở hữu dùng. Nên share explicit cho account ID, Organization hoặc OU tin cậy, kèm create volume permission nếu cần. Public thì rất dễ lộ dữ liệu và access key.",
+   "Lời nhắc khi đi thi: đáp án dùng một AMI cho nhiều region là sai, phải copy. Và khi dọn dẹp, nhớ xóa snapshot ở cả hai region, vì deregister AMI không xóa snapshot."
+  ]
+ }
+}

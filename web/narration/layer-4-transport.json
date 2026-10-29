@@ -1,0 +1,25 @@
+{
+ "Layer 4 Transport": {
+  "sig": "6-4wybly",
+  "steps": [
+   "Sơ đồ này cho thấy cách TCP mở kết nối: client đi từ một ephemeral port như 23060 tới well-known port 443 của server, và hai bên phải đồng bộ sequence number trước khi gửi data.",
+   "Bước một, client gửi SYN kèm một Initial Sequence Number ngẫu nhiên gọi là CS, giống như nói với server rằng mình muốn bắt đầu nói chuyện.",
+   "Server trả lời bằng SYN-ACK: nó chọn sequence ngẫu nhiên riêng là SS, đồng thời ack CS cộng 1, nghĩa là đã nhận tới CS và chờ phần tiếp theo.",
+   "Client gửi ACK với sequence CS cộng 1 và ack SS cộng 1. Lúc này hai bên đã đồng bộ, kết nối chuyển sang trạng thái established.",
+   "Giờ data chạy hai chiều, sequence tăng dần và mọi segment đều phải được ack, segment nào mất thì được truyền lại. Trường window giúp bên nhận kiểm soát tốc độ, tức là flow control.",
+   "Khi đi thi, nhớ rằng một kết nối được xác định bởi bộ bốn source IP, source port, destination IP và destination port, chiều phản hồi đảo port, và FIN dùng để đóng kết nối. Lưu ý thêm, SYN flood là kiểu DDoS gửi hàng loạt SYN với IP giả mà không bao giờ hoàn tất bước ACK."
+  ]
+ },
+ "Layer 4 Transport - firewall": {
+  "sig": "7-4nlsuz",
+  "steps": [
+   "Sơ đồ này so sánh cách hai loại firewall xử lý cùng một kết nối HTTPS: NACL là stateless nên thấy hai luồng riêng và cần hai rule, còn Security Group là stateful nên chỉ cần một rule.",
+   "Ở cả hai bên, ta đều cần một rule outbound cho phép TCP tới port 443, vì đây là chiều khởi tạo khi laptop kết nối ra server.",
+   "Khác biệt nằm ở đây: NACL cần thêm rule inbound mở toàn bộ dải ephemeral port cho phản hồi, còn Security Group theo dõi state nên response tự động được phép.",
+   "Nếu NACL thiếu rule inbound thì phản hồi từ server bị chặn và kết nối hỏng. Với Security Group, bạn hoàn toàn không cần mở ephemeral port.",
+   "Đây là chiều khởi tạo: laptop đi từ ephemeral port 23060 tới well-known port 443 trên server, nên với góc nhìn của laptop đây là traffic outbound.",
+   "Chiều phản hồi thì đảo port: server gửi từ port 443 về port 23060 của laptop. Chính luồng này mà stateless firewall coi là một luồng riêng.",
+   "Khi đi thi, hãy xác định đúng hướng traffic theo góc nhìn: nếu bạn bảo vệ web server nhận kết nối vào thì initiating là inbound và response là outbound, nên NACL phải mở ephemeral port ở chiều outbound."
+  ]
+ }
+}

@@ -1,0 +1,24 @@
+{
+ "IAM Basics": {
+  "sig": "6-1mx6f7q",
+  "steps": [
+   "Sơ đồ này cho thấy IAM bên trong một AWS account. IAM là dịch vụ global, miễn phí, globally resilient, và mỗi account có một instance IAM riêng, tách biệt hoàn toàn với account khác.",
+   "Policy document chỉ allow hoặc deny quyền, tự nó không làm gì cho tới khi được attach vào user, group hoặc role. User Bob là đúng một người, còn role S3-Read được EC2 instances hoặc identity ở account khác assume khi cần.",
+   "Root user được account tin tuyệt đối và không thể giới hạn, nên lộ credential là rủi ro toàn account. Vì vậy hãy cấp quyền theo least privilege và ngừng dùng root khi đã có IAM admin kèm MFA.",
+   "Jane bên hạ tầng là một IAM user, vì ta biết chính xác một người sẽ đăng nhập.",
+   "An cũng là một IAM user. Khi An và Jane nằm trong group Dev team, họ tự nhận quyền của group, giúp quản lý quyền cho nhiều người cùng lúc.",
+   "Khi đi thi, nhớ nhé: biết chính xác một người hoặc một ứng dụng thì chọn User; còn số lượng không biết trước, là AWS service hoặc account khác thì chọn Role."
+  ]
+ },
+ "IAM Basics - flow": {
+  "sig": "6-l4w3mu",
+  "steps": [
+   "Sơ đồ này mô tả cách IAM xử lý một request. IAM đóng ba vai: Identity Provider quản lý identity, Authentication trả lời bạn là ai, và Authorization trả lời bạn được làm gì.",
+   "Đầu tiên, Identity Provider tạo, sửa, xóa các identity. Khi một security principal gửi request, nó phải đưa credential để chứng minh mình đúng là identity đã tự nhận.",
+   "Xác thực xong, identity đã được chứng minh sẽ chuyển sang bước Authorization, nơi IAM đánh giá các policy gắn với identity đó.",
+   "Nếu policy cho phép, request đi tới AWS resource như S3 hoặc EC2. Nếu bị deny, request bị từ chối với lỗi Access Denied.",
+   "Credential tùy cách truy cập: vào console cần sign-in URL theo account ID hoặc alias, username, password và mã MFA; còn CLI, API hoặc SDK dùng access key gồm Key ID và Secret.",
+   "Lời nhắc khi thi: phân biệt rõ authentication là bạn là ai, authorization là bạn được làm gì. IAM chỉ quản identity của chính account đó, và hỗ trợ Identity Federation như AD, Google cùng MFA."
+  ]
+ }
+}

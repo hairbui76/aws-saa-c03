@@ -1,0 +1,24 @@
+{
+ "S3 Multi-Region Access Points": {
+  "sig": "6-rxoup",
+  "steps": [
+   "Sơ đồ này giới thiệu S3 Multi-Region Access Point, gọi tắt là MRAP: một endpoint toàn cầu duy nhất trỏ tới nhiều bucket ở Sydney và Canada, request tự đi tới bucket gần nhất.",
+   "Hai client ở Tokyo và Ohio đều gửi request tới cùng một MRAP. Ứng dụng chỉ cần biết ARN hoặc alias của MRAP, không cần biết bucket nằm ở region nào.",
+   "MRAP route request của Tokyo tới bucket Sydney và của Ohio tới bucket Canada, vì đó là bucket gần nhất. Lưu ý cả hai bucket đều bật versioning, điều kiện cần cho replication.",
+   "Để hai bucket có cùng dữ liệu, bạn phải tự cấu hình replication hai chiều và bật replica modification sync. Template replicate among all specified buckets sẽ tạo full mesh và tự tạo IAM role.",
+   "Về failover, mặc định là active-active, request đi tới bất kỳ bucket sẵn sàng gần nhất. Còn active-passive thì một bucket passive chỉ được dùng khi không còn bucket active nào.",
+   "Nhắc khi đi thi: MRAP không tự đồng bộ dữ liệu, phải cấu hình replication. Danh sách bucket không sửa được sau khi tạo, thời gian tạo thường 10 đến 30 phút, tối đa 24 giờ. Request ký bằng SigV4A, tên chỉ cần unique trong account."
+  ]
+ },
+ "S3 Multi-Region Access Points - lag": {
+  "sig": "6-12vryh1",
+  "steps": [
+   "Sơ đồ này minh họa vấn đề consistency lag: đọc ngay sau khi ghi ở region khác qua MRAP có thể chưa thấy object, vì replication cần thời gian.",
+   "Tại thời điểm không, client ở Canada upload file test4 qua MRAP. Request được route về bucket Canada, nên object nằm ở Canada trước tiên.",
+   "Ngay lập tức, client ở Sydney đọc test4 qua MRAP và bị route tới bucket Sydney. Bucket này chưa nhận được bản replicate, nên trả về lỗi object không tồn tại.",
+   "Vài phút sau, replication mới chép test4 từ Canada sang Sydney. Khi không bật RTC, thời gian replication này không được đảm bảo.",
+   "Lúc này client Sydney thử lại qua MRAP và tải được object, đúng như trong demo phải lặp lại lệnh cho đến khi replication xong.",
+   "Mẹo thi: muốn giảm lag thì bật RTC, cam kết 99,99 phần trăm object được replicate trong 15 phút nhưng tính phí. Dù vậy, kiến trúc dùng MRAP vẫn phải chấp nhận eventual consistency giữa các region."
+  ]
+ }
+}

@@ -1,0 +1,17 @@
+{
+ "Instance Store": {
+  "sig": "10-abku4w",
+  "steps": [
+   "Sơ đồ này nói về Instance Store, ổ lưu trữ local gắn vật lý vào EC2 host. Điểm mấu chốt là dữ liệu nằm trên host, không đi theo instance, nên đổi host là nhận volume mới, trống.",
+   "Trên Host A, Instance 1 dùng ephemeral0, Instance 2 dùng ephemeral1 và ephemeral2; chỉ instance trên đúng host đó mới truy cập được. Reboot thì Instance 1 vẫn ở Host A, còn stop start, resize hay bảo trì host sẽ đẩy nó sang Host B.",
+   "Sang Host B, Instance 1 nhận một ephemeral0 hoàn toàn mới và trống. Volume cũ trên Host A đã bị xóa sạch trước khi cấp lại cho người khác, nên dữ liệu cũ mất hẳn.",
+   "Trường hợp đầu tiên: reboot. Instance không rời host nên dữ liệu instance store vẫn còn nguyên, giống như trong lab, public IP cũng không đổi.",
+   "Stop rồi start thì chắc chắn chuyển host, nên dữ liệu mất hết. Trong lab, public IPv4 đổi và file system cùng file test biến mất.",
+   "Resize, tức là đổi instance type, cũng buộc instance chuyển host, vì vậy dữ liệu instance store cũng mất.",
+   "Khi host bảo trì hoặc thiết bị vật lý bị hỏng, instance dùng volume đó cũng mất dữ liệu, dù bạn không làm gì cả.",
+   "Một điểm rất hay ra đề: instance store chỉ gắn được lúc launch. Khác với EBS, bạn không thể thêm instance store sau khi instance đã chạy.",
+   "Đổi lại, đây là storage nhanh nhất AWS, ví dụ I3 tới khoảng 16 GB mỗi giây và hàng triệu IOPS, vượt xa mọi EBS. Nó lại đã gồm trong giá instance, nên có thì nên dùng.",
+   "Khi đi thi, nhớ nhé: thấy cache, buffer, scratch hoặc dữ liệu đã replicate nơi khác, cần IOPS cực cao, thì chọn Instance Store. Nó không có snapshot, muốn giữ dữ liệu phải tự copy sang EBS hoặc S3."
+  ]
+ }
+}

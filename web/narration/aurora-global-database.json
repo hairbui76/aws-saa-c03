@@ -1,0 +1,12 @@
+{
+ "Aurora Global Database": {
+  "sig": "5-lnlovg",
+  "steps": [
+   "Sơ đồ này nói về Aurora Global Database: một region ghi, nhiều region đọc. Dữ liệu được sao chép một chiều ở tầng storage, thường trong khoảng một giây, phục vụ cross-region DR và đọc latency thấp toàn cầu.",
+   "Ở primary region, app ghi vào primary instance duy nhất, cùng tối đa 15 read replica dùng chung cluster volume. Ở Sydney, secondary cluster chỉ đọc nên cả 16 slot đều là read replica, phục vụ khách gần đó.",
+   "Writer ghi vào cluster volume, rồi storage tự sao chép sang cluster volume ở secondary region, thường một giây hoặc ít hơn. Replication chỉ đi một chiều, từ primary sang secondary.",
+   "Nếu mất toàn bộ primary region, ta promote secondary cluster lên read và write. Nhờ dữ liệu chỉ trễ khoảng một giây, RPO và RTO đều rất thấp.",
+   "Khi đi thi, nhớ: thấy cross-region DR cho DB quan hệ với RPO và RTO rất thấp, hoặc khách nhiều châu lục cần đọc nhanh, hãy chọn Aurora Global Database. Nó không tốn CPU instance, khác read replica RDS ở mức engine. Tối đa 5 secondary region theo khóa học, nay là 10. Cần ghi nhiều region thì chọn DynamoDB Global Tables."
+  ]
+ }
+}

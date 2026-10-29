@@ -1,0 +1,15 @@
+{
+ "cfn-init": {
+  "sig": "8-zivm5j",
+  "steps": [
+   "Sơ đồ này nói về cfn-init, cách bootstrapping EC2 kiểu desired state. User data giờ chỉ còn gọi cfn-init, còn cfn-init đọc khối AWS::CloudFormation::Init trong Metadata để đưa OS về đúng trạng thái mong muốn.",
+   "Mọi thứ bắt đầu từ template. Logical resource EC2Instance chứa cấu hình cfn-init trong Metadata, kèm CreationPolicy timeout 15 phút, nên stack sẽ chờ signal thay vì báo xong ngay.",
+   "Stack launch instance với user data rất ngắn. Hàm Sub đã thay stack ID và region bằng giá trị thật, nên cfn-init biết hỏi đúng stack, đúng region, đúng resource.",
+   "Khi instance khởi động, user data chạy lệnh cfn-init. Đây là helper script có sẵn trong Amazon Linux, nằm ở thư mục opt aws bin.",
+   "cfn-init liên lạc với CloudFormation service để lấy metadata AWS::CloudFormation::Init của chính logical resource này. Cấu hình nằm trong template, đây là tính năng native của CloudFormation.",
+   "Sau đó cfn-init áp desired state theo thứ tự: packages, groups, users, sources, files, commands, rồi services. Nếu có nhiều config key, configSets sẽ chọn key nào dùng và theo thứ tự nào.",
+   "Cuối cùng cfn-signal gửi exit code của cfn-init về stack. Thành công thì resource thành CREATE_COMPLETE, lỗi hoặc hết timeout thì stack thất bại và mặc định rollback.",
+   "Khi đi thi, nhớ nhé: user data là procedural, thuộc EC2; cfn-init là desired state, idempotent, thuộc CloudFormation. Thiếu cfn-signal thì stack báo xong dù bootstrap lỗi, và muốn chạy lại khi update stack thì cần cfn-hup."
+  ]
+ }
+}

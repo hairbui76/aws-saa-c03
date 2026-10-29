@@ -1,0 +1,11 @@
+{
+ "Directory Service": {
+  "sig": "4-1czsf6g",
+  "steps": [
+   "Sơ đồ này so sánh ba mode của AWS Directory Service. Directory chạy trong VPC, trải trên nhiều subnet và nhiều AZ để có HA; điểm cần nhìn là dữ liệu directory nằm ở đâu và có phụ thuộc kết nối về on-prem không.",
+   "Các dịch vụ như WorkSpaces, EC2 Windows join domain hay FSx for Windows đều cần một directory. Simple AD là Samba 4, rẻ, dùng độc lập; Managed Microsoft AD là AD thật, primary ở AWS; còn AD Connector chỉ là proxy, link đứt là dịch vụ hỏng.",
+   "Managed Microsoft AD tạo trust hai chiều với AD on-prem qua Site-to-Site VPN hoặc Direct Connect, nên link đứt AWS vẫn chạy. AD Connector thì chuyển mọi request về AD on-prem, không tự xác thực được.",
+   "Khi đi thi, nhớ nhé: cần directory đơn giản, không nối on-prem, hoặc thấy chữ Samba thì chọn Simple AD. Cần AD thật, schema extension, trust hoặc vẫn chạy khi link đứt thì chọn Managed Microsoft AD. Không muốn lưu gì trên cloud thì chọn AD Connector."
+  ]
+ }
+}

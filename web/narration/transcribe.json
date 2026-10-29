@@ -1,0 +1,16 @@
+{
+ "Transcribe": {
+  "sig": "9-1pmzsga",
+  "steps": [
+   "Sơ đồ này nói về Amazon Transcribe, dịch vụ nhận dạng giọng nói tự động, biến audio thành text. Bạn trả tiền theo từng giây audio được chuyển đổi, dùng bao nhiêu trả bấy nhiêu.",
+   "Có hai cách đưa audio vào. Real-time stream qua HTTP 2 hoặc WebSocket cho kết quả ngay lập tức, còn transcription job xử lý theo lô các file audio đã lưu sẵn trên S3.",
+   "Đầu ra của Transcribe là một bản text transcript. Đây là điểm khởi đầu cho rất nhiều việc xử lý tiếp theo.",
+   "Transcript thường được đưa tiếp sang dịch vụ khác: Comprehend phân tích sentiment và entities, Translate dịch rồi Polly đọc lại bằng ngôn ngữ mới, Kendra để tìm kiếm toàn văn, hoặc dùng làm phụ đề và biên bản họp.",
+   "Để tăng chất lượng, bạn có thể chọn ngôn ngữ cố định hoặc tự nhận diện, thêm custom vocabulary cho thuật ngữ riêng, phân biệt từng người nói, lọc từ không mong muốn và che thông tin cá nhân PII.",
+   "Bản Transcribe chuẩn phù hợp cho hầu hết nhu cầu chuyển giọng nói thông thường thành văn bản.",
+   "Transcribe Medical được tối ưu cho thuật ngữ y khoa, nên nếu đề bài nhắc tới ngành y thì hãy nghĩ ngay tới biến thể này.",
+   "Transcribe Call Analytics chuyên cho cuộc gọi, phân tích đặc điểm cuộc gọi, tóm tắt nội dung, phân loại categories và cảm xúc của từng người nói.",
+   "Khi đi thi, nhớ Polly là chiều ngược lại, từ text ra giọng nói, còn Lex dành cho chatbot hội thoại. Audio tiếng Nhật ra text tiếng Anh thì dùng Transcribe cộng Translate. Ẩn PII thì bật PII redaction, còn cảm xúc cuộc gọi thì dùng Call Analytics hoặc kết hợp Comprehend."
+  ]
+ }
+}

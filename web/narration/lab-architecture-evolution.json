@@ -1,0 +1,27 @@
+{
+ "Lab - Architecture Evolution": {
+  "sig": "9-yjvojf",
+  "steps": [
+   "Sơ đồ này cho thấy blog WordPress tiến hóa từ một instance duy nhất tới kiến trúc elastic, tự phục hồi. Màu đỏ là state còn dính vào instance, màu xanh là state đã được tách ra ngoài.",
+   "Lab gồm năm stage chính: build tay, tự động hóa bằng Launch Template, chuyển DB lên RDS, chuyển media lên EFS, và cuối cùng là ALB cộng ASG.",
+   "Hàng compute: bốn stage đầu vẫn chỉ có một EC2, từ build tay chuyển sang launch từ template với user data. Chỉ đến stage 5 mới có ASG từ một đến ba instance trải nhiều AZ.",
+   "Database ban đầu là MariaDB chạy local, scale in hoặc out là có nguy cơ mất dữ liệu. Từ stage 3, DB lên RDS MySQL, sống ngoài vòng đời EC2 và scale độc lập với app.",
+   "Thư mục wp-content chứa ảnh, plugin và theme lúc đầu nằm trên disk local. Stage 4 chuyển nó lên EFS, mount qua file fstab để tự gắn lại mỗi lần boot.",
+   "Người dùng truy cập thẳng IP instance, mà WordPress lại hard-code IP đó trong database, nên stop rồi start là site hỏng. Stage 5 thay bằng DNS name của ALB nhờ một script sửa IP.",
+   "Launch template cũng tiến hóa qua các version: v1 gồm app và DB, v2 chỉ còn app, v3 thêm mount EFS, v4 thêm script update_wp_ip.sh. Mỗi lần đều set default version mới.",
+   "Xuất phát với sáu giới hạn, mỗi stage gỡ dần: build tay, app và DB chung, mất media, rồi truy cập trực tiếp và IP hard-code. Khi dọn dẹp, xóa ngược thứ tự tạo, stack CloudFormation chỉ xóa được sau khi RDS xóa xong.",
+   "Khi đi thi, nhớ nhé: muốn scale ngang hay self-heal thì instance phải stateless. DB đưa lên RDS hoặc Aurora, file dùng chung lên EFS chứ không phải EBS, config vào Parameter Store, và truy cập qua ALB DNS."
+  ]
+ },
+ "Lab - Architecture Evolution - stage5": {
+  "sig": "6-i1lrro",
+  "steps": [
+   "Đây là kiến trúc hoàn chỉnh ở stage 5 trong VPC 10.16.0.0 trên 16 với ba AZ. ALB đứng phía trước, ASG multi-AZ phía sau, còn mọi state nằm ở RDS, EFS và Parameter Store.",
+   "Người dùng vào bằng DNS name của ALB internet-facing đặt ở ba subnet public. ASG dùng Launch Template v4 với min 1, desired 1, max 3, còn CloudWatch alarm tăng một instance khi CPU trên 40 phần trăm và bớt một khi dưới 40.",
+   "ALB chuyển request tới các EC2 WordPress trong target group. ASG gắn với target group nên instance mới được tự đăng ký, và khi scale out instance mới được đặt ở AZ khác.",
+   "Mỗi instance mount wp-content từ EFS qua mount target ở subnet app của AZ mình, và kết nối tới RDS MySQL. Vì thế thêm hay bớt instance đều không mất dữ liệu.",
+   "Mọi EC2 ở mọi AZ dùng chung một RDS endpoint trong subnet DB. Cấu hình như DB endpoint, password dạng SecureString mã hóa KMS, EFS ID được đọc từ Parameter Store qua instance role.",
+   "Lời nhắc khi thi: gắn ASG vào target group để tự đăng ký và gỡ instance, bật ELB health check để app hỏng cũng bị thay. Và max là giới hạn cứng, max bằng desired thì không scale out được."
+  ]
+ }
+}

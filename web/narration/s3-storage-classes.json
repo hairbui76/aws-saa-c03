@@ -1,0 +1,16 @@
+{
+ "S3 Storage Classes": {
+  "sig": "9-1lg6m94",
+  "steps": [
+   "Sơ đồ này đi từ class nóng nhất tới class đóng băng. Càng lạnh thì lưu càng rẻ, nhưng phí truy xuất, độ trễ và thời gian lưu tối thiểu càng tăng; mọi class đều có 11 nines durability, và Standard là mặc định.",
+   "Đây là sáu storage class chính, xếp từ trái sang phải: S3 Standard, Standard-IA, One Zone-IA, Glacier Instant Retrieval, Glacier Flexible Retrieval và cuối cùng là Glacier Deep Archive, rẻ nhất.",
+   "Standard không có retrieval fee hay mức tối thiểu. Các class IA tính phí đọc theo GB, tối thiểu 30 ngày và 128 KB; One Zone-IA chỉ ở một AZ. Glacier Instant tối thiểu 90 ngày, còn Flexible và Deep Archive cần retrieval job, không public được.",
+   "Khi nào dùng class nào? Standard cho dữ liệu truy cập thường xuyên, Standard-IA khoảng một lần mỗi tháng, One Zone-IA cho dữ liệu tạo lại được, Glacier Instant khoảng một lần mỗi quý, Flexible cho archive, Deep Archive cho compliance.",
+   "Giờ tới Intelligent-Tiering, một class tự chuyển object giữa các tier. Object bắt đầu ở Frequent Access, không được truy cập 30 ngày thì xuống Infrequent Access; nếu được đọc lại, nó tự về Frequent mà không mất retrieval fee.",
+   "Sau 90 ngày không truy cập, object tự động xuống Archive Instant Access, tương đương Glacier Instant Retrieval, vẫn đọc tức thì mà ứng dụng không cần thay đổi gì.",
+   "Tier Archive Access là tùy chọn, bạn phải tự cấu hình. Nó tương đương Glacier Flexible Retrieval, nên ứng dụng phải chấp nhận truy cập bất đồng bộ và gọi API restore.",
+   "Cuối cùng là Deep Archive Access, cũng tùy chọn và phải cấu hình, tương đương Glacier Deep Archive. Đổi lại cho sự tự động này là phí monitoring tính theo mỗi 1.000 object.",
+   "Lời nhắc khi đi thi: nhiều file nhỏ hoặc dữ liệu tạm thì tránh IA và Glacier, vì có kích thước tối thiểu 128 KB hoặc 40 KB và thời gian tối thiểu 30, 90, 180 ngày. Chọn One Zone-IA cho bản dữ liệu duy nhất, quan trọng là sai."
+  ]
+ }
+}

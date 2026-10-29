@@ -1,0 +1,22 @@
+{
+ "EC2 Instance Types": {
+  "sig": "7-1rvk26",
+  "steps": [
+   "Sơ đồ này tổng hợp 5 category instance của EC2. Khi đề thi mô tả một vấn đề hiệu năng, đáp án thường là đổi instance type, nên hãy nhìn xem nút cổ chai nằm ở đâu, và luôn ưu tiên generation mới nhất.",
+   "Mỗi category có một dấu hiệu riêng. General Purpose là mặc định, cân bằng tài nguyên. CPU cao liên tục thì chọn Compute Optimized, thiếu RAM thì chọn Memory Optimized, cần GPU hoặc FPGA thì chọn Accelerated, còn cần local storage nhanh thì chọn Storage Optimized.",
+   "Đây là các family tiêu biểu nhất. T3 burstable cho tải nền thấp, C5 cho encoding và HPC, R5 cho in-memory cache, P3 có GPU cho ML training, còn I3 dùng NVMe SSD với IOPS cao cho NoSQL.",
+   "Thêm lựa chọn thứ hai trong mỗi nhóm. M5 thay T3 khi tải chạy đều, X1 có giá rẻ nhất trên mỗi GiB RAM, G4 cho graphics và ML inference, còn D2 là HDD dense với throughput đĩa rẻ nhất cho Hadoop và data warehouse.",
+   "Tiếp theo là các lựa chọn đặc thù. A1 và M6g dùng ARM Graviton, rẻ nếu ứng dụng chạy được trên ARM. High Memory có nhiều RAM nhất AWS, F1 dùng FPGA cho genomics, còn H1 cho throughput cao như HDFS và Kafka.",
+   "Cuối cùng là Inf1, dùng chip AWS Inferentia chuyên cho ML inference như recommendation, forecasting hay voice.",
+   "Khi đi thi, nhớ chữ cái: C là Compute, R là RAM, X là eXtreme memory, I là I O, D là Dense storage, G là Graphics, P là Parallel, F là FPGA, T là burst, M là Main. Và lưu ý, instance nhỏ giới hạn băng thông EBS nên có thể thành bottleneck dù volume rất nhanh."
+  ]
+ },
+ "EC2 Instance Types - name": {
+  "sig": "3-lds5q0",
+  "steps": [
+   "Giờ ta giải mã tên R5dn.8xlarge. Toàn bộ chuỗi này mới là instance type, nên khi trao đổi với đội vận hành hãy luôn nói đầy đủ, đừng chỉ nói R5 để tránh mơ hồ.",
+   "Tách ra từng phần: R là family, nghĩa là RAM, thuộc Memory Optimized. Số 5 là generation. Chữ dn là additional capabilities, có thể không có. Còn 8xlarge là size của instance.",
+   "Với generation, luôn chọn thế hệ mới nhất vì price performance tốt hơn, trừ khi region chưa có hoặc cần kiểm thử. Chữ d là local NVMe, n là network optimized. Size lớn có price premium, nên thường scale bằng nhiều instance nhỏ."
+  ]
+ }
+}

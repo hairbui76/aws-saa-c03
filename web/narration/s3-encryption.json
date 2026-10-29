@@ -1,0 +1,27 @@
+{
+ "S3 Encryption": {
+  "sig": "6-1r0a25p",
+  "steps": [
+   "Sơ đồ này so sánh bốn cách mã hóa at rest trong S3. Nhớ rằng object mới là thứ được mã hóa, không phải bucket, và mỗi kiểu chia việc giữ key và việc tốn CPU mã hóa khác nhau.",
+   "Đầu tiên là ai giữ key. Client-side thì bạn lo hết, SSE-C bạn giữ key và gửi kèm mỗi request qua HTTPS, SSE-S3 dùng root key ẩn của S3, còn SSE-KMS dùng KMS key.",
+   "Tiếp theo là ai mã hóa. Client-side thì bạn mã hóa trước khi gửi. Với ba kiểu server-side, S3 làm phần mã hóa; SSE-C xong thì hủy key, chỉ giữ hash để kiểm tra key đúng hay sai.",
+   "Đây là ưu nhược điểm. Client-side kiểm soát tối đa nhưng tốn công nhất. SSE-C mất key là mất dữ liệu. SSE-S3 không có role separation, còn SSE-KMS cho key policy, rotation, audit CloudTrail và role separation.",
+   "Vậy khi nào dùng? Không được tin AWS với plaintext thì client-side. Phải giữ key nhưng muốn offload CPU thì SSE-C. Mặc định ít overhead thì SSE-S3. Quy định chặt, cần tách quyền thì SSE-KMS.",
+   "Khi đi thi, nhớ encryption in transit là chuyện riêng. Và bucket default encryption chỉ áp khi request thiếu header, không phải ràng buộc; muốn bắt buộc thì dùng bucket policy Deny s3:PutObject khi header sai."
+  ]
+ },
+ "S3 Encryption - sse-kms": {
+  "sig": "9-ukw0tf",
+  "steps": [
+   "Sơ đồ này đi qua luồng PUT của SSE-KMS và minh họa role separation. Để đọc object, bạn cần cả quyền S3 lẫn quyền KMS để giải mã DEK.",
+   "Đầu tiên, người dùng hoặc ứng dụng gửi object dạng plaintext tới S3 endpoint, nằm trong tunnel HTTPS. S3 sẽ là bên thực hiện mã hóa.",
+   "S3 gọi GenerateDataKey tới KMS key, có thể là AWS managed key aws/s3 hoặc customer managed key của bạn.",
+   "KMS trả về hai thứ: một plaintext DEK để mã hóa, và một bản encrypted DEK để lưu lại.",
+   "S3 dùng plaintext DEK mã hóa object rồi hủy nó ngay, sau đó lưu object đã mã hóa cùng encrypted DEK cạnh nhau. Mỗi object có một DEK riêng.",
+   "Khi đọc, S3 phải nhờ KMS giải mã encrypted DEK. Nếu người gọi không có quyền KMS, bước này thất bại và trả về AccessDenied.",
+   "Đây là Phil, có full quyền S3 nhưng không có quyền KMS. Phil gửi GET và bị từ chối vì không giải mã được DEK.",
+   "Tuy vậy Phil vẫn quản lý và xóa object được. Đó chính là role separation: admin quản trị bucket nhưng không đọc được dữ liệu.",
+   "Khi đi thi, nhớ aws/s3 không sửa được key policy hay rotation; cần kiểm soát hoặc cross-account thì dùng customer managed key. Và mỗi object là một lần gọi KMS, nên khối lượng lớn hãy bật S3 Bucket Keys."
+  ]
+ }
+}

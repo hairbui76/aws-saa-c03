@@ -1,0 +1,25 @@
+{
+ "Elastic Load Balancer": {
+  "sig": "8-c8a9k7",
+  "steps": [
+   "Sơ đồ này cho thấy kiến trúc ba tier với hai load balancer: một internet-facing LB đứng trước web tier, và một internal LB nằm giữa web và app, trải trên hai AZ.",
+   "Đầu tiên, Bob phân giải DNS name của load balancer. Đây là một A record trả về IP của mọi node, nên request được chia đều khoảng 50 phần trăm cho mỗi node.",
+   "Node LB ở từng AZ chuyển request tới web EC2 không cần public IP, web tier gọi qua internal LB tới app EC2, rồi app ghi xuống Aurora, nơi primary replicate sang replica.",
+   "Lưu ý quan trọng: internet-facing và internal chỉ khác nhau ở IP của node, một bên có public IP, một bên chỉ có private IP. Kiến trúc và tính năng giống hệt nhau.",
+   "Mỗi subnet đặt LB cần ít nhất 8 IP trống. Về kỹ thuật subnet trên 28 là đủ, nhưng AWS khuyến nghị trên 27 hoặc lớn hơn để node có chỗ scale.",
+   "Nhờ có LB giữa các tier, Bob không biết mình vào web server nào, web cũng không biết app có bao nhiêu instance. Coupling được nới lỏng và mỗi tier scale độc lập.",
+   "Node LB có tính sẵn sàng cao trong AZ, hỏng thì được thay, tải tăng thì thêm node. Khi tạo, bạn chọn đúng một subnet mỗi AZ, tối thiểu hai AZ.",
+   "Khi đi thi, nhớ rằng EC2 backend không cần public IP, trỏ domain vào LB bằng Route 53 Alias. Thấy CLB thì gần như loại, nhiều domain HTTPS thì chọn ALB với SNI."
+  ]
+ },
+ "Elastic Load Balancer - cross-zone": {
+  "sig": "5-oaa5at",
+  "steps": [
+   "Sơ đồ này so sánh hai trường hợp tắt và bật cross-zone load balancing, với bốn instance ở AZ-A và chỉ một instance ở AZ-B.",
+   "Ở cả hai trường hợp, DNS chia đều tải cho các node, nên node AZ-A và node AZ-B mỗi node nhận 50 phần trăm tổng tải.",
+   "Khi tắt, node AZ-A chia 50 phần trăm cho bốn instance, mỗi cái 12.5 phần trăm, còn instance AZ-B gánh trọn 50. Khi bật, mỗi node chia cho mọi target, nên mỗi instance khoảng 20 phần trăm.",
+   "Kết quả: tắt cross-zone thì instance duy nhất ở AZ-B bị quá tải, còn bật thì tải được dàn đều cho cả năm instance.",
+   "Khi đi thi, nhớ mặc định: ALB bật, NLB và GWLB tắt và có thể tốn phí data transfer giữa AZ, CLB tạo bằng console thì bật. Đề nói tải không đều giữa các AZ thì bật cross-zone."
+  ]
+ }
+}

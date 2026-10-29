@@ -1,0 +1,15 @@
+{
+ "SSL and TLS": {
+  "sig": "8-1h5f21p",
+  "steps": [
+   "Sơ đồ này mô tả TLS handshake gồm ba pha chạy trên một kết nối TCP sẵn có. Điểm mấu chốt: asymmetric encryption chỉ dùng để xác thực và trao khóa, còn dữ liệu thật được mã hóa bằng symmetric session key cho nhẹ.",
+   "Pha một bắt đầu bằng Client Hello, client gửi phiên bản TLS và danh sách cipher suite nó hỗ trợ. Server chọn một cipher suite chung; nếu không có cái nào chung thì kết nối thất bại ngay.",
+   "Server trả lời bằng Server Hello, gồm cipher suite đã chọn và server certificate. Certificate này chứa public key và DNS name của server, là nguyên liệu cho pha xác thực tiếp theo.",
+   "Pha hai, client không tin mù quáng mà kiểm tra certificate: có được CA tin cậy ký không, còn hạn không, có bị revoke không, DNS name có khớp không. Server cũng phải chứng minh mình thực sự giữ private key tương ứng.",
+   "Pha ba là trao đổi khóa. Client sinh pre-master key, mã hóa bằng public key của server rồi gửi đi; chỉ server có private key mới giải mã được, nên giờ hai bên có chung một pre-master key.",
+   "Từ pre-master key, cả hai cùng tạo ra master secret giống nhau, rồi sinh nhiều session key symmetric. Từ đây dữ liệu được mã hóa symmetric. Nhớ thêm: cipher suite gồm key exchange, bulk encryption và MAC, còn cert được CA ký thông qua CSR.",
+   "Hai bên tham gia: phía client là trình duyệt, tin một danh sách CA do hệ điều hành hoặc browser quản lý. Phía server catagram.io giữ private key, thứ chứng minh danh tính của nó.",
+   "Khi đi thi, nhớ TLS chỉ bắt đầu sau khi kết nối TCP ở Layer 4 đã thiết lập. Trên AWS, cert public miễn phí thì nghĩ ngay tới ACM, dùng cho ELB, CloudFront và API Gateway, và riêng CloudFront cần cert ở us-east-1."
+  ]
+ }
+}

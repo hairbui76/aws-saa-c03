@@ -1,0 +1,23 @@
+{
+ "CloudWatch Basics": {
+  "sig": "6-1j8o4md",
+  "steps": [
+   "Sơ đồ này cho thấy CloudWatch, một public service thu thập dữ liệu vận hành, đánh giá bằng alarm rồi kích hoạt hành động. Metric nhìn từ bên ngoài instance có sẵn, còn dữ liệu bên trong OS hoặc từ on-premises thì cần CloudWatch Agent.",
+   "Các dịch vụ AWS tự gửi metric như CPU, network, disk I O ở mức hypervisor, nên bạn không cần làm gì thêm. Còn memory, dung lượng đĩa đã dùng, process bên trong OS, hay server on-premises thì AWS không thấy, nên phải đi qua CloudWatch Agent.",
+   "Agent đẩy dữ liệu vào Metrics và cả Logs, ví dụ Windows Event Log hay log web server. Từ một metric, ta tạo Alarm với ba trạng thái OK, ALARM và INSUFFICIENT_DATA. Trạng thái cuối thường gặp lúc mới tạo và không phải lỗi.",
+   "Khi metric vi phạm tiêu chí, alarm chuyển sang ALARM và thực thi action. Nó có thể gửi SNS notification tới email, kích hoạt Auto Scaling để thêm instance, hoặc chạy EC2 action và Systems Manager action.",
+   "Phần thứ ba là CloudWatch Events, nay là EventBridge. Nó sinh event khi dịch vụ AWS đổi trạng thái, ví dụ EC2 start hoặc stop, hoặc sinh event theo lịch để chạy tác vụ định kỳ.",
+   "Khi đi thi, nhớ rằng memory, đĩa đã dùng và process của EC2 không có sẵn, phải cài CloudWatch Agent kèm quyền IAM, server on-premises cũng vậy. Basic monitoring là 5 phút, detailed là 1 phút và có phí. Còn câu hỏi ai gọi API gì thì chọn CloudTrail."
+  ]
+ },
+ "CloudWatch Basics - metric model": {
+  "sig": "5-17f41fj",
+  "steps": [
+   "Sơ đồ này giải thích mô hình dữ liệu: namespace chứa metric, metric chứa các data point kèm dimension. Namespace dạng AWS chấm dịch vụ là dành riêng cho AWS, còn namespace như Catagram là do bạn tự đặt.",
+   "Metric CPUUtilization không thuộc về một server nào, nhiều instance cùng đổ dữ liệu vào. Mỗi data point gồm timestamp và value, kèm dimension như InstanceId và InstanceType để phân biệt nguồn.",
+   "Trong namespace custom, bạn có thể tự định nghĩa metric riêng, ví dụ VisitorsPerSecond để đo số người truy cập website mỗi giây.",
+   "Nhờ dimension, ta lọc InstanceId bằng i-A để chỉ nhìn thấy CPU của đúng instance A trong metric chung, giống như trong demo chọn Per-Instance Metrics.",
+   "Cuối cùng, một alarm luôn gắn với một metric cộng một tiêu chí, ví dụ CPU lớn hơn hoặc bằng 15 phần trăm. Khi vượt ngưỡng, alarm chuyển sang ALARM và kích hoạt hành động."
+  ]
+ }
+}

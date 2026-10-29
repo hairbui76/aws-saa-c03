@@ -1,0 +1,14 @@
+{
+ "Polly": {
+  "sig": "7-1jyod7l",
+  "steps": [
+   "Sơ đồ này nói về Amazon Polly, dịch vụ chuyển text thành giọng nói tự nhiên. Điểm quan trọng nhất: text ở ngôn ngữ nào thì giọng đọc ra đúng ngôn ngữ đó, Polly không hề dịch.",
+   "Đầu vào là text của một ngôn ngữ, có thể kèm SSML để điều khiển cách đọc như nhấn mạnh, phát âm, thì thầm hay giọng Newscaster. Bên cạnh là pipeline đa ngôn ngữ, bắt đầu bằng text tiếng Anh đưa vào Translate.",
+   "Polly có hai engine. Standard TTS ghép các phoneme, tức đơn vị âm nhỏ nhất, thành câu nói. Neural TTS tự nhiên hơn nhưng tính toán nặng hơn. Còn Translate thì chuyển text tiếng Anh thành tiếng Việt.",
+   "Với Neural, phoneme được chuyển thành spectrogram. Nhánh Standard thì đi thẳng ra audio dạng MP3, Ogg Vorbis hoặc PCM. Ở pipeline bên cạnh, text tiếng Việt lúc này mới được đưa vào Polly.",
+   "Spectrogram tiếp tục đi qua vocoder để tạo sóng âm. Còn Polly đọc text tiếng Việt thành audio tiếng Việt, đúng ngôn ngữ của text đầu vào.",
+   "Cuối cùng vocoder sinh ra audio, nên cả hai engine đều cho cùng định dạng đầu ra. Bạn chọn MP3, Ogg Vorbis hay PCM tùy cách tích hợp, ví dụ PCM khi cần audio thô.",
+   "Nhắc khi đi thi: chiều ngược lại, từ speech sang text, là Transcribe chứ không phải Polly. Còn nếu đề cần chỉnh nhấn giọng, phát âm hay phong cách đọc, hãy nghĩ ngay tới SSML."
+  ]
+ }
+}

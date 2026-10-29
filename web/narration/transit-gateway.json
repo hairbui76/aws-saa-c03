@@ -1,0 +1,12 @@
+{
+ "Transit Gateway": {
+  "sig": "5-w4revm",
+  "steps": [
+   "Sơ đồ này so sánh hai cách nối nhiều VPC với on-prem. Vì VPC peering và VPN không transitive nên phải nối từng cặp, còn Transit Gateway là một hub có transitive routing.",
+   "Bên trái, văn phòng on-prem phải nối VPN riêng tới từng VPC. Bên phải, mỗi VPC chỉ cần một VPC attachment với một subnet trong mỗi AZ, còn on-prem nối qua VPN attachment, Direct Connect Gateway qua transit VIF, và peering attachment tới TGW khác.",
+   "Không có TGW, peering lại không transitive, nên bốn VPC phải tạo full mesh gồm 6 peering connection, theo công thức n nhân n trừ 1 chia 2.",
+   "Tổng lại, full mesh cần 6 peering và 16 tunnel, độ phức tạp tăng theo n bình phương. Với TGW chỉ còn 4 VPC attachment và 4 tunnel, có transitive routing và chia sẻ cross-account qua AWS RAM.",
+   "Nhắc khi đi thi: đường nét đứt là VPN tunnel. Thấy đề nói nhiều VPC cộng on-prem, cần giảm số kết nối hoặc transitive routing, hãy chọn ngay Transit Gateway."
+  ]
+ }
+}

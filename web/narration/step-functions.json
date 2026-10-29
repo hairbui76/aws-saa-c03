@@ -1,0 +1,16 @@
+{
+ "Step Functions": {
+  "sig": "9-1c8h852",
+  "steps": [
+   "Sơ đồ này nói về Step Functions, nơi ta xây state machine để điều phối workflow chạy dài. State machine được định nghĩa bằng Amazon States Language dựa trên JSON, và assume IAM role để gọi các dịch vụ khác.",
+   "Execution có thể được khởi chạy từ API Gateway, EventBridge, Lambda, IoT Rules hoặc thủ công. Trong ví dụ Pet Cuddle-O-Tron, state đầu tiên là Timer, một Wait state chờ đúng số giây Bob nhập vào, có thể kéo dài hàng giờ.",
+   "Hết thời gian chờ, dữ liệu input được chuyển tiếp sang Choice state. Choice không làm việc gì, nó chỉ đọc input để quyết định đi nhánh nào.",
+   "Tùy nút Bob bấm, Choice rẽ sang gửi email qua Lambda và SES, gửi SMS qua SNS, hoặc chạy song song cả hai. Nếu input không khớp nhánh nào, execution đi vào Fail state và kết thúc thất bại.",
+   "Mỗi nhánh làm xong thì đi tới Succeed state, đánh dấu execution kết thúc thành công. Lưu ý các Task chỉ giao việc cho dịch vụ khác, còn state machine đóng vai trò điều phối.",
+   "Loại workflow mặc định là Standard, chạy tối đa 1 năm với ngữ nghĩa exactly-once. Nó phù hợp cho quy trình dài, có trạng thái và cần audit.",
+   "Còn Express chỉ chạy tối đa 5 phút, ngữ nghĩa at-least-once. Express dành cho xử lý event khối lượng lớn như IoT, streaming hay mobile backend.",
+   "Vì sao không dùng Lambda thôi? Lambda timeout 15 phút và stateless, nên xâu chuỗi nhiều function với nhau sẽ rất rối khi scale và phải tự chuyển dữ liệu.",
+   "Khi đi thi, nhớ các loại state: Task giao việc, Choice rẽ nhánh, Wait chờ, Parallel chạy song song, Map lặp cho từng phần tử, Succeed và Fail kết thúc. Thấy workflow dài hơn 15 phút, nhiều bước, cần giữ trạng thái hoặc người duyệt thì chọn Step Functions."
+  ]
+ }
+}

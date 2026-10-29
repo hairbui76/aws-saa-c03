@@ -1,0 +1,18 @@
+{
+ "R53 Public Hosted Zones": {
+  "sig": "11-1wll0at",
+  "steps": [
+   "Sơ đồ này nói về public hosted zone của Route 53, tức là DNS database của một domain, được đặt trên 4 name server riêng. Ta sẽ xem cách Internet và VPC cùng truy cập được zone này.",
+   "Bắt đầu từ phía Internet: laptop của Bob muốn truy cập animals4life.org, nên gửi câu hỏi DNS tới resolver của nhà mạng ISP.",
+   "Bước một, ISP Resolver hỏi DNS Root servers. Root không biết câu trả lời cuối, nhưng chỉ đường tới các server của TLD dot org.",
+   "Bước hai, resolver hỏi server TLD dot org. Zone dot org chứa NS record của animals4life.org, trỏ về 4 name server của Route 53.",
+   "Đây chính là delegation. Khi tạo public hosted zone, Route 53 cấp 4 name server dành riêng cho zone, và NS record ở TLD trỏ về chúng nên zone trở thành authoritative.",
+   "Bước ba, resolver hỏi trực tiếp một trong 4 name server của Route 53 để lấy câu trả lời cuối cùng.",
+   "Các name server này chứa zone file với các resource record như A record cho www, MX và TXT, rồi trả record về cho Bob.",
+   "Bây giờ sang phía VPC: một EC2 instance, khi VPC đã bật DNS, sẽ dùng Route 53 Resolver nằm ở địa chỉ VPC cộng 2 làm DNS resolver.",
+   "Resolver này query được trực tiếp public hosted zone của Route 53, nên instance trong VPC cũng phân giải được domain.",
+   "Tóm lại, từ Internet ta đi qua walking the tree: hỏi Root, rồi TLD trả NS record, rồi hỏi name server Route 53. Còn resolver VPC cộng 2 hỏi được cả zone của Route 53 lẫn mọi zone DNS công cộng khác.",
+   "Nhắc khi đi thi: domain đăng ký ở GoDaddy hay Hover vẫn dùng Route 53 được, chỉ cần tạo public hosted zone rồi chép 4 NS vào registrar. Nếu không resolve được, hãy kiểm tra NS ở TLD có khớp không."
+  ]
+ }
+}

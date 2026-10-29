@@ -1,0 +1,17 @@
+{
+ "Glue": {
+  "sig": "10-10cshlv",
+  "steps": [
+   "Sơ đồ này nói về AWS Glue, dịch vụ ETL serverless kèm Data Catalog. Crawler ghi metadata vào catalog dùng chung, còn Glue Job làm extract, transform, load trên compute do AWS quản lý.",
+   "Từ các nguồn dữ liệu có hai luồng. Crawler kết nối vào nguồn để suy ra schema, còn Glue Job extract dữ liệu ra rồi biến đổi bằng script do bạn tự viết.",
+   "Crawler đẩy schema và metadata vào Glue Data Catalog. Lưu ý mỗi region của mỗi account chỉ có đúng một data catalog.",
+   "Catalog được Athena, Redshift Spectrum, EMR và Lake Formation dùng chung, giúp phá data silo giữa các team. Job có thể chạy thủ công hoặc kích hoạt theo lịch hay sự kiện qua EventBridge. Khi đề nói ETL serverless, ad hoc, cost effective thì chọn Glue chứ không phải Data Pipeline.",
+   "Sau khi biến đổi, job load dữ liệu vào đích. Compute lấy từ warm resource pool do AWS quản lý, cấp khi cần và trả lại khi xong, nên bạn chỉ trả tiền phần đã dùng.",
+   "Bắt đầu với các nguồn, S3 là một nguồn dữ liệu phổ biến để Glue crawl và extract.",
+   "Tiếp theo là RDS và các cơ sở dữ liệu tương thích JDBC, ví dụ Redshift.",
+   "DynamoDB cũng là nguồn được hỗ trợ. Ở phía đích, Glue có thể load vào S3, RDS hoặc cơ sở dữ liệu JDBC.",
+   "Ngoài datastore, Glue còn đọc được từ stream như Kinesis Data Streams hoặc Apache Kafka.",
+   "Mẹo khi đi thi: nếu cần khám phá schema của dữ liệu trên S3 để Athena hoặc Redshift Spectrum truy vấn, đáp án là Glue crawler kết hợp Data Catalog."
+  ]
+ }
+}

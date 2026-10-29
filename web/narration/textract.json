@@ -1,0 +1,16 @@
+{
+ "Textract": {
+  "sig": "9-nlw8il",
+  "steps": [
+   "Sơ đồ này nói về Amazon Textract, dịch vụ trích text và cả cấu trúc từ tài liệu. Nó hơn OCR thông thường vì giữ được quan hệ key-value, bảng, vị trí, và có API riêng cho hóa đơn, biên lai, giấy tờ tùy thân.",
+   "Đầu vào là tài liệu dạng JPEG, PNG, PDF hoặc TIFF, đọc được cả chữ in, viết tay lẫn đóng dấu. Câu hỏi đầu tiên là tài liệu này lớn hay có nhiều trang không.",
+   "Nếu là tài liệu cỡ thường, ta dùng chế độ synchronous, kết quả gần như tức thì. Còn tài liệu lớn như PDF hàng trăm trang thì dùng asynchronous: start job, chờ SNS báo xong rồi mới lấy kết quả.",
+   "Dù đi đường synchronous hay asynchronous, tài liệu đều được đưa vào phần phân tích theo loại tài liệu, nơi Textract chọn cách trích phù hợp.",
+   "Kết quả sau đó được chuyển tiếp cho Comprehend để tìm entity hoặc PII, lưu vào database, hoặc dùng trong ứng dụng. Với KYC và AML, nhiều loại giấy tờ được đưa về cùng một schema và lưu chung một database.",
+   "Loại thứ nhất là Analyze Document cho tài liệu chung. Nó trích raw text, Forms dạng key-value, Tables giữ nguyên cấu trúc bảng, và Queries.",
+   "Loại thứ hai là Analyze Expense dành cho biên lai và hóa đơn. Nó lấy ra vendor, từng line item, giá và ngày, hiểu được dòng sản phẩm nào đi với giá nào.",
+   "Loại thứ ba là Analyze ID cho giấy tờ tùy thân. Bằng lái hay hộ chiếu đều được map về một schema chung, ví dụ số giấy phép và số hộ chiếu cùng trả về trường Document number.",
+   "Khi đi thi, nhớ rằng OCR có cấu trúc như form, bảng, hóa đơn, ID thì chọn Textract, không phải Rekognition. Pipeline hay gặp là S3 upload, gọi Lambda, đi tới Textract, rồi Comprehend tìm PII và lưu vào database."
+  ]
+ }
+}

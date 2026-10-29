@@ -1,0 +1,10 @@
+{
+ "Cloud Computing Definition": {
+  "sig": "3-jp0w9v",
+  "steps": [
+   "Sơ đồ này dựa trên tài liệu NIST SP 800-145, định nghĩa cloud bằng 5 đặc tính thiết yếu. Một hệ thống, dù public hay private, phải thỏa đủ cả 5 mới được gọi là cloud.",
+   "Lần lượt là On-Demand Self-Service, Broad Network Access, Resource Pooling, Rapid Elasticity và Measured Service. Phải mở ticket, phải tới data center, mua phần cứng riêng hay trả phí cố định trước thì đều không phải cloud.",
+   "Khi đi thi, hãy ưu tiên đáp án tự động hóa, dùng dịch vụ managed, scale tự động cả chiều in lẫn out và trả theo mức dùng. Over-provision cố định hay thao tác thủ công thường là đáp án sai."
+  ]
+ }
+}

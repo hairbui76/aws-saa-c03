@@ -1,0 +1,29 @@
+{
+ "SAA-C03 Exam Overview": {
+  "sig": "9-1pq1jrz",
+  "steps": [
+   "Sơ đồ này là lộ trình chứng chỉ AWS mà Adrian khuyến nghị, chia theo bốn cấp Foundational, Associate, Professional và Specialty. Điểm mấu chốt là luôn bắt đầu bằng SA Associate.",
+   "Bước đầu tiên luôn là SA Associate, kể cả khi bạn là developer hay làm vận hành, vì kiến trúc là lõi của mọi thứ. Từ đây có thể sang Developer Associate, hoặc đi thẳng lên SA Professional theo hướng stream-based.",
+   "Theo hướng truyền thống, sau Developer Associate là SysOps Associate. Bài này khó nhất trong ba bài associate vì thiên về vận hành và tìm lỗi thay vì thiết kế.",
+   "Đậu cả ba bài associate, gọi là all three, bạn tiến lên SA Professional, cấp đòi hỏi kiến thức vừa sâu hơn vừa rộng hơn.",
+   "Ở cấp Professional, làm SA Pro trước rồi mới tới DevOps Pro. Đậu ba associate và hai professional gọi là all five.",
+   "Cloud Practitioner được để gần cuối, chỉ để đủ bộ. Đừng học riêng cho nó, vì học SAA đã đủ để thi đậu cả Cloud Practitioner.",
+   "Cuối cùng là các Specialty, chọn theo thế mạnh cá nhân. Chúng thi 170 phút, lệ phí 300 USD, phạm vi hẹp nhưng rất sâu.",
+   "Hãy hình dung một kho kiến thức: Cloud Practitioner và Associate dùng chung nội dung, Associate chỉ sâu hơn. Professional sâu hơn và rộng hơn, còn Specialty khoảng một nửa chuyên ngành, một nửa kỹ năng AWS.",
+   "Khi đi thi, nhớ rằng Associate chỉ khoảng 3 trên 10 về độ khó, còn Pro là 10 trên 10. Và lưu ý năm 2026, SysOps đã đổi thành CloudOps Engineer Associate, một số Specialty đã bị khai tử."
+  ]
+ },
+ "SAA-C03 Exam Overview - format": {
+  "sig": "8-7eeqd7",
+  "steps": [
+   "Sơ đồ này tóm tắt format đề SAA-C03 và bốn domain. Bạn làm 65 câu trong 130 phút, cần 720 trên 1000 tính gộp để đậu.",
+   "Trong 65 câu có 50 câu tính điểm và 15 câu thử nghiệm, bạn không biết câu nào. Domain lớn nhất là Secure với 30 phần trăm, gồm IAM, KMS, Security Groups, NACL và Organizations.",
+   "130 phút chia ra chỉ khoảng 2 phút mỗi câu cho cả đọc và quyết định, nên lần đầu hầu như ai cũng dễ hết giờ nếu không có quy trình.",
+   "Domain Resilient chiếm 26 phần trăm, xoay quanh HA, fault tolerance, DR, Auto Scaling, RDS Multi-AZ và SQS.",
+   "Câu hỏi có dạng chọn một đáp án hoặc chọn nhiều đáp án. Với dạng chọn nhiều, đề luôn ghi rõ số đáp án cần chọn, ví dụ choose two.",
+   "Điểm chấm kiểu compensatory, nên bạn không cần đậu từng domain riêng lẻ. Domain High-Performing chiếm 24 phần trăm, gồm EBS volume types, CloudFront và ElastiCache.",
+   "Lệ phí 150 USD, hiệu lực 3 năm. Domain Cost-Optimized chiếm 20 phần trăm. Khi đi thi, hãy nhớ bốn domain chính là bốn tiêu chí trong đề: bảo mật, resilient, performance và chi phí.",
+   "Câu hỏi associate khá ngắn, từ một đến hai ba dòng, với bốn đến năm đáp án ngắn. Trước khi thi thật, hãy làm practice test đến khi đều đặn trên 90 phần trăm."
+  ]
+ }
+}

@@ -1,0 +1,23 @@
+{
+ "NAT Fundamentals": {
+  "sig": "5-scabmg",
+  "steps": [
+   "Sơ đồ này minh họa PAT, hay NAT overloading, nơi cả mạng private 10.0.0.0 trên 24 dùng chung một IP public duy nhất là 52.95.36.67 của NAT device.",
+   "Ba laptop trong mạng private cùng gửi traffic ra Internet qua NAT device, vốn là default gateway. Lưu ý hai máy tình cờ chọn cùng source port ngẫu nhiên 32768.",
+   "Laptop 10.0.0.42 gửi request tới CatFlix. NAT đổi source thành IP public với port 1337, CatFlix trả lời về đúng cặp đó, rồi NAT tra bảng và dịch ngược về laptop ban đầu.",
+   "Đây là NAT table, ghi lại mỗi cặp IP và port private tương ứng với một public port riêng. Nhờ bảng này, traffic phản hồi mới tìm đúng đường về từng thiết bị.",
+   "Khi đi thi, nhớ rằng NAT phải cấp public port khác nhau khi client trùng source port. Internet không thể khởi tạo kết nối vào thiết bị private vì không có entry trong bảng. NAT Gateway là PAT, Internet Gateway là static NAT một một, còn IPv6 không cần NAT."
+  ]
+ },
+ "NAT Fundamentals - types": {
+  "sig": "6-13ywlmk",
+  "steps": [
+   "Sơ đồ này so sánh ba kiểu NAT dành cho IPv4: Static NAT, Dynamic NAT và PAT. Chúng khác nhau ở cách ánh xạ địa chỉ private sang public và chiều kết nối được phép.",
+   "Static NAT gắn cố định một IP private với một IP public. Dynamic NAT dùng một pool, ví dụ 2 IP public cho 4 thiết bị. PAT cho nhiều máy dùng chung một IP, phân biệt bằng source port.",
+   "Static NAT cho kết nối hai chiều với IP public nhất quán. Dynamic NAT cấp IP tạm thời, nhiều máy dùng chung được nếu khác thời điểm. PAT chỉ cho outbound và traffic phản hồi.",
+   "Về rủi ro, Static NAT tốn một IP public cho mỗi thiết bị. Dynamic NAT hết pool thì thiết bị kế tiếp thất bại. Với PAT, Internet không khởi tạo kết nối vào được, đây cũng là lợi ích bảo mật.",
+   "Trong AWS, Internet Gateway làm static NAT cho public IPv4 và Elastic IP. Dynamic NAT dùng khi ít IP public hơn private. Còn NAT Gateway, NAT instance và router gia đình đều dùng PAT.",
+   "Lời nhắc khi đi thi: IPv6 không dùng NAT. Nếu đề hỏi IPv6 chỉ cho phép outbound trong VPC, hãy chọn Egress-Only Internet Gateway, không phải NAT Gateway."
+  ]
+ }
+}

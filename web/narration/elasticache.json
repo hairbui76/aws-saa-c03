@@ -1,0 +1,31 @@
+{
+ "ElastiCache": {
+  "sig": "9-1iysnyj",
+  "steps": [
+   "Sơ đồ này cho thấy hai cách dùng ElastiCache: bên trái là cache-aside để giảm tải đọc cho database, bên phải là lưu session state để ứng dụng stateless. Điểm mấu chốt là ứng dụng phải được sửa code để biết dùng cache.",
+   "Người dùng gửi yêu cầu tới Application đã được sửa code để làm việc với cache. Bên phải, Load Balancer đưa Bob tới EC2 1, và lát nữa instance này sẽ hỏng.",
+   "Application luôn hỏi ElastiCache trước bằng lệnh GET, vì dữ liệu trong RAM trả về dưới một mili giây. Song song đó, EC2 1 liên tục ghi session state của Bob, ví dụ giỏ hàng, vào ElastiCache.",
+   "Load Balancer có thêm EC2 2 trong Auto Scaling Group. Đây là instance sẽ nhận Bob khi EC2 1 gặp sự cố.",
+   "Nếu cache hit thì trả thẳng, database không bị chạm. Nếu miss, app tự đọc Aurora rồi SET kết quả vào cache. Bên phải, EC2 2 đọc lại session từ ElastiCache nên Bob không bị gián đoạn.",
+   "Ở kiến trúc session, người dùng luôn đi qua Load Balancer chứ không kết nối thẳng vào một instance cụ thể.",
+   "EC2 3 cũng nằm sau Load Balancer. Vì session nằm ngoài instance, bất kỳ EC2 nào cũng phục vụ được Bob, khác hẳn session stickiness.",
+   "Dữ liệu bền vững vẫn nằm trong Aurora, còn ElastiCache chỉ giữ dữ liệu tạm trong RAM, có thể mất hoặc nạp lại.",
+   "Khi đi thi, thấy read-heavy, giảm chi phí đọc database, sub-millisecond, in-memory hay session state thì nghĩ tới ElastiCache. Nhưng đề ghi không được sửa code thì loại nó, và cache cho DynamoDB thì chọn DAX."
+  ]
+ },
+ "ElastiCache - redis-vs-memcached": {
+  "sig": "10-1igirv7",
+  "steps": [
+   "Sơ đồ này so sánh hai engine của ElastiCache. Đề thi phân biệt bằng tính năng: cần bền vững, high availability hay cấu trúc phức tạp thì chọn Redis, còn đơn giản và đa luồng thì Memcached.",
+   "Hai cột là Memcached và Redis. Hiện nay còn có Valkey, một bản fork mã nguồn mở tương thích Redis, nên cứ xếp chung với Redis.",
+   "Về cấu trúc dữ liệu, Memcached chỉ có string đơn giản. Redis có list, set, hash và sorted set, rất hợp cho leaderboard game vì lưu luôn thứ tự xếp hạng.",
+   "Memcached không có replication nên không highly available. Redis replicate qua nhiều AZ, vừa cho high availability vừa dùng replica để scale đọc.",
+   "Memcached không có persistence nên không backup hay restore được. Redis cho phép khôi phục cache về trạng thái trước sự cố.",
+   "Memcached là multi-threaded nên tận dụng tốt CPU nhiều core, còn lõi xử lý của Redis chủ yếu là single-threaded.",
+   "Muốn scale ngang với Memcached, bạn thêm node và tự sharding thủ công. Redis dùng replica cho đọc và cluster mode để shard.",
+   "Memcached không hỗ trợ transactions. Redis có, cho phép nhiều lệnh thực thi theo kiểu all or nothing.",
+   "Điểm chung là cả hai đều in-memory, latency dưới một mili giây. Khi thi, cần Multi-AZ, backup, transactions hay sorted set thì chọn Redis; cache đơn giản, đa luồng, chấp nhận mất dữ liệu thì chọn Memcached.",
+   "Tóm lại, sáu tiêu chí cần nhớ là cấu trúc dữ liệu, replication và Multi-AZ, backup và restore, threading, scale ngang, và transactions."
+  ]
+ }
+}

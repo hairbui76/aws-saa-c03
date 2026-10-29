@@ -1,0 +1,13 @@
+{
+ "BGP": {
+  "sig": "6-1dp3w8x",
+  "steps": [
+   "Sơ đồ này nói về cách BGP chọn đường. Mỗi AS chỉ quảng bá đường tốt nhất kèm AS_PATH, và vì BGP không biết link nào nhanh, ta phải dùng AS path prepending để ép link chậm làm backup.",
+   "Trước khi prepend, Brisbane có hai đường tới 10.18.0.0 trên 16. Đường vệ tinh có AS_PATH 202,i ngắn hơn nên được chọn, khiến traffic chạy trên link chỉ 5 Mbps dù cáp quang nhanh hơn nhiều.",
+   "Sau khi Alice Springs prepend, đường vệ tinh trông như 202,202,202,i, dài hơn đường cáp quang 201,202,i. Traffic chuyển sang đi qua Adelaide, còn vệ tinh làm dự phòng; link chết thì BGP tự chuyển, mạng có HA.",
+   "Vài điểm cần nhớ: BGP chạy trên TCP port 179, peering phải cấu hình thủ công, ASN private từ 64512 tới 65534. Trên AWS, Direct Connect và dynamic Site-to-Site VPN đều dùng BGP, route vào VPC qua route propagation.",
+   "Đây là ba site: Brisbane ASN 200, Adelaide ASN 201 và Alice Springs ASN 202. Brisbane nối Adelaide bằng cáp quang 1 Gbps, còn nối thẳng Alice Springs bằng vệ tinh 5 Mbps latency cao, nơi Alice Springs quảng bá route đã prepend.",
+   "Cuối cùng là link cáp quang 1 Gbps giữa Adelaide và Alice Springs, hoàn thành vòng ba site. Khi đi thi nhớ nhé: BGP chọn AS_PATH ngắn nhất, không theo bandwidth, muốn đẩy traffic khỏi một link thì dùng AS path prepending."
+  ]
+ }
+}

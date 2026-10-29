@@ -1,0 +1,12 @@
+{
+ "IAM Groups": {
+  "sig": "5-13x9hc",
+  "steps": [
+   "Sơ đồ này nói về IAM Groups. Group chỉ là một cái container chứa IAM user, giúp gán quyền cho cả nhóm cùng lúc. Nó không đăng nhập được và không phải identity thật.",
+   "Sally thuộc cả group Developers và QA. Quyền hiệu lực của Sally là gộp ba nguồn: policy trực tiếp và policy của hai group, rồi áp Deny, Allow, Deny. Còn bên phải, Principal trong bucket policy chỉ nhận IAM user hoặc role, không nhận group.",
+   "Mike là một user khác trong group. Mọi thành viên đều thừa hưởng policy của group, nên chỉ cần gắn quyền một lần cho cả nhóm.",
+   "Thêm Ann vào nhóm. Nhớ rằng group không có credentials, không lồng nhau, và không có group All Users mặc định. Muốn cấp quyền theo nhóm thì gắn identity policy vào group.",
+   "Khi đi thi, nhớ các con số: một user tham gia tối đa 10 group, mỗi account 300 group và tăng được, còn 5.000 user mỗi account. Gặp đáp án đăng nhập bằng group là loại ngay."
+  ]
+ }
+}

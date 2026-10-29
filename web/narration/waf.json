@@ -1,0 +1,34 @@
+{
+ "WAF": {
+  "sig": "13-1tg435i",
+  "steps": [
+   "Sơ đồ này cho thấy cách AWS WAF lọc request ở Layer 7. Request đi qua các rule trong Web ACL theo thứ tự, gặp ALLOW hoặc BLOCK là dừng, không khớp gì thì dùng default action.",
+   "Người dùng, bot hay kẻ tấn công đều gửi request vào Web ACL. Chính Web ACL được associate với resource, có thể là CloudFront ở phạm vi global hoặc resource regional cùng region.",
+   "Đầu tiên là AWS Managed rules chặn SQL injection, XSS và IP xấu, phần lớn miễn phí. Nếu không khớp, request đi tiếp xuống rule group do bạn tự tạo, tái sử dụng được và phải khai báo trước WCU.",
+   "Tiếp theo là rate-based rule, chỉ khớp khi một IP gửi quá nhiều request trong cửa sổ thời gian, ví dụ hơn 5000 request trong 5 phút, dấu hiệu brute force hoặc HTTP flood.",
+   "Nếu không rule nào khớp, Web ACL áp dụng default action. Chọn ALLOW khi dùng mô hình deny list, hoặc BLOCK khi chỉ cho phép traffic đã biết là tốt.",
+   "Về phía resource, CloudFront là lựa chọn global, Web ACL của nó được đẩy ra các edge location nên việc associate có thể mất thời gian.",
+   "Mỗi rule gồm ba phần. Đầu tiên là Type: Regular khớp khi điều kiện xảy ra, còn Rate-based khớp khi điều kiện xảy ra với tần suất vượt ngưỡng.",
+   "Statement là phần rule kiểm tra cái gì, như IP, quốc gia, header, URI hay body, nhưng body chỉ xét 8 KB đầu, ghép được bằng AND, OR, NOT. Application Load Balancer là resource regional đầu tiên gắn được WAF.",
+   "API Gateway cũng là resource regional gắn được Web ACL, giúp bảo vệ API khỏi injection và request quá tải.",
+   "Action quyết định kết quả. ALLOW và BLOCK dừng xử lý ngay, còn COUNT và CAPTCHA cho đi tiếp, thường kèm label để rule sau dùng. Lưu ý rate-based rule không có ALLOW.",
+   "AppSync là resource regional nữa trong danh sách hỗ trợ, nhớ bộ bốn CloudFront, ALB, API Gateway và AppSync.",
+   "WAF không gắn được vào NLB hay EC2 trực tiếp. Nếu đề có NLB mà cần lọc Layer 7, hãy đổi sang ALB hoặc đặt CloudFront phía trước.",
+   "Khi đi thi nhớ: một resource chỉ có một Web ACL, nhưng một Web ACL gắn nhiều resource, và global với regional không dùng chéo được. WCU của WAF khác WCU của DynamoDB, và WAF chỉ xử lý HTTP hoặc HTTPS."
+  ]
+ },
+ "WAF - logging": {
+  "sig": "9-1sxf8mq",
+  "steps": [
+   "Sơ đồ này nói về logging của WAF và vòng phản hồi tự động, nơi log được phân tích rồi quay lại cập nhật rule mà không cần con người can thiệp.",
+   "Mọi request từ người dùng, bot hay kẻ tấn công đều đi vào Web ACL của AWS WAF để được đánh giá theo các rule.",
+   "Request được ALLOW sẽ tới resource như CloudFront hay ALB. Đồng thời WAF gửi log tới CloudWatch Logs gần thời gian thực, hoặc Kinesis Data Firehose để đẩy tiếp tới S3 hay đích khác.",
+   "Từ CloudWatch Logs và Firehose, Lambda cùng Athena phân tích log tự động để rút ra thông tin có thể hành động, như IP đang tấn công.",
+   "Log cũng có thể gửi thẳng vào S3, nhưng được giao theo lô khoảng mỗi 5 phút, nên chậm hơn.",
+   "Từ S3, S3 Events kích hoạt Lambda và Athena truy vấn log để phân tích tiếp.",
+   "Kết quả phân tích quay ngược lại cập nhật deny list hoặc rule trong Web ACL, khép kín vòng phản hồi.",
+   "Ngoài tự động nâng cao, admin có thể cập nhật thủ công, hoặc dùng EventBridge scheduled rule gọi Lambda để parse danh sách IP xấu công khai rồi cập nhật deny list.",
+   "Khi đi thi nhớ: muốn phản ứng nhanh thì đừng dựa vào log vào S3 vì trễ khoảng 5 phút, hãy dùng CloudWatch Logs hoặc Firehose. Mẫu event-driven security này cũng lặp lại với GuardDuty, Macie và AWS Config."
+  ]
+ }
+}

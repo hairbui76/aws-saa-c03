@@ -1,0 +1,22 @@
+{
+ "EC2 Purchase Options": {
+  "sig": "6-1bcrhhw",
+  "steps": [
+   "Sơ đồ này là cây quyết định giúp bạn chọn cách mua EC2 theo workload. Nguyên tắc là mặc định chọn On-Demand, chỉ đổi khi có lý do rõ ràng.",
+   "Câu hỏi đầu tiên: phần mềm có license theo socket hoặc core vật lý không? Nếu có, chọn Dedicated Host, vì bạn thuê nguyên host và nhờ host affinity, instance luôn quay về đúng host đó.",
+   "Nếu không, hỏi tiếp: có yêu cầu compliance cấm chia sẻ phần cứng không? Có thì dùng Dedicated Instances, host chỉ chạy instance của bạn mà bạn không phải quản lý host.",
+   "Tiếp theo, workload có chịu được gián đoạn và chạy lại được không? Nếu có, Spot là lựa chọn rẻ nhất, giảm tới 90%, hợp với batch, stateless, xử lý media hay phân tích.",
+   "Nếu workload chạy ổn định 24 trên 7, dài hạn 1 đến 3 năm, hãy chọn Reserved hoặc Savings Plans; 3 năm cộng All Upfront giảm sâu nhất. Còn lại thì quay về On-Demand.",
+   "Khi đi thi nhớ nhé: không bao giờ chọn Spot cho workload không chịu được gián đoạn, dù đề nhấn mạnh tiết kiệm. Thiếu capacity thì ưu tiên Reserved, rồi On-Demand, rồi Spot. Với Spot bạn trả spot price hiện tại, và AWS báo trước 2 phút khi thu hồi."
+  ]
+ },
+ "EC2 Purchase Options - tenancy": {
+  "sig": "4-1lans3f",
+  "steps": [
+   "Sơ đồ này so sánh ba mô hình tenancy: host dùng chung, Dedicated Host và Dedicated Instances. Điểm khác là ai dùng chung phần cứng, trả tiền cho gì, và ai lo capacity.",
+   "Ở host dùng chung, instance của bạn chạy cạnh khách A. Với Dedicated Host, bạn tự đặt nhiều size cùng family như c5.large và c5.xlarge. Dedicated Instances thì host chỉ chứa instance của bạn.",
+   "Host dùng chung còn có khách B và phần trống để AWS tận dụng. Trên Dedicated Host, phần trống là lãng phí vì bạn đã trả tiền cả host, còn Dedicated Instances thì chỗ trống không ai khác được dùng.",
+   "Tóm lại: host dùng chung phục vụ On-Demand, Spot, Reserved và tính theo giây. Dedicated Host trả theo host, tự quản lý capacity, hợp license socket hoặc core. Dedicated Instances tính phí region theo giờ cộng phí instance cao hơn, dành cho compliance."
+  ]
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "EventBridge": {
+  "sig": "6-h5cumg",
+  "steps": [
+   "Sơ đồ này nói về Amazon EventBridge, phiên bản hai của CloudWatch Events. Ý tưởng rất đơn giản: nếu X xảy ra, hoặc tới thời điểm Y, thì làm Z, bằng cách cho rule khớp event rồi chuyển tới target.",
+   "Bên trái là các producer. Dịch vụ AWS như EC2 đổi trạng thái sẽ đẩy event vào default event bus, còn SaaS partner và ứng dụng custom gọi PutEvents có thể dùng thêm bus riêng. Phía dưới là schedule rule, chạy theo cron hoặc rate tính bằng giờ UTC, gọi Lambda EC2Stop như một cron job serverless.",
+   "Tiếp theo, một event pattern rule gắn vào default event bus. Rule này so khớp các event có source là aws.ec2 và state là stopped, những event khác đi qua bus sẽ bị bỏ qua.",
+   "Khi khớp, event được chuyển tới target, ở đây là Lambda EC2Protect, function này đọc instance ID trong event và start lại ngay instance đó. Một rule cũng có thể có thêm target khác như SNS, SQS hay Step Functions.",
+   "Mọi event đều là JSON với các trường chung như id, detail-type, source, account, time, region và resources. Riêng phần detail thì tùy theo dịch vụ và loại event, và target nhận nguyên event này để xử lý.",
+   "Khi đi thi, nhớ rằng nhiều target của cùng một rule nhận event song song, không theo thứ tự. Trong demo, rule lịch stop cả hai instance, instance 1 sinh event stopped, rule pattern bắt được và EC2Protect bật lại nó, tức là hai rule tự nối tiếp nhau."
+  ]
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "S3 Object Lock": {
+  "sig": "9-yo6t3g",
+  "steps": [
+   "Sơ đồ này nói về S3 Object Lock, tức mô hình Write Once Read Many áp lên từng object version. Legal Hold và Retention là hai cơ chế độc lập, có thể dùng riêng hoặc chồng lên nhau.",
+   "Ta có ba cột để so sánh: Legal Hold là một cờ bật tắt, còn Retention có hai mode là Governance mềm hơn và Compliance nghiêm nhất.",
+   "Về thời hạn, Legal Hold không có thời hạn, chỉ ON hoặc OFF. Còn cả Governance lẫn Compliance đều đặt thời hạn theo ngày hoặc năm, tính từ lúc áp dụng.",
+   "Khi đang khóa, cả ba đều chặn xóa và ghi đè version. Riêng Governance cho bypass nếu có quyền s3:BypassGovernanceRetention và gửi header bypass, còn Compliance thì chặn cả root user.",
+   "Gỡ khóa sớm thì sao? Legal Hold tắt được bằng quyền s3:PutObjectLegalHold, Governance gỡ được với quyền bypass và console tự gửi header, còn Compliance thì hoàn toàn không thể rút ngắn hay đổi mode.",
+   "Legal Hold hợp cho vụ kiện, điều tra khi chưa biết giữ đến bao giờ. Governance để chống xóa nhầm hoặc thử trước, còn Compliance dành cho quy định pháp lý bắt buộc như SEC, y tế, tài chính. Version còn bị khóa khi còn ít nhất một cơ chế hiệu lực.",
+   "Khi bật Object Lock trên bucket, versioning tự động được bật, và từ đó bạn không thể tắt Object Lock hay suspend versioning nữa.",
+   "Vì dựa trên versioning nên cái bị khóa là từng object version cụ thể, chứ không phải object nói chung.",
+   "Nhắc khi đi thi: đề nói không ai, kể cả root, được xóa thì chọn Compliance; nếu admin đặc biệt vẫn được xóa thì chọn Governance. Và nhớ MFA Delete chỉ đòi MFA, không phải WORM có thời hạn."
+  ]
+ }
+}

@@ -1,0 +1,25 @@
+{
+ "R53 Failover Routing": {
+  "sig": "4-1dfycsf",
+  "steps": [
+   "Sơ đồ này nói về Failover routing, cách làm active-passive bằng DNS. Ta tạo hai record www cùng tên, một Primary và một Secondary, và health check quyết định record nào được trả về.",
+   "User truy vấn www tới Route 53. Health check A4LHealth gọi HTTP tới index.html trên EC2 mỗi 10 giây với chế độ Fast, rồi báo trạng thái cho record failover. Primary là A record trỏ tới Elastic IP của EC2, Record ID là EC2.",
+   "Khi Primary healthy, Route 53 trả về Elastic IP của EC2. Khi Primary unhealthy, nó trả Secondary, tức là Alias tới S3 website endpoint với Record ID là S3. Secondary không cần gắn health check.",
+   "Khi đi thi, nhớ rằng trang bảo trì nên nằm trên dịch vụ khác site chính, để EC2 lỗi không kéo S3 theo, và bucket phải tên đúng www cộng domain. Nếu đề hỏi active-active thì chọn Multivalue, Weighted hoặc Latency, không phải Failover."
+  ]
+ },
+ "R53 Failover Routing - timeline": {
+  "sig": "9-1r093a1",
+  "steps": [
+   "Sơ đồ này theo dõi failover và fail back theo thời gian trong demo. Điểm mấu chốt là chuyển đổi không tức thời, phải đợi health check đổi trạng thái và cache DNS hết TTL.",
+   "Ban đầu EC2 chạy, health check healthy nên user vào site EC2. Sau đó ta stop instance, và các health checker bắt đầu báo connection timed out.",
+   "Health check chưa đổi ngay mà phải thất bại liên tiếp đủ failure threshold. Với interval Fast 10 giây, trạng thái chuyển sang Unhealthy sau khoảng 1 phút.",
+   "Dù Route 53 đã biết Primary lỗi, client vẫn đang cache IP cũ của EC2. Ta phải đợi TTL 60 giây hết hạn thì client mới hỏi lại DNS.",
+   "Lúc này Route 53 trả Secondary, nên khi refresh, user thấy trang failover tĩnh trên S3.",
+   "Khi start lại EC2, các checker dần nhận HTTP 200 và health check quay về Healthy.",
+   "Sau khi TTL hết hạn, Route 53 trả lại Primary và user quay về site EC2. Đây là fail back tự động, không cần thao tác gì thêm.",
+   "Tóm lại, tổng thời gian chuyển đổi xấp xỉ bằng interval nhân với failure threshold, cộng thêm TTL của record.",
+   "Mẹo thi: muốn chuyển nhanh thì dùng health check Fast 10 giây và đặt TTL thấp. Nhưng hãy nhớ client vẫn có thể giữ IP cũ cho tới khi cache hết hạn."
+  ]
+ }
+}

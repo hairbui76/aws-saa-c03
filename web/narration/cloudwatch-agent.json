@@ -1,0 +1,14 @@
+{
+ "CloudWatch Agent": {
+  "sig": "7-v4y9t5",
+  "steps": [
+   "Sơ đồ này cho thấy cách CloudWatch Agent giúp ta nhìn vào bên trong hệ điều hành của EC2. Agent cần ba thứ: được cài đặt, có cấu hình, và có quyền gửi dữ liệu.",
+   "Mặc định CloudWatch chỉ thấy metric từ hypervisor, nên không có memory hay dung lượng đĩa còn trống. Agent chạy trong OS thu log file và metric cấp OS, lấy quyền từ instance role và kéo cấu hình từ SSM Parameter Store bằng lệnh fetch-config.",
+   "Sau đó agent đẩy metric lên CloudWatch dưới namespace mới tên là CWAgent, còn các log file thì được gửi lên CloudWatch Logs.",
+   "Log file đầu tiên là var log secure, ghi lại các lần SSH và đăng nhập. Nó có log group riêng, bên trong mỗi instance gửi log có một log stream mang instance ID.",
+   "Tương tự, access log của Apache có log group riêng, và mỗi instance vẫn là một log stream đặt tên theo instance ID.",
+   "Error log của Apache cũng vậy. Hãy nhớ quy tắc: mỗi log file tương ứng một log group, mỗi instance tương ứng một log stream, tên mặc định là instance ID.",
+   "Khi đi thi, nhớ rằng lưu cấu hình agent một lần trong Parameter Store thì cả fleet, ví dụ Auto Scaling Group, đều kéo về dùng chung. Server on-premises cũng cài agent được, dùng IAM user credentials vì không có instance role."
+  ]
+ }
+}

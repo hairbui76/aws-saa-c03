@@ -1,0 +1,12 @@
+{
+ "Launch Templates": {
+  "sig": "5-16a5rlh",
+  "steps": [
+   "Sơ đồ này so sánh Launch Template và Launch Configuration. Cả hai định nghĩa instance là gì, còn Auto Scaling Group quyết định khi nào và ở đâu. Cả hai đều không sửa được, nhưng Launch Template có version.",
+   "Một bản cấu hình EC2 gồm AMI, instance type, EBS, key pair, network, Security Group, user data và IAM role. Với Launch Template, muốn sửa thì tạo version mới, và có thể launch EC2 trực tiếp. Với Launch Configuration, muốn đổi phải tạo LC mới.",
+   "Bên Launch Template, ta tiếp tục tạo Version 3 và đặt làm mặc định. Bên kia, LC-2 mới được gắn vào Auto Scaling Group, vì tại một thời điểm ASG chỉ dùng một LC hoặc một version của LT.",
+   "Auto Scaling Group trỏ tới đúng một version cụ thể, ở đây là Version 3. Muốn đổi cấu hình, chỉ cần tạo version mới rồi trỏ ASG sang version đó.",
+   "Khi đi thi, nhớ rằng chỉ Launch Template có versioning, launch trực tiếp, T2 T3 Unlimited, placement group và capacity reservation. Đổi AMI hay instance type thì tạo version mới, cần quyền API thì gắn IAM role, đừng nhúng access key. Launch Configuration đã bị deprecate."
+  ]
+ }
+}

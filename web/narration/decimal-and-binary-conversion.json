@@ -1,0 +1,15 @@
+{
+ "Decimal and Binary Conversion": {
+  "sig": "8-1ckpnko",
+  "steps": [
+   "Sơ đồ này hướng dẫn đổi một octet thập phân sang nhị phân, lấy ví dụ số 133. Ta duyệt tám vị trí từ trái sang, tổng tối đa của tám vị trí là 255.",
+   "Mỗi khối là một vị trí, phía trên là giá trị từ 128 giảm dần tới 1, phía dưới là số còn lại khi đi tới vị trí đó. Bắt đầu với 133, sau vị trí đầu chỉ còn 5.",
+   "133 lớn hơn hoặc bằng 128 nên ghi 1 và trừ đi, còn 5. Các vị trí 64, 32, 16, 8 đều lớn hơn 5 nên ghi 0. Tới 4 thì ghi 1 còn 1, vị trí 2 ghi 0, vị trí 1 ghi 1. Kết quả là 10000101.",
+   "Chiều ngược lại dễ hơn: chỉ cộng giá trị các vị trí có bit 1, ví dụ 00100001 là 32 cộng 1 bằng 33. Ghép bốn octet được 32 bit, và nhớ các giá trị subnet mask hay gặp như 128, 192, 224 cho tới 255.",
+   "Giờ nhìn quy trình dạng lưu đồ. Ta làm từng octet một, lấy số thập phân N và hỏi N có lớn hơn hoặc bằng giá trị vị trí hiện tại không.",
+   "Nếu có, đó là Rule 2: ghi 1 và trừ giá trị vị trí khỏi N. Nếu không, đó là Rule 1: ghi 0 và giữ nguyên N.",
+   "Dù rẽ nhánh nào, ta cũng sang vị trí kế và lặp lại phép so sánh cho đủ tám vị trí. Khi N về 0 thì các vị trí còn lại đều là 0.",
+   "Cuối cùng là các cột của bảng theo dõi: giá trị vị trí, số còn lại, so sánh, bit ghi ra và N sau bước. Khi đi thi, kỹ năng này giúp bạn đọc CIDR, tính số địa chỉ và kiểm tra dải VPC có chồng lấn hay không."
+  ]
+ }
+}

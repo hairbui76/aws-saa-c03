@@ -1,0 +1,15 @@
+{
+ "DynamoDB Indexes LSI and GSI": {
+  "sig": "8-16n67ht",
+  "steps": [
+   "Sơ đồ này so sánh hai loại index của DynamoDB. Base table dùng StationID làm partition key và Day làm sort key; LSI giữ nguyên partition key, chỉ đổi sort key, còn GSI đổi cả hai để Query theo attribute khác mà không phải Scan.",
+   "Đây là LSI theo SunnyDay, ví dụ trạm S1 ngày thứ Tư nắng. Lưu ý LSI chỉ tạo được khi tạo table, tối đa 5 cái, dùng chung RCU và WCU với table, và hỗ trợ cả strongly consistent read.",
+   "Trong base table, item S1 thứ Tư có Sunny bằng Y nên xuất hiện trong LSI. Tương tự, trạm S2 ngày thứ Ba nắng cũng được đưa vào index này.",
+   "Còn item trạm S2 ngày thứ Hai có attribute Alarm là Animal, tức có động vật chui vào trạm. Item này sẽ là dữ liệu cho GSI theo Alarm.",
+   "Base table phục vụ access pattern chính là dữ liệu theo trạm và ngày, còn index phục vụ access pattern phụ. Về projection, chọn ALL, KEYS_ONLY hoặc INCLUDE; nếu thiếu attribute, DynamoDB phải fetch lại từ base table, rất tốn kém.",
+   "GSI dùng Alarm làm partition key và StationID làm sort key, nên item Animal của S2 ngày thứ Hai nằm ở đây. GSI tạo lúc nào cũng được, mặc định 20 cái mỗi table, có capacity riêng nhưng chỉ eventually consistent.",
+   "Khi ghi dữ liệu mới, LSI được cập nhật đồng bộ cùng table, như item S1 thứ Hai nắng. Còn GSI được sao chép bất đồng bộ, như alarm Fire của S1 thứ Ba, nên ứng dụng phải chịu được độ trễ này.",
+   "Khi đi thi, nhớ index là sparse: item không có attribute làm key thì không vào index, nên Scan index rất tiết kiệm. Table đã tồn tại hoặc cần partition key khác thì chọn GSI; cần giữ PK và strong consistency thì chọn LSI; mặc định nên dùng GSI."
+  ]
+ }
+}

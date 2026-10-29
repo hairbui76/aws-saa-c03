@@ -1,0 +1,15 @@
+{
+ "Virtualization": {
+  "sig": "8-ywngqg",
+  "steps": [
+   "Sơ đồ này so sánh bốn thế hệ ảo hóa, từ emulated, paravirtualization, hardware-assisted đến SR-IOV. Câu hỏi xuyên suốt là ai xử lý lệnh privileged và I/O, vì càng về sau phần cứng càng gánh việc thay phần mềm.",
+   "Ở vùng hardware-assisted, guest OS không cần sửa vẫn phát lệnh privileged như bình thường. Điểm khác là CPU giờ đã virtualization-aware, nó biết trước sẽ có những lệnh này.",
+   "CPU bẫy lệnh privileged lại, không làm hệ thống dừng, rồi chuyển hướng cho hypervisor xử lý. Nhờ vậy hiệu năng gần như ngang chạy trực tiếp trên phần cứng.",
+   "Giờ nhìn ba vùng còn lại. Emulated thì guest OS không sửa gửi lệnh privileged cho hypervisor dịch. Paravirtualization thì OS được sửa để gọi hypercall. Còn SR-IOV cho guest nói chuyện trực tiếp với card mạng.",
+   "Với emulated và paravirtualization, hypervisor là lớp phần mềm đứng giữa để đi tới phần cứng. Riêng emulated phải dùng binary translation lúc chạy, hoàn toàn bằng phần mềm nên rất tốn công.",
+   "Ở SR-IOV, hypervisor đứng ngoài đường I/O. Card vật lý tự chia thành nhiều card logic gán thẳng cho từng guest, và chính card lo việc chia sẻ đường truyền.",
+   "Tóm lại: emulated không sửa OS nhưng có thể mất từ 50 phần trăm hiệu năng trở lên. Paravirtualization nhanh hơn nhưng phải sửa OS. Hardware-assisted gần native nhưng I/O vẫn qua phần mềm. SR-IOV chính là Enhanced Networking.",
+   "Khi đi thi, nhớ AWS Nitro là hypervisor riêng của AWS, offload I/O sang phần cứng chuyên dụng. Thấy đề nhắc SR-IOV hoặc cần latency thấp và ổn định, hãy nghĩ ngay tới Enhanced Networking."
+  ]
+ }
+}

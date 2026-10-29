@@ -1,0 +1,10 @@
+{
+ "AWS Accounts": {
+  "sig": "3-1gkocwa",
+  "steps": [
+   "Sơ đồ này cho thấy AWS account là một cái hộp chứa identities và resources, đồng thời là ranh giới cô lập. Ở đây ta có hai account: General, về sau thành Management account, và Production.",
+   "Trong mỗi account, root user có toàn quyền mà IAM policy không chặn được, còn iamadmin chỉ có quyền nhờ được cấp AdministratorAccess tường minh. Identity bên ngoài mặc định bị deny, trừ khi bạn cho phép qua cross-account role hoặc resource policy.",
+   "Khi đi thi, nhớ rằng tách nhiều account giúp giới hạn blast radius, vì sự cố hay lộ credential chỉ gây hại trong account đó. Và mỗi account cần một email duy nhất, còn thẻ thanh toán thì dùng chung được."
+  ]
+ }
+}

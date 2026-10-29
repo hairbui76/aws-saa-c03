@@ -1,0 +1,25 @@
+{
+ "SQS": {
+  "sig": "7-wmbu4e",
+  "steps": [
+   "Sơ đồ này cho thấy SQS đứng giữa để decouple web tier và worker tier. Web pool chỉ lưu file và gửi message, còn worker pool tự poll queue và scale theo độ dài queue, thậm chí về 0.",
+   "Người dùng upload video vào web pool, là một Auto Scaling Group scale theo CPU. Tier này chỉ lo tiếp nhận request từ người dùng.",
+   "Web pool lưu video gốc vào S3 Master bucket, rồi gửi message vào SQS queue. Message chỉ chứa link S3 vì dữ liệu lớn không nên nhét vào message. Gửi xong là web pool hết trách nhiệm.",
+   "Worker pool là một Auto Scaling Group khác, scale theo queue length. Worker đọc video gốc từ S3 Master bucket dựa vào link trong message.",
+   "Worker chủ động poll queue để lấy việc. Queue dài thì worker scale out, queue ngắn thì scale in, nên hai tier scale hoàn toàn độc lập.",
+   "Worker transcode video ra nhiều kích thước rồi lưu vào S3 Transcode bucket, để web tier lấy ra phục vụ người dùng.",
+   "Khi đi thi nhớ nhé: instance chết giữa chừng thì message không bị xóa, hết visibility timeout sẽ hiện lại cho worker khác. Message 256 KB theo khóa học, nay là 1 MiB, retention mặc định 4 ngày, tối đa 14 ngày. Tính tiền theo request, long polling tối đa 20 giây, cross-account thì dùng queue policy. Thấy từ khóa decouple, asynchronous, buffer, worker pool thì chọn SQS; một sự kiện cần nhiều xử lý độc lập thì dùng SNS fan-out tới nhiều SQS queue."
+  ]
+ },
+ "SQS - lifecycle": {
+  "sig": "6-bxm60m",
+  "steps": [
+   "Sơ đồ này nói về vòng đời message và visibility timeout. Điểm mấu chốt là nhận message không xóa nó, chỉ ẩn đi, consumer phải tự gọi DeleteMessage.",
+   "Producer gọi SendMessage, message nằm trong queue ở trạng thái visible, sẵn sàng cho bất kỳ consumer nào poll tới.",
+   "Consumer gọi ReceiveMessage, message chuyển sang in flight và bị ẩn trong khoảng visibility timeout, mặc định 30 giây, có thể từ 0 giây đến 12 giờ.",
+   "Xử lý xong, consumer gọi DeleteMessage và message mất vĩnh viễn. Còn nếu message bị nhận quá số lần maxReceiveCount mà không được xóa, nó được chuyển sang dead-letter queue để chẩn đoán riêng.",
+   "Nếu hết timeout mà chưa ai xóa, chẳng hạn consumer bị crash, message hiện lại trong queue để client khác xử lý. Đây là cơ chế retry và fault tolerance có sẵn.",
+   "Lưu ý khi thi: message bị xử lý trùng thường do visibility timeout ngắn hơn thời gian xử lý, hãy tăng timeout hoặc dùng ChangeMessageVisibility. Short polling trả về ngay kể cả khi rỗng, còn long polling với WaitTimeSeconds tối đa 20 giây giảm request rỗng nên rẻ hơn, vì SQS tính tiền theo request."
+  ]
+ }
+}

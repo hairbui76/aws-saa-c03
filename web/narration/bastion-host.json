@@ -1,0 +1,12 @@
+{
+ "Bastion Host": {
+  "sig": "5-1atoqg3",
+  "steps": [
+   "Sơ đồ này nói về bastion host, hay còn gọi là jumpbox. Đây là một EC2 instance đặt trong public subnet, làm điểm vào duy nhất để admin SSH hoặc RDP từ bên ngoài rồi nhảy tiếp vào các instance private.",
+   "Đầu tiên, admin từ một địa chỉ IP được phép mở kết nối SSH cổng 22. Lưu lượng đi qua Internet Gateway, vì bastion nằm trong subnet public có default route tới IGW.",
+   "Bastion có public IPv4 và Security Group chỉ cho phép SSH cổng 22 từ IP của admin. Nhờ vậy, mọi kết nối từ IP lạ hoặc kẻ tấn công đều bị Security Group chặn ngay.",
+   "Sau khi vào bastion, admin SSH tiếp tới các EC2 app và db chỉ có private IP. Security Group của các instance này chỉ nên cho phép SSH từ Security Group của bastion, không mở ra internet.",
+   "Khi đi thi, nhớ rằng nếu đề hỏi cách an toàn nhất hoặc ít vận hành nhất, đáp án thường là SSM Session Manager hoặc EC2 Instance Connect Endpoint, không cần public IP. Bastion phải vá OS, quản lý key, là điểm tấn công và có thể là single point of failure nếu chỉ ở một AZ."
+  ]
+ }
+}

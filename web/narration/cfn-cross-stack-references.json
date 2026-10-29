@@ -1,0 +1,22 @@
+{
+ "CFN Cross-Stack References": {
+  "sig": "6-1wkommu",
+  "steps": [
+   "Sơ đồ này cho thấy cách một stack dùng resource thật do stack khác tạo ra. Stack nguồn export output, stack khác dùng ImportValue, và tất cả phải nằm trong cùng account, cùng region.",
+   "Bên trong Shared VPC stack sống lâu dài là VPC, subnets, NAT Gateway và Security Group. Ta đưa VPC ID vào Outputs bằng Ref VPC, rồi thêm phần Export với tên SHAREDVPCID.",
+   "Bước export đẩy giá trị vào danh sách exports của region. Danh sách này riêng cho từng region của từng account, nên tên SHAREDVPCID phải là duy nhất ở đó.",
+   "Các app stack ngắn hạn gọi ImportValue SHAREDVPCID thay cho Ref để lấy đúng VPC ID thật. Còn stack ở region khác thì không import được, muốn chia sẻ phải dùng SSM Parameter Store hoặc Custom Resource.",
+   "Tương tự, stack ở account khác cũng không import được, vì mỗi account có danh sách exports riêng. Cross-stack reference không hỗ trợ cross-account.",
+   "Nhắc khi đi thi: khi một export đang được stack khác import, bạn không xóa được stack nguồn và cũng không sửa hoặc xóa export đó. Phải gỡ import trước, đây là cơ chế bảo vệ resource dùng chung."
+  ]
+ },
+ "CFN Cross-Stack References - compare": {
+  "sig": "4-9mvg02",
+  "steps": [
+   "Sơ đồ này so sánh nested stacks và cross-stack references. Nested stacks tái sử dụng template, tức là code, còn cross-stack tái sử dụng stack, tức là resource thật dùng chung.",
+   "Bên trái, cùng một file VPC template được dùng cho ba root stack A, B và C. Bên phải, một Shared VPC stack sống lâu export giá trị, và ba app stack import để dùng chung một VPC.",
+   "Kết quả bên nested là ba root stack tạo ra ba VPC riêng, vòng đời gắn chặt, root đọc output qua GetAtt. Bên cross-stack, app tạo hoặc xóa thoải mái mà VPC vẫn còn nguyên.",
+   "Mẹo thi: thấy từ khóa shared services VPC, vòng đời khác nhau hoặc service-oriented thì chọn cross-stack. Và nhớ rằng nhập tay ID vào parameter chỉ là giá trị tĩnh, không phải tham chiếu."
+  ]
+ }
+}

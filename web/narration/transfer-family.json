@@ -1,0 +1,24 @@
+{
+ "Transfer Family": {
+  "sig": "5-34p0hv",
+  "steps": [
+   "Sơ đồ này giới thiệu AWS Transfer Family, dịch vụ managed file transfer đặt các server SFTP, FTPS, FTP và AS2 trước S3 và EFS. Đối tác cứ dùng giao thức quen thuộc, còn AWS lo phần server, multi-AZ.",
+   "Đầu tiên, đối tác hoặc người dùng bên ngoài kết nối tới Transfer Family server bằng giao thức họ đang dùng sẵn. Bạn có thể gắn custom DNS name cho server nếu muốn.",
+   "Trước khi truyền file, người dùng phải được xác thực qua identity provider: user service managed, Directory Service của AWS, hoặc custom IdP dựng bằng Lambda hay API Gateway.",
+   "Sau đó server dùng IAM role để đọc ghi file vào S3 hoặc EFS. Kèm theo là MFTW, workflow serverless tự động xử lý file sau khi upload, ví dụ gắn tag hay gửi notification.",
+   "Khi đi thi, nhớ giá tính theo giờ server được provision cộng lượng dữ liệu truyền, không phí trả trước. Đối tác cần upload SFTP vào S3 mà không đổi app thì chọn Transfer Family; migrate NAS lớn là DataSync; hybrid lâu dài là Storage Gateway."
+  ]
+ },
+ "Transfer Family - endpoints": {
+  "sig": "7-42k1db",
+  "steps": [
+   "Sơ đồ này so sánh ba kiểu endpoint của Transfer Family: Public, VPC Internet và VPC Internal only. Kiểu endpoint quyết định ai truy cập được, giao thức nào dùng được, IP ra sao và có gắn Security Group hay NACL không.",
+   "Về vị trí, Public nằm ở AWS public zone, truy cập từ internet. VPC Internet nằm trong VPC kèm Elastic IP, truy cập từ internet, VPC và on-prem. VPC Internal chỉ truy cập từ VPC và on-prem qua VPN hoặc Direct Connect.",
+   "Về giao thức, Public chỉ hỗ trợ SFTP. VPC Internet hỗ trợ SFTP, FTPS và AS2. Riêng VPC Internal hỗ trợ đủ cả bốn, kể cả FTP.",
+   "Về địa chỉ IP, Public dùng IP động do AWS quản lý nên phải truy cập bằng DNS. VPC Internet có IP tĩnh nhờ Elastic IP để đối tác whitelist, còn VPC Internal dùng private IP tĩnh.",
+   "Về kiểm soát truy cập, endpoint Public không gắn được Security Group hay NACL. Hai kiểu VPC thì gắn được cả hai để lọc lưu lượng.",
+   "Về cấu hình mạng, Public không cần chuẩn bị gì, còn hai kiểu VPC đều cần có sẵn một VPC.",
+   "Lời nhắc khi đi thi: FTP không mã hóa nên chỉ dùng với VPC Internal. AS2 chỉ dùng kiểu VPC, không dùng Public. FTP và FTPS cần Directory Service hoặc custom IdP, không dùng được service managed user."
+  ]
+ }
+}

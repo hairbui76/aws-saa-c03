@@ -1,0 +1,17 @@
+{
+ "ASG Lifecycle Hooks": {
+  "sig": "10-73ljpm",
+  "steps": [
+   "Sơ đồ này nói về lifecycle hook của Auto Scaling Group. Hook chen một khoảng Wait vào lúc launch hoặc terminate, để instance dừng lại chạy hành động tùy chỉnh trước khi đi tiếp.",
+   "Khi ASG launch một instance, nó vào trạng thái Pending rồi bị giữ lại ở Pending Wait. Đây là lúc ta nạp hoặc index dữ liệu, việc vốn mất khá nhiều thời gian.",
+   "Trong lúc instance đang Wait, hook gửi thông báo transition tới EventBridge hoặc SNS. Nhờ vậy ta xử lý theo kiểu event-driven, và khi xong việc instance sẽ sang Pending Proceed.",
+   "Từ Pending Proceed, instance mới vào InService và được thêm vào target group của load balancer. Phía terminate cũng tương tự, Terminating Wait cũng bắn sự kiện tới EventBridge hoặc SNS, ví dụ để backup dữ liệu hoặc log.",
+   "Sự kiện đó kích hoạt Lambda hoặc SSM Run Command để làm phần việc riêng, như chạy script nạp dữ liệu hay copy log ra ngoài trước khi instance biến mất.",
+   "Làm xong, Lambda hoặc SSM gọi API CompleteLifecycleAction quay lại instance đang Wait. Lệnh này kết thúc khoảng dừng sớm, không phải chờ tới hết timeout.",
+   "Với nhánh terminate, sau khi hoàn tất, instance chuyển từ Terminating Wait sang Terminating Proceed, rồi mới bị hủy hẳn và vào trạng thái Terminated.",
+   "Nhìn lại điểm bắt đầu: scale out là lúc ASG launch instance và đi vào Pending, còn scale in là lúc ASG terminate instance và đi vào Terminating.",
+   "Từ Terminating, instance bị giữ lại ở Terminating Wait. Nếu không có hook, ASG sẽ hủy luôn và ta không có cơ hội chen vào lấy dữ liệu.",
+   "Khi đi thi, nhớ instance thoát Wait khi gọi CompleteLifecycleAction hoặc hết timeout mặc định 3600 giây, rồi theo kết quả CONTINUE hoặc ABANDON. Cần lấy log trước khi terminate thì chọn terminate hook, cần nạp dữ liệu trước khi nhận traffic thì chọn launch hook, và đừng nhầm với health check grace period."
+  ]
+ }
+}

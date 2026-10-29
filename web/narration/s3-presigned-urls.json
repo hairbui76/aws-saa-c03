@@ -1,0 +1,16 @@
+{
+ "S3 Presigned URLs": {
+  "sig": "9-1h9bptc",
+  "steps": [
+   "Sơ đồ này nói về S3 presigned URL, cách cấp quyền tạm thời vào một bucket private. App có quyền sẽ xin một URL ký sẵn cho một object, rồi người dùng cầm URL đó truy cập thẳng vào S3 cho tới khi hết hạn.",
+   "Đầu tiên, người dùng mở trang có video trên app server. Người này không có identity AWS nào, nên bình thường không thể đọc được bucket private.",
+   "App server chạy bằng IAM user app1 với long-term credentials. Dùng IAM user ở đây hợp lý vì chỉ có một ứng dụng và quyền khá cố định.",
+   "Tiếp theo, app gửi yêu cầu tạo presigned URL tới media bucket private, kèm credential của mình, object key, thời điểm hết hạn và phương thức truy cập là GET.",
+   "S3 trả về presigned URL, ví dụ có hiệu lực hai đến ba giờ. URL này đã mã hóa sẵn bucket, object, ai tạo và khi nào hết hạn.",
+   "App trả trang web kèm presigned URL về cho người dùng. Không cần public bucket, cũng không cần tạo IAM user cho từng người.",
+   "Người dùng dùng URL để GET hoặc PUT video trực tiếp vào S3, không đi qua app server. Nhờ vậy app không phải làm trung gian truyền dữ liệu lớn, rất hợp với kiến trúc serverless.",
+   "Ghi nhớ: hạn tối đa là 7 ngày, tức 604800 giây với IAM user, console tối đa 12 giờ, CLI tính bằng giây. Người cầm URL hành động như identity tạo ra nó, theo quyền hiện tại, và đừng tạo URL bằng IAM role vì credential tạm hết hạn thì URL chết theo.",
+   "Khi đi thi, nhớ rằng vẫn tạo được URL cho object mình không có quyền hoặc không tồn tại, nhưng dùng sẽ báo lỗi. Còn nếu phân phối qua CloudFront thì chọn CloudFront signed URL hoặc signed cookie."
+  ]
+ }
+}

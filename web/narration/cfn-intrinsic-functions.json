@@ -1,0 +1,21 @@
+{
+ "CFN Intrinsic Functions": {
+  "sig": "5-1c8mmh7",
+  "steps": [
+   "Sơ đồ này so sánh Ref và GetAtt. Ref lấy giá trị chính, GetAtt lấy thuộc tính phụ của resource, còn Sub giúp đưa cả hai vào trong một chuỗi.",
+   "Khi stack chạy, logical resource tên Instance được tạo thành một EC2 t3.micro thật. Với parameter hoặc pseudo parameter, Ref trả về chính giá trị của nó, ví dụ t3.micro hay us-east-1.",
+   "Với resource, Ref Instance trả physical ID, tức instance ID. Muốn lấy public IP hay public DNS name thì phải dùng GetAtt kèm tên thuộc tính.",
+   "Sub thay biến đô la ngoặc nhọn bằng giá trị lúc runtime, hoạt động giống Ref hoặc GetAtt. Lưu ý resource không thể tự tham chiếu chính nó trong user data, vì lúc đó instance chưa tồn tại.",
+   "Nhắc khi đi thi: thuộc tính GetAtt tùy loại resource. Đề hỏi lấy DNS name hay public IP của instance thì chọn GetAtt, còn sang stack khác thì dùng ImportValue."
+  ]
+ },
+ "CFN Intrinsic Functions - cheatsheet": {
+  "sig": "4-8kkxil",
+  "steps": [
+   "Đây là bảng tóm tắt các hàm hay gặp. Hãy nhận diện qua từ khóa trong đề như không đặt cứng AZ, tự chia CIDR, tạo URL hay user data.",
+   "GetAZs trả danh sách AZ của region, Cidr sinh 16 dải con từ VPC 10.16.0.0 trên 16, Join ghép chuỗi thành URL, còn script bootstrap được bọc bằng Base64 và Sub.",
+   "Tiếp theo, Select lấy phần tử theo index bắt đầu từ 0, nên ta có us-east-1a hoặc subnet 10.16.0.0 trên 20. URL WordPress thường đặt ở Outputs, và user data EC2 bắt buộc dạng Base64.",
+   "Mẹo thi: GetAZs chỉ trả các AZ mà default VPC có subnet. cidrBits là số bit host, 12 bit cho ra trên 20, và phải tự chọn index để khỏi trùng. Các hàm điều kiện, FindInMap, ImportValue có bài riêng."
+  ]
+ }
+}

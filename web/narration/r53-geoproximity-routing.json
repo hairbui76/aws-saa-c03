@@ -1,0 +1,12 @@
+{
+ "R53 Geoproximity Routing": {
+  "sig": "5-12n2fhg",
+  "steps": [
+   "Sơ đồ này nói về Geoproximity Routing: Route 53 trả tài nguyên gần user nhất theo khoảng cách địa lý, và bias giúp dời ranh giới vùng phục vụ. Ta xét ví dụ user ở Saudi Arabia, nơi không có tài nguyên nào.",
+   "Đầu tiên là trường hợp không bias. Mỗi ô trên dải này là vùng địa lý mà một tài nguyên phục vụ, ở đây có vùng của US và vùng của Australia, ranh giới nằm đúng theo khoảng cách.",
+   "Giờ ta đặt bias dương cho UK, và bias dương lớn hơn nữa cho Australia. Bias dương nới rộng vùng của tài nguyên đó và thu hẹp vùng của các tài nguyên lân cận, nên ranh giới bị dời về phía UK.",
+   "Cách khai báo rule: tài nguyên AWS thì khai báo AWS region, tài nguyên ngoài AWS hoặc on-premises thì khai báo latitude và longitude. Bias nằm trong khoảng từ âm 99 đến dương 99.",
+   "Kết quả: không bias, user Saudi về UK vì chỉ cách khoảng 6,700 km, trong khi Úc hơn 10,000 km. Có bias lớn hơn, vùng Úc phủ tới Trung Đông nên user về Úc. Khi đi thi, thấy từ khóa bias, shift traffic, hay expand hoặc shrink region thì chọn Geoproximity, và nhớ tiêu chí là khoảng cách chứ không phải latency."
+  ]
+ }
+}

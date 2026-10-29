@@ -1,0 +1,11 @@
+{
+ "EC2 Shutdown Terminate and Termination Protection": {
+  "sig": "4-np4dok",
+  "steps": [
+   "Sơ đồ này có hai vùng. Bên trái là termination protection, tức thuộc tính DisableApiTermination chặn terminate nhầm. Bên phải là shutdown behavior, quyết định chuyện gì xảy ra khi OS tự shutdown.",
+   "Ở đây có ba luồng. Admin thường gọi TerminateInstances và hệ thống kiểm tra DisableApiTermination. Senior admin có quyền riêng để tắt bảo vệ. Còn bên phải, OS bên trong instance tự chạy lệnh shutdown.",
+   "Nếu DisableApiTermination bằng true, yêu cầu bị từ chối, nên senior admin phải gỡ bảo vệ trước, coi như thêm một bước phê duyệt. Bên phải, mặc định instance chuyển sang stopped, còn chọn terminate thì instance bị xóa luôn, hợp với môi trường disposable.",
+   "Khi đi thi, nhớ rằng nên bật termination protection cho production hoặc business-critical, và CloudFormation có thể bật tự động lúc launch. Nhưng nó không chặn OS shutdown khi behavior là terminate, cũng không chặn ASG scale-in."
+  ]
+ }
+}

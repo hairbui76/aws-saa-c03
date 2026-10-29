@@ -1,0 +1,14 @@
+{
+ "Kinesis Video Streams": {
+  "sig": "7-1w2s3zr",
+  "steps": [
+   "Sơ đồ này kể câu chuyện một ngôi nhà thông minh có ba camera, dùng Kinesis Video Streams cùng Rekognition Video để nhận diện khuôn mặt quen hay lạ, rồi cảnh báo theo kiểu event-driven, hoàn toàn serverless.",
+   "Mỗi camera đẩy video live vào một Kinesis Video Stream riêng. Nhờ vậy trong nhà không cần phần cứng xử lý video, và video được lưu ngoài nhà, mã hóa cả in transit lẫn at rest, an toàn kể cả khi thiết bị tại chỗ bị phá.",
+   "Ba video stream được tích hợp với Rekognition Video, phân tích bằng deep learning và so với face collection. Kết quả gồm khuôn mặt detected và matched được ghi vào một Kinesis Data Stream.",
+   "Lambda được invoke từ các record trong Kinesis Data Stream, xem xét từng record và quyết định theo logic xem đó là khuôn mặt quen hay người lạ.",
+   "Nếu phát hiện mặt lạ, Lambda gửi sự kiện tới SNS để chuẩn bị phát thông báo.",
+   "SNS đẩy cảnh báo tới điện thoại của Bob và Julie, để họ biết ngay khi có người lạ xuất hiện trong nhà.",
+   "Khi đi thi nhớ nhé: dữ liệu KVS được index và lưu bên trong dịch vụ, không mở trực tiếp trên S3, EBS hay EFS, chỉ truy cập qua KVS API. Thấy live video cần analytics, RTSP hoặc GStreamer, hãy nghĩ ngay tới Kinesis Video Streams."
+  ]
+ }
+}

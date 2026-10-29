@@ -1,0 +1,21 @@
+{
+ "CFN Nested Stacks": {
+  "sig": "5-88cz4k",
+  "steps": [
+   "Sơ đồ này cho thấy nested stacks: một root stack tạo các stack con bằng resource AWS::CloudFormation::Stack, mỗi stack con dựng từ template riêng nằm trong S3. Root là thứ duy nhất bạn tạo thủ công.",
+   "Người dùng hoặc pipeline tạo root stack, rồi root khai báo ba logical resource là VPCSTACK, ADSTACK và APPSTACK. Mỗi cái trỏ TemplateURL tới template riêng, dựng Active Directory và ứng dụng.",
+   "VPCSTACK tạo VPC và subnets, xong thì trả Outputs như VpcId, SubnetIds về root. Thứ tự theo DependsOn: VPC trước, rồi AD chạy trong VPC, cuối cùng là App xác thực qua AD.",
+   "Root lấy output VpcId của VPC stack và truyền làm Parameters cho ADSTACK, nhờ đó Active Directory được dựng đúng trong VPC vừa tạo.",
+   "Khi đi thi nhớ: root chỉ đọc được Outputs của stack con qua GetAtt, không cần Export, không tham chiếu resource bên trong. Thiếu parameter không có default thì tạo stack con thất bại. Nested stacks giúp vượt giới hạn 500 resource mỗi stack."
+  ]
+ },
+ "CFN Nested Stacks - reuse": {
+  "sig": "4-50qpki",
+  "steps": [
+   "Sơ đồ này so sánh hai kiểu tái sử dụng: nested stacks dùng lại template, tức là code, còn cross-stack references dùng lại chính resource đang chạy của stack khác.",
+   "Bên trái, template vpc.yaml trong S3 được root stack A và B cùng dùng. Bên phải, một shared VPC stack Export output, và ba app stack dùng Fn::ImportValue để cùng trỏ vào một VPC sống lâu dài.",
+   "Với nested stacks, mỗi root stack tạo ra một VPC mới, riêng biệt. Triển khai 10 root stack giống nhau là bạn có 10 VPC, 10 AD và 10 app.",
+   "Mẹo thi: chọn nested stacks khi mọi phần cùng vòng đời, cần vượt 500 resource hoặc module hóa template. Chọn cross-stack khi có phần sống lâu dài, dùng chung, thay đổi độc lập. Còn nhiều account hoặc region thì là StackSets."
+  ]
+ }
+}

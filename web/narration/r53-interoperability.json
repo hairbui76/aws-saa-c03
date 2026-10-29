@@ -1,0 +1,24 @@
+{
+ "R53 Interoperability": {
+  "sig": "5-dujv2o",
+  "steps": [
+   "Sơ đồ này cho thấy Route 53 thực ra đảm nhận hai vai trò tách biệt: Registrar đăng ký domain với registry của TLD, và DNS hosting giữ zone file trên 4 name server. Ta sẽ xem ba kịch bản kết hợp.",
+   "Ở cả ba kịch bản, registrar là bên nói chuyện với registry của TLD, ở đây là PIR quản lý đuôi .org. Hai kịch bản đầu registrar là Route 53, kịch bản thứ ba là bên thứ ba như Hover.",
+   "Registry sau đó thêm NS record trỏ về nơi host zone. Đó có thể là 4 name server của Route 53, hoặc name server của một nhà cung cấp hosting bên thứ ba.",
+   "Kịch bản một là mặc định, bạn trả cả phí đăng ký lẫn phí hosting hằng tháng cho Route 53. Kịch bản hai hiếm và kém giá trị nhất vì bỏ phí phần hosting mạnh nhất. Kịch bản ba rất phổ biến khi domain đã đăng ký ở nơi khác.",
+   "Khi đi thi, nhớ rằng Alias, routing policy và health check chỉ có khi Route 53 làm DNS hosting. Muốn đổi nơi host DNS thì chỉ cần đổi NS record ở registrar, không cần transfer domain."
+  ]
+ },
+ "R53 Interoperability - hosting only": {
+  "sig": "7-167uy73",
+  "steps": [
+   "Đây là kịch bản hay gặp nhất: domain đăng ký ở registrar khác nhưng DNS lại host trên Route 53. Điểm mấu chốt là không cần transfer domain.",
+   "Đầu tiên, bạn tạo một public hosted zone cho animals4life.org trên Route 53. Zone này tính phí hằng tháng và được cấp sẵn 4 name server.",
+   "Tiếp theo, bạn lấy danh sách 4 name server mà Route 53 vừa cấp cho hosted zone đó.",
+   "Sau đó bạn đăng nhập vào registrar bên thứ ba, chẳng hạn Hover hoặc GoDaddy, và nhập 4 name server này vào phần cấu hình domain.",
+   "Registrar sẽ thay mặt bạn liên lạc với registry .org là PIR để cập nhật NS record cho domain trong zone của TLD.",
+   "Lúc này NS record trong zone .org trỏ về 4 name server của Route 53, tức là delegation đã hoàn tất và hosted zone của bạn hoạt động trên Internet.",
+   "Khi đi thi, nhớ rằng việc này làm được ngay lúc đăng ký hoặc bất kỳ lúc nào sau đó. Phí đăng ký trả cho registrar bên thứ ba, phí hosting trả cho Route 53, và đổi nơi host DNS chỉ cần đổi NS record."
+  ]
+ }
+}

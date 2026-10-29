@@ -1,0 +1,24 @@
+{
+ "VPC Routing and Internet Gateway": {
+  "sig": "6-kxkcej",
+  "steps": [
+   "Sơ đồ này cho thấy một VPC 10.16.0.0 trên 16 trải trên hai AZ, mỗi AZ có subnet web public và subnet app private. VPC Router có sẵn, nằm ở địa chỉ network cộng 1 trong mọi subnet.",
+   "Các EC2 web có cả private IP lẫn public IPv4. Traffic đi ra ngoài VPC được VPC Router chuyển tới Internet Gateway, chỉ một IGW dùng chung cho cả hai AZ.",
+   "Internet Gateway nằm ở biên giữa VPC và AWS Public Zone, nên nó đưa traffic ra internet hoặc tới các public service như S3, SQS, SNS.",
+   "Còn EC2 ở tier app chỉ có private IP, và subnet của nó không có route ra IGW, nên nó không thể ra internet trực tiếp.",
+   "Khác biệt nằm ở route table. Subnet web gắn custom route table có thêm default route 0.0.0.0 trên 0 tới IGW, còn subnet app dùng main route table chỉ có local route.",
+   "Khi đi thi nhớ nhé: IGW là regional, mỗi VPC tối đa một IGW, không cần IGW cho từng AZ. Subnet public cần đủ ba thứ: IGW gắn VPC, default route tới IGW và public IPv4. Longest prefix match giúp local route thắng với traffic nội bộ, và local route không xóa được."
+  ]
+ },
+ "VPC Routing and Internet Gateway - static NAT": {
+  "sig": "6-l5y6hg",
+  "steps": [
+   "Sơ đồ này giải thích cách public IPv4 thật sự hoạt động: IGW làm static NAT một đổi một, còn hệ điều hành của instance không hề biết public IP.",
+   "Đầu tiên, EC2 gửi gói tin với địa chỉ nguồn là private IP 10.16.16.20, đích là update server 1.3.3.7. IGW đã lưu sẵn ánh xạ giữa private IP và public IP 43.250.192.20.",
+   "Khi gói tin đi qua, IGW đổi địa chỉ nguồn thành public IP 43.250.192.20 rồi mới gửi ra internet tới update server.",
+   "Update server trả lời về địa chỉ đích 43.250.192.20, vì đó là địa chỉ duy nhất nó nhìn thấy.",
+   "IGW tra bảng ánh xạ, đổi địa chỉ đích lại thành private IP 10.16.16.20 và chuyển gói vào EC2.",
+   "Lời nhắc khi thi: server ngoài chỉ thấy public IP, đáp án bảo gán public IPv4 vào OS hoặc card mạng là sai. Với IPv6 thì khác, OS có chính địa chỉ IPv6 public và IGW chỉ chuyển gói, không dịch."
+  ]
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "SQS Standard vs FIFO": {
+  "sig": "9-1tdobi5",
+  "steps": [
+   "Sơ đồ này so sánh hai loại queue của SQS. Standard giống đường cao tốc nhiều làn, còn FIFO là đường một làn không được vượt, và tên FIFO queue bắt buộc có đuôi chấm fifo.",
+   "Bên Standard, message chạy trên nhiều làn song song. Chính vì nhiều làn nên throughput rất lớn, nhưng message ở làn này có thể về trước message ở làn khác.",
+   "Bên FIFO, tất cả message xếp hàng trên một làn duy nhất, từ 1 đến 5, không ai được vượt ai. Vào trước thì ra trước.",
+   "Quay lại Standard, các làn tiếp tục nhận thêm message. Thứ tự cuối cùng phụ thuộc làn nào nhanh hơn, nên không có cam kết thứ tự nào cả.",
+   "Tóm tắt đặc tính: Standard có throughput gần như không giới hạn nhưng thứ tự chỉ best-effort. FIFO giữ thứ tự nghiêm ngặt và xử lý exactly-once, loại bỏ message trùng.",
+   "Standard là at-least-once, có thể nhận trùng nên ứng dụng phải idempotent, hợp cho decoupling và worker pool. FIFO giới hạn 300 TPS, hoặc 3.000 message mỗi giây khi batching, hợp cho đơn hàng và lệnh tuần tự.",
+   "Giờ thử một ví dụ: cả hai producer cùng gửi message theo thứ tự 1, 2, 3, 4, 5 vào hai loại queue.",
+   "Consumer bên Standard có thể nhận 2, 1, 3, 1, 5, 4, tức là lệch thứ tự và trùng message 1. Bên FIFO, consumer nhận đúng 1, 2, 3, 4, 5.",
+   "Lưu ý khi đi thi: không đổi Standard sang FIFO tại chỗ được, phải tạo queue mới đuôi chấm fifo. FIFO không hỗ trợ message timer, DLQ phải cùng loại với queue nguồn, và nếu cần hơn 3.000 message mỗi giây thì cân nhắc Standard hoặc high-throughput FIFO."
+  ]
+ }
+}

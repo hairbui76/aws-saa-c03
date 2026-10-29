@@ -1,0 +1,27 @@
+{
+ "DNSSEC": {
+  "sig": "7-1kxms8t",
+  "steps": [
+   "Sơ đồ này cho thấy DNSSEC hoạt động bên trong một zone như icann.org. Ý chính cần nhớ: ZSK ký các record, còn KSK ký các khóa, và zone cha giữ DS để bảo lãnh.",
+   "Đầu tiên, admin lấy RRset MX và ký bằng private ZSK, tạo ra RRSIG MX nằm cạnh RRset. Private ZSK được giữ tách biệt, không nằm trong zone công khai.",
+   "Resolver muốn kiểm tra chữ ký thì cần public ZSK, nằm trong bản ghi DNSKEY với flag 256, còn KSK mang flag 257. Nhưng làm sao tin chính DNSKEY này? Nên nó cũng cần được ký.",
+   "Vì vậy private KSK ký RRset DNSKEY, tạo ra RRSIG DNSKEY. Nhờ đó kẻ tấn công không thể thay public key giả rồi ký lại record giả.",
+   "Zone cha .org giữ DS record chứa hash của public KSK của icann.org. Đây là điểm tin cậy đi vào zone, nối zone con với chuỗi tin cậy phía trên.",
+   "Tóm lại luồng dữ liệu: RRset MX dạng plaintext đi kèm RRSIG MX của nó. DNSSEC ký và xác minh theo cả RRset, không theo từng record riêng lẻ.",
+   "Khi đi thi, nhớ rằng nếu RRset bị sửa mà không có private ZSK để ký lại thì chữ ký sai và bị phát hiện. Tách hai khóa giúp xoay ZSK mà không phải cập nhật zone cha. Và DNSSEC không mã hóa truy vấn, cũng không sửa lỗi."
+  ]
+ },
+ "DNSSEC - chain": {
+  "sig": "8-cg2tvv",
+  "steps": [
+   "Sơ đồ này mô tả chuỗi tin cậy DNSSEC đi từ root, qua .org, xuống tới icann.org. Ở mỗi cấp, zone cha giữ hash KSK của con và ký nó, nên mọi bước đều kiểm chứng được bằng mật mã.",
+   "Root không có zone cha, nên public root KSK được hard-code trong mọi resolver làm trust anchor. Từ đó resolver tin DNSKEY của root, nơi KSK ký ZSK.",
+   "Root ZSK ký DS record của .org, chứa hash của KSK .org. Đây là cách root tuyên bố mình tin zone .org.",
+   "Resolver băm KSK trong DNSKEY của .org và so với DS ở root. Hash khớp nghĩa là KSK của .org đáng tin.",
+   "Tiếp tục, ZSK của .org ký DS record của icann.org, chứa hash của KSK icann.org. Quy trình y hệt cấp trên.",
+   "Hash KSK của icann.org khớp với DS ở .org, nên DNSKEY của icann.org được tin, và KSK của nó bảo lãnh cho ZSK.",
+   "Cuối cùng ZSK của icann.org ký các RRset như MX, A, CNAME. Resolver xác minh RRSIG và biết record đúng nguồn, chưa bị sửa.",
+   "Lưu ý khi thi: private root KSK nằm trong HSM ở California và Virginia, chỉ dùng trong root signing ceremony mỗi 3 tháng, cần ít nhất 3 trên 14 crypto officer. NS chỉ để delegation, DS mới nối chain. Với Route 53, KSK dùng KMS customer managed key asymmetric ở us-east-1, ZSK do Route 53 quản lý, và phải thêm DS vào zone cha."
+  ]
+ }
+}

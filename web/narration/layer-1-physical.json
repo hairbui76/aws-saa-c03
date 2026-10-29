@@ -1,0 +1,15 @@
+{
+ "Layer 1 Physical": {
+  "sig": "8-1ttdw4u",
+  "steps": [
+   "Sơ đồ này cho thấy tầng Physical hoạt động thế nào với một hub. Layer 1 chỉ biết truyền và nhận bit thô trên môi trường dùng chung, nên cả mạng chỉ là một collision domain và một broadcast domain, không scale được.",
+   "Đầu tiên, card mạng của Laptop A thay đổi mức điện áp trên cáp để đẩy các bit 0 và 1 lên hub. Hãy nhớ hub về bản chất chỉ là một sợi cáp có nhiều đầu nối.",
+   "Cùng lúc đó Laptop C cũng truyền. Vì không có cơ chế quyết định ai được truyền khi nào, tín hiệu hai bên chồng lên nhau, gây collision và làm hỏng dữ liệu trên toàn mạng.",
+   "Hub chỉ làm đúng một việc: nhận gì ở một port thì phát lại ra mọi port khác, kể cả lỗi và collision. Vì vậy B và D đều nhận được thứ tín hiệu hỏng đó.",
+   "Môi trường vật lý có thể là cáp đồng dùng điện áp, cáp quang dùng ánh sáng, hoặc Wi-Fi dùng sóng radio. Chuẩn Layer 1 quy định mức điện áp, timing, data rate, khoảng cách, modulation và connector để hai card mạng hiểu nhau.",
+   "Những gì Layer 1 có rất đơn giản: một môi trường dùng chung, cùng chuẩn để truyền bit và chuẩn để nhận bit. Chỉ vậy thôi.",
+   "Còn những gì nó thiếu: không có địa chỉ thiết bị nên mọi thứ là broadcast, không có media access control, không phát hiện được collision, và không gửi trực tiếp một với một được.",
+   "Layer 2 sinh ra để khắc phục bằng MAC address, CSMA CD và switch tách collision domain theo từng port. Khi đi thi, nhớ Direct Connect là kết nối vật lý bằng cáp quang, cần thời gian lắp đặt và không tự mã hóa, còn VPN chạy logic trên internet."
+  ]
+ }
+}

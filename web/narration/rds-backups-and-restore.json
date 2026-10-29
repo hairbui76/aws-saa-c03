@@ -1,0 +1,18 @@
+{
+ "RDS Backups and Restore": {
+  "sig": "11-urdmu0",
+  "steps": [
+   "Sơ đồ này nói về cách RDS backup và restore. Automated backup gồm snapshot hằng ngày cộng transaction log mỗi 5 phút, nên RPO khoảng 5 phút, nhưng restore luôn tạo instance mới và khá chậm, nên RTO cao.",
+   "Đây là một RDS instance chạy Multi-AZ, gồm Primary và Standby. Khi có Multi-AZ, Standby chính là nơi RDS lấy dữ liệu để backup.",
+   "Backup được lấy từ Standby rồi đưa vào S3 do AWS quản lý, nên Primary không bị IO pause. Nếu chỉ single-AZ thì backup chạy trên instance duy nhất và ứng dụng có thể bị khựng. Lưu ý bucket này không hiện trong S3 console của bạn.",
+   "Giờ sang point-in-time restore. Bạn chọn một thời điểm T với độ mịn 5 phút trong khoảng retention, và RDS bắt đầu bằng việc restore snapshot gần nhất trước thời điểm đó.",
+   "Sau khi có snapshot, RDS replay các transaction log đã ghi lên S3 để đưa dữ liệu tiến dần tới đúng thời điểm T bạn chọn.",
+   "Kết quả là một RDS instance hoàn toàn mới, với endpoint DNS mới. RDS không restore đè lên instance cũ.",
+   "Vì endpoint thay đổi, bạn phải cập nhật cấu hình ứng dụng, ví dụ sửa DB_HOST trong wp-config.php, để trỏ sang instance vừa restore.",
+   "Automated backup thực chất là snapshot tự động mỗi ngày trong backup window. Lần đầu là full copy, các ngày sau chỉ incremental, tức là chỉ lưu phần dữ liệu thay đổi.",
+   "Song song đó, transaction log được ghi lên S3 mỗi 5 phút, giúp restore mịn tới 5 phút. Automated backup được giữ từ 0 đến 35 ngày rồi AWS tự dọn; đặt 0 nghĩa là tắt.",
+   "Manual snapshot thì bạn tự chạy, cũng full rồi incremental, và không bao giờ hết hạn, kể cả khi đã xóa instance. Muốn giữ dữ liệu lâu hơn 35 ngày, hãy tạo final snapshot khi xóa instance.",
+   "Khi đi thi nhớ nhé: dữ liệu bị hỏng thì dùng point-in-time restore, vì read replica cũng hỏng theo; còn cần RTO thấp thì chọn read replica. Cross-region backup replication phải tự bật và tốn phí transfer cùng storage ở region đích."
+  ]
+ }
+}

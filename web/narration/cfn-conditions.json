@@ -1,0 +1,14 @@
+{
+ "CFN Conditions": {
+  "sig": "7-191p8lp",
+  "steps": [
+   "Sơ đồ này nói về CloudFormation Conditions: cùng một template nhưng triển khai hạ tầng khác nhau cho dev và prod, tùy theo condition ra true hay false.",
+   "Đầu tiên, parameter được nhập lúc create hoặc update stack. CloudFormation đánh giá section Conditions trước khi xử lý Resources, mỗi condition cho ra true hoặc false nhờ các hàm như Equals, And, Or.",
+   "Tiếp theo là Resources. Resource gắn condition true thì được tạo, condition false thì không tạo physical resource. Resource không gắn condition thì luôn được tạo.",
+   "Giờ xem ví dụ cụ thể. Bob chọn parameter EnvType, chỉ được là dev hoặc prod, mặc định là dev. Wordpress không có condition, còn Wordpress2 và hai Elastic IP đều gắn condition IsProd.",
+   "Parameter EnvType được đưa vào condition IsProd, dùng hàm Equals để so sánh EnvType với chữ prod.",
+   "Nếu chọn dev, IsProd là false nên chỉ tạo Wordpress dùng public IPv4. Nếu chọn prod, tạo thêm Wordpress2, MyEIP và MyEIP2, mỗi instance có một Elastic IP.",
+   "Khi đi thi, nhớ rằng MyEIP dùng Ref tới Wordpress để gắn Elastic IP vào instance. Mappings để tra giá trị, còn Conditions để quyết định có tạo hay không, kết hợp If để chọn giá trị property."
+  ]
+ }
+}

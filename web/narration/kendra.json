@@ -1,0 +1,17 @@
+{
+ "Kendra": {
+  "sig": "10-aasn32",
+  "steps": [
+   "Sơ đồ này nói về Amazon Kendra, dịch vụ intelligent search dựa trên ML. Connector kéo dữ liệu từ nhiều nguồn vào Index, rồi người dùng hỏi bằng ngôn ngữ tự nhiên như đang hỏi một chuyên gia.",
+   "Nguồn đầu tiên là S3. Kendra kết nối tới bucket và đồng bộ theo schedule, nhờ vậy index luôn được cập nhật khi tài liệu trong S3 thay đổi.",
+   "Kendra còn có connector cho các nền tảng cộng tác như Confluence, OneDrive, Salesforce và Google Workspace, giúp gom tri thức nằm rải rác về một chỗ search chung.",
+   "Tài liệu có hai dạng. Structured như FAQ gồm các cặp câu hỏi và trả lời, còn unstructured là PDF, HTML hay file text thông thường.",
+   "Dữ liệu trong cơ sở dữ liệu RDS hoặc file share trên FSx cũng có thể làm data source cho Kendra.",
+   "Kendra Web Crawler giúp đánh index nội dung website. Điểm mạnh của Kendra là hiểu intent: câu hỏi factoid, câu hỏi how do I, và cả keyword nhiều nghĩa như address trong keynote address.",
+   "Người dùng tương tác qua ứng dụng của bạn, không mở console. IAM lo bảo mật, còn IAM Identity Center cung cấp single sign-on và lọc kết quả theo từng người dùng.",
+   "Ứng dụng gửi query ngôn ngữ tự nhiên qua API tới Kendra Index, nơi dữ liệu đã được tổ chức để search hiệu quả, và nhận lại câu trả lời hoặc tài liệu liên quan.",
+   "Cuối cùng, các data source qua connector đổ dữ liệu vào Kendra Index. Index chính là thứ Kendra thực sự tìm kiếm khi nhận query.",
+   "Khi đi thi, nhớ nhé: Kendra là tìm kiếm trong tài liệu, Comprehend là phân tích text, Lex là chatbot và có thể kết hợp với Kendra. Còn Athena là query SQL trên S3, không phải search ngôn ngữ tự nhiên."
+  ]
+ }
+}

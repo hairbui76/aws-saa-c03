@@ -1,0 +1,12 @@
+{
+ "HA vs FT vs DR": {
+  "sig": "5-1bjhdua",
+  "steps": [
+   "Sơ đồ này so sánh ba khái niệm hay bị nhầm: High Availability giảm outage, Fault Tolerance chạy xuyên qua lỗi mà người dùng không hề thấy, còn Disaster Recovery là khôi phục khi cả hai thất bại.",
+   "Ở vùng HA, người dùng dùng server active, khi hỏng thì failover sang standby, có thể phải login lại nhưng vẫn là HA. Vùng FT thì người dùng nối đồng thời hai server active, mất một vẫn chạy. Vùng DR có site chính và backup lưu off-site.",
+   "Khi site chính bị cháy hoặc lụt, ta lấy backup off-site để restore lên site hoặc region dự phòng đã chuẩn bị sẵn. Vì vậy backup tuyệt đối không được để cùng site với hệ thống chính.",
+   "Đây là từ khóa nhận diện trong đề. Minimize downtime hay recover quickly là HA. No interruption, without impact to users hay life-critical là FT, dùng active active, đắt nhất. Mất cả site hoặc region, backup, RPO và RTO là DR.",
+   "Khi đi thi, nhớ 99.9 phần trăm cho phép khoảng 8.77 giờ downtime mỗi năm, còn 99.999 phần trăm chỉ khoảng 5.26 phút. Và đừng nhầm: làm FT khi chỉ cần HA là phí tiền, làm HA khi cần FT có thể nguy hiểm."
+  ]
+ }
+}

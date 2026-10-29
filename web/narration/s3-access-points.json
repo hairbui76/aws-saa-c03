@@ -1,0 +1,12 @@
+{
+ "S3 Access Points": {
+  "sig": "5-1fdb9ao",
+  "steps": [
+   "Sơ đồ này nói về S3 Access Points, cách chia một bucket dùng chung thành nhiều cửa truy cập riêng. Mỗi nhóm có endpoint, policy và network origin riêng, thay vì nhồi tất cả vào một bucket policy khổng lồ.",
+   "Ở bên trái, Admin staff, Field workers và Vet staff mỗi nhóm đi vào access point của mình qua Internet. Access point field chỉ cho prefix field, access point vet chỉ cho prefix vet. Còn EC2 phân tích trong VPC thì đi qua VPC endpoint cho S3.",
+   "Từ VPC endpoint, request đi tới access point analytics có origin là VPC, nghĩa là chỉ chấp nhận truy cập từ đúng VPC này. Tất cả access point cùng trỏ về một bucket, với bucket policy đơn giản kiểu delegate cho access point của account.",
+   "Tóm lại, mỗi access point có DNS riêng, policy riêng có chức năng tương đương bucket policy, và network origin riêng. Nhờ vậy phần phân quyền chi tiết nằm ở từng access point, dễ quản lý hơn nhiều.",
+   "Khi đi thi, nhớ rằng quyền phải được cho phép ở cả access point policy lẫn bucket policy, cách phổ biến là bucket policy delegate. Nhớ lệnh create-access-point, và access point thuộc một bucket, một region, khác với Multi-Region Access Point."
+  ]
+ }
+}

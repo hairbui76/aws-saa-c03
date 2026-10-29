@@ -1,0 +1,14 @@
+{
+ "Cloud Deployment Models": {
+  "sig": "7-1o2qhff",
+  "steps": [
+   "Sơ đồ này giúp mình phân biệt các mô hình triển khai cloud. Hàng trên là public cloud, hàng dưới là private cloud on-premises; hàng ngang là multi-cloud, cột dọc là hybrid cloud.",
+   "Đầu tiên là AWS, một public cloud mở cho công chúng và đủ 5 đặc tính. Nối AWS với data center VMware truyền thống qua VPN hoặc Direct Connect chỉ là hybrid environment, vì VMware không mặc nhiên là private cloud.",
+   "Thêm Microsoft Azure cạnh AWS, dùng nhiều public cloud như vậy gọi là multi-cloud. Còn AWS ghép với AWS Outposts, một private cloud thật chạy tại data center của bạn, mới đúng là hybrid cloud.",
+   "Tương tự, Azure nối sang Google Cloud vẫn là multi-cloud. Azure kết hợp với Azure Stack, nay gọi là Azure Local, cùng vendor và cùng công cụ, tạo thành hybrid cloud.",
+   "Cuối cùng, Google Cloud đi cùng Google Anthos chạy on-premises, lại là một cặp hybrid cloud nữa của cùng một nhà cung cấp.",
+   "Tóm lại: public cloud là dùng một cloud; multi-cloud là nhiều hơn một, cho resilience cấp vendor nhưng nên tránh lớp single pane of glass. Hybrid cloud là public cộng private cùng vendor, còn hybrid environment là public cộng hạ tầng legacy.",
+   "Khi đi thi nhớ nhé: AWS cộng data center VMware của bạn là hybrid networking, không phải hybrid cloud. Còn đề nói chạy dịch vụ AWS ngay trong data center với cùng API, hãy chọn AWS Outposts."
+  ]
+ }
+}

@@ -1,0 +1,29 @@
+{
+ "DNS Record Types": {
+  "sig": "9-1eg99vf",
+  "steps": [
+   "Sơ đồ này tóm tắt các loại DNS record hay gặp. Mỗi hàng cho biết tên được hỏi, giá trị trả về, và điều cần nhớ khi đi thi.",
+   "Đây là toàn bộ các ánh xạ: zone .com trỏ amazon.com tới name server của nó, www trỏ tới IPv4 và IPv6, các tên ftp, mail, www trỏ về server, google.com có mail server, và animalsforlife.org có một chuỗi text.",
+   "Hàng đầu là NS, cơ chế delegation. Zone .com chứa NS record cho amazon.com, trỏ tới các server do đội Amazon quản lý, nơi host zone amazon.com.",
+   "Record A map một hostname tới địa chỉ IPv4, ở đây www trỏ tới 1.2.3.4. Đây là cách phân giải host cơ bản nhất.",
+   "AAAA cũng map tên tới IP nhưng là IPv6. Thường ta tạo cả A lẫn AAAA cùng tên, client hỗ trợ IPv6 thì dùng AAAA, không thì dùng A.",
+   "CNAME tạo shortcut từ tên tới tên. Ba tên ftp, mail, www cùng trỏ về server, nên khi IP đổi chỉ cần sửa đúng một A record.",
+   "MX giúp tìm mail server của domain. Priority 10 nhỏ hơn nên mail.google.com được dùng trước; value có dấu chấm cuối là FQDN, có thể trỏ ra ngoài zone.",
+   "TXT gắn text tùy ý vào domain, ví dụ chuỗi verify để chứng minh quyền sở hữu hoặc SPF chống spam. Và nhớ, apex domain trỏ tới ELB, CloudFront hay S3 thì dùng Alias của Route 53, không phải CNAME.",
+   "Khi đi thi, nhớ: NS là delegation, A là IPv4, AAAA là IPv6. CNAME chỉ trỏ tới tên, không bao giờ tới IP, đây là câu bẫy kinh điển. MX priority nhỏ được dùng trước, còn TXT là chứng minh sở hữu domain và chống spam."
+  ]
+ },
+ "DNS Record Types - TTL": {
+  "sig": "8-1fv9k2a",
+  "steps": [
+   "Sơ đồ này giải thích TTL, tức là resolver được cache câu trả lời bao lâu, và sự khác nhau giữa authoritative với non-authoritative answer.",
+   "Đầu tiên client gửi query tới resolver, thường nằm ở ISP. Record www.amazon.com ở đây có TTL 3600 giây, tức một giờ.",
+   "Lần đầu, resolver phải đi cây: hỏi root, rồi hỏi .com TLD để tìm ra name server của amazon.com. Quá trình này khá tốn thời gian.",
+   "Name server của amazon.com trả về authoritative answer, từ nguồn đáng tin duy nhất nên luôn chính xác. Resolver lưu kết quả này vào cache.",
+   "Trong vòng 3600 giây, client khác hỏi cùng tên sẽ nhận non-authoritative answer trả ngay từ cache, nhanh hơn nhiều.",
+   "TTL thấp giúp thay đổi có hiệu lực nhanh và kiểm soát tốt, đổi lại name server của bạn phải nhận nhiều query hơn.",
+   "TTL cao thì ít query và nhanh cho người dùng, nhưng khi đổi record, resolver còn giữ cache cũ nên thay đổi chậm có hiệu lực, ví dụ email bị giao nhầm khi đổi MX.",
+   "Khi đi thi, nhớ: sắp migrate hoặc đổi DNS thì hạ TTL trước vài ngày đến vài tuần. Gặp câu đổi DNS mãi chưa có hiệu lực, hãy nghĩ tới TTL và cache. Resolver nên tuân thủ TTL nhưng không bắt buộc."
+  ]
+ }
+}

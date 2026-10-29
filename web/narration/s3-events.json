@@ -1,0 +1,14 @@
+{
+ "S3 Events": {
+  "sig": "7-1fk2m6h",
+  "steps": [
+   "Sơ đồ này nói về S3 Event Notifications: khi có thay đổi trong bucket, S3 sinh ra một event dạng JSON và đẩy tới Lambda, SQS hoặc SNS để xây dựng workflow event-driven.",
+   "Mọi thứ bắt đầu khi client hoặc ứng dụng ghi hay xóa object trong bucket. Trên bucket, bạn đã cấu hình event notification, chỉ rõ loại sự kiện cần bắt và đích nhận.",
+   "Lúc này chính service S3 sinh ra event JSON chứa tên bucket, key và tên sự kiện. Vì S3 principal là bên gửi, mỗi đích cần resource policy cho phép nó, còn EventBridge là lựa chọn mạnh hơn và được khuyên dùng.",
+   "Event được gửi tới Lambda để xử lý ngay, tới SQS Standard queue để đệm, hoặc tới SNS topic để fan-out ra nhiều consumer. Mỗi đích có policy riêng: Lambda resource policy, queue policy và topic policy.",
+   "Lưu ý quan trọng: SQS FIFO queue không thể làm đích trực tiếp cho S3 Event Notifications, chỉ có Standard queue mới dùng được.",
+   "Đây là các nhóm sự kiện: ObjectCreated cho việc tạo thumbnail hay watermark, ObjectRemoved để phản ứng bảo mật, ObjectRestore để báo khi restore từ Glacier xong, và Replication để giám sát khi trễ quá 15 phút hoặc thất bại.",
+   "Khi đi thi, nhớ rằng S3 Access Logs và CloudTrail chỉ ghi log, không kích hoạt xử lý. Còn muốn biết restore từ Glacier đã hoàn tất thì dùng event s3 ObjectRestore Completed."
+  ]
+ }
+}

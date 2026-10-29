@@ -1,0 +1,25 @@
+{
+ "Global Accelerator": {
+  "sig": "5-1woj2x5",
+  "steps": [
+   "Sơ đồ này cho thấy cách Global Accelerator đưa người dùng vào mạng AWS sớm nhất có thể, nhờ hai anycast IP tĩnh được mọi edge location quảng bá ra internet.",
+   "Người dùng ở London và Sydney cùng truy cập một cặp IP, nhưng nhờ anycast, mỗi người được định tuyến tới edge gần mình nhất. Chặng public internet vì vậy được rút ngắn tối đa.",
+   "Từ edge, traffic đi tiếp trên AWS global backbone, mạng riêng do AWS kiểm soát, ít hop hơn nên hiệu năng tốt hơn hẳn. Khách London có thể được đưa tới hạ tầng ở Europe thay vì US.",
+   "Mỗi region có một endpoint group với traffic dial và weight. Health check giúp failover sang endpoint khỏe trong vài giây, không phụ thuộc DNS TTL vì IP không hề đổi.",
+   "Khi đi thi nhớ nhé: Global Accelerator không cache và không hiểu HTTP, nó chỉ đưa traffic TCP hoặc UDP vào mạng AWS. Cần IP tĩnh để khách whitelist trong firewall thì nghĩ ngay tới nó."
+  ]
+ },
+ "Global Accelerator - vs CloudFront": {
+  "sig": "8-1tyotav",
+  "steps": [
+   "Sơ đồ này so sánh Global Accelerator và CloudFront. Ý chính: Global Accelerator đưa mạng AWS tới gần khách, còn CloudFront đưa nội dung tới gần khách.",
+   "Global Accelerator cung cấp điểm vào backbone AWS gần người dùng, trong khi CloudFront lưu cache nội dung ngay tại edge để phục vụ nhanh hơn.",
+   "Global Accelerator là network product ở tầng 4, chạy với mọi ứng dụng TCP hoặc UDP. CloudFront hoạt động ở tầng 7 và chỉ phục vụ HTTP hoặc HTTPS.",
+   "Global Accelerator hoàn toàn không cache gì cả. CloudFront thì có cache, điều khiển bằng TTL và có thể invalidation khi nội dung thay đổi.",
+   "Điểm vào của Global Accelerator là hai anycast IP tĩnh, còn CloudFront dùng một DNS name dạng cloudfront chấm net hoặc CNAME của bạn.",
+   "Global Accelerator không hiểu HTTP. CloudFront thì hiểu, nên có behaviors, signed URL hoặc signed cookie, và Lambda at Edge để thao tác nội dung.",
+   "Use case của Global Accelerator là game, VoIP, IoT, MQTT, cần IP tĩnh hoặc failover đa region nhanh. CloudFront hợp với website, video, API và phân phối nội dung có cache.",
+   "Mẹo khi đi thi: đề nhắc TCP, UDP, non-HTTP, static IP hay failover region nhanh thì chọn Global Accelerator. Còn nhắc caching, HTTP, signed URL hay thao tác nội dung thì chọn CloudFront."
+  ]
+ }
+}

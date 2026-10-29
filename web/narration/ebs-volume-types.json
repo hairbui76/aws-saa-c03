@@ -1,0 +1,23 @@
+{
+ "EBS Volume Types": {
+  "sig": "6-uk9zxg",
+  "steps": [
+   "Sơ đồ này giúp bạn chọn EBS volume type theo IOPS và throughput. Hãy nhớ thang mốc 16,000 cho gp2 và gp3, 64,000 cho io1 và io2, và 256,000 cho io2 Block Express.",
+   "Câu hỏi đầu tiên là workload cần gì. Nếu cần IOPS, random I/O hoặc làm boot volume thì chọn nhóm SSD; nếu cần throughput tuần tự với giá rẻ thì đi sang nhóm HDD.",
+   "Bên SSD, gp3 là lựa chọn mặc định, có sẵn 3,000 IOPS và rẻ hơn gp2 khoảng 20 phần trăm; cần hơn 16,000 IOPS hoặc latency ổn định thì dùng io1 hoặc io2. Bên HDD, st1 cho big data truy cập thường xuyên, còn sc1 rẻ nhất cho dữ liệu lạnh.",
+   "Khi một volume cần hơn 64,000 IOPS hoặc hơn 1,000 MB mỗi giây, hãy chọn io2 Block Express, lên tới 256,000 IOPS và 4,000 MB mỗi giây. Lưu ý hiệu năng thực tế còn bị giới hạn bởi loại và kích thước instance.",
+   "Nếu cần IOPS cao hơn mọi loại EBS và dữ liệu có thể tái tạo được, hãy nghĩ tới Instance Store. Đổi lại, nó là ephemeral, dữ liệu không bền vững.",
+   "Lời nhắc khi đi thi: gp2 có 3 IOPS mỗi GB, tối thiểu 100, burst 3,000 bằng credit, trần 250 MB mỗi giây. Và nhớ kỹ, st1 và sc1 không làm được boot volume, nên đề nhắc tới IOPS là loại HDD ngay."
+  ]
+ },
+ "EBS Volume Types - gp2": {
+  "sig": "5-1w6ib9t",
+  "steps": [
+   "Sơ đồ này giải thích mô hình I/O credit bucket của gp2. Mỗi credit tương ứng một thao tác 16 KB, bucket được nạp theo baseline và bị rút ra mỗi khi có I/O.",
+   "Quy tắc rất đơn giản: dùng ít hơn baseline thì bucket đầy lại, dùng nhiều hơn thì cạn dần. Bucket về 0 là không thực hiện được I/O, còn volume lớn hơn 1 TB có baseline từ 3,000 trở lên nên không cần credit.",
+   "Bucket chứa 5.4 triệu credit và bắt đầu đầy, được nạp liên tục với tốc độ 3 IOPS mỗi GB, tối thiểu 100. Bucket đầy cho phép chạy 3,000 IOPS ít nhất khoảng 30 phút, rất hợp tải nặng lúc khởi động.",
+   "Mỗi khi ứng dụng đọc ghi, credit bị rút ra, cho phép burst tới 3,000 IOPS. Trần của một volume gp2 vẫn là 16,000 IOPS và 250 MB mỗi giây.",
+   "Mẹo thi: volume gp2 nhỏ chạy chậm dần sau tải nặng nghĩa là đã cạn credit. Giải pháp là chuyển sang gp3, tăng size gp2, hoặc dùng io1, io2; gp3 thì mọi size đều có sẵn 3,000 IOPS, không cần credit."
+  ]
+ }
+}

@@ -1,0 +1,14 @@
+{
+ "CloudFront Architecture": {
+  "sig": "7-1qvvphr",
+  "steps": [
+   "Sơ đồ này cho thấy CloudFront xử lý cache miss, origin fetch và cache hit ra sao. Edge location nhỏ và rất nhiều, nằm gần người dùng, còn Regional Edge Cache lớn hơn, phục vụ cả một vùng.",
+   "Julie ở Pháp gửi request GET tới edge location A gần cô ấy. Khi object được lấy về, nó sẽ được cache ở REC rồi ở edge A trước khi trả cho Julie.",
+   "Edge A chưa có object, tức là cache miss, nên nó hỏi tiếp Regional Edge Cache, nơi giữ được nhiều dữ liệu hơn edge.",
+   "REC cũng chưa có, nên CloudFront thực hiện origin fetch, lấy bản gốc từ origin, có thể là S3 bucket hoặc một custom origin có public IPv4.",
+   "Giờ Moss ở London cũng yêu cầu đúng object đó, nhưng đi qua một edge location khác là edge B.",
+   "Edge B vẫn miss vì chưa ai lấy qua nó, nhưng REC đã có object nhờ request của Julie, nên trả về ngay mà không phải quay lại origin. Origin nhờ vậy giảm tải rất nhiều.",
+   "Khi đi thi nhớ nhé: CloudFront chỉ cache chiều đọc, upload đi thẳng tới origin và không được cache. Lần sau Julie lấy lại ở edge A là cache hit ngay, và edge location không chạy được EC2, muốn compute ở edge thì dùng Lambda@Edge."
+  ]
+ }
+}

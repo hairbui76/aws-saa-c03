@@ -1,0 +1,24 @@
+{
+ "IAM Roles": {
+  "sig": "8-1scl8bi",
+  "steps": [
+   "Sơ đồ này cho thấy cách một IAM role hoạt động. Role đại diện cho một mức truy cập chứ không phải một người, có trust policy quyết định ai được assume và permissions policy quyết định được làm gì.",
+   "Identity A gọi sts:AssumeRole. Trước hết, yêu cầu này được đối chiếu với trust policy để xem A có nằm trong danh sách được phép assume role hay không.",
+   "Identity B cũng thử assume, nhưng B không có trong trust policy nên bị từ chối ngay. Không được tin cậy thì không có quyền gì cả.",
+   "Vì trust policy tin cậy A, yêu cầu được chuyển tới STS, tức Security Token Service, dịch vụ chịu trách nhiệm sinh credentials cho role.",
+   "STS cấp cho A temporary security credentials. Chúng giống access key nhưng có thời hạn, hết hạn thì A phải assume lại để nhận bộ mới.",
+   "Giờ A dùng credentials tạm thời này để gọi API tới tài nguyên AWS. Lúc này A tạm thời trở thành role và dùng quyền của role.",
+   "Mỗi lần gọi, quyền được kiểm tra theo permissions policy hiện tại. Nên nếu bạn sửa permissions policy, credentials đang dùng cũng bị ảnh hưởng ngay lập tức.",
+   "Khi đi thi nhớ nhé: role là identity thật nên có thể làm Principal trong resource policy, còn group thì không. Và mọi lần assume role đều được CloudTrail ghi lại."
+  ]
+ },
+ "IAM Roles - use-cases": {
+  "sig": "4-zm7md0",
+  "steps": [
+   "Sơ đồ này tổng hợp năm tình huống dùng IAM role hay gặp trong đề. Cứ thấy số principal không xác định, hơn 5.000, đến từ ngoài account, hoặc là AWS service thì nghĩ ngay tới role.",
+   "Bên trái là ai assume role: Lambda runtime assume execution role, Wayne ở helpdesk assume emergency role, nhân viên Active Directory và người dùng app mobile assume role tin IdP, còn user của bạn assume role trong account đối tác.",
+   "Sau khi assume, mỗi role truy cập đúng tài nguyên của nó: Lambda gọi S3 hoặc DynamoDB, Wayne stop hoặc terminate EC2, app mobile đọc ghi DynamoDB, và user của bạn upload vào S3 bucket của partner.",
+   "Mẹo thi: AWS service luôn dùng role, không hard-code access key. Break-glass được CloudTrail ghi lại. Identity ngoài không gọi AWS trực tiếp. App mobile không lưu credentials. Và object upload qua cross-account role thuộc sở hữu partner account."
+  ]
+ }
+}

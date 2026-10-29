@@ -1,0 +1,16 @@
+{
+ "AWS Config": {
+  "sig": "9-1i6wxei",
+  "steps": [
+   "Sơ đồ này nói về AWS Config, dịch vụ ghi lại lịch sử cấu hình và đánh giá compliance. Điều quan trọng nhất là Config không ngăn thay đổi, việc khắc phục chỉ xảy ra sau đó.",
+   "Khi bạn bật Config, recorder bắt đầu theo dõi liên tục mọi resource được hỗ trợ như Security Group, EC2 hay IAM. Mỗi lần có thay đổi, recorder sẽ ghi nhận ngay.",
+   "Mỗi thay đổi tạo ra một configuration item, được lưu vào S3 config bucket. Tập hợp các item này chính là configuration history, xem được trực tiếp từ bucket hoặc qua AWS Config API.",
+   "Đây là phần tùy chọn nhưng mạnh nhất: Config Rules. Bạn dùng AWS managed rules có sẵn, hoặc viết custom rule bằng Lambda để tự đánh giá theo logic riêng.",
+   "Mỗi resource được chấm là compliant hoặc non-compliant. Đồng thời Config có thể gửi thông báo compliance hoặc stream thay đổi qua SNS tới người vận hành hay ứng dụng.",
+   "Với resource non-compliant, ta có thể khắc phục tự động. Event đổi trạng thái đi tới EventBridge, hoặc Config gọi SSM Automation, cách này hiệu quả cho cấu hình bên trong instance.",
+   "EventBridge chuyển event tới Lambda để sửa tự động. Lambda linh hoạt hơn khi cần sửa những thứ ở cấp account, ví dụ đóng lại port vừa bị mở trong Security Group.",
+   "Nhắc lại, một configuration item gồm cấu hình của resource tại thời điểm đó, quan hệ với resource khác, và ai đã thực hiện thay đổi.",
+   "Khi đi thi, nhớ Config là regional, dùng aggregator để gom cross-region và cross-account. CloudTrail trả lời ai gọi API gì, còn Config cho biết cấu hình trông thế nào theo thời gian. Đề yêu cầu chặn trước thì chọn IAM policy hoặc SCP, không phải Config."
+  ]
+ }
+}

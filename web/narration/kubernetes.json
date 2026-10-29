@@ -1,0 +1,16 @@
+{
+ "Kubernetes": {
+  "sig": "9-1b5tyis",
+  "steps": [
+   "Sơ đồ này cho thấy kiến trúc một Kubernetes cluster: control plane lo phần quản lý, còn các node worker chạy pod. Phía bên cạnh là cách expose ứng dụng ra ngoài và lưu trữ bền vững.",
+   "Trong control plane, kube-apiserver là front-end, mọi thành phần đều giao tiếp qua nó. etcd lưu dữ liệu cluster, kube-scheduler gán pod vào node, và kubelet trên node nhận lệnh qua Kubernetes API. Ở ngoài, user đi vào qua Ingress và controller, trên AWS là ALB hoặc NLB.",
+   "Ingress định tuyến request tới Service. Service là lớp trừu tượng phía trên pod, đóng vai điểm truy cập nhất quán cho ứng dụng dù pod phía sau thay đổi.",
+   "Service chuyển tiếp tới nhiều pod. Pod là tạm thời, có thể bị hủy hoặc evict bất cứ lúc nào, nên đừng coi từng pod là thực thể highly available.",
+   "Vì storage mặc định của pod là ephemeral, dữ liệu cần lâu dài phải nằm trên Persistent Volume. Trên AWS, đó có thể là EBS, EFS hoặc FSx, vòng đời vượt quá bất kỳ pod nào.",
+   "Trên mỗi node có tối thiểu ba phần mềm: kubelet, kube-proxy và container runtime. kube-proxy lo networking, hiện thực service và cấu hình rule để truy cập pod từ trong hoặc ngoài cluster.",
+   "Container runtime, ví dụ containerd, là thành phần thực sự xử lý các thao tác với container như chạy hay dừng chúng.",
+   "Đây là các pod trên node. Phổ biến nhất là mỗi pod một container; chỉ gom nhiều container vào một pod khi chúng gắn chặt với nhau. Và nhớ rằng cluster thực tế luôn có nhiều node, một node chỉ dùng để test.",
+   "Khi đi thi, nhớ rằng storage mặc định mất khi pod đổi node, nên thiết kế pod stateless hoặc dùng Persistent Volume. Nếu đề nói đã chạy Kubernetes on-prem, tránh lock-in hay multi-cloud, hãy chọn EKS chứ không phải ECS."
+  ]
+ }
+}

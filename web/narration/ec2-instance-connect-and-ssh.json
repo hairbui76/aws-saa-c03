@@ -1,0 +1,13 @@
+{
+ "EC2 Instance Connect and SSH": {
+  "sig": "6-1m368ia",
+  "steps": [
+   "Sơ đồ này so sánh hai cách vào shell của EC2 Linux: SSH cục bộ dùng key pair, và EC2 Instance Connect dùng quyền IAM. Câu hỏi then chốt là kết nối SSH thực sự xuất phát từ đâu.",
+   "Với Instance Connect, bạn mở terminal ngay trong trình duyệt và được xác thực bằng quyền IAM, không cần key. Yêu cầu đi tới dịch vụ EC2 Instance Connect, dịch vụ này có dải IP riêng theo từng region.",
+   "Chính dịch vụ EC2 Instance Connect mở kết nối SSH tới instance, nên gói tin đi qua Security Group. Câu hỏi đặt ra là rule inbound cổng TCP 22 phải cho phép nguồn nào.",
+   "Với SSH cục bộ, máy bạn giữ private key, nhớ chmod 400 để tránh lỗi permission, và Security Group phải cho IP của bạn. Còn Instance Connect thì Security Group phải cho dải IP của dịch vụ EC2 Instance Connect.",
+   "Qua được Security Group, kết nối tới instance có public IP. Nhớ chọn đúng username theo AMI, ví dụ ec2-user cho Amazon Linux 2, ubuntu cho Ubuntu, centos cho CentOS.",
+   "Mẹo khi đi thi: nếu Security Group chỉ cho My IP thì SSH chạy nhưng Instance Connect thất bại, hãy thêm dải IP dịch vụ lấy từ file ip-ranges.json. Còn instance private, không mở cổng 22, không bastion thì chọn Session Manager hoặc EC2 Instance Connect Endpoint."
+  ]
+ }
+}

@@ -1,0 +1,14 @@
+{
+ "Direct Connect": {
+  "sig": "7-78dgvk",
+  "steps": [
+   "Sơ đồ này cho thấy Direct Connect là một đường vật lý riêng từ văn phòng của bạn, đi qua một DX location, vào AWS Region. Điểm mấu chốt: AWS chỉ cấp cho bạn một port, phần còn lại bạn tự lo.",
+   "Bắt đầu từ văn phòng, router hoặc firewall của bạn cần hỗ trợ BGP và VLAN 802.1Q. Đoạn extension nối router này tới DX location thường do telco hoặc communications partner kéo cáp.",
+   "Trong DX location, router của bạn hoặc partner được nối tới AWS DX router bằng cross connect, tức một sợi cáp quang giữa hai cage. Port có tốc độ 1, 10 hoặc 100 Gbps.",
+   "Trên một đường vật lý đó, bạn tạo nhiều VIF, mỗi VIF có VLAN và phiên BGP riêng. Private VIF đi tới VGW của VPC, Public VIF đi tới các public service như S3, SQS, còn Transit VIF đi qua DX Gateway tới Transit Gateway.",
+   "Qua Private VIF và VGW, văn phòng truy cập trực tiếp các tài nguyên private IP như EC2 hoặc RDS trong VPC, không đi qua public Internet.",
+   "Lưu ý các đặc điểm: một port, một cáp, một location là single point of failure. DX không mã hóa mặc định, không ra được public Internet, provision mất hàng tuần tới hàng tháng, nhưng latency thấp, ổn định và data in miễn phí.",
+   "Khi đi thi, nhớ rằng bạn chỉ đặt mua port, cross connect và extension là việc của bạn hoặc partner. Cần kết nối ngay thì chọn Site-to-Site VPN, cần mã hóa thì chạy IPsec VPN trên public VIF."
+  ]
+ }
+}

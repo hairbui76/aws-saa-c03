@@ -1,0 +1,15 @@
+{
+ "S3 Access Logs": {
+  "sig": "8-1batrs",
+  "steps": [
+   "Sơ đồ này nói về S3 Server Access Logging. Ta bật logging trên source bucket, rồi S3 Log Delivery Group sẽ ghi log file vào target bucket theo kiểu best effort, thường trễ vài giờ.",
+   "Đầu tiên, các request như GET, PUT, DELETE đi tới source bucket A và B. Mỗi bucket được cấu hình logging với một prefix riêng, logsA và logsB, để phân tách log về sau.",
+   "Tiếp theo, S3 Log Delivery Group đọc logging config trên source bucket A, gồm TargetBucket và TargetPrefix. Đây là best effort, nên bật hoặc đổi cấu hình có thể mất vài giờ mới có hiệu lực.",
+   "Source bucket B cũng được Log Delivery Group xử lý tương tự. Nghĩa là một nhóm giao log có thể phục vụ nhiều source bucket cùng lúc.",
+   "Sau đó log được ghi vào một target bucket chung, tách biệt bằng prefix logsA và logsB. Lưu ý target bucket phải cùng region và cùng account với source.",
+   "Khi log đã nằm trong target bucket, ta có thể dùng Athena để truy vấn bằng SQL, phục vụ audit, bảo mật, phân tích access pattern hay giải thích hóa đơn S3.",
+   "Target bucket cần cấp quyền ghi: hiện nay dùng bucket policy cho logging.s3.amazonaws.com, còn khóa học dùng ACL cho Log Delivery Group. Và bạn phải tự quản lý lifecycle, xóa hoặc chuyển class log.",
+   "Bên trong log file, mỗi dòng là một record, các attribute cách nhau bằng dấu cách, giống log Apache. Khi đi thi nhớ: best effort trễ vài giờ nên không dùng cho real-time, không lấy source làm target, cần đảm bảo hơn thì chọn CloudTrail data events."
+  ]
+ }
+}

@@ -1,0 +1,22 @@
+{
+ "Layer 3 Network": {
+  "sig": "7-1i4pzb",
+  "steps": [
+   "Sơ đồ này cho thấy cách một packet đi qua nhiều mạng. D2 ở mạng Orange gửi tới D3 ở mạng Pink, packet giữ nguyên, còn frame được thay mới ở mỗi mạng Layer 2.",
+   "Trước hết là trường hợp local. D1 và D2 cùng mạng nên D1 dùng ARP lấy MAC của D2 rồi gửi thẳng, một frame cho một packet, không cần router.",
+   "Giờ D2 gửi tới D3. Vì D3 khác mạng, D2 bọc packet trong frame F2 với MAC đích là Router R1, chính là default gateway của nó.",
+   "R1 bỏ frame cũ, tra route table và thấy mạng Pink có next hop là R2, nên chuyển packet sang R2.",
+   "R2 nhận ra D3 nằm ngay trong mạng local của nó, nên dùng ARP lấy MAC của D3 và gửi frame F4 tới đích.",
+   "Ở giữa là mạng Green, có thể là link WAN với giao thức Layer 2 khác. Packet P2 nằm trong frame F3, IP nguồn và đích không đổi trừ khi có NAT, còn TTL giảm 1 mỗi hop.",
+   "Khi đi thi, nhớ điểm mấu chốt: IP đích luôn là D3, còn MAC đích đổi theo từng chặng, từ R1, sang R2, rồi tới D3. Routing là hop by hop."
+  ]
+ },
+ "Layer 3 Network - routing": {
+  "sig": "3-1xqbbu0",
+  "steps": [
+   "Sơ đồ này nói về prefix và longest prefix match: mask tách IP thành network part và host part, còn router chọn route khớp và cụ thể nhất.",
+   "Với 133.33.3.7 trên 16, 16 bit đầu là network, nên dải mạng chạy từ 133.33.0.0 tới 133.33.255.255. Packet tới 52.217.13.37 khớp cả route trên 24 lẫn default route, router chọn route trên 24 vì cụ thể hơn.",
+   "Khi đi thi, nhớ VPC route table hoạt động y hệt: local route không xóa được, route cụ thể thắng 0.0.0.0 trên 0, default gateway là VPC router tại network cộng 1, và protocol ICMP 1, TCP 6, UDP 17 dùng trong NACL và Flow Logs."
+  ]
+ }
+}

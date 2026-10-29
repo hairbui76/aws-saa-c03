@@ -1,0 +1,18 @@
+{
+ "Gateway Load Balancer": {
+  "sig": "11-yvcpeh",
+  "steps": [
+   "Sơ đồ này cho thấy cách Gateway Load Balancer chèn các security appliance của bên thứ ba vào luồng traffic, giữa catagramVPC 10.16.0.0 trên 16 có hai AZ và một securityVPC riêng chứa appliance.",
+   "Client trên Internet gửi request tới public IP của ALB, nên gói tin đi vào Internet Gateway của catagramVPC trước tiên.",
+   "IGW dịch public IP thành private IP của ALB trong dải 10.16.96.0 trên 20. Ingress route table gắn với IGW có route cụ thể cho dải này, nên đẩy gói tin tới GWLB Endpoint cùng AZ.",
+   "GWLB Endpoint chuyển gói tin sang Gateway Load Balancer ở security VPC. Gói tin được bọc GENEVE, giữ nguyên địa chỉ và port gốc, nên appliance thấy đúng gói tin thật.",
+   "GWLB load balance các gói tin tới nhiều appliance như firewall hoặc IDS IPS chạy trong ASG. Appliance kiểm tra xong thì trả về qua cùng tunnel, GWLB gỡ lớp GENEVE rồi trả về endpoint.",
+   "Vì địa chỉ gốc vẫn còn nguyên, route table của subnet GWLBE chỉ cần route local để đưa gói tin tới ALB node.",
+   "ALB node sau đó chọn một App EC2 trong private subnet để xử lý request, đúng như khi không có lớp kiểm tra nào.",
+   "Ở AZ còn lại cũng có ALB node và App EC2 tương tự, giúp ứng dụng chạy sẵn sàng cao trên nhiều AZ.",
+   "AZ-A có GWLB Endpoint 1 của riêng nó, nằm trong subnet 10.16.48.0 trên 20.",
+   "Traffic tới ALB ở AZ-A đi y hệt qua GWLBE 1, vì route table luôn trỏ tới endpoint cùng AZ. Nhờ flow stickiness, mỗi flow luôn qua cùng appliance, và appliance hỏng thì flow chuyển sang appliance khỏe.",
+   "Chiều về, subnet ALB có default route tới GWLBE, đi qua appliance rồi ra IGW về client, nên cả hai chiều đều được kiểm tra. Khi đi thi, thấy third-party firewall, IDS IPS cần scale, hoặc GENEVE UDP 6081, hãy chọn GWLB; firewall L7 managed thì là WAF."
+  ]
+ }
+}

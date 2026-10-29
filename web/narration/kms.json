@@ -2,13 +2,21 @@
  "KMS": {
   "sig": "7-1mciu3l",
   "steps": [
-   "Sơ đồ này nói về envelope encryption trong KMS. Nhớ hai điều: KMS key không bao giờ rời KMS, và chỉ mã hóa trực tiếp được tối đa 4 KB, nên dữ liệu lớn phải dùng Data Encryption Key.",
-   "Đầu tiên, ứng dụng hoặc dịch vụ như S3 gọi API GenerateDataKey, chỉ định KMS key. KMS key là một container logic gồm key ID, key policy và backing key material, nằm yên trong KMS và trong region.",
-   "KMS trả về hai bản của cùng một DEK: bản plaintext để dùng ngay, và bản ciphertext đã được mã hóa bằng KMS key. Lưu ý KMS không lưu, cũng không theo dõi DEK này.",
-   "Bây giờ chính bạn hoặc dịch vụ dùng plaintext DEK để mã hóa dữ liệu lớn hơn 4 KB, chứ KMS không làm việc này. Với S3, mỗi object có một DEK riêng.",
-   "Mã hóa xong thì xóa ngay plaintext DEK khỏi bộ nhớ, để không có khóa dạng rõ nào còn nằm lại cạnh dữ liệu.",
-   "Bản ciphertext DEK được lưu kèm ngay cạnh dữ liệu đã mã hóa. Nó an toàn vì chỉ KMS mới giải mã được nó.",
-   "Khi cần giải mã, gửi ciphertext DEK cho KMS Decrypt, không cần chỉ KeyId vì thông tin key nằm sẵn trong ciphertext. KMS kiểm tra quyền, trả lại plaintext DEK để giải mã dữ liệu, rồi lại xóa nó đi."
+   "Sơ đồ này mô tả envelope encryption trong KMS. KMS key không bao giờ rời KMS và chỉ mã hóa trực tiếp tối đa 4 KB, nên dữ liệu lớn phải dùng Data Encryption Key, còn việc mã hóa dữ liệu là do bạn hoặc dịch vụ làm.",
+   "Đầu tiên, ứng dụng hoặc dịch vụ như S3 gọi API GenerateDataKey kèm KeyId. KMS key ở đây là một container logic chứa key ID, key policy và backing key material, và nó luôn nằm yên trong KMS.",
+   "KMS trả về hai bản của cùng một DEK: bản plaintext để dùng ngay, và bản ciphertext là DEK đã được mã hóa bằng KMS key. Lưu ý KMS không lưu và không theo dõi DEK này.",
+   "Tiếp theo, bạn dùng plaintext DEK để mã hóa dữ liệu lớn hơn 4 KB. Nhớ rằng S3 sinh một DEK riêng cho mỗi object, và quyền KMS tách theo từng thao tác nên hỗ trợ role separation.",
+   "Mã hóa xong, plaintext DEK phải được xóa ngay, để không còn bản khóa dạng rõ nào nằm lại bên ngoài KMS.",
+   "Còn ciphertext DEK thì được lưu kèm ngay cạnh dữ liệu đã mã hóa. Nó an toàn vì chỉ KMS mới giải mã được nó.",
+   "Khi cần giải mã, bạn gửi ciphertext DEK cho KMS Decrypt mà không cần chỉ KeyId, vì thông tin key nằm sẵn trong ciphertext. Nhận plaintext DEK, giải mã dữ liệu, rồi lại xóa plaintext DEK."
+  ]
+ },
+ "KMS - keys": {
+  "sig": "3-1y4cfuj",
+  "steps": [
+   "Sơ đồ này nói về ba loại KMS key và key policy. Điểm đặc biệt là KMS không mặc định tin account chứa nó, nên key policy phải trust account thì IAM policy mới có tác dụng.",
+   "Có ba loại: AWS owned key dùng chung nhiều account, AWS managed key tự tạo khi dịch vụ dùng KMS lần đầu, và customer managed key do bạn tạo. Nếu key policy trust account root, bạn cấp quyền qua IAM; nếu không, mọi quyền phải ghi thẳng trong key policy.",
+   "Khi đi thi nhớ nhé: AWS managed key không sửa được key policy, không cross-account, rotation bắt buộc khoảng mỗi năm. Cần cross-account hay tự quyết rotation thì chọn customer managed key, rotation mặc định tắt, và xóa key phải chờ 7 đến 30 ngày."
   ]
  }
 }

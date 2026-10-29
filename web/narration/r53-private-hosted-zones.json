@@ -1,0 +1,20 @@
+{
+ "R53 Private Hosted Zones": {
+  "sig": "4-oscjzh",
+  "steps": [
+   "Sơ đồ này nói về private hosted zone. Nó giống hệt public zone, nhưng không có name server công cộng, nên chỉ client trong VPC đã associate mới resolve được, thông qua Resolver ở địa chỉ VPC cộng 2.",
+   "Mỗi VPC có một EC2 gửi truy vấn DNS tới Resolver chấm 2 của chính VPC đó. Còn user trên Internet thì hoàn toàn không với tới được zone, vì zone không bao giờ được delegate ra DNS công cộng.",
+   "Resolver của VPC1 và VPC2 đã associate nên được trả lời từ zone, còn VPC3 chưa associate thì bị từ chối. Lưu ý tên zone không cần là domain bạn sở hữu, và đổi association phải chờ vài phút mới có hiệu lực.",
+   "Khi đi thi, nhớ nhé: cùng account thì associate qua console, CLI hoặc API; khác account thì chỉ qua CLI hoặc API, tạo authorization trước rồi mới associate. Không resolve được thì kiểm tra association và enableDnsSupport, enableDnsHostnames."
+  ]
+ },
+ "R53 Private Hosted Zones - split-view": {
+  "sig": "4-182bfd1",
+  "steps": [
+   "Sơ đồ này nói về split-view, hay split-horizon DNS. Ta tạo public zone và private zone trùng tên, người trong VPC đã associate thấy private zone, còn người ngoài Internet chỉ thấy public zone.",
+   "Bên trong, WorkSpaces hoặc EC2 hỏi Resolver VPC cộng 2. Bên ngoài, user Internet đi theo đường DNS công cộng bình thường: root, rồi TLD, rồi bốn name server Route 53 của public zone.",
+   "Resolver trả lời từ private zone, vốn là superset, chứa thêm record nhạy cảm accounting. Còn đường công cộng dẫn tới public zone, chỉ có một tập con gồm www, MX và TXT.",
+   "Hai zone cùng tên, nhưng accounting chỉ resolve được ra 8.7.6.5 từ trong VPC, còn Internet thì không có record. Khi đi thi, thấy cùng tên miền mà nội bộ và bên ngoài thấy khác nhau, hãy nghĩ ngay tới split-view."
+  ]
+ }
+}

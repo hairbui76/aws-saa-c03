@@ -1,0 +1,16 @@
+{
+ "Translate": {
+  "sig": "9-1fosuau",
+  "steps": [
+   "Sơ đồ này nói về Amazon Translate, dịch vụ dịch text sang text dựa trên neural machine translation. Nó dịch theo ý nghĩa chứ không thay từng từ, và thường đóng vai trò một bước trong pipeline.",
+   "Bên trái, text nguồn đi vào Encoder, ngôn ngữ nguồn có thể tự động nhận diện hoặc do bạn chỉ định. Bên phải là hai pipeline: audio tiếng Anh vào Transcribe, và review đa ngôn ngữ đưa thẳng vào Translate.",
+   "Encoder đọc câu nguồn và tạo ra semantic representation, tức biểu diễn ý nghĩa. Attention chọn từ nguồn quan trọng để xử lý cụm từ mơ hồ. Song song, Transcribe ra text tiếng Anh, còn review đã dịch được đưa sang Comprehend phân tích sentiment.",
+   "Ý nghĩa đó được chuyển cho Decoder có attention để viết lại bằng ngôn ngữ đích. Ở pipeline audio, text tiếng Anh từ Transcribe giờ được đưa vào Translate.",
+   "Decoder xuất ra text ngôn ngữ đích, diễn đạt tự nhiên theo cách của ngôn ngữ đó. Còn Translate trong pipeline cho ra text tiếng Việt.",
+   "Nếu cần đọc lên, text tiếng Việt được chuyển cho Polly, dịch vụ chuyển text thành giọng nói.",
+   "Polly tạo ra audio tiếng Việt. Vậy là từ audio tiếng Anh, ta có audio tiếng Việt nhờ chuỗi Transcribe, Translate rồi Polly.",
+   "Một use case phổ biến khác là giao tiếp bằng ngôn ngữ của khách, như live chat, email hay in-game chat, giúp trải nghiệm đa ngôn ngữ mượt mà hơn.",
+   "Lời nhắc khi đi thi: Polly và Transcribe không hề dịch. Hễ đề bài có thay đổi ngôn ngữ, bạn cần Translate trong chuỗi xử lý."
+  ]
+ }
+}

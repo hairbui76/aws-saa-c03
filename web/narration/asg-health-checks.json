@@ -1,0 +1,27 @@
+{
+ "ASG Health Checks": {
+  "sig": "7-1olr4n3",
+  "steps": [
+   "Sơ đồ này giới thiệu ba loại health check mà Auto Scaling Group dùng để đánh giá từng instance. Mặc định ASG chỉ kiểm tra EC2, muốn nó hiểu được ứng dụng thì phải bật thêm ELB health check.",
+   "Ba loại đó là EC2 health check, loại mặc định; ELB health check, loại bạn phải tự bật; và custom health check do hệ thống bên ngoài quyết định.",
+   "Với EC2 check, instance khỏe khi đang running và đạt cả hai status check. Với ELB check, instance còn phải pass health check của target group, ví dụ gọi trang health trả về mã 200. Còn custom thì hệ thống ngoài gọi API SetInstanceHealth để đánh dấu.",
+   "Ngược lại, EC2 check coi mọi trạng thái khác running là unhealthy, như stopping, stopped, terminated hay impaired. ELB check báo unhealthy khi fail target group check. Custom thì tùy script hoặc công cụ giám sát bên thứ ba.",
+   "Đây là điểm khác biệt quan trọng: nếu web server bên trong crash, EC2 check vẫn báo healthy. ELB check với ALB ở layer 7 thì phát hiện được app chết, nên ASG sẽ terminate và thay instance.",
+   "Nếu đề hỏi app lỗi mà ASG không thay instance, tức là đang dùng EC2 check mặc định. ELB check cần ASG gắn target group và chạy cộng thêm EC2 check, còn custom dùng khi tiêu chí khỏe là đặc thù doanh nghiệp.",
+   "Khi đi thi, muốn ASG thay instance lúc ứng dụng hỏng thì bật ELB health check trên ASG kèm ALB health check theo path. Cẩn thận bẫy: nếu trang health phụ thuộc database, database sập là mọi instance cùng fail."
+  ]
+ },
+ "ASG Health Checks - grace": {
+  "sig": "8-e47y4o",
+  "steps": [
+   "Sơ đồ này nói về health check grace period, khoảng chờ sau khi launch trước khi health check có hiệu lực. Mặc định 300 giây trên console, nhưng qua CLI hoặc API thì mặc định là 0.",
+   "Trường hợp đúng: ASG launch instance, rồi chờ hết grace period, ví dụ 10 phút, đủ để hệ điều hành khởi động, chạy user data hoặc cfn-init và bật ứng dụng.",
+   "Khi grace hết thì app đã sẵn sàng, health check pass, instance được đánh dấu healthy và bắt đầu nhận traffic.",
+   "Giờ xem trường hợp sai: app cần 8 phút để bootstrap, nhưng grace period chỉ 2 phút. Đến phút thứ 2, ELB check đã gọi trang health.",
+   "Lúc này app chưa chạy xong nên không có phản hồi, và instance bị đánh dấu unhealthy dù thật ra nó chỉ đang khởi động.",
+   "ASG làm đúng nhiệm vụ tự chữa lành của nó: terminate instance bị coi là hỏng.",
+   "Rồi ASG launch instance mới, instance này lại gặp đúng vấn đề cũ, và vòng lặp cứ thế lặp mãi. Kết quả là không instance nào phục vụ được, lại còn tốn tiền.",
+   "Khi đi thi, thấy instance liên tục được launch rồi bị terminate thì nghĩ ngay tới tăng grace period. Còn nếu cần chạy việc trước khi vào service hoặc trước khi terminate, hãy dùng lifecycle hook."
+  ]
+ }
+}

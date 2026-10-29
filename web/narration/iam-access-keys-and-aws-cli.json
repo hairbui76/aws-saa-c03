@@ -1,0 +1,25 @@
+{
+ "IAM Access Keys and AWS CLI": {
+  "sig": "5-1u0p3w8",
+  "steps": [
+   "Sơ đồ này so sánh hai loại long-term credential của IAM user: password dùng cho Console và access key dùng cho CLI hoặc API. Chúng không tự rotate, mỗi user có tối đa hai cặp access key.",
+   "Đây là IAM user iamadmin. Cặp key gồm Access Key ID công khai và Secret Access Key bí mật, secret chỉ hiện đúng một lần lúc tạo. Ta nạp cặp này vào named profile, rồi chạy lệnh như aws s3 ls kèm profile để gọi AWS API.",
+   "Phía còn lại, password dùng để đăng nhập AWS Management Console. Mỗi user chỉ có tối đa một password, kết hợp username và MFA, và password không bắt buộc nếu user chỉ dùng CLI.",
+   "Cặp key thứ hai có thể Active hoặc Inactive, tồn tại chủ yếu để rotate không downtime. Bên CLI còn có default profile, dùng lệnh aws configure không kèm tên, được chọn khi bạn không chỉ định profile.",
+   "Khi đi thi nhớ nhé: aws configure hỏi bốn giá trị, lưu trong thư mục chấm aws. App trên EC2 hoặc Lambda thì dùng IAM Role, đừng nhúng access key. Không tạo key cho root. Lộ secret thì xóa cả cặp và tạo cặp mới."
+  ]
+ },
+ "IAM Access Keys and AWS CLI - rotation": {
+  "sig": "8-19zzhj1",
+  "steps": [
+   "Sơ đồ này minh họa cách rotate access key mà không gây downtime. Giới hạn hai cặp mỗi IAM user, tính cả key Inactive, chính là để key cũ và key mới chạy song song.",
+   "Hàng này theo dõi trạng thái Key 1 qua từng giai đoạn: đang Active, vẫn Active trong lúc chuyển đổi, chờ tắt, chuyển sang Inactive, rồi cuối cùng bị xóa.",
+   "Còn đây là trạng thái Key 2: ban đầu chưa có, sau đó được tạo mới ở trạng thái Active, rồi trở thành key đang được dùng và giữ Active đến cuối.",
+   "Bước đầu tiên: Key 1 đang được dùng, ta tạo thêm Key 2. Lúc này user đã đủ hai trên hai cặp, nên phải làm xong rotation mới tạo thêm được.",
+   "Tiếp theo, cập nhật mọi CLI profile và ứng dụng sang dùng Key 2. Vì Key 1 vẫn Active nên không có gì bị gián đoạn trong lúc chuyển.",
+   "Sau đó chuyển Key 1 sang Inactive thay vì xóa ngay, và theo dõi xem còn ứng dụng nào bị lỗi, tức là vẫn đang dùng key cũ hay không.",
+   "Khi chắc chắn không còn ai dùng, ta xóa hẳn Key 1. Rotation hoàn tất và lại còn chỗ trống cho lần rotate tiếp theo.",
+   "Khi đi thi nhớ: key Inactive bật lại được để rollback, đã xóa thì không. Key Inactive hoặc bị xóa làm app lỗi ngay. Key bị lộ thì vô hiệu hóa hoặc xóa ngay, vì secret không đổi được, chỉ thay cả cặp."
+  ]
+ }
+}

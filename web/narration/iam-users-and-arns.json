@@ -1,0 +1,23 @@
+{
+ "IAM Users and ARNs": {
+  "sig": "8-64bq44",
+  "steps": [
+   "Sơ đồ này cho thấy một IAM user đi qua hai giai đoạn: Authentication để chứng minh bạn là ai, rồi Authorization để quyết định bạn được làm gì với từng request.",
+   "Đầu tiên, principal, có thể là người hoặc ứng dụng, gửi long-term credentials tới IAM: username và password nếu dùng console, hoặc access key nếu dùng CLI hay API.",
+   "Khi credentials hợp lệ, IAM xác nhận principal đúng là Sally. Lúc này nó trở thành một authenticated identity.",
+   "Tiếp theo, Sally thực hiện một hành động, ví dụ gửi request s3:PutObject để upload file lên một S3 bucket.",
+   "Với mỗi request, IAM xét mọi statement áp dụng cho Sally theo thứ tự Deny, Allow, Deny, rồi trả về Allow hoặc Deny. Nhớ rằng user mới tạo mặc định không có quyền gì.",
+   "Nếu có ứng dụng hàng triệu người dùng hoặc doanh nghiệp hơn 5.000 nhân viên, tạo IAM user cho từng người là sai. Hãy dùng IAM Roles kết hợp Identity Federation như Cognito hoặc AD.",
+   "Hai con số cần nhớ: tối đa 5.000 IAM user mỗi account, vì IAM là global nên không tính theo region, và mỗi user thuộc tối đa 10 group.",
+   "Khi đi thi, nhớ password dùng cho console, access key dùng cho CLI và API, cả hai đều là long-term credentials. Nếu hình dung được một thực thể cụ thể, có tên, cần truy cập dài hạn, hãy chọn IAM user."
+  ]
+ },
+ "IAM Users and ARNs - arn": {
+  "sig": "3-dtfajp",
+  "steps": [
+   "Sơ đồ này mổ xẻ ARN, định danh duy nhất cho mọi tài nguyên trên mọi account, với các trường ngăn cách bằng dấu hai chấm. Ta cũng sẽ xem hai cái bẫy hay gặp.",
+   "Lần lượt là partition thường là aws, service như s3 hay ec2, region, account-id 12 chữ số, và resource. S3 để trống region và account vì tên bucket là duy nhất toàn cầu. Lưu ý catgifs chỉ là bucket, catgifs sao là mọi object, hai ARN không chồng nhau nên cần liệt kê cả hai. Và hai dấu hai chấm liền nhau nghĩa là không cần chỉ định, còn dấu sao là mọi giá trị.",
+   "Cuối cùng, mọi ARN luôn bắt đầu bằng tiền tố arn và dấu hai chấm. Khi đọc policy trong đề thi, hãy soi kỹ từng trường sau tiền tố này."
+  ]
+ }
+}

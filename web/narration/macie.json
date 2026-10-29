@@ -1,0 +1,14 @@
+{
+ "Macie": {
+  "sig": "7-9vws2m",
+  "steps": [
+   "Sơ đồ này nói về Amazon Macie, dịch vụ tìm dữ liệu nhạy cảm trong S3. Discovery job dùng data identifier quét object, rồi findings được đẩy sang Security Hub hoặc EventBridge để cảnh báo hoặc tự khắc phục.",
+   "Đầu tiên, bạn chọn các S3 bucket, có thể ở một hoặc nhiều account, và tạo discovery job chạy một lần hoặc định kỳ. Song song, Macie theo dõi policy bucket và sinh policy findings khi bucket bị nới lỏng, nhưng chỉ với thay đổi sau khi bật Macie.",
+   "Job cần các rule để đánh giá nội dung. Managed data identifiers do AWS quản lý, dùng machine learning và pattern matching. Custom data identifiers do bạn tạo bằng regex, kèm keywords, maximum match distance và ignore words để lọc chính xác hơn.",
+   "Tiếp theo, job quét từng object và phân loại dữ liệu. Kết quả là sensitive data findings như Credentials, Financial, Personal gồm PII và PHI, CustomIdentifier, hoặc Multiple khi có nhiều loại cùng lúc.",
+   "Findings có thể xem trực tiếp trên console, tích hợp với AWS Security Hub, hoặc gửi thành event tới EventBridge để xử lý tự động.",
+   "Từ EventBridge, một rule có thể gọi Lambda để remediation tự động, hoặc gửi tới SNS để thông báo qua email. Đây chính là bảo mật hướng sự kiện.",
+   "Khi đi thi, nhớ bài demo: biển số xe Úc không bị managed identifier bắt, phải tạo custom identifier bằng regex. Và Macie chỉ dành cho S3; lỗ hổng EC2 là Inspector, hoạt động độc hại là GuardDuty, compliance cấu hình là AWS Config."
+  ]
+ }
+}

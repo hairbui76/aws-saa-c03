@@ -1,0 +1,25 @@
+{
+ "EC2 Placement Groups": {
+  "sig": "9-xsjlvn",
+  "steps": [
+   "Sơ đồ này so sánh ba loại placement group: Cluster đặt instance gần nhau để có hiệu năng cao nhất, Spread tách từng instance ra, còn Partition chia instance thành từng nhóm trên hạ tầng riêng.",
+   "Với Spread, mỗi instance được đặt trên một rack riêng biệt. Ở đây i1 nằm ở Rack 1 và i3 nằm ở Rack 3, các rack này có thể ở những AZ khác nhau.",
+   "Tiếp theo, i2 và i4 cũng có rack riêng. Bên Partition, ứng dụng 75 instance được chia thành ba partition, mỗi partition 25 instance và có nhóm rack riêng của nó.",
+   "Cluster cho single-stream throughput 10 Gbps thay vì 5, latency thấp nhất và PPS cao nhất. Spread giúp một rack hỏng chỉ mất một instance. Partition cho tối đa 7 partition mỗi AZ, không giới hạn số instance, và cho biết instance nằm ở partition nào.",
+   "Mỗi loại đều có điểm yếu. Cluster chỉ một AZ, hỏng rack có thể mất cả group. Spread giới hạn cứng 7 instance mỗi AZ và không hỗ trợ Dedicated. Partition hỏng thì mất mọi instance trong partition đó.",
+   "Về use case, Cluster dành cho HPC và workload tightly coupled, nên launch cùng lúc và cùng instance type. Spread cho vài instance quan trọng như domain controller. Partition cho HDFS, HBase, Cassandra, Kafka.",
+   "Quay lại Cluster: i1 và i2 nằm cùng rack, thường cùng host, nên kết nối giữa chúng trực tiếp và cực nhanh.",
+   "Tương tự, i2 nối tới i3 với băng thông cao. Mọi instance trong cluster đều liên lạc nhanh với nhau, nhưng đổi lại gần như không có resilience.",
+   "Lời nhắc khi đi thi: Dedicated Hosts không dùng được với placement group, đừng để bị đánh lừa bởi đáp án kết hợp hai thứ này."
+  ]
+ },
+ "EC2 Placement Groups - decision": {
+  "sig": "4-5zz27w",
+  "steps": [
+   "Đây là cây quyết định chọn placement group theo từ khóa đề thi. Đọc từ trên xuống, câu hỏi đầu tiên bạn trả lời có sẽ quyết định đáp án.",
+   "Câu đầu tiên: có cần latency thấp, throughput hoặc PPS cao giữa các node không? Nếu có, chọn Cluster kèm enhanced networking, và EFA nếu đề nhắc MPI. Nếu không, đi tiếp.",
+   "Nếu chỉ có vài instance quan trọng cần phần cứng riêng, chọn Spread, tối đa 7 instance mỗi AZ. Lưu ý, nếu đề yêu cầu span nhiều AZ thì loại Cluster ngay.",
+   "Nếu có nhiều hơn 7 instance mỗi AZ và ứng dụng biết topology, chọn Partition. Đây cũng là lối thoát khi Spread không đủ chỗ vì vượt giới hạn 7 instance mỗi AZ."
+  ]
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "CNAME vs Alias": {
+  "sig": "5-j8kc1f",
+  "steps": [
+   "Sơ đồ này so sánh CNAME với Alias của Route 53. Vấn đề là ELB hay CloudFront chỉ đưa cho bạn một DNS name chứ không phải IP, nên ta cần cách trỏ tên vào đó.",
+   "Bên trái, trỏ www.catagram.io vào ELB bằng CNAME thì được, nhưng trỏ apex catagram.io bằng CNAME thì chuẩn DNS cấm. Bên phải, A alias dùng được cho cả apex lẫn www.",
+   "Tóm lại, CNAME không dùng được ở apex và query bị tính phí. Alias thì dùng được ở cả apex lẫn www, và query tới tài nguyên AWS hoàn toàn miễn phí.",
+   "CNAME là chuẩn nên DNS provider nào cũng hỗ trợ. Alias trỏ tới ELB, CloudFront, S3 website, API Gateway và nhiều dịch vụ khác, type phải khớp đích, ví dụ ELB dùng A alias, và chỉ có khi zone host trên Route 53.",
+   "Khi đi thi, nếu đề hỏi trỏ naked domain như example.com vào ELB, CloudFront hoặc S3 website thì chọn Alias. Với tài nguyên AWS, cứ mặc định chọn Alias nhé."
+  ]
+ }
+}

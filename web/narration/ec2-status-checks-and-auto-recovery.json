@@ -1,0 +1,22 @@
+{
+ "EC2 Status Checks and Auto Recovery": {
+  "sig": "5-6bn1km",
+  "steps": [
+   "Sơ đồ này cho thấy mỗi EC2 instance có hai status check, khi fail sẽ kích hoạt CloudWatch alarm và hành động tự động. Nhớ nhé, bất cứ trạng thái nào khác hai trên hai checks passed đều là sự cố.",
+   "Instance status check theo dõi phần của bạn như kernel, file system, cấu hình mạng trong OS, nên lỗi này bạn phải tự sửa. System status check theo dõi host của AWS, xử lý bằng stop start hoặc recover sang host khác.",
+   "Cả hai check đều có thể đưa vào một CloudWatch alarm. Điều kiện mặc định là một trong hai check fail trong một chu kỳ liên tiếp 5 phút.",
+   "Alarm mặc định gửi thông báo qua SNS, và có thể thêm action Reboot, Stop để chẩn đoán, Terminate hoặc Recover. Terminate chỉ có ích khi có Auto Scaling Group tạo instance thay thế, còn Recover chuyển sang host mới cùng AZ, giữ cấu hình và IP.",
+   "Lưu ý khi đi thi: lúc mới launch, instance ở trạng thái initializing và có lúc chỉ một trên hai check pass. Sau giai đoạn đó, mọi thứ khác hai trên hai checks passed đều là vấn đề."
+  ]
+ },
+ "EC2 Status Checks and Auto Recovery - recover": {
+  "sig": "5-lpgq9v",
+  "steps": [
+   "Sơ đồ này nói về EC2 Auto Recovery. Recover dời instance từ host lỗi sang một host khác còn capacity trong cùng AZ, giữ nguyên instance ID, IP và cấu hình.",
+   "Vì EC2 là dịch vụ gắn với AZ, nếu cả AZ A sập thì Recover không giúp được gì, vì nó không chuyển instance sang AZ khác.",
+   "Muốn high availability thật sự, bạn cần kiến trúc multi-AZ kết hợp Auto Scaling Group và Load Balancer, chứ không chỉ dựa vào Auto Recovery.",
+   "Mẹo thi: Recover không hỗ trợ instance có Instance Store volume, cần host còn capacity trống và chỉ dùng cho instance type đời mới như C5, M5, R5. Hiện nay các type hỗ trợ còn bật sẵn simplified automatic recovery khi system check fail.",
+   "Kết quả: instance i-0abc với IP 10.16.0.10 khởi động lại trên host mới, giữ nguyên định danh. Các EBS volume được gắn lại, đó là lý do chỉ instance dùng toàn EBS mới recover được."
+  ]
+ }
+}

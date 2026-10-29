@@ -1,0 +1,13 @@
+{
+ "VPC Peering": {
+  "sig": "6-1yy3uvj",
+  "steps": [
+   "Sơ đồ này nói về VPC Peering, một kết nối riêng tư và mã hóa giữa đúng hai VPC, có thể cùng hoặc khác region, cùng hoặc khác account. Ba VPC A, B, C dùng dải 10.16, 10.17 và 10.18 trên 16, không trùng nhau.",
+   "Đầu tiên ta tạo peering A với B: bên requester gửi yêu cầu, bên accepter chấp nhận, rồi thêm route ở cả hai phía. Lưu ý A muốn nói chuyện với C thì không thể đi xuyên qua B, vì peering không bắc cầu.",
+   "Traffic qua pcx-ab tới được EC2 B, nhưng chỉ khi đã mở Security Group và NACL. Cùng region thì tham chiếu được SG ID, khác region phải dùng CIDR.",
+   "Tiếp theo VPC B tạo thêm một peering riêng với VPC C là pcx-bc, vì mỗi peering chỉ nối đúng hai VPC.",
+   "Giờ B nói chuyện được với C. Tuy vậy A vẫn không tới được C, nên muốn full mesh ba VPC thì cần ba peering, tức là phải thêm pcx-ac.",
+   "Đây là route table: mỗi phía có destination là CIDR của VPC bên kia, target là peering connection. Khi đi thi, nhớ peering không transitive, CIDR trùng thì không tạo được, và nhiều VPC thì nghĩ tới Transit Gateway."
+  ]
+ }
+}

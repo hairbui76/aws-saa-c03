@@ -1,0 +1,22 @@
+{
+ "Service Control Policies": {
+  "sig": "5-12z1md2",
+  "steps": [
+   "Sơ đồ này nói về Service Control Policies, hay SCP. SCP gắn vào root, OU hoặc account, không cấp quyền mà chỉ đặt trần quyền cho cả account, và kế thừa xuống cây tổ chức.",
+   "Ở đỉnh là Organization Root với FullAWSAccess cho phép mọi thứ. OU prod có thêm SCP chặn toàn bộ S3, còn OU dev chỉ kế thừa từ root. Riêng management account thì không bao giờ bị SCP giới hạn.",
+   "Kết quả là account Production không dùng được S3, kể cả root user hay role AdministratorAccess, giống hệt trong demo. Còn Development vẫn dùng S3 bình thường vì không bị deny.",
+   "Đây là logic giao nhau. Quyền chỉ có trong identity policy thì bị chặn vì vượt trần, quyền chỉ có trong SCP thì vô tác dụng vì SCP không cấp quyền. Chỉ phần giao mới là quyền hiệu lực.",
+   "Khi đi thi, nhớ rằng SCP kế thừa xuống mọi account và OU con, explicit deny ở đâu cũng thắng. Đừng chạy workload trong management account, và SCP là cách duy nhất gián tiếp giới hạn root user của member account."
+  ]
+ },
+ "Service Control Policies - allow-deny-list": {
+  "sig": "5-72yl6u",
+  "steps": [
+   "Sơ đồ này so sánh hai cách dùng SCP: deny list là mặc định, giữ FullAWSAccess rồi chặn từng thứ; còn allow list gỡ FullAWSAccess rồi chỉ cho phép từng thứ, chặt hơn.",
+   "Với deny list, AWS tự gắn FullAWSAccess khi bật SCP, ta chỉ thêm SCP explicit deny cho S3. Với allow list, ta gỡ FullAWSAccess để chỉ còn implicit deny, rồi explicit allow S3 và EC2.",
+   "Kết quả: bên deny list, mọi service đều dùng được trừ S3. Bên allow list, chỉ S3 và EC2 được dùng, mọi thứ khác bị implicit deny chặn lại.",
+   "Deny list ít công quản trị và service mới tự động được phép, nhưng kém chặt. Allow list bảo mật cao hơn, nhưng tốn công và service mới bị chặn cho tới khi được thêm vào.",
+   "Lời nhắc khi đi thi: cả hai cách đều theo quy tắc Deny, Allow, Deny. SCP chỉ đặt trần, identity trong account vẫn cần identity policy mới thực sự có quyền."
+  ]
+ }
+}

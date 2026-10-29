@@ -1,0 +1,13 @@
+{
+ "DataSync": {
+  "sig": "6-4137o1",
+  "steps": [
+   "Sơ đồ này nói về AWS DataSync, dịch vụ truyền dữ liệu qua mạng được quản lý trọn gói. Nó tự lo lịch chạy, giới hạn băng thông, chỉ chuyển phần thay đổi, tự retry, nén, mã hóa TLS và kiểm tra toàn vẹn dữ liệu.",
+   "Bắt đầu ở phía on-premises. DataSync Agent là một máy ảo, ví dụ trên VMware, đọc ghi vào SAN hoặc NAS nội bộ qua NFS cho Linux hoặc SMB cho Windows, nên gần như mọi file server đều tích hợp được.",
+   "Agent gửi dữ liệu tới DataSync Endpoint trong AWS Region qua kênh mã hóa TLS, có nén. Bạn đặt lịch chạy và giới hạn băng thông để không làm nghẽn đường truyền trong giờ làm việc.",
+   "Từ endpoint, dữ liệu được ghi vào S3 với mọi storage class, hoặc EFS và FSx nằm trong VPC. DataSync cũng chạy được giữa các dịch vụ AWS với nhau, ví dụ EFS sang EFS ở region khác.",
+   "Về quy mô, mỗi agent khoảng 10 Gbps, tương đương khoảng 100 TB mỗi ngày, muốn nhanh hơn thì thêm agent. Mỗi task gồm location nguồn, đích, lịch và throttle, xử lý tới khoảng 50 triệu file, giữ metadata và tính giá theo GB chuyển.",
+   "Khi đi thi, nhớ DataSync truyền hai chiều, đưa dữ liệu vào AWS hoặc kéo kết quả về lại. Thấy online, theo lịch, cần validation thì chọn DataSync; offline là Snow Family, hybrid lâu dài là Storage Gateway, đối tác upload SFTP là Transfer Family."
+  ]
+ }
+}

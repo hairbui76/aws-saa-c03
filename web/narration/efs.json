@@ -1,0 +1,25 @@
+{
+ "EFS": {
+  "sig": "6-1a3jymo",
+  "steps": [
+   "Sơ đồ này cho thấy EFS, một file system NFS dùng chung, đi vào VPC 10.16.0.0 trên 16 thông qua mount target. Mỗi mount target nằm trong một subnet và lấy IP của subnet đó.",
+   "Các instance EC2 Linux mount file system qua NFS trên cổng TCP 2049, có Security Group kiểm soát truy cập. EC2 C phải đi nhờ sang AZ-B, còn server on-premises đi qua VPN hoặc Direct Connect.",
+   "Cả hai mount target cùng dẫn tới một EFS file system chuẩn NFSv4 với quyền POSIX. Ở chế độ Regional, dữ liệu được lưu dư thừa qua nhiều AZ.",
+   "Để ý AZ-C: ở đây chưa có mount target nào, nên instance trong AZ này không có điểm kết nối riêng tới EFS.",
+   "EFS chỉ hỗ trợ Linux, nên EC2 Windows dùng SMB phải chuyển sang FSx for Windows. Server Linux on-premises thì đi qua Site-to-Site VPN hoặc Direct Connect tới mount target.",
+   "Khi đi thi, nhớ rằng AZ thiếu mount target sẽ phụ thuộc AZ khác, AZ-B sập là EC2 C mất file system. Và terminate EC2 thì file vẫn còn trên EFS, giúp app tier trở nên stateless."
+  ]
+ },
+ "EFS - options": {
+  "sig": "7-8d9uj5",
+  "steps": [
+   "Sơ đồ này tổng hợp các lựa chọn khi tạo EFS theo bốn trục độc lập: performance, throughput, storage class và độ bền. Ô xanh lá là mặc định hoặc nên dùng.",
+   "Lựa chọn mặc định gồm General Purpose với latency thấp cho web server và CMS, Bursting có throughput tăng theo dung lượng giống gp2, và Regional lưu qua nhiều AZ cho production.",
+   "Provisioned cho phép chỉ định throughput tách khỏi dung lượng, tương tự io1 hoặc io2. One Zone chỉ lưu trong một AZ, rẻ hơn, hợp cho dev và test.",
+   "Max I/O cho IOPS và throughput tổng cao hơn nhưng đổi lại latency cao hơn, dành cho big data hay media song song. Hiện AWS khuyên dùng General Purpose cùng Elastic, mode tự co giãn và trả theo lượng dùng.",
+   "Về bảo mật, encryption at rest bằng KMS chỉ bật được lúc tạo, file system policy ép encryption in transit, còn AWS Backup nên bật cho production. Đề nói throughput cao mà dữ liệu nhỏ thì chọn Provisioned hoặc Elastic.",
+   "Giống S3 Storage Classes, lifecycle policy tự chuyển file từ Standard sang Infrequent Access rẻ hơn, ví dụ khi file không được đọc trong 30 ngày.",
+   "Cuối cùng, file gần như không bao giờ đọc có thể chuyển tiếp sang class Archive. Khi thi, thấy yêu cầu tiết kiệm cho file ít truy cập thì nghĩ ngay tới IA cộng lifecycle policy."
+  ]
+ }
+}

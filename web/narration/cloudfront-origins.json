@@ -1,0 +1,15 @@
+{
+ "CloudFront Origins": {
+  "sig": "8-1x088u6",
+  "steps": [
+   "Sơ đồ này nói về origin của CloudFront, tức nơi CloudFront lấy nội dung khi cache miss. Ta sẽ so sánh S3 origin, custom origin và origin group.",
+   "Điểm quan trọng: origin được chọn trong behavior chứ không gắn thẳng vào distribution. Khi edge cache miss, CloudFront thực hiện origin fetch tới origin hoặc origin group mà behavior đó chỉ định.",
+   "Bên trái là S3 origin, ví dụ REST endpoint của bucket chọn từ dropdown. Bên phải là custom origin gồm EC2, ALB, on-prem, API, và cả S3 static website endpoint, đây là cái bẫy hay gặp.",
+   "S3 origin có OAC, loại được khuyến nghị, hoặc OAI legacy, để chỉ CloudFront đọc được bucket. Còn custom origin cho bạn chọn origin protocol policy: HTTP only, HTTPS only hoặc Match viewer.",
+   "Với S3 origin, origin protocol luôn giống viewer protocol, bạn không chọn được. Custom origin thì đổi được port, mặc định 80 và 443, và đặt được minimum origin SSL protocol.",
+   "S3 origin không có custom port hay minimum SSL protocol, S3 tự lo certificate. Ngược lại custom origin không có OAC hoặc OAI, nên phải bảo vệ bằng custom header bí mật và chỉ cho phép IP range của CloudFront.",
+   "Origin group gộp nhiều origin để có resilience. Behavior gửi request tới primary origin, và khi primary lỗi thì tự động failover sang secondary origin theo failover criteria đã cấu hình.",
+   "Khi đi thi, nhớ rằng origin path và custom origin headers có ở cả hai loại. Thấy nhắc custom port, origin protocol policy hay minimum SSL thì đó là custom origin, còn website endpoint thì không dùng được OAC."
+  ]
+ }
+}

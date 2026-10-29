@@ -1,0 +1,12 @@
+{
+ "SSM Parameter Store": {
+  "sig": "5-6scd1",
+  "steps": [
+   "Sơ đồ này nói về SSM Parameter Store, kho lưu cấu hình và secret có cấu trúc phân cấp và versioning. Đây là public service theo region, client xác thực bằng IAM, còn SecureString cần thêm quyền trên KMS key.",
+   "Ứng dụng, Lambda, EC2 qua instance role và CloudFormation đều đọc parameter từ đây. Nhánh my-cat-app chứa dbstring, dbuser và dbpassword kiểu SecureString; mỗi lần sửa tạo version mới. Nhớ rằng instance trong private subnet cần NAT hoặc VPC endpoint mới tới được service.",
+   "Quyền SSM và quyền KMS là hai thứ tách biệt. Bạn cần ssm GetParameter trên từng parameter hoặc cả cây, cộng thêm kms Decrypt trên key, mặc định là alias aws ssm, để dùng with-decryption lấy plaintext. Mỗi thay đổi còn có thể sinh event qua EventBridge.",
+   "AWS công bố public parameter như AMI ID mới nhất của từng OS theo region, giúp CloudFormation khỏi hard-code AMI. Còn get-parameters-by-path với path my-cat-app sẽ lấy cả nhánh một lần.",
+   "Khi đi thi, nhớ Standard miễn phí, tối đa 10,000 parameter mỗi region, value tối đa 4 KB, không có parameter policies. Advanced tính phí, tới 100,000 parameter, value 8 KB, có TTL. Nếu đề cần tự động rotate secret như mật khẩu RDS thì chọn Secrets Manager."
+  ]
+ }
+}

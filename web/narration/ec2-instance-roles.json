@@ -1,0 +1,20 @@
+{
+ "EC2 Instance Roles": {
+  "sig": "13-jbdzem",
+  "steps": [
+   "Sơ đồ này cho thấy cách EC2 instance role hoạt động: ứng dụng trong instance nhận credential tạm thời qua metadata, nên không cần lưu access key nào cả.",
+   "Đầu tiên là IAM role, có trust policy cho phép ec2.amazonaws.com assume và permissions policy, ví dụ S3 read-only. Role được bọc trong instance profile, và khi EC2 assume role thì STS sẽ cấp temporary credentials.",
+   "Tiếp theo, instance profile được gắn vào EC2 instance. Lưu ý trên console tưởng là gắn role, nhưng thực ra là gắn instance profile cùng tên.",
+   "STS sinh credential tạm thời và EC2 đặt chúng vào metadata, tại đường dẫn iam security-credentials kèm tên role. Credential này được tự động xoay vòng.",
+   "Ứng dụng, AWS CLI hoặc SDK trong instance tự đọc credential từ metadata, hoàn toàn không cần chạy aws configure.",
+   "Cuối cùng, ứng dụng dùng credential tạm đó để ký request gọi tới các dịch vụ AWS như S3 hay DynamoDB.",
+   "Giờ xem thứ tự AWS CLI tìm credential, nó dùng nguồn đầu tiên tìm thấy. Đứng đầu là tham số trên dòng lệnh, tiếp theo là biến môi trường như AWS_ACCESS_KEY_ID.",
+   "Thứ ba là file credentials của CLI nằm trong thư mục chấm aws ở home của người dùng.",
+   "Thứ tư là file config của CLI, cũng nằm trong thư mục chấm aws.",
+   "Thứ năm là container credentials, ví dụ task role của ECS.",
+   "Và instance profile nằm cuối cùng. Vì vậy nếu ai đó chạy aws configure với long-term key trên instance, key đó sẽ thắng instance role.",
+   "Credential gồm AccessKeyId, SecretAccessKey, Token và Expiration. EC2 và STS làm mới nó trước khi hết hạn, nên ứng dụng chỉ cần đọc lại metadata định kỳ, đừng cache quá lâu.",
+   "Khi đi thi nhớ nhé: không bao giờ lưu access key trong instance, AMI hay user data. Người gắn role cần quyền iam PassRole, và bạn có thể gắn hoặc đổi role khi instance đang chạy."
+  ]
+ }
+}

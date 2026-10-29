@@ -1,0 +1,13 @@
+{
+ "YAML": {
+  "sig": "6-vm65v3",
+  "steps": [
+   "Sơ đồ này dùng một template CloudFormation tạo S3 bucket để cho thấy trong YAML, thụt lề chính là cú pháp: thụt sâu hơn nghĩa là nằm bên trong key phía trên.",
+   "Ở mức ngoài cùng là Resources, một dictionary top-level của template. Bên trong nó là s3bucket, chính là logical ID của resource, và bản thân cũng là một dictionary.",
+   "Trong s3bucket có hai key cùng mức thụt lề là Type và Properties. Type cho biết loại resource sẽ tạo là AWS::S3::Bucket, còn Properties là dictionary chứa cấu hình chi tiết.",
+   "Thụt sâu thêm một mức trong Properties là BucketName, tức tên vật lý của bucket, ở đây là ac1337catpics.",
+   "Nhắc lại các khái niệm: list là tập giá trị có thứ tự, viết bằng gạch ngang hoặc ngoặc vuông; dictionary là các cặp key value không thứ tự. Thụt lề luôn dùng dấu cách, không dùng tab.",
+   "Nhìn lại cả file: Resources mức 1, s3bucket mức 2, Type và Properties cùng mức 3 nên là anh em, BucketName mức 4. Khi đi thi nhớ rằng CloudFormation nhận cả YAML và JSON, nhưng IAM policy chỉ dùng JSON, và đề chỉ yêu cầu bạn đọc hiểu template."
+  ]
+ }
+}

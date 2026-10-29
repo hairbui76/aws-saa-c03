@@ -1,0 +1,17 @@
+{
+ "Athena": {
+  "sig": "10-e51rtx",
+  "steps": [
+   "Sơ đồ này nói về Athena, dịch vụ serverless cho phép chạy SQL trực tiếp trên dữ liệu trong S3. Không load, không ETL, không server, và bạn chỉ trả tiền theo lượng dữ liệu mà query quét.",
+   "Đầu tiên là table definition, tức schema. Nó chỉ là một công thức khai báo cột, kiểu dữ liệu và location trên S3, hoàn toàn không chứa dữ liệu. Bạn có thể dùng Glue Data Catalog làm nơi lưu metadata này.",
+   "Athena lấy schema đó và áp vào dữ liệu ngay lúc query. Đây chính là schema-on-read: dữ liệu được dịch sang dạng bảng trong lúc đọc.",
+   "Dữ liệu gốc nằm trong S3 và luôn read-only, không bao giờ bị sửa. Athena đọc được nhiều định dạng như JSON, CSV, Parquet, ORC, Avro, và cả log dịch vụ AWS như CloudTrail hay VPC Flow Logs.",
+   "Người phân tích hoặc ứng dụng gửi câu lệnh SELECT bằng SQL chuẩn. Đây là kiểu truy vấn ad-hoc, cần là chạy, không phải dựng cluster trước.",
+   "Kết quả hiển thị trên console, được lưu vào S3 query result location, hoặc chuyển sang dịch vụ khác. Lưu ý bạn phải cấu hình result location trước khi chạy query đầu tiên.",
+   "Với nguồn không phải S3, Athena có Federated Query, dùng data source connector chạy trên Lambda. Có connector dựng sẵn cho DynamoDB, RDS, CloudWatch Logs, DocumentDB và các nguồn JDBC như MySQL, PostgreSQL.",
+   "Connector Lambda đóng vai trò phiên dịch giữa nguồn dữ liệu và Athena, như một phần mở rộng của query engine. Nhờ vậy một câu SQL có thể truy vấn cả nguồn ngoài S3.",
+   "Về chi phí, bạn trả khoảng 5 USD cho mỗi TB dữ liệu quét, không có phí nền. Hãy nén dữ liệu, dùng định dạng cột Parquet hoặc ORC, và partition để quét ít hơn, rẻ hơn, nhanh hơn.",
+   "Khi đi thi, nhớ rằng database truyền thống phải tạo table rồi load hoặc ETL dữ liệu vào, còn Athena bỏ hẳn bước đó. Thấy query ad-hoc trên S3 hay query log thì chọn Athena, data warehouse chạy liên tục thì chọn Redshift, lọc trong một object thì chọn S3 Select."
+  ]
+ }
+}

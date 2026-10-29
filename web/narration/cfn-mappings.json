@@ -1,0 +1,14 @@
+{
+ "CFN Mappings": {
+  "sig": "7-hqo2mo",
+  "steps": [
+   "Sơ đồ này nói về section Mappings trong CloudFormation, một bảng tra cứu tĩnh viết sẵn trong template. Hàm FindInMap đi từ tên bảng, tới dòng là top-level key, rồi tới cột là second-level key để lấy ra một giá trị.",
+   "Tham số đầu tiên là MapName, bắt buộc phải có. Ở đây ta tra trong mapping tên RegionMap, nơi chứa AMI ID theo từng region.",
+   "Bảng được tổ chức với dòng là region và cột là kiến trúc. Ví dụ cột HVMG2 là một loại kiến trúc, bên cạnh cột HVM64.",
+   "Giao giữa dòng us-east-1 và cột HVMG2 là AMI ami-0a584ac55a7631c0c. Mỗi ô là một giá trị cố định, không phải gọi API.",
+   "Dòng us-west-1 có bộ AMI riêng cho từng kiến trúc. Nhờ vậy cùng một template chạy ở region khác vẫn lấy đúng AMI, tức là template có tính portable.",
+   "So sánh các cách lấy AMI: đặt cứng chỉ chạy một region, parameter nhập tay bắt người dùng tự tra, Mappings thì portable nhưng phải tự cập nhật. Khi thi, nếu đề nói luôn dùng AMI mới nhất thì chọn SSM parameter, còn bật tắt tạo resource là việc của Conditions.",
+   "Kết quả: TopLevelKey dùng pseudo parameter AWS::Region nên tự khớp us-east-1, SecondLevelKey là HVM64, cho ra ami-0ff8a91507f77f867 gán vào ImageId của EC2 Instance. Nhớ rằng giá trị này tĩnh, không tự cập nhật khi AWS ra AMI mới."
+  ]
+ }
+}

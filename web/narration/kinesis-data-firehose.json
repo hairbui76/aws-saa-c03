@@ -1,0 +1,16 @@
+{
+ "Kinesis Data Firehose": {
+  "sig": "9-p03ix3",
+  "steps": [
+   "Sơ đồ này nói về Kinesis Data Firehose, dịch vụ fully managed và serverless, nhận dữ liệu streaming, gom vào buffer rồi giao tới các đích. Vì giao theo buffer nên Firehose chỉ là near real-time.",
+   "Ở giữa là Firehose, nhận dữ liệu từ producer theo thời gian thực nhưng chỉ giao khi đủ 1 MB hoặc sau 60 giây, tính tiền theo khối lượng dữ liệu. Riêng Redshift, Firehose ghi vào S3 trung gian rồi tự chạy lệnh COPY.",
+   "Từ Firehose, dữ liệu được giao tới đích theo buffer. Trên đường đi có thể gửi record qua Lambda để transform, dù việc này có thể tăng latency, và tùy chọn lưu bản gốc vào một S3 backup bucket.",
+   "Bắt đầu với nguồn: producer có thể dùng KPL hoặc Kinesis Agent gửi thẳng vào Firehose. Bên đích, Firehose giao được tới HTTP endpoint, kể cả bên thứ ba, và Splunk.",
+   "Thiết bị IoT cũng là một nguồn gửi trực tiếp. Ở phía đích có thêm Amazon OpenSearch Service, trước đây gọi là Elasticsearch.",
+   "Đích phổ biến nhất là S3 bucket, rất hợp để đổ dữ liệu vào data lake mà không phải tự viết code.",
+   "CloudWatch Logs và CloudWatch Events cũng có thể đẩy dữ liệu thẳng vào Firehose để lưu trữ hoặc phân tích.",
+   "Cuối cùng, Firehose có thể đọc từ một Kinesis Data Stream, đóng vai consumer. Cách này giúp persist dữ liệu trước khi nó rơi khỏi rolling window của stream.",
+   "Khi đi thi nhớ nhé: đề yêu cầu real-time thì đáp án có Firehose là sai, vì Firehose khoảng 60 giây, còn Kinesis Data Streams khoảng 200 mili giây. Firehose không giao trực tiếp vào DynamoDB hay RDS, nhưng đẩy stream vào S3, Redshift, OpenSearch hoặc Splunk với ít vận hành nhất thì chọn Firehose."
+  ]
+ }
+}

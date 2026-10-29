@@ -1,0 +1,22 @@
+{
+ "ECS Launch Types EC2 vs Fargate": {
+  "sig": "5-ek1pgn",
+  "steps": [
+   "Sơ đồ này so sánh hai launch type của ECS. Phần quản lý ECS thì giống nhau, điểm khác là container host nằm trong account của bạn dưới dạng EC2, hay chạy trên hạ tầng dùng chung do AWS vận hành.",
+   "Đầu tiên là phần ECS management dùng chung cho cả hai mode: Scheduling và Orchestration, Cluster Manager, Placement Engine quyết định container chạy ở đâu, cùng task definition và service definition.",
+   "Đây là các task đang chạy trên host. Chú ý ô trống bên EC2 mode: instance vẫn đang running nên bạn vẫn bị tính tiền, dù không có task nào chạy trên đó.",
+   "Ở EC2 mode, host là EC2 instance chạy ECS agent, thấy được trong account, truy cập được, và bạn tự lo capacity cùng availability. Đổi lại bạn dùng được Reserved, Spot. Còn Fargate là serverless, chỉ trả vCPU và RAM task dùng, hợp với tải burst hoặc batch.",
+   "Bên EC2 mode, Auto Scaling Group điều khiển số lượng instance trải qua nhiều AZ. Bên Fargate, AWS inject vào VPC của bạn một ENI cho mỗi task theo network mode awsvpc, nên task có IP trong VPC và được kiểm soát bằng Security Group."
+  ]
+ },
+ "ECS Launch Types EC2 vs Fargate - decision": {
+  "sig": "5-f67y5",
+  "steps": [
+   "Sơ đồ này giúp bạn chọn giữa EC2 thuần, ECS EC2 mode và Fargate. Nguyên tắc là cân bằng giữa giá và công quản trị, rồi xét kiểu workload.",
+   "Câu hỏi đầu tiên: ứng dụng đã đóng gói container chưa? Nếu chưa, cứ chạy app trong OS trên EC2 thuần. Nếu có, ta tiếp tục xét mức ưu tiên về công quản trị.",
+   "Nếu bạn muốn ít công quản trị nhất, hoặc tải kiểu burst, batch, periodic, hãy chọn ECS Fargate vì không trả tiền host nhàn rỗi. Nếu không, xét tiếp đặc điểm workload và giá.",
+   "Workload lớn, ổn định, nhạy cảm về giá, đã có Reserved Instances, muốn dùng Spot hoặc cần host đặc biệt thì chọn ECS EC2 mode. Nếu không rơi vào các trường hợp đó, Fargate vẫn là lựa chọn an toàn.",
+   "Lời nhắc khi đi thi: chạy Docker trực tiếp trên EC2 chỉ để thử nghiệm, không cho production; đã dùng container thì chọn ECS. Và EC2 mode chỉ rẻ thật khi bạn giảm được công quản trị, còn giữ fleet chạy liên tục cho tải không đều là lãng phí."
+  ]
+ }
+}

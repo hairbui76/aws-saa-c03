@@ -1,0 +1,22 @@
+{
+ "Compare - SQS vs SNS vs Kinesis": {
+  "sig": "5-1wda640",
+  "steps": [
+   "Sơ đồ này đặt ba dịch vụ cạnh nhau. SQS là queue để decouple, mỗi việc một worker; SNS là pub sub phát một message tới nhiều nơi; còn Kinesis là stream để ingest dữ liệu lớn cho nhiều consumer đọc lại.",
+   "Phía gửi: web tier đẩy việc vào queue, publisher như ứng dụng, CloudWatch hay ASG publish vào topic, còn hàng nghìn sensor và click stream liên tục đổ dữ liệu vào stream chia theo shard.",
+   "Phía nhận khác hẳn nhau. Worker tự poll queue rồi delete khi xong, ASG scale theo độ dài queue. Topic thì đẩy tới email, Lambda, SQS. Stream cho nhiều consumer cùng đọc, kể cả Firehose đưa vào S3.",
+   "Điểm khác cốt lõi: SQS giữ message tối đa 14 ngày, không delete thì hiện lại sau visibility timeout. SNS không lưu, chỉ retry. Kinesis giữ dữ liệu trong rolling window từ 24 giờ tới 365 ngày để replay, thứ tự giữ trong từng shard.",
+   "Khi đi thi, nhớ lăng kính này: thấy ingestion of data thì chọn Kinesis, worker pool hay decoupling thì chọn SQS, một event ra nhiều job độc lập thì SNS fan-out tới SQS. Cả ba là public service, chỉ Amazon MQ nằm trong VPC."
+  ]
+ },
+ "Compare - SQS vs SNS vs Kinesis - decision": {
+  "sig": "5-coovc1",
+  "steps": [
+   "Đây là cây quyết định chọn giữa SQS, SNS, Kinesis và Amazon MQ. Ta đi từ trên xuống, câu hỏi đầu tiên là đề nói về ingest dữ liệu hay về decouple và phân phối message.",
+   "Nếu cần ingest dữ liệu lớn từ nhiều nguồn, real-time, nhiều consumer và replay được, chọn ngay Kinesis Data Streams. Nếu không, hỏi tiếp: một message có cần tới nhiều đích cùng lúc không?",
+   "Nếu có nhiều đích, xét xem mỗi đích có cần buffer riêng, xử lý và scale độc lập không. Nếu chỉ một đích, hỏi xem bài toán có phải decouple, worker pool hay xử lý bất đồng bộ.",
+   "Cần buffer riêng cho từng đích thì dùng SNS fan-out tới nhiều SQS, không cần thì SNS là đủ. Decouple thì SQS, cần thứ tự thì FIFO; hệ thống cũ dùng JMS hay MQTT thì Amazon MQ. Dạng một upload S3 ra nhiều job video là câu kinh điển.",
+   "Lúc thi, nhớ thêm các lựa chọn lân cận: đưa stream vào S3 hay Redshift near real-time là Firehose, SQL trên stream là Kinesis Data Analytics, định tuyến event theo rule hay cron là EventBridge, workflow nhiều bước là Step Functions."
+  ]
+ }
+}

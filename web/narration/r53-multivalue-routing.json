@@ -1,0 +1,13 @@
+{
+ "R53 Multivalue Routing": {
+  "sig": "6-s63str",
+  "steps": [
+   "Sơ đồ này nói về Multivalue routing của Route 53: nhiều record cùng tên, mỗi record có health check riêng, và Route 53 chỉ trả về những record còn healthy để client tự chọn.",
+   "Đầu tiên, client gửi query tên www tới Route 53. Tên này được cấu hình theo kiểu Multivalue, nghĩa là phía sau có nhiều record độc lập.",
+   "Ở đây ta có bốn record A cùng tên www, mỗi cái một IP. Route 53 chỉ đưa vào response những record healthy, tối đa 8 record, nếu nhiều hơn thì chọn ngẫu nhiên 8.",
+   "Mỗi record được kiểm tra độc lập bằng health check riêng. Record 1.2.3.5 bị UNHEALTHY nên bị loại, vì vậy response chỉ còn 1.2.3.3, 1.2.3.4 và 1.2.3.6.",
+   "Cuối cùng client nhận danh sách IP healthy và tự chọn một IP để kết nối. Vì không nhận được IP hỏng, client không bao giờ chọn trúng tài nguyên đã chết.",
+   "Khi đi thi, nhớ nhé: Simple cũng trả nhiều value nhưng không có health check, còn Multivalue có health check từng record để tăng availability. Nhưng Multivalue không phải load balancer, cần phân phối kết nối thật hay sticky session thì chọn ELB."
+  ]
+ }
+}

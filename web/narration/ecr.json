@@ -1,0 +1,14 @@
+{
+ "ECR": {
+  "sig": "7-11qa8m5",
+  "steps": [
+   "Sơ đồ này nói về Amazon ECR, registry chứa container image do AWS quản lý, dùng cho Docker, ECS và EKS. Cấu trúc đi từ registry tới repository rồi tới image có tag, kèm nhiều tích hợp AWS mà Docker Hub không có.",
+   "Mỗi account có một public registry là ECR Public, cạnh đó là private registry theo từng region. Quyền truy cập do IAM điều khiển, còn enhanced scanning dùng Inspector để quét lỗ hổng cả OS lẫn package theo từng layer.",
+   "Với public registry, ai cũng pull được image, nhưng muốn push thì phải có quyền IAM. Trong repository web, một image có thể mang nhiều tag như latest và v1.2.",
+   "Repository còn chứa image khác với tag v1.1. Song song đó, ECR gửi metrics gần thời gian thực về CloudWatch cho authentication, push và pull, còn CloudTrail ghi lại mọi API call để biết ai đã push hoặc pull.",
+   "Với private registry, cả pull lẫn push đều cần quyền IAM, và tag phải unique trong một repository. ECR còn phát event tới EventBridge để kích hoạt workflow như scan hoặc deploy, và hỗ trợ replication cross-region lẫn cross-account.",
+   "Registry có thể chứa nhiều repository, như repository api ở đây. Docker host, ECS task hoặc EKS pod sẽ pull image về; nếu nằm trong subnet private không có NAT thì cần VPC endpoint cho ECR API và Docker, cộng S3 gateway endpoint vì layer lưu trên S3.",
+   "Khi đi thi, nhớ nhé: quét lỗ hổng OS và package thì chọn enhanced scanning, cần image ở region hoặc account khác thì dùng replication, audit ai push pull là CloudTrail, còn image mới kích hoạt pipeline là EventBridge."
+  ]
+ }
+}

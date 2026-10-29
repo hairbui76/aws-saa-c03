@@ -1,0 +1,26 @@
+{
+ "FSx for Lustre": {
+  "sig": "7-1h741a9",
+  "steps": [
+   "Sơ đồ này giới thiệu FSx for Lustre, file system song song cho HPC. Client Linux đi qua một ENI vào file system trong một AZ, dữ liệu chia stripe nên throughput lên tới hàng trăm GB mỗi giây.",
+   "Đây là các EC2 Linux có cài Lustre client, dùng quyền kiểu POSIX. Tất cả cùng đi qua một ENI duy nhất, vì Lustre chỉ chạy trong một AZ.",
+   "Từ ENI, dữ liệu đi vào các storage server. Ghi thì đi thẳng xuống disk, còn đọc lặp lại dữ liệu hay dùng thì lấy từ cache trong RAM nên rất nhanh.",
+   "Metadata như tên file, timestamp, permission nằm trên MST. Dữ liệu thật được chia stripe qua nhiều OST, mỗi OST 1.17 TiB, nhờ vậy xử lý song song cho hiệu năng cao.",
+   "Có thể gắn một S3 bucket làm repository. Muốn ghi thay đổi ngược về S3 thì dùng lệnh hsm_archive, vì theo khóa học không có đồng bộ tự động.",
+   "Object trong S3 hiện ra ngay trong file system, nhưng chỉ được lazy load vào Lustre khi client truy cập lần đầu.",
+   "Khi đi thi nhớ nhé: thấy Lustre, HPC, POSIX, machine learning với SageMaker, big data hay financial modelling thì chọn FSx for Lustre. Còn Windows hoặc SMB thì chọn FSx for Windows. Kích thước tối thiểu 1.2 TiB, tăng theo bước 2.4 TiB."
+  ]
+ },
+ "FSx for Lustre - deployment": {
+  "sig": "7-bz447z",
+  "steps": [
+   "Sơ đồ này so sánh hai kiểu triển khai Scratch và Persistent. Điểm chung quan trọng là cả hai đều nằm trong một AZ duy nhất.",
+   "Scratch nhắm tới hiệu năng thuần túy, rẻ, cho workload ngắn hạn. Persistent dành cho lưu trữ dài hạn và cần HA trong phạm vi AZ.",
+   "Scratch không có replication và không HA. Persistent thì replicate dữ liệu, nhưng chỉ trong cùng một AZ.",
+   "Khi phần cứng hỏng, Scratch mất phần dữ liệu trên phần cứng đó, và file system càng lớn càng dễ gặp lỗi. Persistent thì self-healing, AWS tự thay phần cứng, không mất dữ liệu.",
+   "Nếu cả AZ sập thì Scratch mất dữ liệu, và Persistent cũng vẫn có thể mất. Đây là cái bẫy hay gặp trong đề.",
+   "Scratch có baseline 200 MB mỗi giây trên mỗi TiB. Persistent cho chọn 50, 100 hoặc 200. Cả hai đều burst tới 1,300 MB mỗi giây trên mỗi TiB nhờ credit.",
+   "Lời nhắc khi đi thi: muốn bảo vệ dữ liệu khỏi lỗi AZ thì backup sang S3, manual hoặc automatic, retention từ 0 đến 35 ngày, trong đó 0 nghĩa là tắt automatic backup."
+  ]
+ }
+}

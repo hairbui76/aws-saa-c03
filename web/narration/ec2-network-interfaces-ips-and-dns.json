@@ -1,0 +1,25 @@
+{
+ "EC2 Network Interfaces IPs and DNS": {
+  "sig": "7-1f8w66w",
+  "steps": [
+   "Sơ đồ này cho thấy mọi cấu hình mạng của EC2 như IP, MAC, Security Group và source destination check thực ra nằm trên ENI. Ta có VPC 10.16.0.0 trên 16, một AZ với hai subnet app và mgmt.",
+   "Instance A luôn có một primary ENI tạo cùng instance và không tách ra được, mang private IP cố định 10.16.0.10. Ta gắn thêm secondary ENI ở subnet mgmt, có MAC, IP và Security Group riêng.",
+   "Điểm khác biệt của secondary ENI là detach được và gắn sang instance khác cùng AZ, MAC đi theo ENI. Còn primary ENI đi ra ngoài qua Internet Gateway, nơi làm static NAT giữa public IP và private IP.",
+   "Internet Gateway nối ra Internet. Traffic từ ngoài vào public IP sẽ được Internet Gateway dịch sang private IP của primary ENI.",
+   "Vì public IPv4 chỉ được associate ở Internet Gateway nên hệ điều hành không bao giờ thấy nó, đừng cấu hình public IPv4 trong Windows hay Linux. IPv6 thì khác, OS thấy được vì IPv6 đều là public.",
+   "Security Group áp lên ENI nên mọi IP trên cùng một ENI dùng chung bộ rule. Muốn các IP chịu rule khác nhau thì phải tách ra nhiều ENI.",
+   "Nhắc khi đi thi: làm NAT instance hoặc router thì phải tắt Source Destination Check trên ENI. Phần mềm license theo MAC thì gắn license vào secondary ENI, thay instance chỉ cần chuyển ENI sang."
+  ]
+ },
+ "EC2 Network Interfaces IPs and DNS - dns": {
+  "sig": "6-1fi3nis",
+  "steps": [
+   "Sơ đồ này nói về hai chuyện: public DNS resolve khác nhau tùy người hỏi ở đâu, và vòng đời của public IPv4 thường, vốn là động, muốn cố định thì dùng Elastic IP.",
+   "Bên trái, ta query tên public DNS của instance và câu hỏi là hỏi từ đâu. Bên phải, instance launch với public IP 3.89.10.5, và reboot thì vẫn giữ nguyên IP đó.",
+   "Hỏi từ trong VPC sẽ ra private IP 10.16.0.10, nên traffic đi thẳng trong VPC mà không vòng qua Internet Gateway. Hỏi từ ngoài thì ra public IP. Còn stop rồi start, hoặc AWS chuyển host, sẽ cấp IP mới hoàn toàn.",
+   "Khi gắn Elastic IP vào primary ENI, public IP thường bị gỡ ngay và EIP trở thành public IP mới. EIP thuộc account, cố định tới khi bạn release.",
+   "Gỡ EIP ra thì instance nhận một public IP mới, không bao giờ lấy lại IP cũ. Đây là bẫy thi kinh điển.",
+   "Lưu ý khi đi thi: từ tháng 2 năm 2024, AWS tính phí cho mọi public IPv4, kể cả Elastic IP đang được gắn."
+  ]
+ }
+}

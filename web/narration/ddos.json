@@ -1,0 +1,14 @@
+{
+ "DDoS": {
+  "sig": "7-101q7wv",
+  "steps": [
+   "Sơ đồ này so sánh ba kiểu DDoS: HTTP flood ở Layer 7, SYN flood ở Layer 4 và DNS amplification ở Layer 3 và 4. Vì traffic đến từ rất nhiều IP và trông như thật, ta không thể chặn từng IP mà cần sản phẩm chuyên dụng.",
+   "Bắt đầu với SYN flood. Botnet gửi hàng loạt gói SYN với source IP giả mạo, server mở kết nối half-open và giữ tài nguyên trong lúc chờ bước tiếp theo của three-way handshake.",
+   "Server trả SYN-ACK về địa chỉ bị giả mạo, nhưng không ai gửi lại ACK. Kết nối cứ treo đến hết timeout, nhân lên hàng triệu lần thì kết nối hợp lệ không vào được.",
+   "Bên trái là HTTP flood: botnet hàng triệu máy gửi request rẻ như GET reallycomplex.php, nhưng server tốn nhiều CPU để xử lý. Bên phải, một botnet nhỏ gửi truy vấn tới hàng nghìn DNS server, giả source IP là IP của nạn nhân.",
+   "Kết quả là web server cạn tài nguyên nên người dùng thật bị chậm hoặc lỗi. Còn với amplification, các DNS server trả response lớn hơn request rất nhiều về catagram.io, làm nghẽn đường truyền của nạn nhân.",
+   "Trên AWS, HTTP flood dùng WAF với rate-based rule cộng Shield Advanced. SYN flood và tấn công Layer 3 và 4 được Shield Standard bảo vệ miễn phí, tự động bật. Còn volumetric thì dùng Shield cùng CloudFront và Route 53 để hấp thụ ở edge.",
+   "Lời nhắc khi đi thi: đừng chọn đáp án chặn DDoS bằng block IP trong NACL hoặc Security Group. Có quá nhiều IP, và với amplification thì nguồn là DNS server không độc hại, chặn bừa có thể ảnh hưởng chính ứng dụng."
+  ]
+ }
+}

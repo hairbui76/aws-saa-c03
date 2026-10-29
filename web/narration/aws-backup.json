@@ -1,0 +1,21 @@
+{
+ "AWS Backup": {
+  "sig": "4-1uoorx4",
+  "steps": [
+   "Sơ đồ này cho thấy AWS Backup gom backup của nhiều dịch vụ về một chính sách chung. Backup Plan quyết định khi nào và giữ bao lâu, Resources là thứ được backup, còn Vault là nơi lưu trữ.",
+   "Các dịch vụ như EC2, EBS, EFS, FSx, RDS, DynamoDB, S3 được gán vào Backup Plan. Plan quy định tần suất, tối thiểu mỗi giờ, backup window, lifecycle và continuous backup để có PITR. Nhớ nhé, Vault Lock là của AWS Backup, không phải S3 Object Lock.",
+   "Theo plan, backup được lưu vào Backup Vault mã hóa bằng KMS key, rồi copy sang vault ở region hoặc account khác. Nhờ vậy bản copy vẫn sống sót nếu cả region A sập.",
+   "Khi đi thi, nhớ rằng resource thường được chọn theo tag. Đề nói quản lý backup tập trung, thay script snapshot tự viết cho từng dịch vụ thì chọn ngay AWS Backup."
+  ]
+ },
+ "AWS Backup - lifecycle": {
+  "sig": "5-n1tazu",
+  "steps": [
+   "Sơ đồ này nói về vòng đời một recovery point và Vault Lock theo thời gian. Ý chính là Vault Lock chỉ chặn xóa sớm, không chặn việc hết hạn tự nhiên.",
+   "Backup mới tạo nằm ở warm storage, sau một số ngày có thể chuyển sang cold storage rẻ hơn nhưng phải nằm tối thiểu 90 ngày. Song song, khi bật Vault Lock, bạn có 72 giờ cool-off để còn gỡ lock.",
+   "Khi hết retention, backup tự động expire và bị xóa. Còn hết 72 giờ cool-off thì vault bị khóa WORM, không ai xóa sớm được, kể cả root lẫn AWS.",
+   "Dù vault đã khóa, backup vẫn expire bình thường khi hết retention. Lock chỉ ngăn việc xóa trước hạn hoặc lách quy định thôi.",
+   "Khi đi thi, nhớ governance mode cho user có quyền IAM gỡ lock, còn compliance mode là bất biến, dùng chống ransomware. Nhớ số: cold storage ít nhất 90 ngày, cool-off 72 giờ, cron mỗi giờ, restore theo thời điểm thì dùng PITR."
+  ]
+ }
+}

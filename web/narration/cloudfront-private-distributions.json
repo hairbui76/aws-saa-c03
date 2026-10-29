@@ -1,0 +1,27 @@
+{
+ "CloudFront Private Distributions": {
+  "sig": "7-162lkxp",
+  "steps": [
+   "Sơ đồ này cho thấy một CloudFront distribution có hai behavior: phần public dùng để đăng nhập, phần private chỉ phục vụ request mang chữ ký hợp lệ, và origin S3 phải được khóa lại.",
+   "Đầu tiên, ứng dụng di động đăng nhập qua identity federation như Google hay Facebook. Request này đi vào default behavior sao, là phần public nên không cần chữ ký.",
+   "Default behavior chuyển tiếp request tới API Gateway, vốn là origin của phần public trong backend serverless này.",
+   "Khi app cần ảnh private, API Gateway gọi Lambda signer. Lambda kiểm tra xem user có quyền với nhóm ảnh đó không, rồi ký bằng private key thuộc trusted key group.",
+   "Nếu hợp lệ, Lambda trả signed cookie cùng thông tin URL truy cập về app. Lưu ý, private behavior chỉ chặn phía viewer, nên phải khóa origin bằng OAC hoặc OAI, kẻo user tải thẳng từ S3.",
+   "Giờ app gửi request tới path catgifs kèm signed cookie. Behavior này là private, CloudFront dùng public key trong trusted key group để kiểm tra chữ ký; thiếu chữ ký thì bị từ chối.",
+   "Chữ ký hợp lệ thì CloudFront thực hiện origin fetch từ S3 bucket ảnh private, bucket này chỉ cho phép CloudFront truy cập qua OAC, rồi trả ảnh về app."
+  ]
+ },
+ "CloudFront Private Distributions - signed URL vs cookie": {
+  "sig": "8-1e7gt5f",
+  "steps": [
+   "Sơ đồ này giúp bạn chọn giữa signed URL và signed cookie, đồng thời phân biệt hai cách cấu hình signer. Nhớ rằng gắn signer vào behavior là behavior đó thành private.",
+   "Bắt đầu khi bạn cần phát nội dung private qua CloudFront. Câu hỏi đầu tiên cần đặt ra là client có hỗ trợ cookie hay không.",
+   "Nếu client không hỗ trợ cookie, chỉ còn signed URL dùng được. Nếu có, ta hỏi tiếp: cần truy cập nhiều object, cả một path, hay muốn giữ nguyên URL?",
+   "Nếu có, chọn signed cookie, vì nó cấp quyền cho cả nhóm file mà URL ứng dụng không đổi. Nếu chỉ một object, dùng signed URL với URL riêng chứa chữ ký.",
+   "Về signer, cách mới và khuyến nghị là trusted key groups: tạo public key, gom vào key group, quản lý bằng IAM và CloudFront API, không cần root user.",
+   "Cách cũ là trusted signer: CloudFront key pair bắt buộc do root user tạo và gắn với cả AWS account, kém linh hoạt nhưng vẫn phải nhận ra khi đi thi.",
+   "Cả hai cách đều dùng chữ ký bất đối xứng: app hoặc Lambda giữ private key để ký, còn CloudFront giữ public key để kiểm tra chữ ký.",
+   "Khi đi thi, đừng nhầm với S3 presigned URL, vốn đi thẳng tới S3, ký bằng credential IAM, một object một thao tác. Và thấy trusted key group hoặc trusted signer là đề đang nói về private behavior."
+  ]
+ }
+}

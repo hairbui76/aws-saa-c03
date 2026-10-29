@@ -1,0 +1,27 @@
+{
+ "Exam Technique": {
+  "sig": "7-n0ksp",
+  "steps": [
+   "Sơ đồ này nói về exam technique: chia 130 phút làm bài thành ba lượt theo độ khó, để câu khó ở cuối không ăn mất thời gian của câu dễ và trung bình.",
+   "Bắt đầu với 65 câu, phase 1 là lướt toàn bộ đề và trả lời ngay những câu bạn biết trong khoảng 10 giây. Nhóm dễ này chiếm khoảng 25 phần trăm.",
+   "Vì sao làm câu dễ trước? Vì nó tốn rất ít thời gian, ít sai, giúp gom điểm chắc chắn. Sang phase 2, gặp câu khó thì Mark for Review rồi bỏ qua, dồn sức cho câu trung bình.",
+   "Câu trung bình chiếm khoảng một nửa đề và quyết định bạn đậu hay trượt. Xong phần đó, phase 3 dùng thời gian còn lại cho câu khó, sắp hết giờ mới đoán.",
+   "Cuối cùng là review các câu đã mark. Câu khó lúc này chỉ là điểm thưởng, vì phần lớn điểm đã nằm trong tay và không bị ảnh hưởng.",
+   "Nhớ quỹ thời gian khoảng 2 phút mỗi câu. Không có quy trình thì dễ kẹt câu khó ở đầu và hết giờ. Đừng đoán ở phase 1 và 2, vì câu phía sau có thể gợi lại kiến thức.",
+   "Lời nhắc khi đi thi: nếu là bài thi AWS đầu tiên, hãy giả định mình sẽ hết giờ. Đừng hoảng, cứ Mark for Review và luôn theo dõi thời gian còn lại."
+  ]
+ },
+ "Exam Technique - question": {
+  "sig": "8-uvzmp5",
+  "steps": [
+   "Sơ đồ này là question technique, tức cách xử lý từng câu hỏi: loại nhanh, tìm keyword, bỏ word fluff, rồi so keyword đáp án với tiêu chí của đề.",
+   "Đầu tiên loại ngay đáp án vô lý như sai sản phẩm hay tính năng không tồn tại. Sau đó tìm keyword trong preamble và câu hỏi, và để ý cả những gì bị thiếu, ví dụ không có Auto Scaling Group.",
+   "Tiếp theo xác định câu hỏi thật sự hỏi gì. Để ý từ chỉ số lượng như one, any, multiple hay all, vì chúng có thể đổi hẳn đáp án.",
+   "Bước bốn là bỏ word fluff, tức phần chữ lặp lại giữa các đáp án. Phần đó giống nhau nên không giúp phân biệt, khỏi cần đọc kỹ.",
+   "Rồi tìm action keyword riêng của từng đáp án và so với keyword của đề, xem đáp án nào thật sự đáp ứng yêu cầu.",
+   "Nếu còn đúng số đáp án cần chọn thì kiểm tra lại cho hợp lý rồi chọn. Nếu chưa, loại cái vi phạm tiêu chí của đề, vẫn bí thì Mark for Review.",
+   "Các tiêu chí thường gặp: cost-effective thì chọn đáp án rẻ nhất mà vẫn đúng; best practice là dùng role thay vì access key; highest performance là Direct Connect hay Instance Store; có timeframe thì loại Direct Connect vì mất nhiều tuần.",
+   "Khi đi thi, nhớ hai ví dụ: có ALB mà không có ASG thì load balancer chỉ ngừng gửi traffic tới instance hỏng, không tự thay thế. Key phải nằm on-premises thì chọn SSE-C hoặc client-side encryption."
+  ]
+ }
+}

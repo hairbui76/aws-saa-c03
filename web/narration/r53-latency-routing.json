@@ -1,0 +1,11 @@
+{
+ "R53 Latency Routing": {
+  "sig": "4-1loctey",
+  "steps": [
+   "Sơ đồ này nói về Latency routing của Route 53. Ta có ba region là us-east-1, us-west-1 và Sydney, mỗi record cùng tên www được gắn với một region, và Route 53 sẽ trả về region có latency ước tính thấp nhất còn healthy.",
+   "Một user ở Úc gửi query cho www. Route 53 xác định vị trí user bằng IP lookup, rồi tra database latency của AWS để so độ trễ từ vị trí đó tới từng region, cuối cùng trả về địa chỉ 1.2.3.5.",
+   "Vì sao lại là 1.2.3.5? Từ Úc, us-east-1 mất khoảng 400 mili giây, us-west-1 khoảng 280, còn Sydney chỉ khoảng 42 nên thắng. Nếu Sydney unhealthy theo health check, Route 53 trả record thấp kế tiếp là us-west-1.",
+   "Khi đi thi, nhớ mỗi region chỉ có một record cùng tên, và database latency cập nhật nền, không real-time, không biết sự cố mạng cục bộ. Thấy đề nói lowest latency cho user toàn cầu thì chọn Latency routing; còn cần anycast IP hoặc đi backbone AWS thì chọn Global Accelerator."
+  ]
+ }
+}

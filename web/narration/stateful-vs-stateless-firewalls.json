@@ -1,0 +1,13 @@
+{
+ "Stateful vs Stateless Firewalls": {
+  "sig": "6-tp2izh",
+  "steps": [
+   "Sơ đồ này so sánh hai kiểu firewall. Mỗi kết nối gồm request tới well-known port và response về ephemeral port; bên trái là stateless như NACL, bên phải là stateful như Security Group.",
+   "Bob dùng ephemeral port 13337 gửi request tới server ở port 443. Với stateless, ta cần một rule inbound cho port 443; với stateful, đây là rule duy nhất cần viết.",
+   "Server trả response về đúng IP và port 13337 của Bob. Firewall stateless không biết port nào nên phải mở cả dải 1024 đến 65535, còn stateful tự nhớ kết nối và cho response đi qua.",
+   "Kết quả là stateless cần hai rule và mở toàn bộ dải ephemeral, overhead cao, dễ sai. Stateful chỉ cần một rule inbound 443, gọn và ít lỗi cấu hình hơn.",
+   "Lưu ý hướng đi phụ thuộc góc nhìn: request là outbound với client nhưng inbound với server. Còn response thì luôn ngược chiều với request.",
+   "Khi đi thi, hãy xác định chiều request và port đích trước, rồi suy ra response. Nhớ NACL là stateless, hay quên rule outbound cho ephemeral port, còn Security Group là stateful."
+  ]
+ }
+}

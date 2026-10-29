@@ -1,0 +1,15 @@
+{
+ "Layer 7 Firewall": {
+  "sig": "8-14mg3s5",
+  "steps": [
+   "Sơ đồ này so sánh ba loại firewall: Layer 3 và 4, thêm Layer 5, và Layer 7. Ý chính là mỗi firewall chỉ hiểu tới tầng nó hoạt động, nên chỉ Layer 7 mới đọc được nội dung HTTP.",
+   "Firewall Layer 3 và 4 nhìn thấy IP address, port và flag. Khi thêm Layer 5, nó hiểu thêm khái niệm session. Còn firewall Layer 7 vẫn giữ trọn mọi khả năng của các tầng bên dưới.",
+   "Ở Layer 3 và 4, request và response bị coi là hai luồng riêng nên cần hai rule. Có Layer 5 thì firewall biết response thuộc cùng session, chỉ cần một rule. Layer 7 thì hiểu hẳn HTTP, gồm header, host, URL và nội dung.",
+   "Với hai loại đầu, dữ liệu Layer 7 là hộp kín, ảnh mèo hay malware trông như nhau, mở đường cho tấn công. Layer 7 thì chặn được SQL injection, XSS, lọc hoặc thay thế nội dung, và chặn cả ứng dụng cụ thể.",
+   "Trên AWS, NACL là firewall stateless kiểu Layer 3 và 4, Security Group là stateful nhờ hiểu session, còn WAF chính là hiện thực của firewall Layer 7.",
+   "Với HTTPS, client mở kết nối mã hóa thứ nhất và tưởng mình nối thẳng tới server. Thực ra kết nối kết thúc tại firewall, nơi TLS được giải mã để lộ ra HTTP thuần cho việc kiểm tra.",
+   "Sau khi inspect xong, firewall tạo một kết nối HTTPS mới tới backend server. Cả client lẫn server đều không nhận ra, quá trình này hoàn toàn trong suốt, giống SSL offload ở load balancer.",
+   "Khi đi thi, hễ đề nhắc lọc theo header, URL, nội dung request, SQL injection, XSS hay chặn ứng dụng, hãy nghĩ ngay tới WAF. Security Group và NACL không hề nhìn thấy những thứ này."
+  ]
+ }
+}

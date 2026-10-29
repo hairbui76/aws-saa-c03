@@ -1,0 +1,30 @@
+{
+ "Database Models": {
+  "sig": "8-7004hz",
+  "steps": [
+   "Sơ đồ này so sánh database relational với các họ NoSQL. Relational có schema và quan hệ cố định từ trước, còn NoSQL là mọi thứ không relational, schema lỏng hoặc không có.",
+   "Relational dùng table gồm row và column, có primary key, và join table với composite key cho quan hệ many-to-many. Key-value chỉ là cặp key và value, value opaque với DB. Wide column cố định partition key, còn attribute tự do theo từng item.",
+   "Khi đề nhắc schema và quan hệ định nghĩa trước, ACID hay OLTP, hãy nghĩ tới relational. Dữ liệu name value đơn giản hoặc in-memory cache là key-value. Cần scale cực lớn mà không cần join là wide column.",
+   "Tương ứng sản phẩm AWS: relational là RDS và Aurora, key-value là ElastiCache và DynamoDB, còn wide column chính là DynamoDB với partition key và sort key tùy chọn.",
+   "Document lưu JSON hoặc XML có ID, và DB hiểu nội dung nên index được thuộc tính lồng sâu. Column store nhóm dữ liệu theo cột trên đĩa. Graph lưu node và edge, quan hệ có sẵn nên không phải join lúc query.",
+   "Catalog, user profile hay CMS gợi ý document DB. Reporting, analytics, data warehouse gợi ý column store. Còn social media, HR, quan hệ phức tạp thay đổi liên tục thì nghĩ tới graph.",
+   "Sản phẩm tương ứng là DocumentDB cho document, Redshift cho column store, và Neptune cho graph. DocumentDB và Neptune nằm ngoài khóa học, nhưng Redshift thì cần nhớ kỹ.",
+   "Khi đi thi nhớ nhé: OLTP, giao dịch theo row thì chọn RDS; analytics theo cột chọn Redshift; key-value hoặc cache chọn ElastiCache hoặc DynamoDB; social và quan hệ động thì nghĩ tới graph."
+  ]
+ },
+ "Database Models - row-vs-column": {
+  "sig": "10-wwj90r",
+  "steps": [
+   "Sơ đồ này cho thấy cùng một bảng dữ liệu nhưng cách nhóm trên đĩa khác nhau, và chính điều đó quyết định workload nào phù hợp.",
+   "Đây là bảng Orders ở mức logic, gồm ba cột OrderID, Size và Price, với ba đơn hàng mẫu.",
+   "Trong row store, toàn bộ row đầu tiên gồm order 1, size S, giá 10 được lưu liền nhau trên đĩa.",
+   "Row thứ hai cũng nằm liền kề. Nhược điểm: muốn tính tổng riêng cột Price trên toàn bảng, DB phải đọc qua mọi row.",
+   "Row thứ ba nối tiếp. Cách lưu này rất hợp khi bạn cần thêm, sửa hoặc xóa nguyên một row.",
+   "Còn column store gom theo cột: mọi OrderID nằm chung, mọi Size nằm chung, mọi Price nằm chung. Tính tổng một cột chỉ cần đọc đúng cột đó.",
+   "Đổi lại, column store rất kém cho giao dịch, vì thêm, sửa hay xóa cả một row phải chạm vào nhiều nhóm cột khác nhau.",
+   "Cả hai cách lưu đều xuất phát từ cùng một bảng logic, chỉ khác cách tổ chức vật lý trên đĩa.",
+   "Row store phục vụ OLTP như order, contact, stock, dùng RDS hoặc Aurora. Column store phục vụ reporting và analytics trên vài cột, dùng Redshift làm data warehouse.",
+   "Mẹo thi: mô hình hay gặp là dữ liệu giao dịch nằm ở OLTP dạng row, sau đó được chuyển sang column store như Redshift để phân tích."
+  ]
+ }
+}

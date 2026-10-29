@@ -1,0 +1,26 @@
+{
+ "S3 Basics": {
+  "sig": "7-1sg22o4",
+  "steps": [
+   "Sơ đồ này cho thấy S3 vận hành thế nào: một public service truy cập được từ mọi nơi có Internet, nhưng dữ liệu luôn nằm trong một region và được replicate qua nhiều AZ.",
+   "Người dùng hoặc ứng dụng, có thể tới hàng triệu, truy cập S3 qua console, CLI, API hoặc HTTPS. S3 được thiết kế cho rất nhiều người dùng đọc cùng lúc.",
+   "Các yêu cầu đi thẳng tới bucket koala-campaign-1333337. Bucket được tạo ở một region cụ thể, nhưng tên của nó phải duy nhất trên toàn cầu, kể cả giữa các account khác nhau.",
+   "Dữ liệu trong bucket được sao chép qua nhiều AZ của region, nên mất một AZ vẫn không mất dữ liệu. Đó là lý do S3 được gọi là regionally resilient.",
+   "Bên trong bucket là các object. Mỗi object có key giống tên file, và bucket cộng với key xác định duy nhất một object.",
+   "Lưu ý cấu trúc là phẳng: folder old chỉ là prefix trong key. Tạo folder archive trên console thực chất là tạo một object rỗng có key archive gạch chéo.",
+   "Khi đi thi, nhớ: object từ 0 byte tới 5 TB, số object không giới hạn, tên bucket 3 tới 63 ký tự chữ thường, 100 soft và 1000 hard bucket mỗi account. S3 private mặc định, và nghìn user thì dùng một bucket chia prefix."
+  ]
+ },
+ "S3 Basics - storage types": {
+  "sig": "7-pmqydt",
+  "steps": [
+   "Sơ đồ này so sánh ba kiểu lưu trữ object, file và block. Thông điệp chính: S3 là lựa chọn mặc định, trừ khi bạn cần mount ổ đĩa hoặc file share.",
+   "Ba cột tương ứng ba dịch vụ: object storage là S3, file storage là EFS hoặc FSx, còn block storage là EBS.",
+   "Về cách truy cập, S3 lấy cả object qua API hoặc HTTP. File storage cho duyệt thư mục qua NFS hoặc SMB, còn EBS được mount như ổ đĩa để OS tự tạo file system.",
+   "Về cấu trúc, S3 phẳng và chỉ dùng prefix, file storage có cây thư mục thật, còn block chỉ là các block thô, không biết file là gì.",
+   "Về số client, S3 phục vụ rất nhiều client cùng lúc, file storage phục vụ nhiều client, còn EBS thường chỉ gắn với một instance.",
+   "S3 không mount được, còn file và block thì được. Hãy dùng S3 để phân phối dữ liệu lớn, offload ảnh video tĩnh khỏi EC2, và làm input output cho dịch vụ AWS khác.",
+   "Mẹo thi: hễ đề nói cần mount hoặc cần Windows file share thì loại S3 ngay, và nghĩ tới EBS, EFS hoặc FSx."
+  ]
+ }
+}

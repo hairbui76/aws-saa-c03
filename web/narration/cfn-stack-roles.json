@@ -1,0 +1,14 @@
+{
+ "CFN Stack Roles": {
+  "sig": "7-1mg0z92",
+  "steps": [
+   "Sơ đồ này nói về stack role trong CloudFormation. Thay vì dùng quyền của người đang thao tác, CloudFormation assume một IAM role để tạo, sửa, xóa resource, giúp tách biệt quyền rõ ràng.",
+   "Đầu tiên, Gabby là account admin tạo một IAM role có quyền tạo, sửa, xóa resource. Role này cần trust policy cho phép cloudformation.amazonaws.com assume nó.",
+   "Tiếp theo, Phil bên helpdesk tạo stack từ template đã được duyệt và pass role vào. Nhưng nếu Phil gọi thẳng API của EC2 hay DynamoDB thì sẽ bị AccessDenied, vì anh ta không có quyền trực tiếp.",
+   "Role của Gabby được gắn vào stack. Từ đây, các thao tác sau trên stack như update hay delete cũng tiếp tục dùng chính role này.",
+   "Khi stack chạy, CloudFormation assume stack role và dùng quyền của role để tạo EC2, DynamoDB, Lambda, hoàn toàn không phụ thuộc quyền của IAM user Phil.",
+   "Tóm lại, Phil chỉ cần quyền CloudFormation trên stack và iam:PassRole cho đúng role đó. Anh ta không cần bất kỳ quyền trực tiếp nào trên EC2 hay S3.",
+   "Khi đi thi, nhớ nhé: nếu đề hỏi user cần dùng CloudFormation để làm việc mà bên ngoài CloudFormation họ không được phép, đáp án là stack role kèm iam:PassRole. Thiếu PassRole thì không gắn được role vào stack."
+  ]
+ }
+}

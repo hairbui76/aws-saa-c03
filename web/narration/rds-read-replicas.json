@@ -1,0 +1,21 @@
+{
+ "RDS Read Replicas": {
+  "sig": "6-rw8au1",
+  "steps": [
+   "Sơ đồ này nói về RDS read replica, bản sao chỉ đọc được replicate bất đồng bộ. Ghi được commit ở primary trước, replica nhận sau, nên luôn có một độ trễ gọi là replication lag.",
+   "Ứng dụng ghi và đọc vào primary, còn phần đọc có thể chuyển sang read replica. Nhưng replica có endpoint riêng, nên app phải được sửa để dùng, nếu không replica coi như vô dụng.",
+   "Primary replicate bất đồng bộ sang replica, lag thường vài giây. Bạn có tới 5 replica trực tiếp, replica còn có replica riêng nhưng lag cộng dồn, và có thể đặt replica ở region khác với dữ liệu được mã hóa in transit.",
+   "Khi cần, bạn promote cross-region replica thành một instance độc lập đọc ghi bình thường. Lưu ý bước promote này là thủ công, không tự động.",
+   "Nếu cả region chính sập, promote replica ở region kia giúp RPO gần 0 vì dữ liệu sync liên tục, và RTO thấp vì promote nhanh hơn nhiều so với restore snapshot.",
+   "Khi đi thi nhớ: read replica không tự failover, app không tự biết replica, và không chống data corruption vì lỗi cũng được replicate theo. Với RDS, sync là Multi-AZ, async là read replica; Aurora cross-region thì chọn Aurora Global Database."
+  ]
+ },
+ "RDS Read Replicas - when": {
+  "sig": "3-1epgqtt",
+  "steps": [
+   "Sơ đồ này giúp bạn quyết định khi nào dùng read replica. Nó giải quyết scale đọc và sự cố hỏng hóc, còn dữ liệu bị hỏng thì phải quay về backup.",
+   "Đầu tiên hãy xác định đề đang nói vấn đề gì: tải đọc nặng hoặc báo cáo làm chậm DB chính, instance, AZ hay cả region bị hỏng, hay dữ liệu bị corrupt hoặc xóa nhầm.",
+   "Tải đọc nặng thì dùng read replica và trỏ app vào endpoint replica. Hỏng hóc thì promote replica để có RPO gần 0, RTO thấp. Còn corrupt hoặc xóa nhầm thì dùng point-in-time restore, vì replica đã nhận lỗi và Multi-AZ cũng không cứu được."
+  ]
+ }
+}

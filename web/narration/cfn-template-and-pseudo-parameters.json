@@ -1,0 +1,24 @@
+{
+ "CFN Template and Pseudo Parameters": {
+  "sig": "5-268ikg",
+  "steps": [
+   "Sơ đồ này nói về hai nguồn input cho một CloudFormation template: template parameters do người dùng nhập, và pseudo parameters do AWS tự cung cấp. Hai loại này dùng bổ sung cho nhau chứ không phải chọn một.",
+   "Bên trái, người hoặc pipeline nhập template parameter qua console, CLI hoặc API, kèm các tùy chọn như Default, AllowedValues, NoEcho hay Type. Bên phải, AWS tự bơm pseudo parameter như AWS::Region, AWS::AccountId mà không cần khai báo.",
+   "Trong phần Resources, cả hai loại đều được dùng giống nhau bằng Ref. Ví dụ InstanceType lấy từ template parameter, còn tag Region lấy từ pseudo parameter AWS::Region.",
+   "Khi tạo stack, các logical resource trong template trở thành physical resource, và cấu hình của chúng phụ thuộc vào đúng những giá trị input vừa truyền vào.",
+   "Khi đi thi, nhớ nhé: NoEcho để ẩn mật khẩu, AllowedValues để giới hạn vài instance type, Type kiểu AWS để console tự liệt kê giá trị có thật. Thấy tiền tố AWS hai chấm và không cần khai báo thì đó là pseudo parameter."
+  ]
+ },
+ "CFN Template and Pseudo Parameters - portable": {
+  "sig": "7-tgt3oj",
+  "steps": [
+   "Sơ đồ này theo dõi demo bốn giai đoạn, biến một template non-portable thành portable. Mỗi bước bỏ bớt một giá trị đặt cứng, cuối cùng chạy được ở mọi region mà không cần nhập gì.",
+   "Bước nhảy quan trọng là từ stage2 sang stage3: thay parameter String bằng parameter kiểu SSM AMI ID, với default là path public parameter của Amazon Linux mới nhất.",
+   "Kết quả là template hoàn toàn portable, tự lấy AMI mới nhất đúng region. Quy tắc rút ra: không đặt tên cứng, đưa giá trị theo region thành parameter có default, và tốt nhất là tham chiếu động.",
+   "Quay lại điểm xuất phát: template nonportable đặt cứng cả BucketName lẫn ImageId, nên stack thứ hai trong cùng account fail vì trùng tên bucket rồi rollback. Stage1 sửa bằng cách bỏ BucketName để CloudFormation tự đặt tên.",
+   "Stage1 tạo nhiều lần được, nhưng sang us-east-2 lại fail vì AMI ID là giá trị riêng theo từng region. Vì thế stage2 chuyển ImageId thành parameter.",
+   "Stage2 đã portable, nhưng người dùng vẫn phải tự tra AMI ID đúng region mỗi lần tạo stack, khá bất tiện và dễ sai.",
+   "Ghi nhớ khi thi: tên tự đặt gồm tên stack, logical ID và chuỗi ngẫu nhiên nên luôn duy nhất. Ngoài ra Amazon Linux 2 hết hỗ trợ giữa 2026, nên hiện nay hãy dùng path SSM của AL2023."
+  ]
+ }
+}

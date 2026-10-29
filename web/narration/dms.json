@@ -1,0 +1,27 @@
+{
+ "DMS": {
+  "sig": "8-exc6qp",
+  "steps": [
+   "Sơ đồ này cho thấy cách AWS Database Migration Service hoạt động: một replication instance chạy task chuyển dữ liệu từ nguồn sang đích, với điều kiện ít nhất một đầu phải nằm trong AWS.",
+   "Mọi thứ bắt đầu từ source DB, có thể ở on-premises hoặc trong AWS. Câu hỏi đầu tiên là engine có đổi không: cùng engine thì chỉ cần DMS, khác engine thì dùng thêm SCT để chuyển schema.",
+   "Source endpoint chứa thông tin kết nối tới DB nguồn. Dữ liệu đi vào replication instance, thực chất là một EC2 có phần mềm migration, chạy được nhiều replication task cùng lúc.",
+   "Từ replication instance, dữ liệu được đẩy tới target endpoint, nơi lưu thông tin kết nối tới database đích.",
+   "Cuối cùng dữ liệu được ghi vào target DB, có thể là RDS, Aurora, Redshift, DynamoDB hay cả S3.",
+   "Có ba loại task. Full load chỉ copy dữ liệu hiện có nên cần downtime. Full load cộng CDC vừa copy vừa áp thay đổi, gần như không downtime. CDC only dùng khi đã bulk load bằng công cụ native.",
+   "Lưu ý DMS không tự chuyển đổi schema. SCT là ứng dụng độc lập làm việc đó, và nay còn có DMS Schema Conversion ngay trong console.",
+   "Khi đi thi, nhớ rằng dữ liệu đi qua internet, VPN, Direct Connect hoặc VPC Peering. Thấy minimal downtime thì chọn Full load cộng CDC, và đừng nhầm DMS với DataSync dành cho file."
+  ]
+ },
+ "DMS - snowball": {
+  "sig": "7-36kmrz",
+  "steps": [
+   "Sơ đồ này nói về migration rất lớn, nhiều TB, khi mạng yếu hoặc không muốn chiếm băng thông: dữ liệu đi bằng thiết bị Snowball vào S3, rồi DMS nạp từ S3.",
+   "Bước một, SCT trích dữ liệu từ DB on-premises ra local. Đường còn lại tới S3 là luồng CDC, mang các thay đổi phát sinh sau đợt bulk.",
+   "Dữ liệu trích ra được chép vào thiết bị Snowball để vận chuyển vật lý thay vì truyền qua mạng.",
+   "Bước hai, thiết bị được gửi về AWS, và AWS nạp toàn bộ dữ liệu vào một S3 bucket.",
+   "Bước ba, DMS replication instance đọc dữ liệu từ S3 để bắt đầu migrate.",
+   "DMS ghi dữ liệu vào DB đích như RDS, Aurora hoặc Redshift, và nếu bật CDC thì tiếp tục áp các thay đổi đi qua S3.",
+   "Khi đi thi, nhớ rằng SCT ở đây chỉ trích dữ liệu ra định dạng file chung nên vẫn đúng quy tắc. Đề nói DB nhiều TB, mạng yếu thì chọn DMS cộng SCT cộng Snowball, bật CDC trước khi cutover."
+  ]
+ }
+}

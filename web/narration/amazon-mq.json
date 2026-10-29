@@ -1,0 +1,12 @@
+{
+ "Amazon MQ": {
+  "sig": "5-1fzut8c",
+  "steps": [
+   "Sơ đồ này nói về Amazon MQ, một message broker chuẩn mở do AWS quản lý, nằm trong VPC và nối với hệ thống on-prem để migrate hoặc chạy song song mà gần như không sửa ứng dụng.",
+   "Phía on-prem, producer gửi message vào ActiveMQ broker có cả queue một-một lẫn topic một-nhiều. Ứng dụng đã chuyển lên AWS vẫn nói chuyện với Amazon MQ bằng JMS hay AMQP như cũ, nên không phải viết lại code.",
+   "Để hai bên gặp nhau cần đường mạng riêng là Site-to-Site VPN hoặc Direct Connect. Với production, ta dùng cặp broker active và standby ở hai AZ, chung EFS làm shared storage nên dữ liệu được replicate giữa hai AZ.",
+   "Broker on-prem nói chuyện với broker active qua kết nối riêng đó. Nếu AZ A gặp sự cố, broker standby ở AZ B tiếp quản nhờ dữ liệu chung trên EFS. Còn dev hoặc test thì một single-instance broker là đủ.",
+   "Khi đi thi, nhớ nhé: thiết kế mới hoặc cần tích hợp native với AWS thì chọn SNS hoặc SQS. Thấy migrate hệ thống messaging cũ, hoặc từ khóa JMS, AMQP, MQTT, ActiveMQ thì chọn Amazon MQ, và nhớ nó cần private networking, không phải public endpoint như SQS."
+  ]
+ }
+}

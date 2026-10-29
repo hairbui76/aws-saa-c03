@@ -1,0 +1,13 @@
+{
+ "JSON": {
+  "sig": "6-1iep83q",
+  "steps": [
+   "Sơ đồ này mổ xẻ một IAM policy document viết bằng JSON, để thấy cấu trúc lồng nhau được quyết định bởi dấu ngoặc chứ không phải thụt lề.",
+   "Mọi tài liệu JSON bắt đầu bằng một object top-level trong ngoặc nhọn. Ở đây nó có hai key: Version mang giá trị string, và Statement mang giá trị là một array trong ngoặc vuông.",
+   "Array Statement là danh sách có thứ tự, và mỗi phần tử của nó lại là một statement object riêng. Một policy có thể chứa nhiều statement như vậy.",
+   "Bên trong mỗi statement object là các key quen thuộc: Effect cho phép hay từ chối, Action là hành động, Resource là tài nguyên áp dụng, và tùy chọn thêm Condition.",
+   "So với YAML, JSON dùng ngoặc để định cấu trúc nên thụt lề tùy ý, nhưng không có comment. Quan trọng nhất, JSON dùng được cho cả CloudFormation lẫn policy, còn YAML chỉ dùng cho CloudFormation.",
+   "Đây là policy hoàn chỉnh cho phép s3 GetObject trên bucket catpics. Khi đi thi, nhớ rằng mọi policy quyền như IAM, bucket policy, KMS key policy hay SCP đều là JSON, nên hãy luyện đọc thật nhanh Version, Statement, Effect, Action, Resource và Condition."
+  ]
+ }
+}

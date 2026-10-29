@@ -1,0 +1,16 @@
+{
+ "SQS Dead Letter Queues": {
+  "sig": "9-143vv7o",
+  "steps": [
+   "Sơ đồ này nói về Dead-Letter Queue trong SQS. Ý chính là message lỗi sẽ không quay vòng mãi, mà khi bị nhận quá số lần cho phép sẽ tự chuyển sang một queue riêng để cảnh báo và chẩn đoán.",
+   "Đầu tiên, Producer gửi message vào Source Queue. Trên queue này ta cấu hình redrive policy với maxReceiveCount bằng 3, tức là cho phép nhận tối đa ba lần.",
+   "Consumer gọi ReceiveMessage để lấy message về xử lý. Nhưng giả sử message bị corrupt hoặc có gì đặc thù, nên xử lý thất bại và Consumer không xóa nó.",
+   "Vì không bị xóa, khi hết visibility timeout message lại hiện ra trong queue. Mỗi lần được nhận, thuộc tính ReceiveCount tăng thêm 1, và nếu không có DLQ thì vòng lặp này sẽ kéo dài vô hạn.",
+   "Khi ReceiveCount vượt quá maxReceiveCount mà message vẫn chưa bị xóa, SQS tự chuyển nó sang Dead-Letter Queue. Lưu ý DLQ phải cùng loại Standard hoặc FIFO với source, và một DLQ có thể phục vụ nhiều source queue.",
+   "Từ DLQ, ta đặt CloudWatch Alarm theo độ dài queue, lớn hơn 0 là báo qua SNS để biết sớm. Đồng thời có thể chẩn đoán, xử lý riêng, rồi redrive message về source sau khi sửa lỗi.",
+   "Giờ đến chuyện retention. Message đã nằm ở source queue một ngày rồi mới sang DLQ có retention hai ngày, và enqueue timestamp của nó được giữ nguyên, không reset.",
+   "Vì vậy đến ngày thứ hai message hết hạn và bị xóa, nó chỉ sống thêm đúng một ngày trong DLQ. Do đó nên đặt retention của DLQ dài hơn source queue, tối đa 14 ngày.",
+   "Nhắc khi đi thi: redrive policy được cấu hình trên source queue, không phải trên DLQ. Gặp đề message lỗi bị xử lý lại liên tục hoặc cần cô lập message thất bại, hãy nghĩ ngay tới DLQ cùng maxReceiveCount."
+  ]
+ }
+}

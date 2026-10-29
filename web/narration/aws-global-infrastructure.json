@@ -1,0 +1,22 @@
+{
+ "AWS Global Infrastructure": {
+  "sig": "5-223ost",
+  "steps": [
+   "Sơ đồ này giới thiệu ba khối hạ tầng của AWS: Region là fault domain cô lập có đủ dịch vụ, Availability Zone là phần cô lập bên trong region, còn Edge Location nhỏ, rất nhiều và nằm gần người dùng.",
+   "Giả sử ta cần chạy sáu server ở region Sydney. Đầu tiên ta đặt Server 1, Server 3 và Server 5 rải ra ba AZ khác nhau, mỗi AZ một server.",
+   "Tiếp theo đặt Server 2, 4 và 6, vậy mỗi AZ có hai server. Nếu một AZ gặp sự cố như mất điện, vẫn còn bốn trên sáu server tiếp tục chạy.",
+   "Region N. Virginia có tới sáu AZ, từ us-east-1a đến 1f. Các region cô lập hoàn toàn với nhau, dữ liệu không rời region trừ khi bạn cấu hình. Còn edge location như ở Melbourne giúp CloudFront cache nội dung gần người dùng để giảm latency.",
+   "Khi đi thi nhớ nhé: AZ là khái niệm logic, không phải một data center. Và region có hai cách gọi: code như ap-southeast-2 dùng trong CLI và API, còn name như Asia Pacific Sydney dùng trong console."
+  ]
+ },
+ "AWS Global Infrastructure - resilience": {
+  "sig": "5-2heos2",
+  "steps": [
+   "Sơ đồ này nói về ba mức resilience của dịch vụ AWS. Với mỗi dịch vụ, hãy luôn hỏi nó là global, regional hay AZ resilient để biết khi nào nó sập.",
+   "Globally resilient nghĩa là một sản phẩm với một database toàn cục, replicate qua nhiều region và bạn không cần chọn region. Region resilient chạy riêng từng region, còn AZ resilient chỉ chạy trong đúng một AZ.",
+   "Dịch vụ global gần như chỉ sập khi cả thế giới sập. Dịch vụ regional vẫn chạy khi mất một AZ nhưng hỏng nếu mất cả region. Còn dịch vụ AZ sẽ hỏng ngay khi AZ đó gặp sự cố.",
+   "Ví dụ cụ thể: IAM, Route 53 và CloudFront là global. S3, VPC và RDS là regional. Còn EC2 instance, EBS volume và subnet là AZ resilient.",
+   "Mẹo khi đi thi: đề yêu cầu chịu được mất một AZ thì trải tài nguyên qua nhiều AZ trong region. Còn nếu phải chịu được mất cả region hay thảm họa diện rộng thì chọn kiến trúc multi-region."
+  ]
+ }
+}

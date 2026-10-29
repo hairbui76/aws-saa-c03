@@ -1,0 +1,20 @@
+{
+ "Lambda": {
+  "sig": "4-fqtidp",
+  "steps": [
+   "Sơ đồ này so sánh hai chế độ mạng của Lambda: Public là mặc định, còn VPC Lambda thì được gắn vào subnet trong VPC của bạn. Mỗi chế độ ra vào được những nơi hoàn toàn ngược nhau.",
+   "Public Lambda chạy trên mạng dùng chung của AWS nên gọi được SQS, DynamoDB và Internet với hiệu năng tốt nhất, nhưng không vào được Aurora hay EC2 trong private subnet. Còn VPC Lambda đi qua Hyperplane ENI, mỗi tổ hợp Security Group và subnet chỉ cần một ENI, tạo một lần khi cấu hình.",
+   "Từ ENI, function trong VPC truy cập tự do Aurora, EC2, EFS nếu Security Group cho phép. Muốn ra Internet thì đi qua NAT Gateway rồi Internet Gateway, còn tới S3 hoặc DynamoDB thì dùng Gateway endpoint.",
+   "Khi đi thi nhớ nhé: VPC Lambda mặc định không ra được Internet hay public AWS service, phải có NAT Gateway hoặc VPC endpoint. Execution role cần quyền EC2 networking để tạo ENI, và hãy đối xử với nó như mọi tài nguyên khác trong VPC."
+  ]
+ },
+ "Lambda - invoke": {
+  "sig": "4-1gq0cec",
+  "steps": [
+   "Sơ đồ này nói về ba kiểu invocation của Lambda: synchronous, asynchronous và event source mapping. Điểm khác nhau là ai chờ kết quả, ai retry và quyền đọc nguồn nằm ở đâu.",
+   "Với synchronous, client hoặc CLI gọi qua API Gateway. Với asynchronous, S3, SNS hay EventBridge đẩy event rồi quên luôn. Còn event source mapping thì tự poll Kinesis, SQS hoặc DynamoDB Streams và gửi event batch cho function.",
+   "API Gateway gọi Lambda và đợi phản hồi. Ở kiểu async, Lambda tự retry từ 0 đến 2 lần nên code phải idempotent, kết quả có thể gửi tới Destinations. Với event source mapping, execution role phải có quyền đọc nguồn, batch lỗi liên tục đi vào DLQ.",
+   "Lời nhắc khi đi thi: ở kiểu synchronous, client chờ kết quả và tự retry khi lỗi. Còn async thì Lambda retry, và event source mapping dùng quyền của execution role để đọc nguồn."
+  ]
+ }
+}

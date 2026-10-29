@@ -1,0 +1,15 @@
+{
+ "Kinesis Data Analytics": {
+  "sig": "8-1i6gcb7",
+  "steps": [
+   "Sơ đồ này nói về Kinesis Data Analytics, dịch vụ chạy SQL real-time giữa stream vào và stream ra. Lưu ý source và destination đều nằm ngoài KDA, và KDA không sửa dữ liệu nguồn.",
+   "Dữ liệu từ source đi vào in-app input stream, giống một bảng database liên tục cập nhật. Song song, dữ liệu tĩnh CSV hoặc JSON trên S3 được nạp vào reference table, ví dụ bổ sung tên người chơi và vật phẩm cho stream điểm số.",
+   "Application code viết bằng SQL đọc cả input stream lẫn reference table, nhờ vậy có thể làm giàu và phân tích dữ liệu stream liên tục theo thời gian thực.",
+   "Kết quả SQL được ghi vào các in-app output stream. Còn lỗi phát sinh khi chạy truy vấn sẽ được đưa vào in-app error stream riêng để bạn theo dõi.",
+   "Các output stream được map ra đích bên ngoài. Ra Kinesis Data Stream hoặc Lambda thì vẫn giữ real-time, còn ra Firehose tới S3, Redshift hay OpenSearch thì chỉ còn near real-time.",
+   "Ở phía source, nguồn đầu tiên có thể là Kinesis Data Stream, nơi ingest dữ liệu quy mô lớn theo thời gian thực.",
+   "Nguồn thứ hai là Kinesis Firehose. KDA chỉ nhận input từ một trong hai loại này, Data Streams hoặc Firehose.",
+   "Khi đi thi, gặp leaderboard game, kết quả bầu cử, e-sports hay metrics real-time cho security thì nghĩ ngay tới KDA. Cần SQL phức tạp theo thời gian thực là KDA, còn Firehose cộng Lambda chỉ near real-time và transform đơn giản. Nay dịch vụ đã đổi tên thành Managed Service for Apache Flink."
+  ]
+ }
+}

@@ -1,0 +1,27 @@
+{
+ "NAT Gateway": {
+  "sig": "7-11lidfo",
+  "steps": [
+   "Sơ đồ này cho thấy thiết kế NAT Gateway chịu lỗi cấp region trong VPC 10.16.0.0 trên 16 ở us-east-1. Vì NAT Gateway chỉ AZ-resilient, ta đặt mỗi AZ một NAT Gateway trong public subnet.",
+   "Các EC2 trong private subnet không có public IP. Mỗi AZ có một route table private riêng, với route 0.0.0.0 trên 0 trỏ tới NAT Gateway của chính AZ đó.",
+   "Mỗi route table dẫn traffic tới NAT Gateway cùng AZ. Mỗi NAT Gateway nằm trong web subnet public và có một Elastic IP riêng.",
+   "Cả ba NAT Gateway cùng gửi traffic ra Internet Gateway. Internet Gateway là region-resilient nên chỉ cần một cái cho cả VPC.",
+   "Tại đây Internet Gateway làm static NAT, đổi source sang Elastic IP của NAT Gateway, rồi gói tin mới đi ra Internet hoặc AWS public zone.",
+   "Đừng quên route table của các public web subnet phải có route 0.0.0.0 trên 0 trỏ tới Internet Gateway. Thiếu route này thì NAT Gateway không ra ngoài được.",
+   "Khi đi thi, nhớ: một NAT Gateway cho cả region là sai nếu đề đòi HA. NAT Gateway không gắn được Security Group, chỉ dùng NACL. IPv6 outbound-only thì dùng Egress-Only IGW. NAT chỉ cho kết nối đi ra, và tính phí theo giờ cộng theo GB, không có free tier."
+  ]
+ },
+ "NAT Gateway - flow": {
+  "sig": "8-z8vhp0",
+  "steps": [
+   "Sơ đồ này theo dõi một gói tin đi qua NAT Gateway theo kiểu IP masquerading, tức nhiều private IP ẩn sau một Elastic IP duy nhất.",
+   "Instance i01 với IP 10.16.32.10 gửi gói tin tới update server. Route table của private subnet đẩy nó tới NAT Gateway, nơi luồng này được ghi vào translation table theo IP và port.",
+   "NAT Gateway đổi source thành private IP của chính nó rồi chuyển gói tin tới Internet Gateway, theo route của public subnet.",
+   "Internet Gateway làm static NAT, đổi source sang Elastic IP public, rồi gửi gói tin tới update server 1.3.3.7.",
+   "Update server trả response về địa chỉ đích là Elastic IP, vì đó là địa chỉ duy nhất nó nhìn thấy.",
+   "Internet Gateway đổi destination từ Elastic IP về lại private IP của NAT Gateway và chuyển gói tin vào trong.",
+   "NAT Gateway tra translation table để biết luồng này thuộc instance nào và port nào, rồi trả đúng về i01. Nhờ vậy nhiều instance với nhiều kết nối vẫn không bị lẫn.",
+   "Lời nhắc khi thi: NAT Gateway làm many-to-one, còn IGW làm static NAT một đối một sang Elastic IP. Public subnet route tới IGW, private subnet route tới NAT Gateway. Và nếu dùng NAT instance thì bắt buộc tắt Source Destination Check."
+  ]
+ }
+}

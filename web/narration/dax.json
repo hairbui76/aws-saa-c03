@@ -1,0 +1,15 @@
+{
+ "DAX": {
+  "sig": "8-1igshwa",
+  "steps": [
+   "Sơ đồ này nói về DAX, bộ cache in-memory gắn liền với DynamoDB. Để ý là cluster DAX nằm trong VPC, trải trên nhiều AZ, còn DynamoDB vẫn là public service bên ngoài.",
+   "Ứng dụng trên EC2 cài DAX SDK và gọi GetItem hay Query y như gọi DynamoDB. Mọi request đi tới cluster endpoint, nơi cân bằng tải qua các node, giống cách truy cập RDS.",
+   "Endpoint phân phối tới primary node, vừa đọc vừa ghi, và các replica node chỉ đọc ở AZ khác. Nếu primary hỏng, một replica sẽ được bầu lên thay để đảm bảo sẵn sàng cao.",
+   "Primary replicate dữ liệu sang các replica, và khi miss thì tự đọc từ DynamoDB. DAX có item cache cho GetItem, BatchGetItem, và query cache lưu kết quả Query hoặc Scan theo đúng tham số.",
+   "Khi cache hit, DAX trả kết quả ngay trong vài microsecond, ví dụ khoảng 400 micro giây, nhanh hơn rất nhiều so với đọc DynamoDB trực tiếp.",
+   "Khi cache miss, DAX tự đọc từ DynamoDB, lưu vào cache rồi trả về cho app, mất khoảng single-digit millisecond như DynamoDB bình thường. App không phải làm gì thêm.",
+   "Với write-through, khi ghi qua DAX SDK, dữ liệu được ghi vào DynamoDB và vào cache cùng lúc, nên lần đọc sau có sẵn trong cache.",
+   "Khi đi thi, nhớ: cache cho DynamoDB, giảm từ millisecond xuống microsecond, read-heavy, RCU đắt, ít sửa code thì chọn DAX. Cần strongly consistent read hoặc write-heavy thì DAX không giúp, app phải ở trong VPC, còn ElastiCache bắt app tự quản logic cache."
+  ]
+ }
+}

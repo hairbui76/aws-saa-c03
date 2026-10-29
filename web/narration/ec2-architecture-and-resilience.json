@@ -1,0 +1,15 @@
+{
+ "EC2 Architecture and Resilience": {
+  "sig": "8-d007w3",
+  "steps": [
+   "Sơ đồ này cho thấy vì sao EC2 là dịch vụ AZ-resilient: host, network interface và EBS volume đều bị khóa trong một AZ, nên instance không thể tự di chuyển sang AZ khác.",
+   "Ở AZ-A, EBS volume nối vào EC2 Host 1 qua storage networking. Muốn mang dữ liệu sang AZ khác, bước đầu tiên là tạo snapshot hoặc AMI, được lưu trên S3 ở cấp Region.",
+   "Vì snapshot nằm ở cấp Region, ta có thể restore nó thành một EBS volume mới ngay trong AZ-B, đây là cách duy nhất để chuyển dữ liệu qua AZ.",
+   "Từ volume và AMI đó, ta launch một instance hoàn toàn mới ở AZ-B. Nghĩa là không phải di chuyển instance cũ, mà là tạo bản sao rồi dựng lại.",
+   "Quay lại AZ-A, Primary ENI được tạo trong Subnet A và nối instance vào VPC qua data networking. Khi stop rồi start, Instance 2 có thể chuyển sang Host 2 nhưng vẫn cùng AZ, và dữ liệu Instance Store sẽ mất.",
+   "Mỗi host có vCPU, memory và Instance Store cục bộ, tạm thời. Nếu chỉ reboot thì instance ở lại Host 1, nên dữ liệu Instance Store vẫn còn.",
+   "Lưu ý quan trọng: EBS volume hoặc ENI của AZ-A không bao giờ gắn được vào instance ở AZ-B, vì cả hai đều là tài nguyên theo AZ.",
+   "Khi đi thi, hãy nhớ: AZ hỏng thì host, ENI và EBS trong AZ đó hỏng theo. Muốn high availability, hãy rải instance ra nhiều AZ và đặt load balancer phía trước."
+  ]
+ }
+}

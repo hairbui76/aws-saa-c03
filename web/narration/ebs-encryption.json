@@ -1,0 +1,25 @@
+{
+ "EBS Encryption": {
+  "sig": "6-1o226y3",
+  "steps": [
+   "Sơ đồ này cho thấy EBS encryption hoạt động thế nào. Điểm mấu chốt: KMS key không mã hóa volume trực tiếp mà sinh ra một data encryption key riêng cho từng volume, còn việc mã hóa do EC2 host đảm nhận.",
+   "Khi tạo volume mã hóa, EBS gọi KMS bằng GenerateDataKeyWithoutPlaintext để nhận về DEK đã mã hóa. DEK này được lưu kèm volume trên raw storage, dùng key aws/ebs hoặc customer managed key.",
+   "Khi volume được attach hoặc instance launch, EBS nhờ KMS giải mã DEK, việc này cần quyền kms:Decrypt. DEK plaintext chỉ được nạp vào memory của EC2 host, không bao giờ nằm trên đĩa.",
+   "Instance đọc ghi dữ liệu bình thường dưới dạng plaintext. OS hoàn toàn không biết có mã hóa, vì mọi thứ diễn ra ở tầng host.",
+   "Host dùng DEK với AES-256 để mã hóa dữ liệu trước khi ghi xuống volume, và giải mã khi đọc lên. Nhờ vậy trên đĩa vật lý luôn chỉ có ciphertext.",
+   "Khi đi thi, nhớ: instance chuyển host thì DEK ở host cũ bị hủy, host mới phải nhờ KMS giải mã lại. EBS encryption miễn phí, không giảm hiệu năng nên bật encrypt by default theo region; còn muốn tự giữ key thì dùng software disk encryption trong OS."
+  ]
+ },
+ "EBS Encryption - dek": {
+  "sig": "7-1ewdr30",
+  "steps": [
+   "Sơ đồ này nói về quy tắc DEK: volume tạo mới luôn có DEK riêng, snapshot và volume khôi phục dùng lại đúng DEK đó. Bên phải là cách mã hóa một volume chưa mã hóa.",
+   "Volume A tạo mới nhận DEK-A duy nhất, và snapshot của nó dùng cùng DEK-A nên cũng được mã hóa. Với volume chưa mã hóa, bước đầu tiên cũng là tạo snapshot.",
+   "Volume khôi phục từ snapshot của A vẫn dùng DEK-A, đã mã hóa là mã hóa mãi. Còn snapshot chưa mã hóa thì ta copy và chọn tùy chọn Encrypt với một KMS key.",
+   "Kết quả của bước copy là một snapshot đã mã hóa, vì không thể bật mã hóa trực tiếp trên volume đang có.",
+   "Từ snapshot đã mã hóa, ta tạo volume mã hóa rồi thay thế volume cũ. Đây là đường vòng chuẩn mà đề thi hay hỏi.",
+   "Volume B tạo từ đầu sẽ có DEK-B khác. Nhiều volume có thể dùng chung một KMS key, nhưng mỗi volume mới luôn có DEK riêng.",
+   "Lời nhắc khi thi: không thể gỡ mã hóa qua Console, CLI hay API, muốn bỏ thì copy dữ liệu trong OS sang volume không mã hóa. Muốn share snapshot hoặc AMI mã hóa sang account khác thì phải dùng customer managed key và key policy, vì aws/ebs không share được."
+  ]
+ }
+}

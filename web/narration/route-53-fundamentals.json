@@ -1,0 +1,28 @@
+{
+ "Route 53 Fundamentals": {
+  "sig": "11-13o3gbx",
+  "steps": [
+   "Sơ đồ này cho thấy Route 53 đăng ký domain animalsforlife.org thế nào. Nhớ rằng Route 53 là dịch vụ global, làm hai việc tách rời: đăng ký domain và host zone file trên 4 managed name server.",
+   "Mọi thứ bắt đầu khi bạn vào Route 53 console và chọn Register domains, tức là dùng Route 53 với vai trò registrar.",
+   "Bước một, Route 53 hỏi registry quản lý TLD, ở đây là PIR cho đuôi .org, xem domain animalsforlife.org còn trống hay không.",
+   "Mục tiêu cuối cùng là registry .org ủy quyền, hay delegate, việc quản trị domain này cho 4 name server do AWS quản lý.",
+   "Khi domain còn trống, Route 53 tạo một hosted zone cho animalsforlife.org. Đây chính là zone file, nơi bạn sẽ tạo các record như A, CNAME hay MX.",
+   "Zone file này được đặt lên 4 managed name server mà Route 53 cấp phát, rải ở nhiều nơi trên thế giới. Từ đó chúng trở thành authoritative cho domain.",
+   "Bước bốn, Route 53 làm việc với registry để thêm NS record vào zone .org, trỏ về 4 name server kia. Đó chính là cơ chế delegation.",
+   "Phía trên registry còn có root zone do IANA quản lý, ủy quyền đuôi .org cho PIR. DNS bản chất là một chuỗi delegation từ root xuống tới name server của bạn.",
+   "Đây là hai trong bốn name server, ns-1 và ns-2, cùng giữ một bản zone file của domain.",
+   "Và ns-3, ns-4 hoàn thiện bộ 4 name server mà mỗi hosted zone được cấp.",
+   "Khi đi thi, nhớ: Route 53 tạo hosted zone, cấp 4 name server và delegate qua NS record. Domain đăng ký nơi khác vẫn dùng được hosted zone Route 53, chỉ cần đổi NS ở registrar về 4 name server của Route 53."
+  ]
+ },
+ "Route 53 Fundamentals - hosted zones": {
+  "sig": "5-9dkv1u",
+  "steps": [
+   "Sơ đồ này so sánh public và private hosted zone. Public resolve được từ Internet, còn private chỉ resolve được từ những VPC đã associate với nó.",
+   "Với private hosted zone, người dùng ngoài Internet không thể resolve record, nên rất hợp cho các record nhạy cảm không muốn lộ ra ngoài.",
+   "Các EC2 instance bên trong VPC A và VPC B thì resolve được, vì hai VPC này đã được associate với private hosted zone.",
+   "Vì registrar và DNS hosting tách rời, có ba cách kết hợp: đăng ký và host đều ở Route 53, đăng ký ở Route 53 nhưng NS trỏ ra DNS bên ngoài, hoặc đăng ký nơi khác rồi trỏ NS về Route 53.",
+   "Tóm lại khi đi thi: public hosted zone có 4 name server nằm trong AWS public zone, nhận DNS query từ Internet; private hosted zone chỉ phục vụ các VPC được associate, dùng cho DNS nội bộ."
+  ]
+ }
+}

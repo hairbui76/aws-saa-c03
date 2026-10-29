@@ -1,0 +1,12 @@
+{
+ "FSx for Windows": {
+  "sig": "5-1uzgrxn",
+  "steps": [
+   "Sơ đồ này nói về FSx for Windows File Server, một file share Windows native, fully managed. AWS lo phần server bên dưới, bạn chỉ việc dùng file share, giống cách RDS giao database cho bạn.",
+   "Client truy cập share qua giao thức SMB. WorkSpaces hoặc EC2 Windows trong VPC kết nối thẳng tới ENI của file server, còn nhân viên on-prem đi qua VPN hoặc Direct Connect.",
+   "Về danh tính, FSx dùng Active Directory làm user store, có thể là AWS Managed Microsoft AD hoặc AD tự quản ngay on-premises. Nếu chọn Multi-AZ, dữ liệu replicate sang standby ở AZ khác để chịu được lỗi AZ.",
+   "Vì là file system Windows thật, bạn có đủ tính năng quen thuộc: NTFS ACL, VSS để người dùng tự restore bản Previous Versions, DFS namespace, dedup, cùng mã hóa KMS at-rest và có thể bắt buộc mã hóa in-transit.",
+   "Mẹo đi thi: thấy Windows, SMB, Active Directory, VSS hay DFS thì chọn FSx for Windows. Linux, NFS, POSIX thì chọn EFS, còn HPC thì nghĩ tới FSx for Lustre."
+  ]
+ }
+}

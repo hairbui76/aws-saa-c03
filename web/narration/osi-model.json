@@ -1,0 +1,15 @@
+{
+ "OSI Model": {
+  "sig": "8-k2twno",
+  "steps": [
+   "Đây là mô hình OSI bảy tầng. Ở máy gửi, ví dụ Firefox, dữ liệu đi xuống qua các tầng, rồi ở máy nhận, ví dụ web server, dữ liệu đi ngược lên. Ba tầng dưới đưa dữ liệu từ A tới B, bốn tầng trên lo chia nhỏ và định dạng.",
+   "Bắt đầu ở máy gửi, ứng dụng tầng 7 như HTTP hay DNS tạo dữ liệu, rồi đi xuống tầng 6 để định dạng và mã hóa, sau đó tới tầng 5 quản lý phiên. Mỗi tầng đóng gói thêm thông tin của mình.",
+   "Xuống tầng 4 Transport, dữ liệu được chia thành segment, dùng TCP hoặc UDP và gắn port. Tiếp đó tầng 3 Network đóng thành packet với địa chỉ IP để định tuyến qua nhiều mạng.",
+   "Tầng 2 Data Link đóng packet thành frame có MAC address, đây là địa bàn của switch. Cuối cùng tầng 1 Physical biến tất cả thành bit truyền trên cáp hoặc sóng.",
+   "Bit đi qua môi trường vật lý dưới dạng tín hiệu điện, ánh sáng hoặc sóng, rồi máy nhận ráp lại thành frame. Trong AWS, Direct Connect chính là một đường cáp quang vật lý ở tầng 1.",
+   "Ở máy nhận, frame được bóc ra thành packet ở tầng 3, rồi thành segment ở tầng 4. Lưu ý VPC ẩn tầng 2 với bạn, nhưng Direct Connect lại dùng VLAN 802.1Q ở tầng 2.",
+   "Dữ liệu tiếp tục đi lên tầng 5 và tầng 6. Ở tầng 4 có NLB xử lý TCP, UDP và TLS, còn Security Group stateful và NACL stateless lọc traffic ở tầng 3 và tầng 4.",
+   "Cuối cùng dữ liệu tới ứng dụng tầng 7. Khi đi thi, nhớ ALB, WAF và CloudFront là dịch vụ tầng 7, đọc được HTTP path, host và header, và thiết bị tầng X hiểu mọi tầng bên dưới nó."
+  ]
+ }
+}

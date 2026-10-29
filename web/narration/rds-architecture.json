@@ -1,0 +1,15 @@
+{
+ "RDS Architecture": {
+  "sig": "8-1xf1zii",
+  "steps": [
+   "Sơ đồ này cho thấy kiến trúc Amazon RDS: một DB server do AWS quản lý, chạy bên trong VPC, trải qua ba AZ với các database subnet, và có thêm một region khác cho read replica.",
+   "Ứng dụng trên EC2 không kết nối tới RDS bằng địa chỉ IP, mà dùng endpoint DNS dạng CNAME cùng port 3306 của MySQL.",
+   "Endpoint này trỏ tới primary, tức DB instance chính nhận cả đọc lẫn ghi. Một instance là một DB server nên có thể chứa nhiều database.",
+   "Primary có EBS storage riêng. Nó replicate đồng bộ sang standby ở AZ khác, và replicate bất đồng bộ tới read replica cùng region hoặc cross-region. Lưu ý standby không phục vụ đọc ghi.",
+   "Standby và read replica mỗi cái cũng có EBS volume riêng của mình. Đây là điểm khác biệt lớn so với Aurora.",
+   "Backup và snapshot được lưu vào S3 do AWS quản lý, bạn không thấy bucket nhưng dữ liệu bền vững cấp region. Khi có Multi-AZ, backup lấy từ standby nên không ảnh hưởng hiệu năng primary.",
+   "Truy cập mạng được kiểm soát bằng Security Group của RDS: cho phép inbound port 3306 với source là security group của app, đây là cách tham chiếu chuẩn.",
+   "Khi đi thi, nhớ nhé: Multi-AZ là đồng bộ, read replica là bất đồng bộ và có thể cross-region. DB subnet group gồm các private subnet nhiều AZ. RDS không có SSH hay OS access, cần thì dùng RDS Custom hoặc EC2. Và Aurora không phải RDS, Aurora dùng shared cluster volume."
+  ]
+ }
+}

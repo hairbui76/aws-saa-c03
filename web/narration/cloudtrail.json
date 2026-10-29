@@ -1,0 +1,23 @@
+{
+ "CloudTrail": {
+  "sig": "6-ki0125",
+  "steps": [
+   "Sơ đồ này cho thấy CloudTrail ghi lại mọi API call trên account. Event History 90 ngày có sẵn và miễn phí, còn muốn lưu lâu, tìm kiếm hay gom nhiều account thì tạo trail đổ vào S3 và CloudWatch Logs.",
+   "Mọi API call của user, role hoặc service đều đi vào CloudTrail, một regional service. Riêng IAM, STS và CloudFront luôn log vào us-east-1, nên trail phải bật global service events. Nhớ là log tới trễ khoảng 15 phút, không real-time.",
+   "Từ CloudTrail có hai nhánh. Event History bật sẵn, miễn phí, giữ 90 ngày. Còn trail có thể là one-region, all-regions tự thêm region mới, hoặc organization trail tạo từ management account để gom mọi account, mọi region về một bucket.",
+   "Trail mặc định ghi vào S3 bucket dưới dạng file JSON nén, lưu vô thời hạn. Tùy chọn thêm CloudWatch Logs, và CloudTrail cần một IAM role để ghi thay bạn vào đó.",
+   "Khi log đã ở CloudWatch Logs, bạn dùng metric filter, tạo alarm, hoặc xử lý theo sự kiện, ví dụ kích hoạt Lambda khi thấy một API call cụ thể.",
+   "Khi đi thi, nhớ: phát hiện log bị sửa thì bật log file validation, có thể mã hóa SSE-KMS và báo qua SNS. Câu hỏi ai đã xóa hay sửa tài nguyên là CloudTrail, còn tài nguyên có tuân thủ cấu hình không là AWS Config."
+  ]
+ },
+ "CloudTrail - event-types": {
+  "sig": "5-5wuev2",
+  "steps": [
+   "Sơ đồ này nói về ba loại event của CloudTrail. Trail mặc định chỉ log management events, còn data events và insights events phải bật riêng.",
+   "Management events là control plane, như tạo hoặc terminate EC2, tạo VPC, sửa Security Group, đăng nhập console. Data events là thao tác bên trong tài nguyên như đọc ghi object S3, invoke Lambda. Insights phát hiện hoạt động bất thường.",
+   "Về mặc định, management events được bật. Data events tắt vì khối lượng rất lớn, và insights events cũng tắt, bạn phải chủ động bật nếu cần.",
+   "Về giá, một bản management events mỗi region mỗi account là miễn phí, thêm trail thì 2 đô cho 100.000 events. Data events tốn 0.10 đô cho 100.000 events, tính ngay từ event đầu tiên.",
+   "Mẹo thi: đề hỏi log truy cập object S3 hoặc invoke Lambda thì bật data events, có phí. Và Event History chỉ giữ 90 ngày, muốn lưu lâu phải tạo trail đổ vào S3."
+  ]
+ }
+}
