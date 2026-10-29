@@ -1,0 +1,944 @@
+{
+  "chapter": "11 Databases",
+  "lessons": {
+    "ACID vs BASE": [
+      {
+        "type": "single",
+        "q": "Theo CAP theorem, yếu tố “Consistency” (C) được định nghĩa thế nào?",
+        "options": [
+          "Mọi request đều nhận được phản hồi không lỗi, nhưng không đảm bảo là dữ liệu mới nhất",
+          "Hệ thống vẫn hoạt động dù có message bị rớt giữa các node mạng",
+          "Mọi lần đọc nhận được lần ghi mới nhất, hoặc nhận lỗi",
+          "Giao dịch thành công toàn bộ hoặc không áp dụng gì cả"
+        ],
+        "answer": [2],
+        "explain": "Consistency trong CAP = mọi lần đọc trả về lần ghi mới nhất hoặc trả lỗi. “Luôn có phản hồi nhưng có thể cũ” là định nghĩa Availability; “toàn bộ hoặc không gì cả” là Atomic của ACID."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty fintech xây hệ thống chuyển tiền giữa các tài khoản. Việc trừ tiền tài khoản A và cộng tiền tài khoản B phải cùng thành công hoặc cùng không được áp dụng, dữ liệu có quan hệ bảng chặt chẽ. Lựa chọn nào phù hợp nhất?",
+        "options": [
+          "DynamoDB với eventually consistent read mặc định",
+          "Amazon RDS (relational database tuân thủ ACID)",
+          "Amazon ElastiCache for Redis làm kho dữ liệu chính",
+          "Amazon S3 với object versioning"
+        ],
+        "answer": [1],
+        "explain": "Yêu cầu atomic và ràng buộc quan hệ chặt là đặc trưng ACID, thấy ACID thì mặc định nghĩ tới RDS (relational), lý do ngành tài chính dùng nó. DynamoDB mặc định chạy kiểu BASE (eventually consistent) nên không phải lựa chọn tự nhiên ở đây."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng web-scale cần throughput đọc/ghi cực lớn, khả năng scale gần như không giới hạn và chấp nhận việc dữ liệu đọc ra có thể hơi cũ trong vài giây. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "RDS MySQL Multi-AZ",
+          "Aurora provisioned với 15 replica",
+          "RDS Oracle với TDE",
+          "Amazon DynamoDB"
+        ],
+        "answer": [3],
+        "explain": "Cần scale cực lớn và chấp nhận eventual consistency là kịch bản BASE/NoSQL, tức DynamoDB. RDS/Aurora theo ACID nên khả năng scale bị giới hạn bởi các quy tắc consistency cứng nhắc."
+      },
+      {
+        "type": "single",
+        "q": "Một câu hỏi trong đề thi mô tả nhu cầu “giao dịch ACID trên nhiều item trong DynamoDB”. Theo mẹo thi, đề đang nói tới tính năng nào?",
+        "options": [
+          "DynamoDB Transactions",
+          "DynamoDB Global Tables",
+          "DynamoDB Streams",
+          "DynamoDB Accelerator (DAX)"
+        ],
+        "answer": [0],
+        "explain": "Thấy ACID đi cùng NoSQL/DynamoDB thì nhiều khả năng đang nói DynamoDB Transactions, tính năng cung cấp hành vi kiểu ACID. Global Tables là replication đa region, không liên quan tới tính nguyên tử của giao dịch."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về mô hình BASE là đúng? (Chọn 2)",
+        "options": [
+          "BASE ưu tiên consistency hơn availability theo CAP theorem",
+          "Soft state: DB không tự ép consistency mà đẩy trách nhiệm cho application/developer",
+          "BASE giới hạn khả năng scale vì các quy tắc giao dịch cứng nhắc",
+          "DynamoDB chỉ hỗ trợ eventually consistent read, không có strongly consistent read",
+          "Eventually consistent: nếu đợi đủ lâu, lần đọc sẽ khớp với lần ghi trước đó"
+        ],
+        "answer": [1, 4],
+        "explain": "Soft state và Eventually consistent là hai thành phần của BASE. BASE ưu tiên availability (không phải consistency) và scale rất tốt; DynamoDB hỗ trợ cả eventually lẫn strongly consistent read, ứng dụng tự chọn."
+      }
+    ],
+    "Aurora Global Database": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy Aurora MySQL ở us-east-1 và cần phương án DR cross-region với RPO/RTO rất thấp. Replication sang region khác không được tiêu tốn CPU của các DB instance. Giải pháp nào đáp ứng tốt nhất?",
+        "options": [
+          "Aurora Multi-Master với các writer trong us-east-1",
+          "Bật cross-region backup replication cho automated backup",
+          "Aurora Global Database với một secondary region",
+          "Tạo cross-region replica dựa trên binlog ở tầng engine"
+        ],
+        "answer": [2],
+        "explain": "Aurora Global Database replicate ở tầng storage (~1 giây), không tốn CPU instance, và promote secondary được khi mất region. Replica dựa trên binlog là replication async ở tầng engine nên tốn tài nguyên instance; backup cross-region thì RTO cao vì phải restore."
+      },
+      {
+        "type": "single",
+        "q": "Aurora Global Database sao chép dữ liệu từ primary region sang secondary region như thế nào?",
+        "options": [
+          "Ở tầng engine qua binlog, độ trễ thường vài phút",
+          "Đồng bộ (synchronous) ở tầng storage, độ trễ bằng 0",
+          "Qua DMS với chế độ CDC, độ trễ vài giây",
+          "Ở tầng storage, một chiều, độ trễ thường khoảng 1 giây hoặc ít hơn"
+        ],
+        "answer": [3],
+        "explain": "Replication của Global Database ở storage layer, một chiều primary → secondary, thường ≤ 1 giây và không ảnh hưởng hiệu năng DB. Nó không đồng bộ (synchronous) nên có độ trễ nhỏ, và cũng không dùng DMS."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, một Aurora Global Database có tối đa bao nhiêu secondary region, và mỗi secondary region có tối đa bao nhiêu replica?",
+        "options": [
+          "5 secondary region, mỗi region tối đa 16 replica",
+          "5 secondary region, mỗi region tối đa 15 replica",
+          "3 secondary region, mỗi region tối đa 6 replica",
+          "10 secondary region, mỗi region tối đa 5 replica"
+        ],
+        "answer": [0],
+        "explain": "Khóa học nêu 5 secondary region (hiện AWS đã nâng lên 10), mỗi secondary có tối đa 16 replica vì không có writer nên cả 16 slot (1 + 15) đều là read replica. Con số 15 là số replica ở primary region."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng toàn cầu cần người dùng ở nhiều region đều GHI được vào database cục bộ (multi-active), dữ liệu phù hợp mô hình NoSQL. Lựa chọn nào đúng?",
+        "options": [
+          "Aurora Global Database",
+          "DynamoDB Global Tables",
+          "RDS cross-region read replica",
+          "Aurora Multi-Master"
+        ],
+        "answer": [1],
+        "explain": "Aurora Global Database chỉ có một region ghi (replication một chiều), nên nhu cầu ghi ở nhiều region với NoSQL là DynamoDB Global Tables. Aurora Multi-Master chỉ hoạt động trong một region."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có Aurora PostgreSQL ở us-east-1. Khách hàng ở châu Âu và châu Á phàn nàn đọc dữ liệu chậm. Cần giảm latency đọc cho họ mà ứng dụng vẫn ghi vào một nơi duy nhất. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Thêm nhiều Aurora replica trong us-east-1 và dùng reader endpoint",
+          "Đặt ElastiCache trong us-east-1 trước Aurora",
+          "Dùng Aurora Global Database, thêm secondary region ở châu Âu và châu Á",
+          "Bật Aurora Backtrack để giảm thời gian truy vấn"
+        ],
+        "answer": [2],
+        "explain": "Global read scaling: thêm secondary region gần người dùng để họ đọc với latency thấp, còn ghi vẫn ở primary. Thêm replica hay cache trong us-east-1 không giải quyết được độ trễ mạng xuyên lục địa."
+      }
+    ],
+    "Aurora Multi-Master": [
+      {
+        "type": "single",
+        "q": "Về cách kết nối, Aurora Multi-Master khác Aurora single-master ở điểm nào?",
+        "options": [
+          "Multi-master có cluster endpoint tự cân tải lệnh ghi giữa các writer",
+          "Multi-master bắt buộc dùng custom endpoint cho mỗi writer",
+          "Multi-master không có cluster endpoint và không có load balancing; ứng dụng tự kết nối tới từng instance",
+          "Multi-master chỉ có reader endpoint, lệnh ghi đi qua RDS Proxy"
+        ],
+        "answer": [2],
+        "explain": "Ở multi-master không có cluster endpoint hay load balancing; ứng dụng tự kết nối tới một hoặc tất cả instance và tự quản failover/cân tải. Cluster endpoint + reader endpoint là đặc trưng của single-master."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng Aurora MySQL và yêu cầu ứng dụng gần như không bị gián đoạn khi một writer hỏng; ứng dụng sẵn sàng tự giữ kết nối tới nhiều writer trong cùng region. Theo khóa học, cấu hình nào phù hợp?",
+        "options": [
+          "Aurora single-master với 15 replica",
+          "Aurora Multi-Master",
+          "Aurora Global Database với 5 secondary region",
+          "RDS MySQL Multi-AZ instance deployment"
+        ],
+        "answer": [1],
+        "explain": "Multi-master cho mọi instance cùng đọc/ghi, writer này chết thì ứng dụng chuyển ngay sang writer khác, là nền móng cho ứng dụng fault tolerant. Single-master vẫn có gián đoạn trong lúc promote replica."
+      },
+      {
+        "type": "single",
+        "q": "Trong Aurora Multi-Master, điều gì xảy ra khi một writer đề xuất commit nhưng các storage node từ chối vì xung đột với một thay đổi khác đang diễn ra?",
+        "options": [
+          "Lệnh ghi được tự động chuyển sang writer khác để thử lại",
+          "Áp dụng quy tắc last-writer-wins, lệnh ghi sau ghi đè lệnh trước",
+          "Lệnh ghi được đưa vào hàng đợi và commit khi xung đột kết thúc",
+          "Không đạt quorum nên thay đổi bị hủy và lỗi được trả về cho ứng dụng"
+        ],
+        "answer": [3],
+        "explain": "Writer cần quorum storage node đồng ý; nếu quorum từ chối, thay đổi bị hủy và trả lỗi cho ứng dụng. Aurora không tự retry hay áp dụng last-writer-wins."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần failover nhanh nhất có thể và giảm thiểu downtime cho Aurora MySQL, nhưng KHÔNG cần nhiều writer. Theo mẹo thi, giải pháp nào phù hợp?",
+        "options": [
+          "Aurora single-master có replica, kết hợp RDS Proxy",
+          "Aurora Multi-Master",
+          "Aurora Global Database",
+          "RDS MySQL Multi-AZ instance"
+        ],
+        "answer": [0],
+        "explain": "Khi không đòi nhiều writer, Aurora single-master + replica (failover nhanh nhờ shared storage) cộng RDS Proxy (failover trong suốt với ứng dụng) là đáp án. Multi-master thêm độ phức tạp vì ứng dụng phải tự quản kết nối."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về Aurora Multi-Master là đúng? (Chọn 2)",
+        "options": [
+          "Multi-master hoạt động trong một region",
+          "Multi-master có reader endpoint để cân tải đọc",
+          "Mỗi writer có storage riêng, không dùng shared cluster volume",
+          "Thay đổi đã commit được replicate sang các writer khác để chúng cập nhật in-memory cache",
+          "Multi-master replicate một chiều sang các secondary region"
+        ],
+        "answer": [0, 3],
+        "explain": "Multi-master nằm trong một region, dùng chung shared storage, và thay đổi đã commit được đẩy sang writer khác để cập nhật cache. Replication một chiều sang region khác là Aurora Global Database, không phải multi-master."
+      }
+    ],
+    "Aurora Serverless": [
+      {
+        "type": "single",
+        "q": "Một blog nhỏ chỉ có người truy cập vài phút mỗi ngày. Chủ blog muốn trả tiền ít nhất và không phải quản lý capacity của database. Lựa chọn nào phù hợp nhất?",
+        "options": [
+          "Aurora provisioned với instance db.r5.large",
+          "RDS MySQL Multi-AZ instance",
+          "Aurora Serverless, cho phép pause về 0 ACU khi không có tải",
+          "MySQL tự cài trên EC2 t3.micro dùng Reserved Instance"
+        ],
+        "answer": [2],
+        "explain": "Workload ít dùng/không đều là use case điển hình của Aurora Serverless: scale theo ACU, billing theo giây, pause về 0 thì chỉ trả storage. Provisioned hay EC2 đều tính tiền compute cả khi không dùng."
+      },
+      {
+        "type": "single",
+        "q": "Aurora Serverless đo compute bằng đơn vị nào, và khi cluster đang pause thì bạn trả tiền cho gì?",
+        "options": [
+          "vCPU-hour; vẫn trả compute tối thiểu 10 phút mỗi giờ",
+          "RCU/WCU; chỉ trả cho request đã thực hiện",
+          "DPU; trả phí khởi động lại cluster",
+          "ACU (Aurora Capacity Unit); khi pause chỉ trả tiền storage"
+        ],
+        "answer": [3],
+        "explain": "Compute của Aurora Serverless đo bằng ACU, scale giữa min/max ACU; khi pause về 0 ACU chỉ còn phí storage. RCU/WCU là đơn vị capacity của DynamoDB."
+      },
+      {
+        "type": "single",
+        "q": "Một nhóm dev dùng Aurora Serverless với auto-pause. Sau thời gian không dùng, request đầu tiên của ứng dụng thường bị timeout vì DB đang resume. Yêu cầu mới: latency thấp ổn định ngay từ request đầu. Cách xử lý phù hợp nhất?",
+        "options": [
+          "Đặt min ACU lớn hơn 0 (không cho pause) hoặc chuyển sang provisioned",
+          "Tăng max ACU lên mức cao nhất",
+          "Thêm reader endpoint cho cluster",
+          "Bật Backtrack cho cluster"
+        ],
+        "answer": [0],
+        "explain": "Resume sau khi pause có độ trễ; muốn latency thấp liên tục thì giữ min ACU > 0 hoặc dùng provisioned. Tăng max ACU chỉ nâng trần scale, không bỏ được độ trễ resume từ 0."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng serverless chạy trên Lambda truy cập Aurora Serverless. Nhóm phát triển muốn gọi DB qua một API nhẹ kiểu connectionless thay vì quản lý kết nối DB truyền thống. Tính năng nào phù hợp?",
+        "options": [
+          "RDS Proxy",
+          "Data API",
+          "IAM DB Authentication",
+          "Reader endpoint"
+        ],
+        "answer": [1],
+        "explain": "Data API là API nhẹ, kiểu connectionless, hợp với Lambda dùng Aurora Serverless. RDS Proxy là đáp án khi vẫn dùng kết nối truyền thống từ nhiều Lambda, không phải connectionless."
+      },
+      {
+        "type": "single",
+        "q": "Trong kiến trúc Aurora Serverless (v1) mà khóa học mô tả, vì sao cluster scale in/out mà không làm gián đoạn kết nối của ứng dụng?",
+        "options": [
+          "Mỗi ACU có storage local đồng bộ với nhau nên kết nối được chuyển kèm dữ liệu",
+          "Một Application Load Balancer do người dùng tạo đứng trước các ACU",
+          "Ứng dụng kết nối qua một shared proxy fleet do AWS quản lý, proxy môi giới kết nối tới các ACU",
+          "Ứng dụng dùng instance endpoint của từng ACU và tự chuyển khi ACU thay đổi"
+        ],
+        "answer": [2],
+        "explain": "Client không nối trực tiếp tới ACU mà đi qua shared proxy fleet do AWS quản lý, nên việc thêm/bớt ACU trong suốt với ứng dụng. ACU là stateless và không có storage local."
+      }
+    ],
+    "Aurora": [
+      {
+        "type": "single",
+        "q": "Cluster volume của Aurora (theo khóa học) có đặc điểm nào sau đây?",
+        "options": [
+          "3 bản sao trên 3 AZ, tối đa 5 replica",
+          "6 bản sao trên 2 AZ, tối đa 15 replica",
+          "6 bản sao trên 3 AZ, tối đa 15 replica, dung lượng tối đa 128 TiB",
+          "2 bản sao trên 2 AZ, 1 standby không đọc được"
+        ],
+        "answer": [2],
+        "explain": "Con số cần thuộc: cluster volume SSD 6 bản sao trên 3 AZ, tối đa 15 replica, 128 TiB (khóa học). 1 standby không đọc được là mô tả RDS Multi-AZ instance."
+      },
+      {
+        "type": "single",
+        "q": "Một developer lỡ xóa một bảng quan trọng trong Aurora MySQL 10 phút trước. Công ty muốn tua cả cluster về thời điểm trước sự cố ngay tại chỗ, không tạo DB mới và không đổi endpoint của ứng dụng. Tính năng nào đáp ứng?",
+        "options": [
+          "Point-in-time restore từ automated backup",
+          "Restore từ manual snapshot gần nhất",
+          "Fast clone từ cluster hiện tại",
+          "Aurora Backtrack"
+        ],
+        "answer": [3],
+        "explain": "Backtrack tua lại in-place cả cluster về thời điểm trước khi dữ liệu hỏng, không tạo DB mới, không đổi cấu hình ứng dụng. Point-in-time restore hay restore snapshot luôn tạo cluster mới với endpoint mới."
+      },
+      {
+        "type": "single",
+        "q": "Đội QA cần một bản sao của Aurora production để test, tạo thật nhanh và tốn ít storage nhất có thể. Lựa chọn nào phù hợp?",
+        "options": [
+          "Aurora Fast clone (copy-on-write)",
+          "Tạo manual snapshot rồi restore sang cluster mới",
+          "Dùng DMS full load sang một cluster mới",
+          "Thêm một Aurora replica rồi promote"
+        ],
+        "answer": [0],
+        "explain": "Fast clone không copy toàn bộ dữ liệu mà tham chiếu storage gốc và chỉ lưu phần khác biệt (copy-on-write), nên nhanh và tiết kiệm storage. Restore snapshot hay DMS đều phải copy toàn bộ dữ liệu."
+      },
+      {
+        "type": "single",
+        "q": "Ứng dụng đọc nhiều trên Aurora. Công ty muốn khi thêm replica thì năng lực đọc tự tăng mà ứng dụng chỉ cần cấu hình một địa chỉ đọc duy nhất. Ứng dụng nên dùng endpoint nào cho các truy vấn đọc?",
+        "options": [
+          "Cluster endpoint",
+          "Reader endpoint",
+          "Instance endpoint của replica đầu tiên",
+          "Endpoint DNS của RDS Proxy chỉ dành cho ghi"
+        ],
+        "answer": [1],
+        "explain": "Reader endpoint cân tải qua các replica và tự cập nhật khi thêm replica. Cluster endpoint luôn trỏ tới primary/writer nên không phân tải đọc."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về chi phí Aurora (theo khóa học) là đúng? (Chọn 2)",
+        "options": [
+          "Aurora có free tier với instance micro giống RDS",
+          "Phải chọn trước dung lượng storage khi tạo cluster",
+          "Compute được tính theo giây với mức tối thiểu 10 phút",
+          "Xóa dữ liệu thì phí storage giảm ngay theo dung lượng đang dùng",
+          "Dung lượng backup được miễn phí bằng 100% dung lượng cluster"
+        ],
+        "answer": [2, 4],
+        "explain": "Aurora tính compute theo giây (tối thiểu 10 phút) và miễn phí backup bằng 100% dung lượng cluster. Aurora không có free tier, không cần cấp phát storage trước, và khi đi thi nên giả định cơ chế high watermark (xóa dữ liệu không giảm phí ngay)."
+      }
+    ],
+    "DMS": [
+      {
+        "type": "single",
+        "q": "Một công ty cần migrate database Oracle on-premises sang Aurora PostgreSQL với downtime tối thiểu. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "DMS với Full load only, không cần SCT",
+          "AWS DataSync qua Site-to-Site VPN",
+          "DMS với CDC only, không cần SCT",
+          "AWS SCT để chuyển schema, sau đó DMS với Full load + CDC"
+        ],
+        "answer": [3],
+        "explain": "Đổi engine (Oracle → PostgreSQL) cần SCT để chuyển schema vì DMS không tự chuyển schema; minimal downtime thì dùng Full load + CDC. DataSync dùng cho file/object, không phải database."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã bulk load dữ liệu vào RDS Oracle bằng công cụ export/import native của Oracle. Giờ họ chỉ cần đồng bộ liên tục các thay đổi phát sinh ở database nguồn on-premises. Loại DMS task nào phù hợp?",
+        "options": [
+          "Full load",
+          "CDC only",
+          "Full load + CDC",
+          "Schema conversion bằng SCT"
+        ],
+        "answer": [1],
+        "explain": "CDC only chỉ replicate thay đổi, dùng khi dữ liệu ban đầu đã được bulk load bằng công cụ khác. Full load + CDC sẽ copy lại toàn bộ dữ liệu, thừa trong tình huống này."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần migrate database vài chục TB lên AWS nhưng đường mạng yếu và không muốn chiếm băng thông của doanh nghiệp. Giải pháp nào phù hợp?",
+        "options": [
+          "Dùng SCT trích dữ liệu vào Snowball, AWS nạp vào S3, rồi DMS migrate từ S3 vào DB đích",
+          "Dùng DMS Full load trực tiếp qua internet",
+          "Dùng Storage Gateway File Gateway để đồng bộ file dump",
+          "Dùng DataSync chép file dữ liệu DB vào EFS"
+        ],
+        "answer": [0],
+        "explain": "Migration nhiều TB với mạng yếu dùng DMS + SCT + Snowball: SCT extract ra Snowball, AWS nạp vào S3, DMS migrate từ S3 (CDC cũng đi qua S3). DMS trực tiếp qua internet sẽ chậm và chiếm băng thông."
+      },
+      {
+        "type": "single",
+        "q": "Trong AWS DMS, thành phần nào là EC2 chạy phần mềm migration và có thể chạy nhiều tác vụ migrate cùng lúc?",
+        "options": [
+          "Replication task",
+          "Source endpoint",
+          "Replication instance",
+          "Schema Conversion Tool"
+        ],
+        "answer": [2],
+        "explain": "Replication instance là EC2 có phần mềm migration và chạy được nhiều replication task. Replication task chỉ chứa tùy chọn của một lần migrate; endpoint chứa thông tin kết nối."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về AWS DMS và SCT là đúng? (Chọn 2)",
+        "options": [
+          "Ít nhất một endpoint (source hoặc target) phải nằm trong AWS",
+          "Migrate MySQL on-premises sang RDS MySQL bắt buộc phải dùng SCT",
+          "DMS tự chuyển đổi schema giữa các engine khác nhau",
+          "Migrate Microsoft SQL Server on-premises sang RDS MySQL cần dùng SCT",
+          "DMS dùng được để migrate giữa hai database đều nằm on-premises"
+        ],
+        "answer": [0, 3],
+        "explain": "DMS yêu cầu ít nhất một đầu ở AWS, và SCT chỉ cần khi đổi engine (MSSQL → MySQL). Cùng engine (MySQL → RDS MySQL) không cần SCT; DMS không tự chuyển schema và không migrate giữa hai DB on-prem."
+      }
+    ],
+    "Database Models": [
+      {
+        "type": "single",
+        "q": "Một startup xây mạng xã hội, dữ liệu xoay quanh quan hệ giữa người dùng, công ty, địa điểm và các quan hệ này thay đổi liên tục. Truy vấn kiểu “mọi nhân viên của công ty X” phải nhanh. Mô hình database nào phù hợp nhất?",
+        "options": [
+          "Column store (Amazon Redshift)",
+          "Wide column store (Amazon DynamoDB)",
+          "Relational (Amazon RDS MySQL)",
+          "Graph database (ví dụ Amazon Neptune)"
+        ],
+        "answer": [3],
+        "explain": "Graph DB lưu quan hệ (edge) cùng dữ liệu nên truy vấn quan hệ nhanh và linh hoạt, hợp với social media. Relational phải tính join mỗi lần query và schema/quan hệ cố định, khó thay đổi."
+      },
+      {
+        "type": "single",
+        "q": "Bộ phận phân tích cần chạy báo cáo tổng hợp (ví dụ tổng số sản phẩm bán theo size) trên vài cột của một tập dữ liệu rất lớn. Mô hình lưu trữ và dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Row store, Amazon RDS",
+          "Column store, Amazon Redshift",
+          "Key-value, Amazon ElastiCache",
+          "Document, Amazon DocumentDB"
+        ],
+        "answer": [1],
+        "explain": "Column store nhóm dữ liệu theo cột nên rất tốt cho reporting/analytics trên vài cột; Redshift là ví dụ AWS. Row store (RDS) hợp OLTP thao tác theo row, kém khi aggregate một cột trên toàn bộ dữ liệu."
+      },
+      {
+        "type": "single",
+        "q": "Đề thi mô tả dữ liệu chỉ là các cặp name/value, không có structure, dùng cho in-memory caching. Theo mẹo thi, đây là mô hình nào?",
+        "options": [
+          "Key-value store",
+          "Graph database",
+          "Column store",
+          "Relational database"
+        ],
+        "answer": [0],
+        "explain": "Name/value, key/value, không structure, in-memory caching là dấu hiệu của key-value store (ví dụ ElastiCache). Column store dành cho analytics, graph dành cho dữ liệu nặng quan hệ."
+      },
+      {
+        "type": "single",
+        "q": "DynamoDB thuộc mô hình NoSQL nào, và yêu cầu “cứng” duy nhất về cấu trúc item là gì?",
+        "options": [
+          "Document DB; mọi item phải là JSON hợp lệ",
+          "Graph DB; mọi item phải có ít nhất một edge",
+          "Wide column store; mọi item trong table phải dùng cùng cấu trúc key và key phải duy nhất",
+          "Column store; mọi item phải có đủ tất cả attribute"
+        ],
+        "answer": [2],
+        "explain": "DynamoDB là wide column store: bắt buộc partition key (tùy chọn thêm sort key), mọi item dùng cùng cấu trúc key và key phải duy nhất; attribute thì tự do. Việc bắt buộc mọi row có đủ attribute là đặc trưng relational."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty lưu product catalog dạng JSON lồng nhau, cấu trúc mỗi sản phẩm khác nhau, và cần truy vấn/index trên các thuộc tính lồng sâu. Mô hình nào phù hợp nhất?",
+        "options": [
+          "Key-value store, vì value có thể chứa JSON",
+          "Document database",
+          "Column store",
+          "Relational database với schema cố định"
+        ],
+        "answer": [1],
+        "explain": "Document DB hiểu nội dung document nên có flexible indexing và truy vấn được thuộc tính nested, hợp catalog/user profile/CMS. Key-value cũng chứa được JSON nhưng value là opaque với DB, không index được bên trong."
+      }
+    ],
+    "Databases on EC2": [
+      {
+        "type": "single",
+        "q": "Một vendor phần mềm yêu cầu dùng một database engine mới nổi mà cả RDS lẫn Aurora đều không hỗ trợ. Công ty muốn chạy trên AWS. Lựa chọn nào phù hợp?",
+        "options": [
+          "RDS Custom",
+          "Aurora Serverless",
+          "RDS MySQL với custom parameter group",
+          "Tự cài database engine đó trên EC2"
+        ],
+        "answer": [3],
+        "explain": "Cần engine/version AWS không cung cấp là lý do hợp lệ để chạy DB trên EC2. RDS Custom chỉ hỗ trợ Oracle và SQL Server, không cài được engine tùy ý."
+      },
+      {
+        "type": "single",
+        "q": "Một vendor nói ứng dụng của họ cần root access để tinh chỉnh một số tham số MySQL nên đề xuất tự chạy DB trên EC2. Theo khóa học, kiến trúc sư nên làm gì trước tiên?",
+        "options": [
+          "Kiểm tra xem các tham số đó có chỉnh được qua RDS parameter group hay không",
+          "Chuyển ngay sang MySQL trên EC2 vì đó là yêu cầu của vendor",
+          "Dùng RDS Custom for MySQL để có quyền root",
+          "Dùng Aurora Serverless để có quyền OS"
+        ],
+        "answer": [0],
+        "explain": "Yêu cầu root access thường chỉ là “nghĩ là cần”; RDS cho chỉnh nhiều tham số qua parameter group mà không cần root, nên phải chất vấn trước. RDS Custom không hỗ trợ MySQL, Aurora cũng không cho truy cập OS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty tách WordPress monolith thành 2 EC2: app ở AZ-A, database ở AZ-B, kết nối qua private IP. Hệ quả về chi phí truyền dữ liệu là gì?",
+        "options": [
+          "Miễn phí vì dùng private IP trong cùng VPC",
+          "Chỉ tính phí khi dữ liệu đi ra internet",
+          "Phát sinh phí data transfer giữa các AZ",
+          "Phải trả phí NAT Gateway cho mỗi GB"
+        ],
+        "answer": [2],
+        "explain": "Traffic giữa instance cùng AZ qua private IP là miễn phí, nhưng cross-AZ thì có phí data transfer (nhỏ nhưng có). Private IP không làm traffic cross-AZ thành miễn phí."
+      },
+      {
+        "type": "single",
+        "q": "Database MariaDB tự quản chạy trên một EC2 với EBS volume. Rủi ro về resilience lớn nhất của kiến trúc này là gì?",
+        "options": [
+          "EBS tự replicate sang region khác nên tốn thêm phí",
+          "EC2 và EBS đều nằm trong một AZ, AZ lỗi thì database lỗi",
+          "RDS sẽ tự ghi đè cấu hình engine trong maintenance window",
+          "Không thể snapshot EBS khi DB đang chạy"
+        ],
+        "answer": [1],
+        "explain": "DB trên EC2 mặc định là single AZ vì EC2 và EBS đều gắn với một AZ; muốn HA phải tự xây và tự lo backup (EBS snapshot, dump lên S3). EBS không tự replicate sang region khác."
+      },
+      {
+        "type": "multi",
+        "q": "Những lý do nào là lý do hợp lệ để chạy database trên EC2 thay vì dịch vụ managed? (Chọn 2)",
+        "options": [
+          "Cần point-in-time restore tự động với retention 35 ngày",
+          "Cần tổ hợp OS + DB version rất cụ thể mà AWS không cung cấp",
+          "Muốn database scale linh hoạt theo tải bursty, trả theo giây",
+          "Cần kiến trúc replication đặc thù mà AWS không hỗ trợ",
+          "Muốn HA tự động qua nhiều AZ mà không phải tự xây"
+        ],
+        "answer": [1, 3],
+        "explain": "Tổ hợp OS + DB version cụ thể và kiến trúc replication đặc thù là các lý do hợp lệ trong khóa học. PITR tự động, scale theo giây và HA tự động là lợi ích của dịch vụ managed (RDS/Aurora), DB trên EC2 không có sẵn."
+      }
+    ],
+    "RDS Architecture": [
+      {
+        "type": "single",
+        "q": "Khóa học mô tả Amazon RDS chính xác nhất là gì?",
+        "options": [
+          "Database-as-a-Service: mỗi lần trả tiền bạn nhận đúng một database",
+          "Một public service giống S3, truy cập qua public endpoint",
+          "Database server as a service: một DB instance do AWS quản lý, chứa được nhiều database",
+          "Một dịch vụ cho phép SSH vào OS để tự cài database engine"
+        ],
+        "answer": [2],
+        "explain": "RDS là “database server as a service”: một RDS instance là một DB server chứa được nhiều database, gọi là DBaaS là không chính xác. RDS chạy trong VPC và không có SSH/OS access (ngoại lệ RDS Custom)."
+      },
+      {
+        "type": "single",
+        "q": "Khi launch một RDS instance Multi-AZ, RDS dựa vào cấu hình nào để chọn subnet cho primary và subnet ở AZ khác cho standby?",
+        "options": [
+          "DB subnet group",
+          "DB parameter group",
+          "VPC route table",
+          "Option group"
+        ],
+        "answer": [0],
+        "explain": "DB subnet group là danh sách subnet (nhiều AZ trong một VPC) mà RDS được phép dùng; RDS chọn một subnet cho primary và một ở AZ khác cho standby. Parameter group dùng để cấu hình tham số engine."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chạy WordPress trên các EC2 trong private subnet và RDS MySQL trong private subnet. Cần chỉ cho phép các EC2 app tier kết nối vào RDS. Cách chuẩn nhất là gì?",
+        "options": [
+          "Thêm IAM policy cho phép rds:Connect vào instance role của EC2",
+          "Tạo Network ACL chặn mọi IP trừ IP hiện tại của các EC2",
+          "Bật public accessibility và giới hạn bằng password mạnh",
+          "Thêm inbound rule port 3306 vào security group của RDS với source là security group của các EC2 app"
+        ],
+        "answer": [3],
+        "explain": "Truy cập mạng vào RDS được kiểm soát bằng VPC security group; tham chiếu SG của app tier là cách chuẩn và tự áp dụng cho instance mới. NACL theo IP khó bảo trì khi EC2 thay đổi, còn IAM không kiểm soát truy cập mạng."
+      },
+      {
+        "type": "single",
+        "q": "Theo mẹo thi, phát biểu nào đúng về storage của RDS thường (không phải Aurora)?",
+        "options": [
+          "Mọi instance dùng chung một cluster volume sao chép 6 bản qua 3 AZ",
+          "Mỗi RDS instance có EBS storage riêng; primary và standby mỗi bên một volume",
+          "Storage tự co giãn, không cần cấp phát trước dung lượng",
+          "Standby đọc dữ liệu trực tiếp từ volume của primary"
+        ],
+        "answer": [1],
+        "explain": "RDS thường gắn EBS riêng cho từng instance (primary và standby mỗi bên một volume) và phải cấp phát storage trước. Shared cluster volume 6 bản/3 AZ là của Aurora, đừng gán cho RDS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có RDS instance với 2 TB storage đã cấp phát. Theo khóa học, họ được miễn phí bao nhiêu dung lượng backup/snapshot?",
+        "options": [
+          "Không có dung lượng miễn phí",
+          "100 GB",
+          "2 TB",
+          "4 TB"
+        ],
+        "answer": [2],
+        "explain": "RDS miễn phí dung lượng snapshot bằng đúng dung lượng storage đã mua (2 TB storage → 2 TB snapshot free); vượt quá thì tính theo GB-tháng."
+      }
+    ],
+    "RDS Backups and Restore": [
+      {
+        "type": "single",
+        "q": "Automated backup của RDS có retention period tối đa bao lâu và ghi transaction log lên S3 với tần suất nào?",
+        "options": [
+          "Tối đa 35 ngày; transaction log mỗi 5 phút",
+          "Tối đa 7 ngày; transaction log mỗi 1 phút",
+          "Tối đa 90 ngày; transaction log mỗi 15 phút",
+          "Không giới hạn; transaction log mỗi giờ"
+        ],
+        "answer": [0],
+        "explain": "Automated backup giữ 0–35 ngày (0 = tắt) và ghi transaction log lên S3 mỗi 5 phút, cho phép point-in-time restore với RPO khoảng 5 phút."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty sắp xóa một RDS instance nhưng phải giữ dữ liệu của nó 1 năm để tuân thủ. Cách đơn giản nhất là gì?",
+        "options": [
+          "Chọn giữ lại automated backup khi xóa instance",
+          "Tăng backup retention lên 365 ngày rồi xóa instance",
+          "Bật cross-region backup replication rồi xóa instance",
+          "Tạo final snapshot (manual snapshot) khi xóa instance"
+        ],
+        "answer": [3],
+        "explain": "Manual/final snapshot không bao giờ tự hết hạn và tồn tại sau khi xóa instance. Automated backup giữ lại vẫn hết hạn theo retention, mà retention tối đa chỉ 35 ngày."
+      },
+      {
+        "type": "single",
+        "q": "Lúc 10:20 một lỗi ứng dụng làm hỏng dữ liệu trong RDS MySQL (có automated backup). Công ty muốn khôi phục dữ liệu về khoảng 10:15. Điều nào mô tả đúng quy trình?",
+        "options": [
+          "Promote read replica, vì replica chưa bị ảnh hưởng",
+          "Point-in-time restore tới 10:15, tạo RDS instance mới với endpoint mới, rồi cập nhật ứng dụng trỏ sang endpoint đó",
+          "Point-in-time restore tại chỗ, endpoint cũ được giữ nguyên",
+          "Thực hiện Reboot with failover để chuyển sang standby"
+        ],
+        "answer": [1],
+        "explain": "PITR restore snapshot gần nhất rồi replay transaction log tới thời điểm chọn, và luôn tạo instance mới với endpoint mới nên phải cập nhật app. Read replica và standby cũng bị corrupt theo vì dữ liệu được replicate sang."
+      },
+      {
+        "type": "single",
+        "q": "Một quản trị viên không tìm thấy bucket chứa automated backup của RDS trong S3 console. Giải thích nào đúng?",
+        "options": [
+          "Automated backup chỉ được lưu trên EBS của standby",
+          "Backup nằm trong bucket bị ẩn và phải bật S3 Inventory mới thấy",
+          "Backup được lưu trong S3 bucket do AWS quản lý, chỉ xem được trong RDS console",
+          "Automated backup chỉ được lưu khi bật cross-region replication"
+        ],
+        "answer": [2],
+        "explain": "Cả automated backup và snapshot đều lưu trong S3 bucket do AWS quản lý, không xuất hiện trong S3 console của bạn mà chỉ thấy trong RDS console. Đề thi có hỏi điểm này."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về cross-region backup của RDS là đúng? (Chọn 2)",
+        "options": [
+          "Được bật mặc định cho mọi RDS instance",
+          "Phải bật rõ ràng trong cấu hình automated backup",
+          "Chỉ áp dụng cho manual snapshot, không áp dụng cho transaction log",
+          "Không tính phí vì nằm trong dung lượng backup miễn phí",
+          "Tính phí data transfer cross-region và phí storage ở region đích"
+        ],
+        "answer": [1, 4],
+        "explain": "RDS có thể replicate snapshot và transaction log sang region khác, nhưng phải bật thủ công, và có phí data transfer cross-region + storage ở region đích. Tính năng này không mặc định và không miễn phí."
+      }
+    ],
+    "RDS Custom": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy Microsoft SQL Server và muốn dùng automation của RDS (backup, patch…), nhưng phải RDP vào OS để cài một agent của bên thứ ba. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "RDS for SQL Server Multi-AZ",
+          "Amazon RDS Custom for SQL Server",
+          "SQL Server tự cài trên EC2",
+          "Aurora PostgreSQL với Babelfish"
+        ],
+        "answer": [1],
+        "explain": "Cần managed RDS nhưng phải truy cập OS/tùy chỉnh engine, engine là Oracle hoặc SQL Server, thì dùng RDS Custom. RDS thường không cho OS access; EC2 thì mất hết automation của RDS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng PostgreSQL và cần quyền truy cập OS của database server để cài phần mềm giám sát riêng. Lựa chọn nào khả thi?",
+        "options": [
+          "RDS Custom for PostgreSQL",
+          "RDS PostgreSQL với IAM DB authentication",
+          "Tự chạy PostgreSQL trên EC2",
+          "Aurora PostgreSQL với custom endpoint"
+        ],
+        "answer": [2],
+        "explain": "RDS Custom chỉ hỗ trợ Oracle và SQL Server; với MySQL/PostgreSQL mà cần quyền OS thì phải chạy trên EC2. RDS và Aurora không cho truy cập OS."
+      },
+      {
+        "type": "single",
+        "q": "Amazon RDS Custom hỗ trợ những database engine nào?",
+        "options": [
+          "MySQL và PostgreSQL",
+          "MariaDB và MySQL",
+          "Aurora MySQL và Aurora PostgreSQL",
+          "Oracle và Microsoft SQL Server"
+        ],
+        "answer": [3],
+        "explain": "RDS Custom chỉ hỗ trợ Oracle và Microsoft SQL Server; các engine khác cần quyền OS thì phải dùng EC2."
+      },
+      {
+        "type": "single",
+        "q": "Một DBA dùng RDS Custom for Oracle và cần chỉnh một tham số ở mức OS. Theo khóa học, bước nào phải làm trước khi tùy chỉnh?",
+        "options": [
+          "Pause database automation, tùy chỉnh xong thì resume full automation",
+          "Tạo final snapshot và xóa instance",
+          "Tắt Multi-AZ để tránh failover",
+          "Chuyển instance sang public subnet để SSH"
+        ],
+        "answer": [0],
+        "explain": "Trước khi tùy chỉnh phải pause automation để RDS không can thiệp, xong thì resume để DB trở lại trạng thái sẵn sàng cho production. Truy cập qua SSH/RDP/Session Manager, không cần public subnet."
+      },
+      {
+        "type": "single",
+        "q": "Điểm nào giúp nhận diện RDS Custom so với RDS thường?",
+        "options": [
+          "RDS Custom không inject ENI vào VPC của bạn",
+          "Với RDS Custom, EC2 instance, EBS volume và backup hiện ra trong AWS account của bạn",
+          "RDS Custom do AWS chịu trách nhiệm toàn bộ backup và HA, khách hàng không tham gia",
+          "RDS Custom không hỗ trợ Session Manager"
+        ],
+        "answer": [1],
+        "explain": "Với RDS Custom mọi tài nguyên (EC2, EBS, backup) chạy trong account của bạn; RDS thường thì không thấy chúng. Trách nhiệm scaling, HA, backup, patch ở RDS Custom là chia sẻ, không phải hoàn toàn của AWS."
+      }
+    ],
+    "RDS Multi-AZ": [
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về RDS Multi-AZ Instance deployment (kiểu classic)?",
+        "options": [
+          "Standby phục vụ đọc để giảm tải cho primary",
+          "Replication sang standby là asynchronous nên có replication lag",
+          "Standby có thể đặt ở region khác để chống lỗi cả region",
+          "Có đúng một standby replicate synchronous, không dùng được để đọc hay ghi; failover 60–120 giây qua đổi CNAME"
+        ],
+        "answer": [3],
+        "explain": "Multi-AZ instance có 1 standby replicate đồng bộ ở AZ khác cùng region, không truy cập được kể cả để đọc, failover bằng đổi DNS CNAME mất 60–120 giây. Asynchronous và cross-region là đặc điểm của read replica."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty bật Multi-AZ (instance) cho RDS MySQL với kỳ vọng giảm tải các truy vấn báo cáo trên primary, nhưng tải primary không đổi. Họ nên làm gì?",
+        "options": [
+          "Thêm RDS read replica và sửa ứng dụng gửi truy vấn báo cáo tới endpoint của replica",
+          "Kết nối truy vấn báo cáo trực tiếp vào standby",
+          "Tăng backup retention để backup chạy trên standby",
+          "Bật Reboot with failover để chuyển truy vấn sang standby"
+        ],
+        "answer": [0],
+        "explain": "Multi-AZ instance là để HA, standby không phục vụ đọc; muốn scale đọc thì dùng read replica (hoặc Multi-AZ Cluster/Aurora). Không thể kết nối vào standby của Multi-AZ instance."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần RDS MySQL có 1 writer và 2 standby đọc được ở các AZ khác nhau, failover dưới khoảng 35 giây, chạy trên Graviton với local NVMe SSD. Lựa chọn nào phù hợp?",
+        "options": [
+          "RDS Multi-AZ Instance deployment",
+          "Aurora Global Database",
+          "RDS Multi-AZ DB Cluster deployment",
+          "RDS single-AZ với 2 cross-region read replica"
+        ],
+        "answer": [2],
+        "explain": "1 writer + 2 reader đọc được, failover ~35 giây, Graviton + NVMe là dấu hiệu của Multi-AZ DB Cluster. Multi-AZ Instance chỉ có 1 standby không đọc được và failover 60–120 giây."
+      },
+      {
+        "type": "multi",
+        "q": "Với RDS Multi-AZ Instance, những sự kiện nào gây ra failover sang standby? (Chọn 2)",
+        "options": [
+          "Tạo manual snapshot",
+          "AZ chứa primary gặp sự cố (AZ outage)",
+          "Thêm một read replica",
+          "Thay đổi instance type của DB",
+          "Tăng backup retention period"
+        ],
+        "answer": [1, 3],
+        "explain": "Failover xảy ra khi AZ outage, primary failure, manual failover, đổi instance type hoặc patching phần mềm. Snapshot (lấy từ standby), thêm read replica hay đổi retention không gây failover."
+      },
+      {
+        "type": "single",
+        "q": "Sau mỗi lần failover của RDS Multi-AZ, ứng dụng mất kết nối lâu hơn nhiều so với 2 phút vì cứ tiếp tục trỏ vào primary cũ. Cách khắc phục được khóa học nêu là gì?",
+        "options": [
+          "Cấu hình ứng dụng dùng IP của standby thay cho endpoint",
+          "Tắt (hoặc giảm) DNS caching trong ứng dụng cho endpoint của database",
+          "Thêm read replica cùng region",
+          "Nâng instance class của primary"
+        ],
+        "answer": [1],
+        "explain": "Failover Multi-AZ là đổi CNAME sang standby nên cần tắt DNS caching cho tên này để ứng dụng resolve được địa chỉ mới nhanh. Dùng IP cứng sẽ hỏng ngay khi failover."
+      }
+    ],
+    "RDS Proxy": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng serverless có hàng nghìn Lambda invocation đồng thời, mỗi lần mở kết nối mới tới RDS MySQL db.t3.medium, dẫn tới lỗi “too many connections”. Giải pháp nào đáp ứng với ít thay đổi code nhất?",
+        "options": [
+          "Thêm RDS read replica",
+          "Đặt ElastiCache trước database",
+          "Dùng RDS Proxy và trỏ Lambda tới proxy endpoint",
+          "Chuyển sang RDS Multi-AZ Instance deployment"
+        ],
+        "answer": [2],
+        "explain": "RDS Proxy giữ connection pool và multiplex nhiều kết nối client lên ít kết nối DB, đúng bài toán “too many connections” với Lambda; proxy endpoint dùng như DB endpoint nên không cần sửa ứng dụng. Read replica hay cache không giảm số kết nối mở/đóng."
+      },
+      {
+        "type": "single",
+        "q": "Một developer muốn kết nối tới RDS Proxy từ laptop ở nhà qua internet. Điều gì đúng?",
+        "options": [
+          "Chỉ cần bật public accessibility cho proxy",
+          "Phải đặt proxy sau một Network Load Balancer public",
+          "Proxy có public endpoint mặc định nhưng bắt buộc TLS",
+          "RDS Proxy chỉ truy cập được từ trong VPC (hoặc mạng private nối vào VPC), không truy cập từ internet"
+        ],
+        "answer": [3],
+        "explain": "RDS Proxy không public, chỉ truy cập được từ VPC hoặc mạng private kết nối vào VPC (VPN, Direct Connect…). Đây là bẫy hay gặp trong đề."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, RDS Proxy giúp giảm thời gian failover khoảng bao nhiêu và vì sao?",
+        "options": [
+          "Hơn 60%, vì client vẫn nối vào proxy và chờ trong khi proxy tự kết nối tới primary mới, không phải đợi CNAME của DB đổi",
+          "Khoảng 10%, vì proxy cache kết quả truy vấn trong lúc failover",
+          "100%, vì proxy ghi đồng thời vào primary và standby",
+          "Hơn 60%, vì proxy biến standby thành reader phục vụ đọc"
+        ],
+        "answer": [0],
+        "explain": "RDS Proxy giảm failover hơn 60% (Aurora khoảng 66–67%) và che lỗi DB khỏi ứng dụng: client giữ kết nối tới proxy, proxy tự lập kết nối tới primary mới. Proxy không phải cache và không ghi song song."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn giảm tải trên RDS do cùng một số truy vấn đọc được lặp lại rất nhiều lần. Một kỹ sư đề xuất RDS Proxy. Theo mẹo thi, nhận xét nào đúng?",
+        "options": [
+          "Đúng, RDS Proxy tự cache kết quả truy vấn đọc",
+          "Sai, RDS Proxy không phải cache; nên dùng ElastiCache hoặc read replica để giảm tải đọc",
+          "Đúng, RDS Proxy tự phân tải đọc sang standby của Multi-AZ instance",
+          "Sai, nên dùng Elastic Load Balancer trước RDS để phân tải đọc"
+        ],
+        "answer": [1],
+        "explain": "RDS Proxy chỉ pool và multiplex kết nối, không cache dữ liệu. Giảm tải đọc thì dùng read replica hoặc ElastiCache; ELB không pool kết nối DB và không dùng để phân tải đọc cho RDS."
+      },
+      {
+        "type": "single",
+        "q": "RDS Proxy giảm tải cho database server bằng cơ chế nào?",
+        "options": [
+          "Nén dữ liệu trước khi ghi xuống EBS",
+          "Chia dữ liệu thành nhiều shard trên nhiều instance",
+          "Connection pooling: giữ kết nối lâu dài tới DB và multiplex nhiều kết nối client lên ít kết nối DB",
+          "Chuyển mọi truy vấn ghi thành asynchronous"
+        ],
+        "answer": [2],
+        "explain": "RDS Proxy duy trì pool kết nối lâu dài tới DB (không mở/đóng liên tục) và multiplex: ít kết nối proxy→DB phục vụ nhiều kết nối client→proxy. Nó không shard hay nén dữ liệu."
+      }
+    ],
+    "RDS Read Replicas": [
+      {
+        "type": "single",
+        "q": "Các báo cáo chạy hằng ngày làm chậm RDS PostgreSQL chính của một công ty thương mại điện tử. Công ty muốn tách tải đọc của báo cáo ra mà không ảnh hưởng primary. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Tạo read replica và cấu hình công cụ báo cáo dùng endpoint của replica",
+          "Bật Multi-AZ Instance và chạy báo cáo trên standby",
+          "Tăng backup retention lên 35 ngày",
+          "Tạo manual snapshot mỗi ngày và chạy báo cáo trên snapshot"
+        ],
+        "answer": [0],
+        "explain": "Read-heavy workload hay báo cáo làm chậm DB chính thì dùng read replica, với điều kiện ứng dụng được trỏ tới endpoint riêng của replica. Standby của Multi-AZ instance không phục vụ đọc."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, RDS read replica dùng kiểu replication nào và mỗi DB instance có tối đa bao nhiêu read replica trực tiếp?",
+        "options": [
+          "Synchronous; tối đa 1",
+          "Synchronous; tối đa 15",
+          "Asynchronous; tối đa 5",
+          "Asynchronous; không giới hạn"
+        ],
+        "answer": [2],
+        "explain": "Read replica dùng asynchronous replication (có lag) và khóa học nêu tối đa 5 replica trực tiếp mỗi instance (hiện nay MySQL/MariaDB/PostgreSQL lên tới 15). Synchronous là Multi-AZ."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chạy RDS MySQL ở eu-west-1 và cần phục hồi nhanh (RTO thấp) nếu toàn bộ region gặp sự cố. Giải pháp nào phù hợp nhất cho RDS?",
+        "options": [
+          "Bật Multi-AZ Instance deployment",
+          "Tạo cross-region read replica ở region khác và promote khi region chính lỗi",
+          "Tăng tần suất manual snapshot lên mỗi giờ",
+          "Dùng RDS Proxy để failover sang region khác"
+        ],
+        "answer": [1],
+        "explain": "Cross-region read replica cho RPO gần 0 và promote nhanh nên RTO thấp khi mất region. Multi-AZ chỉ trong một region; restore từ snapshot thì chậm, RTO cao."
+      },
+      {
+        "type": "single",
+        "q": "Một script lỗi đã ghi đè sai dữ liệu trên RDS primary 15 phút trước. Instance có một read replica cùng region. Theo mẹo thi, cách khôi phục đúng là gì?",
+        "options": [
+          "Promote read replica vì nó có dữ liệu gần như mới nhất",
+          "Thực hiện failover sang standby Multi-AZ",
+          "Tạo replica của replica rồi promote",
+          "Point-in-time restore từ automated backup tới thời điểm trước sự cố"
+        ],
+        "answer": [3],
+        "explain": "Read replica chỉ bảo vệ khỏi failure, không bảo vệ khỏi data corruption vì dữ liệu hỏng cũng được replicate sang. Data corruption phải dùng point-in-time restore."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về RDS read replica là đúng? (Chọn 2)",
+        "options": [
+          "Read replica có endpoint riêng, ứng dụng phải được sửa để dùng nó",
+          "Khi primary lỗi, RDS tự động failover sang read replica",
+          "Read replica được replicate synchronous nên không có lag",
+          "Replica của replica (nhiều tầng) làm replication lag cộng dồn",
+          "Read replica chỉ đặt được trong cùng region với primary"
+        ],
+        "answer": [0, 3],
+        "explain": "Read replica có endpoint riêng (app phải biết để dùng), và replica nhiều tầng làm lag cộng dồn. Không có automatic failover tới replica (phải promote thủ công), replication là async và đặt được cross-region."
+      }
+    ],
+    "RDS Security": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên EC2 cần đăng nhập RDS MySQL mà không lưu password trong code, dùng instance role của EC2. Cơ chế nào phù hợp và token có hiệu lực bao lâu?",
+        "options": [
+          "IAM DB Authentication với generate-db-auth-token; token có hiệu lực 15 phút",
+          "IAM DB Authentication; token có hiệu lực 12 giờ",
+          "Transparent Data Encryption với KMS key; key xoay vòng mỗi năm",
+          "Security group tham chiếu instance role; không cần token"
+        ],
+        "answer": [0],
+        "explain": "IAM DB Authentication: policy gắn vào role ánh xạ identity sang local DB user, gọi generate-db-auth-token để lấy token hiệu lực 15 phút dùng thay password. Security group chỉ kiểm soát mạng, không xác thực danh tính."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty bật IAM DB Authentication cho RDS PostgreSQL và muốn dùng IAM policy để quy định user nào được SELECT hay UPDATE trên từng bảng. Nhận xét nào đúng?",
+        "options": [
+          "Đúng, IAM policy có thể cấp quyền ở mức bảng qua action rds-db:Select",
+          "Đúng, nhưng chỉ khi dùng thêm RDS Proxy",
+          "Không được; IAM DB Authentication chỉ thay password khi đăng nhập, quyền trên object trong DB vẫn do local DB user của engine quyết định",
+          "Không được; phải chuyển sang Oracle TDE để IAM kiểm soát quyền"
+        ],
+        "answer": [2],
+        "explain": "IAM DB auth chỉ là authentication, không phải authorization; quyền trên bảng/object vẫn gán cho local DB user và do engine kiểm soát. Đây là bẫy kinh điển trong đề."
+      },
+      {
+        "type": "single",
+        "q": "Một ngân hàng chạy RDS Oracle và yêu cầu dữ liệu được mã hóa ngay trong database engine, khóa mã hóa nằm trong HSM do khách hàng quản lý để AWS không thể tiếp xúc với khóa. Giải pháp nào đáp ứng?",
+        "options": [
+          "Encryption at rest bằng KMS với customer managed key",
+          "Bắt buộc SSL/TLS cho mọi database user",
+          "EBS encryption với AWS managed key",
+          "Oracle TDE tích hợp với AWS CloudHSM"
+        ],
+        "answer": [3],
+        "explain": "TDE mã hóa trong engine; RDS Oracle + TDE + CloudHSM để khóa trong HSM do khách hàng quản lý, loại AWS khỏi chuỗi tin cậy. KMS/EBS encryption do RDS host thực hiện nên vẫn cần tin AWS."
+      },
+      {
+        "type": "single",
+        "q": "Một RDS MySQL đang chạy được tạo mà không bật encryption at rest. Công ty muốn có phiên bản được mã hóa. Cách làm đúng là gì?",
+        "options": [
+          "Modify instance và bật encryption, áp dụng trong maintenance window",
+          "Tạo snapshot, copy snapshot với tùy chọn encryption bật, rồi restore từ bản copy đã mã hóa",
+          "Tạo read replica có mã hóa từ instance không mã hóa rồi promote",
+          "Bật SSL/TLS bắt buộc, dữ liệu trên EBS sẽ tự được mã hóa"
+        ],
+        "answer": [1],
+        "explain": "Encryption at rest phải chọn khi tạo instance; muốn mã hóa DB đang plaintext thì snapshot → copy (bật encryption) → restore. SSL/TLS chỉ mã hóa in transit, không mã hóa dữ liệu trên đĩa."
+      },
+      {
+        "type": "multi",
+        "q": "Khi bật encryption at rest bằng KMS cho một RDS instance, những phát biểu nào là đúng? (Chọn 2)",
+        "options": [
+          "Database engine biết dữ liệu đang được mã hóa và tự mã hóa trước khi ghi",
+          "Storage, log, snapshot và replica đều được mã hóa bằng cùng KMS key",
+          "Chỉ hỗ trợ cho Microsoft SQL Server và Oracle",
+          "Không thể tắt mã hóa sau khi đã bật",
+          "Có thể tắt mã hóa bất kỳ lúc nào qua Modify"
+        ],
+        "answer": [1, 3],
+        "explain": "Với KMS + EBS, storage, log, snapshot và replica đều được mã hóa và không thể tắt. Việc mã hóa do RDS host làm (engine không biết), áp dụng cho mọi engine; chỉ TDE mới giới hạn ở MSSQL/Oracle."
+      }
+    ]
+  }
+}

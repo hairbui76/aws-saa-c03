@@ -1,0 +1,1251 @@
+{
+  "chapter": "05 S3",
+  "lessons": {
+    "KMS": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng cần mã hóa các file báo cáo khoảng 2 MB bằng một KMS key. Cách tiếp cận nào đúng với giới hạn của KMS?",
+        "options": [
+          "Gọi API Encrypt trực tiếp với KMS key cho từng file 2 MB",
+          "Gọi GenerateDataKey, mã hóa file bằng plaintext DEK, xóa plaintext DEK rồi lưu ciphertext DEK cạnh file đã mã hóa",
+          "Export KMS key về ứng dụng để mã hóa cục bộ cho nhanh",
+          "Yêu cầu tăng giới hạn kích thước của API Encrypt qua Service Quotas"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "KMS key chỉ mã hóa trực tiếp tối đa 4 KB, dữ liệu lớn hơn phải dùng envelope encryption với DEK sinh từ GenerateDataKey. Key không bao giờ rời KMS nên không thể export KMS key."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty tài chính yêu cầu lưu khóa mã hóa trong HSM chuyên dụng single-tenant, đạt chuẩn FIPS 140-2 Level 3 và do chính công ty quản lý. Dịch vụ nào đáp ứng yêu cầu?",
+        "options": [
+          "AWS KMS với customer managed key",
+          "AWS KMS với AWS managed key",
+          "AWS CloudHSM",
+          "AWS Secrets Manager"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Theo khóa học, KMS là FIPS 140-2 Level 2 và là dịch vụ dùng chung; yêu cầu Level 3, HSM riêng, single-tenant, tự quản key là dấu hiệu kinh điển của CloudHSM. Customer managed key vẫn nằm trong hạ tầng KMS dùng chung."
+      },
+      {
+        "type": "single",
+        "q": "Account A mã hóa dữ liệu bằng KMS. Một ứng dụng ở Account B cần giải mã dữ liệu này. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Dùng AWS managed key aws/s3 và gắn IAM policy kms:Decrypt cho role trong Account B",
+          "Dùng AWS owned key vì AWS chia sẻ key này giữa nhiều account",
+          "Bật automatic rotation trên AWS managed key để key được chia sẻ",
+          "Dùng customer managed key và sửa key policy cho phép Account B dùng key"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Chỉ customer managed key mới sửa được key policy để cho phép cross-account. AWS managed key không tùy biến được key policy nên IAM policy ở account khác không có tác dụng."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về key policy của KMS?",
+        "options": [
+          "KMS không mặc định tin account chứa key; key policy phải có statement trust account thì IAM identity policy mới có tác dụng",
+          "Mọi IAM user có AdministratorAccess trong account tự động dùng được mọi KMS key",
+          "Key policy là tùy chọn; key không có key policy sẽ dùng IAM policy",
+          "Key policy chỉ áp dụng cho asymmetric key"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Khác với hầu hết dịch vụ, KMS không mặc định tin account; mỗi key luôn có key policy và phải trust account (Principal là account root) thì IAM policy mới cấp quyền được. Vì vậy có quyền admin IAM chưa chắc dùng được key."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về AWS KMS là đúng? (Chọn 2)",
+        "options": [
+          "Khi xóa KMS key, key bị xóa ngay lập tức",
+          "Khi gọi Decrypt không cần chỉ định KeyId vì thông tin key nằm sẵn trong ciphertext",
+          "KMS lưu trữ và theo dõi mọi DEK đã sinh ra để giải mã sau này",
+          "Xóa key phải qua waiting period từ 7 đến 30 ngày",
+          "Alias là global, cùng một alias trỏ tới cùng một key ở mọi region"
+        ],
+        "answer": [
+          1,
+          3
+        ],
+        "explain": "Decrypt đọc KeyId nằm trong ciphertext, và xóa key luôn có waiting period 7–30 ngày (mặc định 30). KMS không lưu DEK, còn alias là per-region nên mỗi region trỏ tới key khác nhau."
+      }
+    ],
+    "S3 Access Logs": [
+      {
+        "type": "single",
+        "q": "Đội audit cần bản ghi chi tiết từng request tới bucket và object (requester, operation, HTTP status code, bytes) với chi phí thấp nhất. Việc log trễ vài giờ là chấp nhận được. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "CloudTrail management events",
+          "S3 Server Access Logging gửi log vào một target bucket",
+          "VPC Flow Logs trên subnet chứa ứng dụng",
+          "CloudWatch request metrics cho S3"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Server Access Logging ghi chi tiết từng request theo kiểu web log, chỉ tốn phí lưu trữ và chấp nhận trễ vài giờ. CloudTrail management events không ghi thao tác đọc/ghi object (cần data events)."
+      },
+      {
+        "type": "single",
+        "q": "Đặc điểm giao log của S3 Server Access Logging là gì?",
+        "options": [
+          "Gần real-time trong vài giây và đảm bảo giao đủ 100%",
+          "Chỉ được giao khi bucket nguồn bật Versioning",
+          "Best effort, do S3 Log Delivery Group thực hiện, thường trễ vài giờ",
+          "Giao mỗi phút qua Amazon EventBridge"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Việc giao log do S3 Log Delivery Group thực hiện theo kiểu best effort, bật hay đổi cấu hình cũng có thể mất vài giờ mới có hiệu lực. Nếu cần nhanh và đảm bảo hơn thì dùng CloudTrail data events."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty bật S3 Server Access Logging cho nhiều bucket từ một năm trước. Chi phí lưu trữ của target bucket tăng liên tục. Cách nào giải quyết với vận hành thấp nhất?",
+        "options": [
+          "Không cần làm gì vì S3 tự xóa log sau 90 ngày",
+          "Bật S3 Bucket Key trên target bucket",
+          "Chuyển toàn bộ log sang CloudTrail Lake",
+          "Cấu hình S3 Lifecycle trên target bucket để chuyển log sang class rẻ hơn hoặc xóa sau một thời gian"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "S3 không tự quản lý vòng đời log file; bạn phải dùng Lifecycle Configuration để chuyển class hoặc expire log. Bucket Key chỉ giảm số lần gọi KMS, không liên quan dung lượng lưu trữ."
+      },
+      {
+        "type": "single",
+        "q": "Đội bảo mật muốn nhận cảnh báo ngay khi có object bị xóa khỏi một bucket quan trọng. Giải pháp nào phù hợp?",
+        "options": [
+          "S3 Event Notifications (hoặc Amazon EventBridge) để kích hoạt xử lý khi có sự kiện xóa",
+          "S3 Server Access Logging rồi quét log bằng Athena định kỳ",
+          "S3 Inventory report hằng ngày",
+          "Lifecycle rule ghi lại các thao tác xóa"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Server access logs là best effort, trễ vài giờ nên không dùng cho cảnh báo real-time; cần phản ứng ngay thì dùng S3 Events hoặc EventBridge. Athena trên access logs chỉ phù hợp phân tích sau."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về cấu hình S3 Server Access Logging là đúng? (Chọn 2)",
+        "options": [
+          "Logging được bật trên source bucket, chỉ định TargetBucket và TargetPrefix",
+          "Logging được bật trên target bucket, liệt kê các source bucket",
+          "Mỗi log record được ghi dưới dạng JSON",
+          "Target bucket bắt buộc nằm ở region khác source để tránh vòng lặp log",
+          "Một target bucket có thể nhận log từ nhiều source bucket, phân tách bằng prefix"
+        ],
+        "answer": [
+          0,
+          4
+        ],
+        "explain": "Cấu hình logging đặt trên source bucket (TargetBucket + TargetPrefix) và nhiều source có thể dồn về một target theo prefix. Log record phân cách bằng dấu cách (giống log Apache), không phải JSON; target thực tế phải cùng region với source."
+      }
+    ],
+    "S3 Access Points": [
+      {
+        "type": "single",
+        "q": "Một bucket chứa hàng tỷ object được hàng trăm team dùng chung. Bucket policy đã trở nên quá lớn và khó quản lý. Công ty muốn quản lý quyền riêng cho từng team với vận hành thấp nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Cấp presigned URL cho từng team",
+          "Tạo một S3 Multi-Region Access Point",
+          "Tạo S3 Access Point riêng cho từng team, mỗi access point có policy riêng",
+          "Dùng bucket ACL riêng cho từng team"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "S3 Access Points chia bucket dùng chung thành nhiều view, mỗi cái có endpoint và policy riêng nên bucket policy được đơn giản hóa. Multi-Region Access Point dùng để route toàn cầu tới bucket gần nhất, không giải quyết vấn đề phân quyền theo team."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn tài nguyên phân tích chỉ truy cập được dữ liệu trong bucket từ một VPC cụ thể, không đi qua Internet. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Tạo access point với network origin là VPC, kèm VPC endpoint cho S3 trong VPC đó",
+          "Tạo access point với network origin là Internet và giới hạn theo địa chỉ IP",
+          "Dùng S3 Multi-Region Access Point",
+          "Bật S3 Transfer Acceleration cho bucket"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Access point có network origin VPC chỉ chấp nhận truy cập từ VPC đó qua VPC endpoint, có thể kết hợp endpoint policy để ép buộc. Internet origin không giới hạn truy cập trong VPC."
+      },
+      {
+        "type": "single",
+        "q": "Vet staff đã được cấp quyền GetObject trong access point policy nhưng vẫn bị Access Denied khi đọc object qua access point. Nguyên nhân có khả năng nhất là gì?",
+        "options": [
+          "Access point chỉ hoạt động với network origin là Internet",
+          "Bucket policy không cho phép (hoặc không delegate quyền cho access point)",
+          "Bucket chưa bật Versioning",
+          "Access point policy chỉ có hiệu lực với role cross-account"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Quyền cấp ở access point policy cũng phải được bucket policy cho phép; cách phổ biến là bucket policy delegate mọi action khi request đi qua access point của account sở hữu. Versioning không liên quan đến quyền truy cập."
+      },
+      {
+        "type": "single",
+        "q": "Adrian nhắc cần nhớ lệnh CLI dùng để tạo S3 Access Point. Đó là lệnh nào?",
+        "options": [
+          "aws s3 mb",
+          "aws s3api put-bucket-policy",
+          "aws s3api put-bucket-acl",
+          "aws s3control create-access-point"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Access point được tạo qua API S3 Control bằng create-access-point. put-bucket-policy chỉ gắn policy cho bucket chứ không tạo access point."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về S3 Access Points?",
+        "options": [
+          "Access point cung cấp một endpoint toàn cầu tự động route tới bucket gần nhất ở nhiều region",
+          "Một bucket chỉ có tối đa một access point",
+          "Mỗi access point có endpoint DNS riêng, access point policy riêng và network origin riêng",
+          "Access point policy thay thế hoàn toàn bucket policy nên bucket policy bị bỏ qua"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Mỗi access point có DNS name, policy (tương đương bucket policy) và network origin riêng; một bucket có thể có nhiều access point. Endpoint toàn cầu route tới bucket gần nhất là đặc điểm của Multi-Region Access Points."
+      }
+    ],
+    "S3 Bucket Keys": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng upload hàng trăm nghìn object mỗi giây vào bucket dùng SSE-KMS và liên tục gặp ThrottlingException từ KMS, chi phí KMS cũng rất cao. Công ty muốn giữ lợi ích kiểm soát key của SSE-KMS. Giải pháp nào hiệu quả nhất?",
+        "options": [
+          "Chuyển bucket sang SSE-S3",
+          "Bật S3 Bucket Key trên bucket",
+          "Tạo thêm nhiều KMS key và chia object cho từng key",
+          "Chuyển sang client-side encryption"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "S3 Bucket Key cho KMS sinh một bucket key có thời hạn để S3 tự sinh DEK, giảm mạnh số lần gọi KMS nên giảm chi phí và tránh throttling mà vẫn giữ SSE-KMS. SSE-S3 hết throttling nhưng mất khả năng kiểm soát key và role separation."
+      },
+      {
+        "type": "single",
+        "q": "Một bucket đã có hàng triệu object SSE-KMS. Sau khi bật S3 Bucket Key, điều gì xảy ra với các object cũ?",
+        "options": [
+          "Toàn bộ object cũ tự động được re-encrypt bằng bucket key",
+          "Object cũ bị chuyển sang SSE-S3",
+          "Bucket Key chỉ áp dụng cho object mã hóa sau khi bật; object cũ phải copy/re-encrypt nếu muốn hưởng lợi",
+          "Object cũ không còn đọc được cho đến khi re-encrypt"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Bucket Key không hồi tố, chỉ áp dụng cho object được mã hóa sau khi bật. Object cũ vẫn đọc bình thường với DEK riêng của chúng, muốn áp dụng thì phải copy/re-encrypt."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi bật S3 Bucket Key, đội bảo mật nhận thấy thay đổi trong CloudTrail log cho KMS. Thay đổi đó là gì?",
+        "options": [
+          "CloudTrail không còn ghi bất kỳ event KMS nào cho bucket",
+          "Số event KMS tăng gấp đôi vì phải sinh thêm bucket key",
+          "Log hiển thị ARN của từng DEK thay vì ARN object",
+          "Log hiển thị ARN của bucket thay vì ARN object, và số event KMS ít đi"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Vì KMS chỉ được gọi để sinh bucket key, CloudTrail thấy bucket ARN và số event giảm. Hệ quả là policy dùng encryption context theo ARN object phải đổi sang ARN bucket."
+      },
+      {
+        "type": "single",
+        "q": "Khi không bật Bucket Key, điều gì giới hạn số PUT/giây tối đa vào một bucket dùng SSE-KMS?",
+        "options": [
+          "Quota request của KMS cho GenerateDataKey (khoảng 5.500, 10.000 hoặc 50.000 request/giây tùy region)",
+          "Giới hạn 3.500 PUT/giây trên mỗi prefix của S3 luôn thấp hơn quota KMS",
+          "Giới hạn băng thông của S3 Transfer Acceleration",
+          "Số lượng object tối đa trong bucket"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Mỗi object SSE-KMS cần một lần GenerateDataKey nên quota KMS (5.500/10.000/50.000 req/s tùy region) trở thành trần số PUT/giây. Bucket Key giảm số lời gọi này."
+      },
+      {
+        "type": "single",
+        "q": "S3 Bucket Key liên quan đến kiểu mã hóa nào?",
+        "options": [
+          "SSE-S3",
+          "SSE-C",
+          "Client-side encryption",
+          "SSE-KMS"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Bucket Key chỉ giải quyết vấn đề chi phí và throttling khi gọi KMS, nên chỉ liên quan SSE-KMS. SSE-S3 dùng root key nội bộ của S3, không gọi KMS nên không có vấn đề throttling."
+      }
+    ],
+    "S3 Encryption": [
+      {
+        "type": "single",
+        "q": "Một công ty trong ngành chịu quản lý chặt cần mã hóa object trong S3 sao cho S3 administrator không đọc được dữ liệu, mọi lần dùng key được audit và công ty kiểm soát được rotation. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "SSE-S3",
+          "SSE-C",
+          "SSE-KMS với customer managed key",
+          "SSE-KMS với AWS managed key aws/s3"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "SSE-KMS với customer managed key cho role separation (không có quyền KMS thì không đọc được object), audit qua CloudTrail và kiểm soát key policy/rotation. AWS managed key aws/s3 không sửa được key policy hay rotation."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty bắt buộc phải tự giữ và quản lý khóa mã hóa, nhưng không muốn tốn CPU của hệ thống mình cho việc mã hóa khối lượng lớn dữ liệu. Phương pháp mã hóa S3 nào phù hợp nhất?",
+        "options": [
+          "Client-side encryption",
+          "SSE-C",
+          "SSE-S3",
+          "SSE-KMS với AWS managed key"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Với SSE-C, khách hàng cung cấp key kèm request còn S3 thực hiện mã hóa/giải mã, nên offload được CPU. Client-side encryption cũng giữ key nhưng phải tự tốn CPU mã hóa."
+      },
+      {
+        "type": "single",
+        "q": "Một bucket đã đặt default encryption là SSE-KMS, nhưng đội bảo mật phát hiện một số object được upload với SSE-S3. Cách nào bắt buộc mọi upload đều dùng SSE-KMS?",
+        "options": [
+          "Bật lại default encryption SSE-KMS với customer managed key",
+          "Bật S3 Bucket Key cho bucket",
+          "Bật S3 Object Lock ở compliance mode",
+          "Thêm bucket policy Deny s3:PutObject khi header x-amz-server-side-encryption khác aws:kms"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Default encryption chỉ áp dụng khi request không có header, không phải ràng buộc; request chỉ định kiểu khác vẫn được ưu tiên. Muốn ép buộc phải dùng bucket policy kiểm tra header x-amz-server-side-encryption."
+      },
+      {
+        "type": "single",
+        "q": "Khi upload object, giá trị nào của header x-amz-server-side-encryption yêu cầu S3 dùng SSE-S3?",
+        "options": [
+          "AES256",
+          "aws:kms",
+          "aws:kms:dsse",
+          "aws:s3"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "AES256 tương ứng SSE-S3 (S3 managed keys, AES-256). aws:kms là SSE-KMS và aws:kms:dsse là DSSE-KMS mã hóa hai lớp."
+      },
+      {
+        "type": "multi",
+        "q": "Một IAM admin có full quyền S3 nhưng bị gắn inline policy Deny kms:* trên mọi resource. Admin này vẫn mở (GET) được những object nào? (Chọn 2)",
+        "options": [
+          "Object không mã hóa",
+          "Object SSE-KMS dùng AWS managed key aws/s3",
+          "Object SSE-S3",
+          "Object SSE-KMS dùng customer managed key",
+          "Object SSE-KMS đã bật S3 Bucket Key"
+        ],
+        "answer": [
+          0,
+          2
+        ],
+        "explain": "Object không mã hóa và SSE-S3 không cần quyền KMS nên vẫn đọc được. Mọi object SSE-KMS (kể cả có Bucket Key) đều cần KMS decrypt DEK, nên explicit deny kms:* gây Access Denied – đây chính là role separation."
+      }
+    ],
+    "S3 Events": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn tự động tạo thumbnail mỗi khi có ảnh mới được upload vào bucket S3, với chi phí vận hành thấp nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Chạy cron job trên EC2 quét bucket mỗi 5 phút",
+          "Cấu hình S3 Event Notification cho s3:ObjectCreated:* gọi Lambda function",
+          "Bật S3 Server Access Logging và cho Lambda đọc log",
+          "Tạo Lifecycle rule để kích hoạt xử lý ảnh"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "S3 Event Notification gọi Lambda khi object được tạo là mẫu event-driven kinh điển, không phải quản lý server. Server access logs giao trễ vài giờ nên không phù hợp để xử lý ngay."
+      },
+      {
+        "type": "single",
+        "q": "Kỹ sư cấu hình S3 Event Notification gửi sự kiện ObjectCreated tới một SQS Standard queue nhưng queue không nhận được message nào. Nguyên nhân có khả năng nhất là gì?",
+        "options": [
+          "Bucket chưa bật Versioning",
+          "SQS Standard queue không được hỗ trợ làm đích",
+          "SQS queue policy chưa cho phép S3 service principal gửi message",
+          "Thiếu IAM role gắn vào bucket"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Event do S3 service sinh ra nên đích cần resource policy (SQS queue policy, SNS topic policy, Lambda resource policy) cho phép S3 gửi vào. SQS Standard là đích hợp lệ; FIFO queue mới không dùng trực tiếp được."
+      },
+      {
+        "type": "single",
+        "q": "Mỗi khi có file upload vào bucket, ba hệ thống độc lập đều cần nhận thông báo để xử lý riêng. Kiến trúc nào phù hợp nhất?",
+        "options": [
+          "S3 Event Notification gửi vào một SQS FIFO queue dùng chung",
+          "S3 Replication sang ba bucket, mỗi hệ thống đọc một bucket",
+          "S3 Server Access Logging gửi log cho ba hệ thống",
+          "S3 Event Notification gửi tới SNS topic, ba hệ thống subscribe qua SQS queue hoặc Lambda"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Fan-out một event tới nhiều consumer dùng S3 → SNS → nhiều SQS/Lambda (hoặc EventBridge với nhiều rule). Một queue dùng chung chỉ giao mỗi message cho một consumer, và FIFO queue không làm đích trực tiếp được."
+      },
+      {
+        "type": "multi",
+        "q": "Những dịch vụ nào là đích hợp lệ của S3 Event Notifications (không qua EventBridge)? (Chọn 2)",
+        "options": [
+          "Amazon SNS topic",
+          "Amazon Kinesis Data Streams",
+          "Amazon SQS Standard queue",
+          "Amazon SQS FIFO queue",
+          "AWS Step Functions"
+        ],
+        "answer": [
+          0,
+          2
+        ],
+        "explain": "S3 Event Notifications chỉ gửi trực tiếp tới SNS topic, SQS Standard queue và Lambda. Muốn dùng nhiều loại đích hơn như Step Functions hay Kinesis thì dùng EventBridge."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn thông báo cho khách hàng ngay khi quá trình restore object từ S3 Glacier hoàn tất. Loại event nào cần cấu hình?",
+        "options": [
+          "s3:ObjectRestore:Completed",
+          "s3:ObjectCreated:Copy",
+          "s3:ObjectRemoved:Delete",
+          "s3:Replication:OperationMissedThreshold"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Nhóm Object Restore có event cho lúc bắt đầu và lúc hoàn tất restore; s3:ObjectRestore:Completed báo restore xong. Restore không tạo object mới nên ObjectCreated:Copy không phải đáp án."
+      }
+    ],
+    "S3 Lifecycle Configuration": [
+      {
+        "type": "single",
+        "q": "Một công ty lưu log ứng dụng trong S3. Log được truy cập thường xuyên trong 30 ngày đầu, hiếm khi sau đó, phải lưu trữ dài hạn sau 90 ngày và xóa sau 365 ngày. Giải pháp nào tiết kiệm chi phí nhất với ít vận hành nhất?",
+        "options": [
+          "Lưu tất cả trong S3 Intelligent-Tiering và tự xóa bằng Lambda",
+          "Lifecycle rule: transition sang Standard-IA sau 30 ngày, sang Glacier Deep Archive sau 90 ngày, expiration sau 365 ngày",
+          "Lambda chạy theo lịch để đổi storage class và xóa object",
+          "S3 Replication sang một bucket thứ hai dùng Glacier"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Access pattern đã biết trước theo thời gian nên lifecycle rule với transition và expiration là phù hợp, không cần code. Intelligent-Tiering dành cho pattern không biết trước và không tự xóa object."
+      },
+      {
+        "type": "single",
+        "q": "Một bucket chứa dữ liệu có mức độ truy cập không thể dự đoán: có object bỗng được đọc nhiều sau nhiều tháng không ai dùng. Công ty muốn tối ưu chi phí tự động theo mức độ truy cập. Giải pháp nào phù hợp?",
+        "options": [
+          "Lifecycle rule transition sang Standard-IA sau 30 ngày",
+          "Lifecycle rule transition sang One Zone-IA sau 30 ngày",
+          "S3 Intelligent-Tiering",
+          "Lifecycle rule transition sang Glacier Flexible Retrieval sau 60 ngày"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Lifecycle chỉ dựa trên thời gian, không dựa trên tần suất truy cập; chuyển theo mức truy cập với pattern không biết trước là việc của Intelligent-Tiering. Lifecycle sang IA có thể phát sinh phí retrieval khi object bị đọc lại nhiều."
+      },
+      {
+        "type": "single",
+        "q": "Transition nào sau đây KHÔNG được hỗ trợ bởi S3 Lifecycle?",
+        "options": [
+          "S3 Standard → Glacier Deep Archive",
+          "Standard-IA → One Zone-IA",
+          "Intelligent-Tiering → Glacier Flexible Retrieval",
+          "One Zone-IA → Glacier Instant Retrieval"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Transition đi xuống như thác nước, và One Zone-IA là ngoại lệ không sang được Glacier Instant Retrieval (chỉ sang Glacier Flexible hoặc Deep Archive). Các transition còn lại đều hợp lệ."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư cấu hình lifecycle rule chuyển object từ S3 Standard sang Standard-IA sau 7 ngày để tiết kiệm chi phí. Điều gì đúng?",
+        "options": [
+          "Không được; lifecycle yêu cầu object ở Standard tối thiểu 30 ngày trước khi sang Standard-IA hoặc One Zone-IA",
+          "Được, miễn là bucket bật Versioning",
+          "Được, nhưng chỉ áp dụng cho object nhỏ hơn 128 KB",
+          "Không được vì Standard-IA chỉ nhận object upload trực tiếp"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Lifecycle Standard → Standard-IA/One Zone-IA cần tối thiểu 30 ngày ở Standard; đáp án 7 ngày là bẫy. Upload thẳng vào Standard-IA hoặc đổi class thủ công thì không bị ràng buộc này."
+      },
+      {
+        "type": "multi",
+        "q": "Một bucket bật Versioning có chi phí tăng nhanh do tích lũy rất nhiều noncurrent version. Những hành động nào giảm chi phí mà vẫn giữ được versioning? (Chọn 2)",
+        "options": [
+          "Suspend versioning để S3 tự xóa các version cũ",
+          "Lifecycle rule expire noncurrent version sau một số ngày",
+          "Bật MFA Delete trên bucket",
+          "Bật S3 Transfer Acceleration",
+          "Lifecycle rule transition noncurrent version sang class Glacier rẻ hơn"
+        ],
+        "answer": [
+          1,
+          4
+        ],
+        "explain": "Lifecycle áp dụng được cho noncurrent version, cả transition lẫn expiration. Suspend versioning không xóa version cũ mà chúng vẫn bị tính phí."
+      }
+    ],
+    "S3 Multi-Region Access Points": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng toàn cầu cần một endpoint S3 duy nhất, tự động route request đọc/ghi tới bucket gần người dùng nhất ở nhiều region và hỗ trợ failover giữa các region. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo S3 Access Point riêng ở mỗi region",
+          "Đặt Amazon CloudFront trước một bucket",
+          "S3 Multi-Region Access Point kết hợp S3 Replication hai chiều giữa các bucket",
+          "Bật S3 Transfer Acceleration trên một bucket"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "MRAP cung cấp một endpoint toàn cầu route tới bucket gần nhất và có failover, kết hợp replication để dữ liệu giống nhau. CloudFront chỉ cache nội dung khi đọc, không route ghi/đọc trực tiếp vào nhiều bucket."
+      },
+      {
+        "type": "single",
+        "q": "Ứng dụng dùng MRAP với replication hai chiều giữa Canada và Sydney. Người dùng ở Sydney thỉnh thoảng nhận lỗi object không tồn tại khi đọc object vừa được ghi từ Canada. Cách nào giảm vấn đề này?",
+        "options": [
+          "Bật S3 Replication Time Control (RTC)",
+          "Chuyển MRAP sang cấu hình active-passive",
+          "Bật S3 Transfer Acceleration",
+          "Bật S3 Bucket Key"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Đây là replication lag: client Sydney bị route tới bucket Sydney trước khi object được replicate. RTC (SLA 15 phút, tốn phí) giảm lag; kiến trúc MRAP vẫn phải chấp nhận eventual consistency giữa các region."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về S3 Multi-Region Access Points?",
+        "options": [
+          "MRAP tự động đồng bộ dữ liệu giữa các bucket thành viên",
+          "Danh sách bucket của MRAP có thể thêm hoặc bớt bất cứ lúc nào",
+          "Tên MRAP phải unique toàn cầu giống tên bucket",
+          "MRAP không tự đồng bộ dữ liệu; phải cấu hình replication giữa các bucket"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "MRAP chỉ route request, bạn phải tự cấu hình replication (thường hai chiều kèm replica modification sync). Danh sách bucket không sửa được sau khi tạo, và tên MRAP chỉ cần unique trong account."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, việc tạo một Multi-Region Access Point thường mất bao lâu?",
+        "options": [
+          "Vài giây, sẵn sàng ngay",
+          "Thường 10–30 phút, trường hợp xấu nhất tới 24 giờ",
+          "Luôn đúng 1 giờ",
+          "Từ 2 đến 3 ngày"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "MRAP thường mất 10–30 phút để tạo, tệ nhất tới 24 giờ, và phải đợi status Ready mới dùng được."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn ứng dụng đọc/ghi S3 qua một endpoint duy nhất: bucket ở us-east-1 phục vụ toàn bộ request, bucket ở eu-west-1 chỉ được dùng khi bucket us-east-1 không sẵn sàng. Giải pháp nào phù hợp?",
+        "options": [
+          "MRAP với failover configuration active-active",
+          "S3 Access Point với network origin VPC",
+          "MRAP với failover configuration active-passive, đặt bucket eu-west-1 là passive",
+          "S3 Same-Region Replication kèm presigned URL"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Failover controls của MRAP cho phép đặt bucket passive chỉ nhận request khi không còn bucket active nào. Active-active sẽ gửi request tới bucket gần nhất nên eu-west-1 vẫn nhận traffic."
+      }
+    ],
+    "S3 Object Lock": [
+      {
+        "type": "single",
+        "q": "Quy định tài chính yêu cầu bản ghi giao dịch lưu trong S3 không được xóa hay sửa trong 7 năm bởi bất kỳ ai, kể cả root user. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "S3 Object Lock Governance mode với retention 7 năm",
+          "S3 Object Lock Compliance mode với retention 7 năm",
+          "S3 Object Lock Legal Hold",
+          "Bật Versioning và MFA Delete"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Compliance mode khóa tuyệt đối với mọi identity kể cả root, không rút ngắn được retention và không đổi mode. Governance mode cho phép identity có s3:BypassGovernanceRetention xóa nên không đạt yêu cầu."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn ngăn người dùng xóa nhầm các object version quan trọng trong 1 năm, nhưng một nhóm admin đặc biệt vẫn được phép xóa hoặc chỉnh khóa khi cần. Giải pháp nào phù hợp?",
+        "options": [
+          "Object Lock Compliance mode và cấp quyền cho admin",
+          "Object Lock Legal Hold",
+          "Object Lock Governance mode và cấp s3:BypassGovernanceRetention cho nhóm admin",
+          "Bucket policy Deny s3:DeleteObject cho mọi principal"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Governance mode khóa version nhưng cho phép identity có s3:BypassGovernanceRetention (kèm header bypass) xóa hoặc chỉnh khóa. Compliance mode không ai gỡ được, kể cả root."
+      },
+      {
+        "type": "single",
+        "q": "Đội pháp chế yêu cầu giữ nguyên một số tài liệu trong S3 phục vụ một vụ kiện cho đến khi vụ kiện kết thúc, chưa biết là khi nào. Tính năng nào phù hợp nhất?",
+        "options": [
+          "Object Lock Compliance mode retention 10 năm",
+          "Object Lock Governance mode retention 1 năm",
+          "MFA Delete",
+          "Object Lock Legal Hold"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Legal Hold là cờ ON/OFF không có thời hạn, phù hợp tình huống pháp lý không biết trước thời gian giữ. Retention mode đòi hỏi chỉ định thời hạn cụ thể."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về S3 Object Lock?",
+        "options": [
+          "Khóa áp dụng cho từng object version; bật Object Lock thì Versioning được bật và không thể suspend",
+          "Khóa áp dụng cho toàn bộ bucket thay vì từng object",
+          "Object Lock hoạt động được mà không cần Versioning",
+          "Có thể tắt Object Lock bất cứ lúc nào sau khi bật"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Object Lock dựa trên versioning nên khóa ở mức object version; sau khi bật không thể tắt Object Lock và không thể suspend versioning."
+      },
+      {
+        "type": "multi",
+        "q": "Một object version đang được khóa bằng Object Lock Governance mode. Để xóa version này trước khi hết retention, identity cần những gì? (Chọn 2)",
+        "options": [
+          "Mã MFA từ thiết bị của root user",
+          "Permission s3:PutObjectLegalHold",
+          "Gửi header x-amz-bypass-governance-retention: true trong request",
+          "Yêu cầu từ AWS Support",
+          "Permission s3:BypassGovernanceRetention"
+        ],
+        "answer": [
+          2,
+          4
+        ],
+        "explain": "Bypass Governance mode cần cả permission s3:BypassGovernanceRetention và header x-amz-bypass-governance-retention: true (console mặc định gửi header này). s3:PutObjectLegalHold chỉ dùng để bật/tắt Legal Hold."
+      }
+    ],
+    "S3 Performance Optimization": [
+      {
+        "type": "single",
+        "q": "Nhân viên ở hiện trường với mạng chậm và không ổn định thường xuyên upload file dữ liệu vài GB lên S3. Upload hay thất bại và phải làm lại từ đầu. Giải pháp nào cải thiện độ tin cậy và tốc độ?",
+        "options": [
+          "Dùng Multipart Upload để upload song song nhiều part và chỉ retry part bị lỗi",
+          "Dùng single PUT và tăng số lần retry",
+          "Đặt CloudFront trước bucket",
+          "Dùng S3 Select để giảm dữ liệu truyền"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Multipart Upload chia dữ liệu thành các part độc lập, upload song song và chỉ gửi lại part lỗi. Single PUT đứt stream là mất toàn bộ upload."
+      },
+      {
+        "type": "single",
+        "q": "Một team ở Úc upload dataset lớn lên bucket ở London (eu-west-2) và tốc độ rất chậm do đường truyền public internet đi xa. Giải pháp nào cải thiện tốc độ upload với thay đổi ít nhất?",
+        "options": [
+          "Đặt Amazon CloudFront trước bucket",
+          "Dùng AWS Global Accelerator trỏ tới bucket",
+          "Bật S3 Transfer Acceleration và dùng accelerate endpoint",
+          "Cấu hình Cross-Region Replication sang bucket ở Sydney"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Transfer Acceleration đưa dữ liệu vào edge location gần nhất rồi đi trên AWS global network tới bucket, lợi ích tăng theo khoảng cách. Global Accelerator dành cho ứng dụng TCP/UDP (ALB, NLB, EC2), không phải S3."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần upload một object 20 GB lên S3. Phát biểu nào đúng?",
+        "options": [
+          "Dùng single PUT được vì giới hạn single PUT là 5 TB",
+          "Bắt buộc dùng Multipart Upload; tối đa 10.000 part, mỗi part 5 MB–5 GB",
+          "Multipart Upload chỉ hỗ trợ tối đa 100 part",
+          "Bắt buộc bật Transfer Acceleration cho object trên 5 GB"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Single PUT tối đa 5 GB nên object lớn hơn bắt buộc multipart, với tối đa 10.000 part, mỗi part 5 MB–5 GB (part cuối có thể nhỏ hơn). 5 TB là kích thước object tối đa, không phải giới hạn single PUT."
+      },
+      {
+        "type": "single",
+        "q": "Kỹ sư không thể bật S3 Transfer Acceleration cho bucket có tên reports.example.com. Nguyên nhân là gì?",
+        "options": [
+          "Bucket chưa bật Versioning",
+          "Bucket đang dùng SSE-KMS",
+          "Region của bucket không hỗ trợ edge location",
+          "Tên bucket chứa dấu chấm nên không đáp ứng điều kiện của Transfer Acceleration"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Transfer Acceleration yêu cầu tên bucket DNS-compatible và không chứa dấu chấm. Versioning hay kiểu mã hóa không ảnh hưởng tới việc bật tính năng này."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi bật S3 Transfer Acceleration, tốc độ upload không thay đổi. Ứng dụng vẫn gửi request tới s3.eu-west-2.amazonaws.com. Cần làm gì?",
+        "options": [
+          "Đặt Amazon CloudFront trước bucket",
+          "Đổi ứng dụng sang dùng endpoint <bucket>.s3-accelerate.amazonaws.com",
+          "Tạo Gateway VPC Endpoint cho S3",
+          "Bật AWS Global Accelerator"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Khi bật Transfer Acceleration, bucket có endpoint riêng dạng s3-accelerate; vẫn dùng endpoint thường thì không có tác dụng. VPC endpoint chỉ phục vụ truy cập riêng tư từ VPC."
+      }
+    ],
+    "S3 Presigned URLs": [
+      {
+        "type": "single",
+        "q": "Một đối tác không có tài khoản AWS cần upload đúng một file báo cáo vào bucket S3 private của công ty trong vòng 24 giờ tới. Giải pháp nào an toàn nhất và ít công sức nhất?",
+        "options": [
+          "Tạo một IAM user cho đối tác và xóa sau khi xong",
+          "Tạm thời mở public write cho bucket",
+          "Tạo presigned URL cho phương thức PUT với object key cụ thể và thời hạn 24 giờ",
+          "Gửi access key của một IAM user nội bộ cho đối tác"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Presigned URL cho phép người không có identity AWS GET hoặc PUT một object cụ thể trong bucket private trong thời gian giới hạn. Tạo IAM user tốn công cho nhu cầu ngắn hạn, còn chia sẻ credential hay public bucket đều rủi ro bảo mật."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng lưu video của khách hàng trong bucket S3 private. Khách hàng đăng nhập vào ứng dụng (không có tài khoản AWS) cần xem video của mình mà bucket không được public. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Ứng dụng dùng một IAM user riêng để tạo presigned URL GET cho video khi khách hàng yêu cầu",
+          "Thêm bucket policy Principal \"*\" cho phép s3:GetObject",
+          "Tạo IAM user cho từng khách hàng",
+          "Bật S3 Static Website Hosting cho bucket"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Ứng dụng tạo presigned URL để khách tải trực tiếp từ S3, không cần public bucket hay IAM user cho từng người. Bucket policy Principal \"*\" làm lộ mọi video cho bất kỳ ai."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng trên EC2 dùng instance role để tạo presigned URL với thời hạn 7 ngày. Người dùng báo URL ngừng hoạt động chỉ sau vài giờ. Nguyên nhân có khả năng nhất là gì?",
+        "options": [
+          "S3 tự giới hạn mọi presigned URL ở 1 giờ",
+          "Bucket chưa bật Versioning",
+          "Object đã bị lifecycle chuyển sang Standard-IA",
+          "URL được ký bằng credential tạm thời của role; credential hết hạn trước nên URL mất hiệu lực"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Presigned URL tạo bằng role ngừng hoạt động khi credential tạm hết hạn, dù expiry của URL dài hơn. Nên dùng identity dài hạn như IAM user để tạo URL có thời hạn dài."
+      },
+      {
+        "type": "single",
+        "q": "Một presigned URL đang hoạt động bình thường. Admin gắn explicit Deny S3 cho IAM user đã tạo URL, sau đó gỡ policy này đi. Điều gì xảy ra với URL?",
+        "options": [
+          "URL vẫn hoạt động suốt vì quyền được cố định lúc tạo",
+          "URL bị Access Denied khi policy deny còn hiệu lực và hoạt động lại sau khi gỡ policy",
+          "URL bị vô hiệu vĩnh viễn ngay khi gắn deny",
+          "URL chỉ bị ảnh hưởng nếu được tạo bằng console"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Quyền của presigned URL là quyền hiện tại của identity tạo ra nó, không phải quyền tại thời điểm tạo. Thu hồi quyền thì URL mất quyền ngay, trả lại quyền thì URL dùng lại được (nếu chưa hết hạn)."
+      },
+      {
+        "type": "single",
+        "q": "Thời hạn tối đa của presigned URL tạo bằng IAM user (SigV4) qua CLI là bao lâu?",
+        "options": [
+          "1 giờ (3600 giây)",
+          "12 giờ",
+          "30 ngày",
+          "7 ngày (604800 giây)"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Với IAM user và SigV4, presigned URL tối đa 7 ngày = 604800 giây; --expires-in tính bằng giây, mặc định 3600. 12 giờ là giới hạn khi tạo từ console."
+      }
+    ],
+    "S3 Replication": [
+      {
+        "type": "single",
+        "q": "Một công ty cần bản sao dữ liệu S3 ở region khác để DR, và yêu cầu thời gian replicate dự đoán được: 99,99% object mới phải có mặt ở đích trong 15 phút. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Same-Region Replication (SRR)",
+          "Cross-Region Replication (CRR) kèm S3 Replication Time Control (RTC)",
+          "Cross-Region Replication (CRR) mặc định",
+          "Chạy S3 Batch Replication mỗi 15 phút"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "RTC cung cấp SLA 99,99% object mới được replicate trong 15 phút, kèm metrics và notification. CRR không có RTC là best effort nên thời gian replicate không đảm bảo."
+      },
+      {
+        "type": "single",
+        "q": "Quy định yêu cầu dữ liệu không được rời khỏi region hiện tại, nhưng công ty vẫn cần một bản sao cô lập trong account riêng của đội security. Giải pháp nào phù hợp?",
+        "options": [
+          "Same-Region Replication sang bucket ở account security trong cùng region",
+          "Cross-Region Replication sang region khác trong cùng account",
+          "S3 Multi-Region Access Point với hai bucket",
+          "Bật S3 Transfer Acceleration"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "SRR giữ dữ liệu trong cùng region và có thể replicate sang account khác để cô lập. CRR đưa dữ liệu ra region khác nên vi phạm yêu cầu sovereignty."
+      },
+      {
+        "type": "single",
+        "q": "Kỹ sư bật replication trên một bucket đã có 10 triệu object. Vài ngày sau, chỉ object mới xuất hiện ở bucket đích. Cách nào copy các object có sẵn với ít công sức nhất?",
+        "options": [
+          "Bật S3 Replication Time Control",
+          "Bật delete marker replication",
+          "Dùng S3 Batch Replication để replicate các object có sẵn",
+          "Tắt rồi bật lại Versioning trên source bucket"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Replication không retroactive, chỉ copy object ghi sau khi bật; object có sẵn cần S3 Batch Replication. RTC chỉ đảm bảo thời gian replicate cho object mới."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về S3 Replication là đúng? (Chọn 2)",
+        "options": [
+          "Versioning chỉ cần bật trên source bucket",
+          "Versioning phải được bật trên cả source và destination bucket",
+          "Thay đổi do Lifecycle Configuration gây ra cũng được replicate",
+          "Replication mặc định là hai chiều giữa source và destination",
+          "Delete marker mặc định không được replicate"
+        ],
+        "answer": [
+          1,
+          4
+        ],
+        "explain": "Replication yêu cầu versioning ở cả hai bucket, và delete marker chỉ được replicate khi bật tùy chọn. Replication là một chiều và không replicate system events như thay đổi do lifecycle."
+      },
+      {
+        "type": "single",
+        "q": "Account A cấu hình replication từ bucket của mình sang bucket ở Account B. Ngoài IAM role ở Account A, cần cấu hình gì thêm so với replication trong cùng account?",
+        "options": [
+          "Bật S3 Replication Time Control",
+          "Chuyển object sang mã hóa SSE-C",
+          "Tạo IAM role giống hệt trong Account B",
+          "Bucket policy trên destination bucket cho phép role replication của Account A ghi vào, và nên đổi ownership object sang Account B"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Khác account thì destination bucket không mặc định tin role của account nguồn, cần bucket policy cho phép; đổi ownership giúp Account B đọc được object. RTC chỉ liên quan thời gian replicate."
+      }
+    ],
+    "S3 Security": [
+      {
+        "type": "multi",
+        "q": "Người dùng ở Account B cần đọc object trong bucket thuộc Account A. Những cấu hình nào là bắt buộc? (Chọn 2)",
+        "options": [
+          "Tắt Block Public Access trên bucket",
+          "Gắn identity policy trong Account A cho user của Account B",
+          "Bucket policy trên bucket của Account A cho phép principal thuộc Account B",
+          "Identity policy trong Account B cho phép user gọi s3:GetObject trên bucket của Account A",
+          "ACL WRITE trên bucket cấp cho Account B"
+        ],
+        "answer": [
+          2,
+          3
+        ],
+        "explain": "Cross-account cần cả hai phía: account B cấp quyền cho identity qua identity policy và bucket policy của account A cho phép account B. Identity policy chỉ gắn được cho identity trong chính account của mình; Block Public Access không ảnh hưởng truy cập cross-account được cấp đúng cách qua principal cụ thể."
+      },
+      {
+        "type": "single",
+        "q": "Kỹ sư thêm bucket policy với Principal \"*\" cho phép s3:GetObject trên mọi object, nhưng người dùng anonymous vẫn nhận 403 Access Denied. Nguyên nhân có khả năng nhất là gì?",
+        "options": [
+          "Bucket chưa bật Versioning",
+          "Object được mã hóa bằng SSE-S3",
+          "Block Public Access vẫn đang bật trên bucket",
+          "Bucket policy thiếu phần tử Principal"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Block Public Access là lớp fail-safe chặn truy cập public bất kể bucket policy nói gì. SSE-S3 không cản đọc vì S3 tự giải mã khi trả object."
+      },
+      {
+        "type": "single",
+        "q": "Một policy JSON có các phần tử Effect, Principal, Action và Resource. Policy này nhiều khả năng là loại nào?",
+        "options": [
+          "IAM identity policy gắn vào một role",
+          "Resource policy, ví dụ bucket policy",
+          "IAM identity policy gắn vào một group",
+          "Inline policy gắn vào một IAM user"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Resource policy phải có Principal để nói statement áp dụng cho ai; identity policy không có Principal vì principal ngầm định là identity được gắn policy."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn mọi người dùng trong account đọc được toàn bộ bucket, nhưng object dưới prefix confidential/ chỉ đọc được khi người dùng đăng nhập bằng MFA. Giải pháp nào phù hợp?",
+        "options": [
+          "Đặt ACL riêng cho từng object trong confidential/",
+          "Bật MFA Delete trên bucket",
+          "Bật S3 Object Lock cho prefix confidential/",
+          "Bucket policy Allow s3:GetObject trên cả bucket, cộng statement Deny s3:* trên confidential/* khi aws:MultiFactorAuthAge là Null"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Explicit Deny thắng Allow, nên Deny kèm điều kiện Null aws:MultiFactorAuthAge chặn truy cập prefix khi không có MFA, phần còn lại vẫn đọc tự do. MFA Delete chỉ yêu cầu MFA khi xóa version hoặc đổi trạng thái versioning."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về S3 ACL?",
+        "options": [
+          "ACL là cơ chế legacy, gắn với bucket hoặc object, chỉ có 5 permission và không hỗ trợ condition",
+          "ACL hỗ trợ condition như aws:SourceIp giống bucket policy",
+          "ACL có thể gắn cho một nhóm object theo prefix",
+          "ACL là cách AWS khuyến nghị để cấp quyền cross-account"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "ACL là subresource của bucket hoặc object với 5 permission (READ, WRITE, READ_ACP, WRITE_ACP, FULL_CONTROL), không có condition và không gắn được cho nhóm object. AWS khuyến nghị dùng bucket policy hoặc identity policy thay thế."
+      }
+    ],
+    "S3 Select and Glacier Select": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng chỉ cần vài nghìn dòng thỏa điều kiện từ một object CSV 2 TB trên S3 và muốn giảm lượng dữ liệu truyền cũng như chi phí. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Tải toàn bộ object về rồi lọc trong ứng dụng",
+          "Dùng S3 Select với biểu thức SQL để lọc ngay trong S3",
+          "Chuyển object sang S3 Standard-IA",
+          "Bật S3 Transfer Acceleration"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "S3 Select lọc phía server và chỉ trả phần dữ liệu được chọn. Tải về rồi lọc trong ứng dụng vẫn phải truyền và trả phí cho toàn bộ object."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có file JSON lớn đã archive trong lớp Glacier và chỉ cần trích một phần nhỏ dữ liệu, không muốn lấy về toàn bộ file. Tính năng nào phù hợp?",
+        "options": [
+          "S3 Inventory",
+          "Amazon Redshift",
+          "S3 Lifecycle Configuration",
+          "Glacier Select"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Glacier Select áp dụng biểu thức SQL-like ngay trong Glacier để chỉ trả về phần dữ liệu cần. S3 Inventory chỉ liệt kê metadata object, không lọc nội dung."
+      },
+      {
+        "type": "multi",
+        "q": "S3 Select hỗ trợ những định dạng dữ liệu nào? (Chọn 2)",
+        "options": [
+          "Apache Avro",
+          "JSON",
+          "XML",
+          "Parquet",
+          "Microsoft Excel (XLSX)"
+        ],
+        "answer": [
+          1,
+          3
+        ],
+        "explain": "S3/Glacier Select hỗ trợ CSV, JSON và Parquet (CSV và JSON có thể nén BZIP2/GZIP). Avro, XML và XLSX không được hỗ trợ."
+      },
+      {
+        "type": "single",
+        "q": "Đội phân tích cần chạy truy vấn SQL ad-hoc trên toàn bộ dataset gồm hàng nghìn object trong S3 mà không quản lý hạ tầng. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Athena",
+          "S3 Select",
+          "Glacier Select",
+          "S3 Inventory"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "S3 Select chỉ chạy trên một object; truy vấn SQL ad-hoc trên nhiều object hay cả dataset là việc của Athena. S3 Inventory chỉ là báo cáo danh sách object."
+      },
+      {
+        "type": "single",
+        "q": "Theo slide của khóa học, S3 Select và Glacier Select mang lại lợi ích nào so với lấy toàn bộ object?",
+        "options": [
+          "Nhanh hơn tới 80% và rẻ hơn tới 400%",
+          "Nhanh hơn tới 10 lần, không thay đổi chi phí",
+          "Nhanh hơn tới 400% và rẻ hơn tới 80%",
+          "Chỉ giảm chi phí lưu trữ, không ảnh hưởng hiệu năng"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Khóa học nêu con số nhanh hơn tới 400% và rẻ hơn tới 80%, vì việc lọc diễn ra trong service nên chỉ truyền phần dữ liệu được chọn."
+      }
+    ],
+    "S3 Static Website Hosting": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn host website tĩnh với chi phí thấp, không quản lý server, nhưng bắt buộc dùng HTTPS với custom domain và cache nội dung gần người dùng toàn cầu. Giải pháp nào phù hợp?",
+        "options": [
+          "Chỉ dùng S3 static website endpoint",
+          "S3 static website hosting kết hợp Amazon CloudFront và chứng chỉ ACM",
+          "EC2 chạy Nginx sau Application Load Balancer",
+          "S3 static website hosting kết hợp S3 Transfer Acceleration"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "S3 website endpoint chỉ hỗ trợ HTTP; cần HTTPS, custom certificate và caching toàn cầu thì đặt CloudFront (với ACM) phía trước. Transfer Acceleration chỉ tối ưu upload, không cung cấp HTTPS cho website endpoint."
+      },
+      {
+        "type": "single",
+        "q": "Kỹ sư bật static website hosting, upload index.html và error.html, nhưng mở website endpoint thì nhận 403 Forbidden. Cần làm gì?",
+        "options": [
+          "Tắt Block Public Access và thêm bucket policy cho phép s3:GetObject với Principal \"*\"",
+          "Bật Versioning cho bucket",
+          "Đổi error document thành 403.html",
+          "Mã hóa object bằng SSE-KMS"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Bật static hosting không đồng nghĩa cấp quyền; truy cập qua website endpoint là anonymous nên cần tắt Block Public Access và có bucket policy public read. Error document chỉ quyết định trang trả về khi có lỗi."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn phục vụ website tĩnh trên S3 tại địa chỉ top10.example.org với DNS do Route 53 quản lý. Cấu hình nào đúng?",
+        "options": [
+          "Bucket tên bất kỳ, tạo CNAME record trỏ tới S3 API endpoint",
+          "Bucket tên example.org, tạo A record trỏ tới địa chỉ IP của bucket",
+          "Bucket tên top10.example.org, tạo Alias record trỏ tới S3 website endpoint đúng region",
+          "Bucket tên bất kỳ, đổi website endpoint thành top10.example.org trong cấu hình bucket"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Tên bucket phải trùng đúng FQDN và dùng Alias record tới S3 website endpoint. Website endpoint do AWS sinh từ tên bucket + region nên không tự đặt được."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn hiển thị trang thông báo bảo trì cho khách hàng khi website chính chạy trên EC2 gặp sự cố. Giải pháp nào tin cậy và rẻ nhất?",
+        "options": [
+          "Đặt trang bảo trì trên chính EC2 đang chạy website",
+          "Đặt trang bảo trì trên một EC2 instance khác cùng VPC",
+          "Dùng CloudWatch alarm để tự khởi động lại EC2",
+          "Host trang bảo trì trên S3 static website và dùng Route 53 failover để chuyển DNS khi site chính lỗi"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Trang out-of-band nên nằm ngoài hạ tầng chính; S3 static website rẻ, không có server và có thể chuyển DNS sang khi có sự cố. Đặt trên EC2 (cùng hay khác) vẫn chịu chung rủi ro với hạ tầng compute."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về mô hình giá của S3?",
+        "options": [
+          "Data transfer vào S3 luôn miễn phí; transfer ra khỏi S3 và request mới tính tiền",
+          "Data transfer vào và ra khỏi S3 đều miễn phí, chỉ tính phí storage",
+          "Request được tính theo mỗi request riêng lẻ với cùng một mức giá cho mọi loại",
+          "Storage chỉ tính khi lưu đủ 1 tháng và đủ 1 GB"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "S3 tính ba thành phần: storage theo GB-tháng (tính theo tỉ lệ), transfer ra theo GB (vào miễn phí) và request theo mỗi 1.000 request với giá khác nhau tùy loại. Với website tĩnh nhiều người dùng, chi phí request là thứ cần để ý."
+      }
+    ],
+    "S3 Storage Classes": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng sinh thumbnail từ ảnh gốc lưu trong S3 Standard. Thumbnail ít khi được truy cập và có thể tạo lại bất cứ lúc nào. Storage class nào rẻ nhất mà vẫn truy cập được ngay?",
+        "options": [
+          "S3 Standard",
+          "S3 Standard-IA",
+          "S3 One Zone-IA",
+          "S3 Glacier Deep Archive"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "One Zone-IA rẻ hơn Standard-IA, phù hợp dữ liệu truy cập ít và dễ tạo lại, chấp nhận rủi ro mất 1 AZ. Deep Archive rẻ hơn nhưng phải chạy retrieval job hàng giờ nên không truy cập ngay được."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty phải lưu hồ sơ theo quy định trong 10 năm. Dữ liệu gần như không bao giờ được đọc, và nếu cần thì chấp nhận chờ tới 48 giờ. Storage class nào có chi phí thấp nhất?",
+        "options": [
+          "S3 Glacier Flexible Retrieval",
+          "S3 Glacier Deep Archive",
+          "S3 Glacier Instant Retrieval",
+          "S3 Standard-IA"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Glacier Deep Archive rẻ nhất, phù hợp dữ liệu compliance hiếm khi đọc, retrieval Standard ~12 giờ, Bulk tới 48 giờ. Glacier Flexible Retrieval truy xuất nhanh hơn nhưng giá lưu trữ cao hơn."
+      },
+      {
+        "type": "single",
+        "q": "Dữ liệu y khoa quan trọng được truy cập khoảng một lần mỗi quý, nhưng khi cần phải đọc được trong vài mili giây. Storage class nào tối ưu chi phí nhất?",
+        "options": [
+          "S3 Standard-IA",
+          "S3 One Zone-IA",
+          "S3 Glacier Flexible Retrieval với Expedited retrieval",
+          "S3 Glacier Instant Retrieval"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Glacier Instant Retrieval lưu rẻ hơn Standard-IA, vẫn truy cập mili giây, phù hợp dữ liệu cần ngay nhưng chỉ khoảng một lần mỗi quý. Expedited của Glacier Flexible mất 1–5 phút, không đạt mili giây."
+      },
+      {
+        "type": "single",
+        "q": "Minimum storage duration của S3 Glacier Deep Archive là bao lâu?",
+        "options": [
+          "180 ngày",
+          "90 ngày",
+          "30 ngày",
+          "365 ngày"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Minimum duration là 30 ngày (Standard-IA, One Zone-IA), 90 ngày (Glacier Instant Retrieval, Glacier Flexible Retrieval) và 180 ngày (Glacier Deep Archive)."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về S3 Glacier Flexible Retrieval là đúng? (Chọn 2)",
+        "options": [
+          "Object có thể được public trực tiếp qua S3 static website hosting",
+          "Phải chạy retrieval job; dữ liệu được khôi phục tạm thời vào Standard-IA",
+          "Expedited retrieval mất khoảng 1–5 phút",
+          "Dữ liệu chỉ được lưu trên một AZ",
+          "Minimum storage duration là 180 ngày"
+        ],
+        "answer": [
+          1,
+          2
+        ],
+        "explain": "Object Glacier Flexible là dữ liệu lạnh, phải chạy retrieval job (Expedited 1–5 phút, Standard 3–5 giờ, Bulk 5–12 giờ) và được khôi phục tạm vào Standard-IA. Class này không public được, lưu ≥3 AZ và minimum duration là 90 ngày."
+      }
+    ],
+    "S3 Versioning and MFA Delete": [
+      {
+        "type": "single",
+        "q": "Một bucket bật Versioning có chi phí lưu trữ tăng mạnh do nhiều noncurrent version. Một kỹ sư đề xuất disable versioning. Phản hồi nào đúng?",
+        "options": [
+          "Đồng ý, disable versioning sẽ xóa toàn bộ version cũ",
+          "Suspend versioning là đủ vì S3 sẽ tự xóa version cũ",
+          "Không thể disable versioning sau khi bật; dùng lifecycle rule để expire noncurrent version",
+          "Bật MFA Delete để giảm số version được lưu"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Versioning đã bật thì chỉ suspend được, không về Disabled; suspend cũng không xóa version cũ nên vẫn bị tính tiền. Lifecycle expire noncurrent version là cách kiểm soát chi phí."
+      },
+      {
+        "type": "single",
+        "q": "Một người dùng vô tình xóa object (không chỉ định version ID) trong bucket đã bật Versioning. Cách nào khôi phục object nhanh nhất?",
+        "options": [
+          "Xóa delete marker để version trước đó trở thành current",
+          "Chạy retrieval job từ S3 Glacier",
+          "Mở ticket AWS Support để khôi phục",
+          "Không thể khôi phục, phải upload lại"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Xóa object không chỉ định version ID chỉ thêm delete marker che các version cũ; xóa delete marker là undelete. Dữ liệu không mất nên không cần Support hay Glacier."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn thêm lớp bảo vệ để không ai có thể xóa vĩnh viễn một object version hoặc thay đổi trạng thái versioning của bucket nếu không cung cấp mã MFA. Giải pháp nào đáp ứng trực tiếp yêu cầu này?",
+        "options": [
+          "S3 Object Lock Legal Hold",
+          "Lifecycle rule expire noncurrent version",
+          "Bucket policy với điều kiện aws:SourceIp",
+          "Bật MFA Delete trong versioning configuration của bucket"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "MFA Delete bắt buộc gửi serial thiết bị MFA và mã MFA khi đổi trạng thái versioning hoặc xóa vĩnh viễn version. Legal Hold là cơ chế WORM chặn xóa, không phải yêu cầu MFA."
+      },
+      {
+        "type": "single",
+        "q": "Một object 5 GB trong bucket bật Versioning đã được ghi đè 4 lần (tổng cộng 5 version). S3 tính phí lưu trữ cho bao nhiêu dữ liệu?",
+        "options": [
+          "5 GB, chỉ tính current version",
+          "10 GB",
+          "25 GB",
+          "Chỉ tính phần chênh lệch giữa các version"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Mọi version đều chiếm dung lượng và bị tính tiền đầy đủ: 5 version × 5 GB = 25 GB. S3 không lưu kiểu delta giữa các version."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về S3 Versioning là đúng? (Chọn 2)",
+        "options": [
+          "Bucket có thể chuyển từ Enabled về Disabled",
+          "Object trong bucket chưa từng bật versioning có version ID là null",
+          "Bucket ở trạng thái Suspended có thể chuyển về Disabled",
+          "Xóa object không chỉ định version ID sẽ xóa vĩnh viễn current version",
+          "Bucket ở trạng thái Enabled có thể chuyển sang Suspended"
+        ],
+        "answer": [
+          1,
+          4
+        ],
+        "explain": "Trạng thái đi Disabled → Enabled ↔ Suspended, không bao giờ quay lại Disabled; object chưa từng có versioning có version ID null. Xóa không chỉ định version ID chỉ tạo delete marker."
+      }
+    ]
+  }
+}

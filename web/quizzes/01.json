@@ -1,0 +1,190 @@
+{
+  "chapter": "01 Accounts and Basics",
+  "lessons": {
+    "AWS Accounts": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn cô lập hoàn toàn các môi trường dev, test và prod sao cho nếu credential của môi trường dev bị lộ thì thiệt hại không lan sang prod. Giải pháp nào đáp ứng tốt nhất yêu cầu này?",
+        "options": ["Tạo một VPC riêng cho mỗi môi trường trong cùng một AWS account", "Tạo IAM group riêng cho từng môi trường trong cùng một account", "Tách mỗi môi trường thành một AWS account riêng, quản lý tập trung bằng AWS Organizations", "Triển khai mỗi môi trường ở một AWS region khác nhau trong cùng account"],
+        "answer": [2],
+        "explain": "AWS account là ranh giới cô lập (blast radius): sự cố hay credential bị lộ trong account này mặc định không ảnh hưởng account khác. VPC, IAM group hay region riêng vẫn nằm trong cùng account nên một admin bị lộ credential vẫn chạm được mọi môi trường."
+      },
+      {
+        "type": "single",
+        "q": "Một IAM user được gán managed policy AdministratorAccess nhưng không mở được Billing console. Cần làm gì để khắc phục?",
+        "options": ["Root user bật “IAM user and role access to Billing information” trong Account settings", "Gán thêm policy AdministratorAccess lần thứ hai cho user", "Bật MFA cho IAM user này", "Chuyển user sang region us-east-1 rồi đăng nhập lại"],
+        "answer": [0],
+        "explain": "Nếu chưa bật “IAM user and role access to Billing information”, kể cả IAM identity có AdministratorAccess cũng không vào được Billing console. Bật MFA là best practice nhưng không mở quyền billing."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về account root user?",
+        "options": ["Mỗi account có thể có nhiều root user, mỗi người một email", "Root user bắt đầu với zero permission và phải được cấp quyền tường minh", "Có thể xóa root user sau khi đã tạo IAM admin", "Root user có toàn quyền trên account và không thể bị giới hạn bằng IAM policy"],
+        "answer": [3],
+        "explain": "Mỗi account có đúng một root user, có full control và không thể giới hạn bằng IAM policy, cũng không xóa được. “Bắt đầu với zero permission” là đặc điểm của IAM identity, không phải root user."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư muốn tạo thêm một AWS account cho môi trường Production bên cạnh account General hiện có. Thông tin nào bắt buộc phải khác với account General?",
+        "options": ["Thẻ tín dụng dùng làm payment method", "Địa chỉ email dùng cho root user", "Support plan được chọn", "Region mặc định"],
+        "answer": [1],
+        "explain": "Mỗi AWS account cần một email không trùng với bất kỳ account nào khác vì email là định danh đăng nhập của root user. Một thẻ thanh toán có thể dùng chung cho nhiều account."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty vừa tạo AWS account mới. Hai hành động nào là best practice để bảo vệ account root user? (Chọn 2)",
+        "options": ["Tạo access key cho root user để dùng với AWS CLI", "Bật MFA cho root user", "Gán một IAM policy hạn chế quyền cho root user", "Chia sẻ password root cho cả đội vận hành qua password manager", "Tạo IAM admin cho công việc hằng ngày và ngừng dùng root user"],
+        "answer": [1, 4],
+        "explain": "Best practice là bật MFA cho root, không tạo access key cho root và dùng IAM admin cho công việc hằng ngày. Không thể giới hạn root bằng IAM policy, nên phương án gán policy cho root không có tác dụng."
+      }
+    ],
+    "AWS Budgets": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn nhận email cảnh báo ngay khi chi phí AWS trong tháng được dự báo sẽ vượt 1.000 USD, trước khi thực sự vượt. Giải pháp nào đáp ứng yêu cầu với ít công sức vận hành nhất?",
+        "options": ["Xem Cost Explorer mỗi ngày và tự gửi email khi cần", "Tải Cost and Usage Report và phân tích bằng script hằng tuần", "Bật Receive PDF invoice by email trong Billing preferences", "Tạo AWS Budgets cost budget 1.000 USD với alert dùng trigger Forecasted"],
+        "answer": [3],
+        "explain": "AWS Budgets với trigger Forecasted báo khi chi phí dự báo sẽ vượt ngưỡng, hoàn toàn tự động. Cost Explorer dùng để phân tích chi phí chứ không tự gửi cảnh báo, còn PDF invoice chỉ gửi hóa đơn hằng tháng."
+      },
+      {
+        "type": "single",
+        "q": "Đội tài chính muốn phân tích chi phí AWS theo từng service và theo thời gian để xem xu hướng chi tiêu qua giao diện trực quan. Công cụ nào phù hợp nhất?",
+        "options": ["AWS Budgets", "AWS Free Tier usage alerts", "Cost Explorer", "CloudWatch billing alarm"],
+        "answer": [2],
+        "explain": "Cost Explorer dùng để xem và phân tích chi phí chi tiết theo service, region, thời gian. AWS Budgets dùng để đặt ngưỡng và cảnh báo, không phải công cụ phân tích xu hướng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã mua nhiều Reserved Instances và muốn được cảnh báo khi mức sử dụng (utilization) của chúng giảm dưới một ngưỡng. Loại budget nào phù hợp?",
+        "options": ["Reservation budget", "Cost budget", "Usage budget", "Savings Plans budget"],
+        "answer": [0],
+        "explain": "Reservation budget theo dõi mức sử dụng và độ phủ của Reserved Instances. Savings Plans budget dễ gây nhầm nhưng nó dành cho Savings Plans, không phải RI."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư muốn tạo CloudWatch alarm dựa trên metric EstimatedCharges nhưng không thấy metric này. Nguyên nhân hợp lý nhất là gì?",
+        "options": ["Cost Explorer chưa được bật nên chưa có dữ liệu", "Chưa bật “Receive Billing Alerts” trong Billing preferences, hoặc đang xem CloudWatch ở region khác us-east-1", "Account đang dùng Basic support plan", "Chưa tạo cost budget trong AWS Budgets"],
+        "answer": [1],
+        "explain": "Muốn tạo billing alarm phải bật Receive Billing Alerts trước, và metric EstimatedCharges chỉ có ở us-east-1. Cost Explorer và AWS Budgets là công cụ riêng, không phải điều kiện để có metric billing trong CloudWatch."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn khi chi phí vượt ngưỡng đặt trước thì AWS tự động áp một IAM policy hoặc SCP để chặn tạo thêm tài nguyên, không cần người can thiệp. Tính năng nào đáp ứng yêu cầu?",
+        "options": ["Cost and Usage Report", "Free Tier usage alerts", "AWS Budgets Actions", "Cost Explorer forecast"],
+        "answer": [2],
+        "explain": "Budget Actions có thể áp IAM policy/SCP hoặc dừng EC2/RDS khi vượt ngưỡng, giúp tự động ngăn chi tiêu vượt mức. Cost Explorer forecast chỉ dự báo, không thực hiện hành động."
+      }
+    ],
+    "IAM Access Keys and AWS CLI": [
+      {
+        "type": "single",
+        "q": "Một IAM user có thể có tối đa bao nhiêu cặp access key cùng lúc?",
+        "options": ["1", "2", "5", "Không giới hạn"],
+        "answer": [1],
+        "explain": "Mỗi IAM user có 0, 1 hoặc 2 cặp access key, tính cả key active lẫn inactive. Có 2 cặp là để rotate key mà không gây downtime."
+      },
+      {
+        "type": "single",
+        "q": "Một developer làm mất Secret Access Key của IAM user mình nhưng vẫn còn Access Key ID. Cách xử lý đúng là gì?",
+        "options": ["Tải lại Secret Access Key từ trang Security credentials", "Yêu cầu AWS Support khôi phục Secret Access Key", "Đổi password console để AWS cấp lại Secret Access Key", "Xóa cặp access key cũ, tạo cặp mới và cập nhật mọi nơi đang dùng key"],
+        "answer": [3],
+        "explain": "Secret Access Key chỉ hiển thị đúng một lần lúc tạo và không thể tải lại hay đổi. Cách duy nhất là xóa cả cặp, tạo cặp mới rồi cập nhật CLI/ứng dụng."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên Amazon EC2 cần đọc dữ liệu từ Amazon S3. Giải pháp nào đáp ứng yêu cầu theo best practice bảo mật?",
+        "options": ["Gán IAM role cho EC2 instance để ứng dụng dùng temporary credentials", "Tạo IAM user, sinh access key và lưu trong file cấu hình trên instance", "Nhúng access key của IAM user vào mã nguồn ứng dụng", "Dùng access key của root user vì chắc chắn có đủ quyền"],
+        "answer": [0],
+        "explain": "Ứng dụng chạy trên EC2/Lambda nên dùng IAM role với credential tạm thời. Nhúng access key dài hạn vào instance hay code là đáp án sai kinh điển, còn dùng access key của root vi phạm best practice nghiêm trọng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn rotate access key của IAM user dùng cho ứng dụng mà không làm gián đoạn ứng dụng. Thứ tự nào đúng?",
+        "options": ["Xóa key cũ → tạo key mới → cập nhật ứng dụng", "Đặt key cũ sang Inactive → tạo key mới → cập nhật ứng dụng", "Tạo key thứ hai → cập nhật ứng dụng sang key mới → đặt key cũ sang Inactive → xóa key cũ", "Đổi Secret Access Key của key hiện tại trong IAM console"],
+        "answer": [2],
+        "explain": "Rotation là tạo cặp mới, cập nhật mọi nơi dùng key, vô hiệu hóa rồi xóa cặp cũ; việc cho phép 2 cặp key nhằm mục đích này. Xóa hoặc inactive key cũ trước khi cập nhật sẽ làm ứng dụng ngừng hoạt động ngay."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư quản lý hai AWS account và muốn lưu access key của mỗi account trong AWS CLI v2 để chuyển đổi dễ dàng. Lệnh nào dùng để cấu hình một named profile?",
+        "options": ["aws configure", "aws configure --profile iamadmin-production", "aws iam create-profile iamadmin-production", "aws sts get-session-token --profile iamadmin-production"],
+        "answer": [1],
+        "explain": "aws configure --profile <tên> tạo named profile, sau đó dùng --profile <tên> trong từng lệnh. aws configure không kèm --profile chỉ cấu hình default profile."
+      }
+    ],
+    "IAM Basics": [
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về AWS IAM?",
+        "options": ["IAM là regional service, phải cấu hình riêng ở từng region", "Mỗi IAM user tạo ra được tính phí theo tháng", "IAM là global service, globally resilient, và mỗi account có instance IAM riêng", "Một instance IAM được chia sẻ giữa mọi account trong cùng region"],
+        "answer": [2],
+        "explain": "IAM là dịch vụ global, miễn phí, globally resilient, và mỗi account có database IAM riêng tách biệt hoàn toàn. Không cần chọn region khi làm việc với IAM."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chạy ứng dụng trên số lượng EC2 instance thay đổi liên tục theo Auto Scaling, và mọi instance đều cần đọc dữ liệu từ Amazon S3. Loại IAM identity nào phù hợp?",
+        "options": ["Một IAM user dùng chung cho mọi instance", "Một IAM group chứa các instance", "Mỗi instance một IAM user riêng", "Một IAM role được các instance assume"],
+        "answer": [3],
+        "explain": "Chọn role khi số lượng thực thể không xác định trước hoặc là AWS service. IAM group chỉ chứa IAM user, không chứa EC2 instance, và cũng không phải identity để đăng nhập."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi một security principal chứng minh được danh tính, IAM đánh giá các policy gắn với identity để quyết định cho phép hay từ chối request. Bước này gọi là gì?",
+        "options": ["Authorization", "Authentication", "Identity Federation", "Identity Provider"],
+        "answer": [0],
+        "explain": "Authorization quyết định bạn được làm gì dựa trên policy. Authentication là bước trước đó: chứng minh bạn là ai bằng password, access key, MFA."
+      },
+      {
+        "type": "single",
+        "q": "Một admin tạo một IAM policy cho phép đọc S3 nhưng user Bob vẫn bị từ chối khi truy cập S3. Nguyên nhân khả dĩ nhất là gì?",
+        "options": ["IAM chưa được bật ở region của bucket", "Policy chưa được attach vào user Bob hoặc group/role mà Bob dùng", "Bob chưa bật MFA nên mọi policy bị bỏ qua", "Policy chỉ có hiệu lực sau 24 giờ"],
+        "answer": [1],
+        "explain": "Policy tự nó không làm gì; chỉ có hiệu lực khi được attach vào user, group hoặc role. IAM là global nên không có khái niệm bật theo region."
+      },
+      {
+        "type": "multi",
+        "q": "Hai phát biểu nào đúng về IAM users và account alias? (Chọn 2)",
+        "options": ["Tạo IAM users, groups, roles phải trả phí theo số lượng", "IAM là dịch vụ miễn phí", "Phải chọn region khi tạo IAM user", "Account alias chỉ cần duy nhất trong phạm vi account", "Username của IAM user chỉ cần duy nhất trong phạm vi một account"],
+        "answer": [1, 4],
+        "explain": "IAM miễn phí, và username chỉ cần duy nhất trong account nên hai account có thể cùng có user iamadmin. Account alias thì khác: nó nằm trong sign-in URL nên phải duy nhất toàn cầu."
+      }
+    ],
+    "MFA": [
+      {
+        "type": "single",
+        "q": "Tổ hợp đăng nhập nào thực sự là multi-factor authentication?",
+        "options": ["Password + câu hỏi bảo mật", "Username + password", "Password + mã TOTP từ ứng dụng authenticator", "PIN + password"],
+        "answer": [2],
+        "explain": "Password (knowledge) + mã từ thiết bị (possession) là hai loại factor khác nhau. Password + câu hỏi bảo mật hay PIN + password đều chỉ là knowledge nên vẫn là single-factor."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã bật MFA cho root user và muốn mọi IAM user đăng nhập console cũng phải dùng MFA. Cần làm gì?",
+        "options": ["Không cần làm gì vì MFA của root user bảo vệ toàn bộ account", "Gán MFA device cho từng IAM user", "Bật MFA ở cấp account trong Billing preferences", "Tạo access key cho từng IAM user"],
+        "answer": [1],
+        "explain": "MFA gắn với từng identity, không gắn với account: MFA của root không bảo vệ IAM user. Mỗi identity cần entry MFA riêng."
+      },
+      {
+        "type": "single",
+        "q": "Đăng nhập bằng vân tay hoặc nhận diện khuôn mặt thuộc loại factor nào?",
+        "options": ["Inherence (thứ bạn là)", "Knowledge (thứ bạn biết)", "Possession (thứ bạn có)", "Location (nơi bạn ở)"],
+        "answer": [0],
+        "explain": "Sinh trắc học như vân tay, khuôn mặt, giọng nói là inherence. Điện thoại chứa ứng dụng authenticator mới là possession."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn bắt buộc phải xác thực MFA mới được xóa vĩnh viễn object version trong một S3 bucket đã bật versioning. Tính năng nào đáp ứng yêu cầu?",
+        "options": ["S3 Object Lock", "Bật MFA cho IAM user của đội vận hành", "S3 Lifecycle rule", "S3 MFA Delete"],
+        "answer": [3],
+        "explain": "S3 MFA Delete yêu cầu MFA khi xóa vĩnh viễn object version hoặc đổi trạng thái versioning. Bật MFA cho IAM user chỉ bảo vệ việc đăng nhập, không buộc MFA cho thao tác xóa trên bucket."
+      },
+      {
+        "type": "single",
+        "q": "Một admin muốn viết IAM policy chỉ cho phép một số hành động nhạy cảm khi người gọi đã xác thực bằng MFA. Condition key nào phù hợp?",
+        "options": ["aws:SourceIp", "aws:PrincipalOrgID", "aws:MultiFactorAuthPresent", "aws:SecureTransport"],
+        "answer": [2],
+        "explain": "aws:MultiFactorAuthPresent kiểm tra request có được xác thực bằng MFA hay không. aws:SecureTransport chỉ kiểm tra request có đi qua HTTPS."
+      }
+    ]
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "chapter": "12 Network Storage and Backup",
+  "lessons": {
+    "AWS Backup": [
+      {
+        "type": "single",
+        "q": "Một công ty dùng EC2, EBS, RDS, DynamoDB và EFS trên nhiều account trong AWS Organizations. Hiện mỗi đội tự viết script snapshot riêng cho từng dịch vụ. Công ty muốn một chính sách backup thống nhất, quản lý tập trung với chi phí vận hành thấp nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Dùng Lambda và EventBridge để chạy script snapshot theo lịch cho từng dịch vụ",
+          "Dùng AWS Backup với backup plan quản lý tập trung qua AWS Organizations",
+          "Dùng Amazon Data Lifecycle Manager cho EBS và automated backups riêng cho RDS",
+          "Dùng S3 Cross-Region Replication để sao chép dữ liệu của mọi dịch vụ"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "AWS Backup hợp nhất cấu hình, lập lịch, lưu trữ và giám sát backup cho nhiều dịch vụ, nhiều account qua Organizations. Data Lifecycle Manager chỉ lo EBS snapshot, vẫn phải quản lý rời rạc từng dịch vụ."
+      },
+      {
+        "type": "single",
+        "q": "Để phòng ransomware và đáp ứng compliance, một công ty yêu cầu các backup của RDS và EBS không thể bị xóa trước hạn bởi bất kỳ ai, kể cả root user hay administrator. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Bật S3 Object Lock trên bucket lưu snapshot",
+          "Gắn IAM policy Deny xóa recovery point cho mọi user",
+          "Bật AWS Backup Vault Lock trên backup vault",
+          "Bật MFA Delete trên backup vault"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Vault Lock bật WORM cho backup vault; sau thời gian cool-off không ai, kể cả AWS, xóa được backup trước hạn. S3 Object Lock là tính năng riêng cho S3 object, còn IAM deny có thể bị admin gỡ bỏ."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã dùng AWS Backup và muốn bản backup có sẵn ở region thứ hai để khôi phục khi cả region chính gặp sự cố, với ít công sức nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Cấu hình region copy trong backup plan để copy backup sang vault ở region khác",
+          "Viết Lambda function copy từng snapshot sang region khác",
+          "Bật S3 Cross-Region Replication cho backup vault",
+          "Tạo thêm một backup vault trong cùng region"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Backup plan hỗ trợ sẵn region copy để copy backup sang region khác phục vụ DR. Vault thứ hai trong cùng region không bảo vệ được khi cả region gặp sự cố."
+      },
+      {
+        "type": "multi",
+        "q": "Những con số nào về AWS Backup là đúng theo khóa học? (Chọn 2)",
+        "options": [
+          "Vault Lock có thời gian cool-off 24 giờ",
+          "Tần suất backup nhỏ nhất qua cron expression là mỗi 5 phút",
+          "Backup chuyển sang cold storage phải nằm ở đó tối thiểu 30 ngày",
+          "Vault Lock có thời gian cool-off 72 giờ, trong thời gian đó vẫn gỡ được lock",
+          "Backup chuyển sang cold storage phải nằm ở đó tối thiểu 90 ngày"
+        ],
+        "answer": [
+          3,
+          4
+        ],
+        "explain": "Vault Lock có 72 giờ cool-off trước khi khóa hoàn toàn, và backup ở cold storage phải giữ tối thiểu 90 ngày. Tần suất nhỏ nhất qua cron là mỗi giờ."
+      },
+      {
+        "type": "single",
+        "q": "Trong AWS Backup, thành phần nào định nghĩa tần suất backup, backup window, lifecycle (chuyển cold storage, expire) và region copy?",
+        "options": [
+          "Backup Vault",
+          "Backup Resources",
+          "Vault Lock",
+          "Backup Plan"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Backup Plan là chính sách chứa tần suất, window, lifecycle, vault đích và region copy. Backup Vault chỉ là đích lưu backup (container, mã hóa bằng KMS key)."
+      }
+    ],
+    "EFS": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng WordPress chạy trên nhiều EC2 Linux ở nhiều AZ cần dùng chung thư mục wp-content để instance trở nên stateless. Giải pháp lưu trữ nào phù hợp nhất?",
+        "options": [
+          "Gắn một EBS gp3 volume riêng cho mỗi instance",
+          "Amazon EFS với mount target ở mỗi AZ, mount vào thư mục wp-content",
+          "Amazon FSx for Windows File Server",
+          "Instance store volume trên mỗi instance"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "EFS là shared network file system (NFSv4) cho nhiều EC2 Linux, dữ liệu tách khỏi vòng đời instance. EBS là block storage gắn vào một instance trong một AZ nên không dùng chung được."
+      },
+      {
+        "type": "single",
+        "q": "Một file system EFS chỉ có mount target ở AZ-a. Các EC2 instance ở AZ-b mất quyền truy cập file khi AZ-a gặp sự cố. Cần thay đổi gì để kiến trúc chịu được lỗi AZ?",
+        "options": [
+          "Chuyển performance mode sang Max I/O",
+          "Chuyển throughput mode sang Provisioned",
+          "Bật lifecycle policy chuyển file sang Infrequent Access",
+          "Tạo mount target trong mỗi AZ có instance dùng EFS"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Giống NAT Gateway, muốn HA thì cần một mount target ở mỗi AZ; instance ở AZ không có mount target phụ thuộc AZ khác. Performance hay throughput mode không ảnh hưởng tới khả năng chịu lỗi AZ."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng trên EFS lưu lượng dữ liệu nhỏ nhưng cần throughput cao và ổn định. Ở chế độ Bursting, throughput không đủ. Theo khóa học, nên chọn gì?",
+        "options": [
+          "Performance mode Max I/O",
+          "Storage class One Zone",
+          "Throughput mode Provisioned",
+          "Lifecycle policy chuyển dữ liệu sang Infrequent Access"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Bursting có throughput tăng theo dung lượng lưu (giống gp2), còn Provisioned cho phép chỉ định throughput độc lập với dung lượng (giống io1/io2). Max I/O tăng aggregate IOPS cho workload song song nhưng latency cao hơn, không giải quyết việc throughput gắn với dung lượng."
+      },
+      {
+        "type": "single",
+        "q": "Đặc điểm của performance mode Max I/O trên EFS là gì?",
+        "options": [
+          "Aggregate throughput và IOPS cao hơn, đổi lại latency cao hơn; hợp workload song song cao",
+          "Latency thấp nhất và là mode mặc định cho web server, CMS",
+          "Throughput tăng theo dung lượng dữ liệu lưu, giống gp2",
+          "Chỉ dùng được với file system One Zone"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Max I/O dành cho workload song song cao như big data, media processing, chấp nhận latency cao hơn. General Purpose là mặc định với latency thấp, phù hợp hầu hết workload."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về Amazon EFS là đúng? (Chọn 2)",
+        "options": [
+          "EFS được hỗ trợ chính thức để mount trên Windows instance qua SMB",
+          "EFS là private service, truy cập qua mount target trong VPC; server on-premises có thể truy cập qua VPN hoặc Direct Connect",
+          "Mỗi mount target nằm trong một subnet và nhận một IP từ dải IP của subnet đó",
+          "Encryption at rest có thể bật bất kỳ lúc nào sau khi tạo file system",
+          "EFS là block storage chỉ gắn được vào một instance tại một thời điểm"
+        ],
+        "answer": [
+          1,
+          2
+        ],
+        "explain": "EFS là private service, phơi ra qua mount target có IP trong subnet, và on-premises tới được qua VPN/Direct Connect. EFS chỉ hỗ trợ Linux (Windows/SMB dùng FSx for Windows), và encryption at rest chỉ bật được khi tạo file system."
+      }
+    ]
+  }
+}

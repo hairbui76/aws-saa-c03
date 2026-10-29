@@ -1,0 +1,630 @@
+{
+  "chapter": "06 VPC Basics",
+  "lessons": {
+    "Bastion Host": [
+      {
+        "type": "single",
+        "q": "Một công ty cần cho đội admin SSH từ mạng văn phòng (IP cố định) vào các EC2 instance chỉ có private IP trong private subnet. Yêu cầu có một điểm vào duy nhất theo mô hình truyền thống. Giải pháp nào phù hợp?",
+        "options": [
+          "Đặt một NAT Gateway trong public subnet và cấu hình port forwarding SSH tới các instance private",
+          "Gán Elastic IP cho từng instance private và mở port 22 từ IP văn phòng",
+          "Đặt bastion host trong public subnet, SG của bastion chỉ cho SSH từ IP văn phòng; SG của instance private chỉ cho SSH từ SG của bastion",
+          "Đặt bastion host trong private subnet và thêm route 0.0.0.0/0 tới NAT Gateway"
+        ],
+        "answer": [2],
+        "explain": "Bastion (jumpbox) phải nằm ở public subnet (route tới IGW + public IP), siết SG theo IP nguồn và instance đích chỉ nhận SSH từ SG của bastion. NAT Gateway không hỗ trợ port forwarding và không làm bastion được."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn quản trị các EC2 instance private theo cách an toàn nhất và ít vận hành nhất: không có public IP, không mở bất kỳ port inbound nào và có audit log phiên làm việc. Giải pháp nào đáp ứng?",
+        "options": [
+          "Triển khai bastion host trong Auto Scaling Group trải nhiều AZ",
+          "Dùng AWS Systems Manager Session Manager với SSM Agent và instance role phù hợp",
+          "Dùng EC2 Instance Connect (public) và mở port 22 từ 0.0.0.0/0",
+          "Đặt NAT Gateway trong public subnet để admin đi vào qua Elastic IP của nó"
+        ],
+        "answer": [1],
+        "explain": "Session Manager không cần public IP, không cần port inbound và có audit log, nên là đáp án điển hình cho câu hỏi 'an toàn nhất / ít vận hành nhất'. Bastion vẫn cần public IP, mở port 22, phải vá OS và quản lý key."
+      },
+      {
+        "type": "multi",
+        "q": "Một kỹ sư dựng bastion host trong custom VPC nhưng không SSH được từ internet. Bastion cần những điều kiện mạng nào để truy cập được từ internet? (Chọn 2)",
+        "options": [
+          "Subnet chứa bastion có NAT Gateway riêng",
+          "Route table của subnet chứa bastion có route 0.0.0.0/0 tới Internet Gateway đang gắn với VPC",
+          "Subnet chứa bastion có route ::/0 tới Egress-Only Internet Gateway",
+          "Bastion có public IPv4 (auto-assign hoặc Elastic IP) và SG cho phép SSH inbound",
+          "Các instance private đích phải có Elastic IP"
+        ],
+        "answer": [1, 3],
+        "explain": "Bastion cần subnet public (IGW + default route) và public IP, cộng SG cho phép SSH inbound. Egress-Only IGW chỉ cho IPv6 đi ra nên không nhận kết nối vào; NAT Gateway cũng chỉ phục vụ kết nối đi ra."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng duy nhất một bastion host trong một AZ để quản trị toàn bộ VPC. Khi AZ đó gặp sự cố, đội vận hành mất quyền truy cập quản trị. Cách khắc phục theo khuyến nghị là gì?",
+        "options": [
+          "Chuyển bastion sang instance type lớn hơn",
+          "Thay bastion bằng một NAT Gateway vì NAT Gateway được AWS quản lý",
+          "Bật Termination Protection cho bastion",
+          "Đặt bastion ở nhiều AZ hoặc trong Auto Scaling Group trải nhiều AZ"
+        ],
+        "answer": [3],
+        "explain": "Một bastion đơn lẻ là single point of failure; cần nhiều AZ hoặc ASG để HA. Termination Protection chỉ chống xóa nhầm, không giúp gì khi AZ hỏng."
+      },
+      {
+        "type": "single",
+        "q": "Cách truy cập quản trị nào (ra mắt năm 2023) cho phép kết nối tới instance private mà không cần public IP và không cần Internet Gateway, thường được xem là cách mới thay thế bastion?",
+        "options": [
+          "EC2 Instance Connect Endpoint",
+          "EC2 Instance Connect (public)",
+          "Bastion host với Elastic IP",
+          "NAT instance có tắt Source/Destination Check"
+        ],
+        "answer": [0],
+        "explain": "EC2 Instance Connect Endpoint đặt endpoint trong VPC nên instance không cần public IP hay IGW. EC2 Instance Connect bản thường vẫn yêu cầu instance có public IP và mở port 22."
+      }
+    ],
+    "Compare - Security Groups vs NACL": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng web công khai cho phép HTTPS từ 0.0.0.0/0. Đội bảo mật phát hiện tấn công từ dải 198.51.100.0/24 và cần chặn ngay dải này. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Thêm deny rule cho 198.51.100.0/24 vào Security Group của web instance",
+          "Xóa rule 0.0.0.0/0 trong Security Group và thêm allow cho từng IP khách hàng",
+          "Thêm rule DENY cho 198.51.100.0/24 vào NACL của web subnet với rule number nhỏ hơn rule ALLOW 443",
+          "Thêm rule DENY vào NACL với rule number lớn hơn rule ALLOW 443"
+        ],
+        "answer": [2],
+        "explain": "SG không có explicit deny nên không chặn được một dải con; NACL có DENY và xử lý theo số nhỏ trước. Nếu DENY đặt số lớn hơn ALLOW thì traffic đã khớp ALLOW trước và DENY không bao giờ có tác dụng."
+      },
+      {
+        "type": "single",
+        "q": "Hai EC2 instance trong cùng một subnet không giao tiếp được với nhau qua TCP 8080. NACL của subnet đang là default NACL. Nguyên nhân khả dĩ nhất nằm ở đâu?",
+        "options": [
+          "Security Group của instance đích chưa cho phép TCP 8080 từ instance nguồn",
+          "NACL chưa có rule outbound cho dải ephemeral port",
+          "Route table của subnet thiếu route local",
+          "Subnet chưa có Internet Gateway"
+        ],
+        "answer": [0],
+        "explain": "Traffic giữa hai instance cùng subnet không đi qua NACL, chỉ chịu tác động của SG. Default NACL lại cho phép tất cả, nên thủ phạm là SG."
+      },
+      {
+        "type": "single",
+        "q": "Luồng Bob (Internet) → web subnet (HTTPS 443) → app subnet (TCP 1337), mỗi subnet có NACL riêng và mỗi tầng có SG riêng. Cần tối thiểu bao nhiêu rule nếu chỉ dùng NACL và bao nhiêu nếu chỉ dùng SG?",
+        "options": [
+          "4 rule NACL và 4 rule SG",
+          "3 rule NACL và 2 rule SG",
+          "4 rule NACL và 2 rule SG",
+          "6 rule NACL và 2 rule SG"
+        ],
+        "answer": [3],
+        "explain": "NACL stateless: mỗi lần vượt ranh giới subnet cần cặp rule request + ephemeral response trên mỗi NACL đi qua, tổng 6. SG stateful chỉ cần inbound 443 trên SG-web và inbound 1337 (source SG-web) trên SG-app."
+      },
+      {
+        "type": "single",
+        "q": "Inbound của một NACL có rule 100: ALLOW TCP 22 từ 203.0.113.5/32 và rule 200: DENY TCP 22 từ 203.0.113.5/32. Kết nối SSH từ 203.0.113.5 vào subnet sẽ ra sao?",
+        "options": [
+          "Bị chặn vì DENY luôn ưu tiên hơn ALLOW",
+          "Được cho phép vì rule 100 khớp trước và NACL dừng xét",
+          "Bị chặn vì rule * implicit deny ở cuối",
+          "Tùy Security Group quyết định vì NACL bỏ qua các rule mâu thuẫn"
+        ],
+        "answer": [1],
+        "explain": "NACL xét rule từ số nhỏ nhất, gặp rule khớp đầu tiên thì dừng, nên rule 100 ALLOW thắng. Quan niệm 'DENY luôn thắng' không áp dụng cho NACL."
+      },
+      {
+        "type": "multi",
+        "q": "Những đặc điểm nào chỉ có ở Security Group mà NACL không có? (Chọn 2)",
+        "options": [
+          "Hỗ trợ rule DENY tường minh",
+          "Tham chiếu được Security Group khác (logical resource) làm source",
+          "Gắn vào subnet",
+          "Xử lý rule theo thứ tự rule number",
+          "Stateful: response của request đã được phép tự động được cho qua"
+        ],
+        "answer": [1, 4],
+        "explain": "SG stateful và tham chiếu được logical resource (SG khác, self-reference). DENY tường minh, gắn vào subnet và xử lý theo số thứ tự là đặc điểm của NACL."
+      }
+    ],
+    "Custom VPC": [
+      {
+        "type": "single",
+        "q": "Một kỹ sư launch EC2 vào public subnet của một custom VPC mới tạo. Instance có public IPv4 nhưng không có public DNS hostname. Cần thay đổi gì?",
+        "options": [
+          "Tạo Route 53 public hosted zone cho VPC",
+          "Gắn Elastic IP thay cho public IP tự động",
+          "Bật thuộc tính enableDnsHostnames của VPC",
+          "Tạo DHCP option set mới trỏ tới 8.8.8.8"
+        ],
+        "answer": [2],
+        "explain": "enableDnsHostnames quyết định instance có public IP có được cấp public DNS hostname hay không, và mặc định tắt ở custom VPC. Elastic IP không giải quyết việc thiếu hostname."
+      },
+      {
+        "type": "single",
+        "q": "Khi tạo custom VPC, primary IPv4 CIDR được phép có kích thước trong khoảng nào?",
+        "options": [
+          "Từ /32 đến /8",
+          "Từ /28 đến /16",
+          "Từ /24 đến /16",
+          "Từ /28 đến /8"
+        ],
+        "answer": [1],
+        "explain": "VPC IPv4 nhỏ nhất /28 (16 IP) và lớn nhất /16 (65,536 IP). /8 vượt quá giới hạn tối đa của một VPC."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chỉ cần 2 EC2 instance chạy trên phần cứng dedicated vì lý do license; các tài nguyên còn lại trong VPC có thể dùng phần cứng chung. Cấu hình nào tiết kiệm chi phí nhất?",
+        "options": [
+          "Tạo VPC với tenancy Dedicated",
+          "Tạo VPC Dedicated cho 2 instance và VPC Default cho phần còn lại, nối bằng VPC peering",
+          "Dùng default VPC vì nó luôn chạy trên phần cứng dedicated",
+          "Tạo VPC với tenancy Default và chọn tenancy dedicated riêng cho 2 instance đó khi launch"
+        ],
+        "answer": [3],
+        "explain": "VPC tenancy Default vẫn cho phép chọn dedicated ở cấp từng instance. Tenancy Dedicated ở cấp VPC ép mọi tài nguyên lên phần cứng dedicated nên tốn tiền không cần thiết."
+      },
+      {
+        "type": "single",
+        "q": "Một custom VPC có CIDR 10.20.0.0/16. Route 53 Resolver (DNS) của VPC nằm ở địa chỉ nào?",
+        "options": [
+          "10.20.0.2",
+          "10.20.0.1",
+          "10.20.0.3",
+          "10.20.255.255"
+        ],
+        "answer": [0],
+        "explain": "DNS resolver của VPC luôn ở base IP của VPC + 2. Địa chỉ network + 1 là của VPC Router."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về IPv6 trong custom VPC?",
+        "options": [
+          "Có thể tự chọn bất kỳ dải IPv6 /48 nào cho VPC giống như IPv4",
+          "IPv6 trong VPC được chia thành dải private và public giống IPv4",
+          "VPC nhận một dải /56 do AWS cấp hoặc dải mình sở hữu (BYOIP); mọi địa chỉ đều publicly routable nhưng vẫn cần route và firewall mới ra internet",
+          "Bật IPv6 làm instance tự động truy cập được từ internet mà không cần route hay IGW"
+        ],
+        "answer": [2],
+        "explain": "IPv6 VPC là /56, không tự chọn dải tùy ý (Amazon-provided hoặc BYOIP), và không có khái niệm private/public. Dù publicly routable, vẫn phải cấu hình route, IGW và firewall tường minh."
+      }
+    ],
+    "NACL": [
+      {
+        "type": "single",
+        "q": "Một kỹ sư gắn custom NACL vào web subnet, thêm inbound rule 110 ALLOW TCP 443 từ 0.0.0.0/0. Người dùng gửi request được nhưng không nhận được phản hồi. Cần thêm rule nào?",
+        "options": [
+          "Inbound ALLOW TCP 1024–65535 từ 0.0.0.0/0",
+          "Outbound ALLOW TCP 1024–65535 tới 0.0.0.0/0",
+          "Outbound ALLOW TCP 443 tới 0.0.0.0/0",
+          "Không cần rule nào, chỉ cần thêm outbound rule vào Security Group"
+        ],
+        "answer": [1],
+        "explain": "NACL stateless nên response cần rule riêng: outbound tới dải ephemeral 1024–65535 của client. Outbound 443 sai vì response đi tới ephemeral port của client, không phải port 443."
+      },
+      {
+        "type": "single",
+        "q": "Một admin tạo NACL mới và associate ngay vào subnet production. Lập tức mọi kết nối vào/ra subnet bị mất. Nguyên nhân là gì?",
+        "options": [
+          "NACL mới mặc định chỉ cho phép traffic từ chính subnet",
+          "Associate NACL mới làm subnet mất route local",
+          "Subnet có thể gắn nhiều NACL và hai NACL đang xung đột",
+          "Custom NACL mới tạo chỉ có rule * implicit deny ở cả inbound và outbound"
+        ],
+        "answer": [3],
+        "explain": "Custom NACL mới tạo chỉ có rule * DENY nên chặn tất cả khi gắn vào subnet. Mỗi subnet chỉ có đúng một NACL, nên không có chuyện hai NACL xung đột."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về quan hệ giữa NACL và subnet?",
+        "options": [
+          "Mỗi subnet gắn đúng một NACL; một NACL có thể gắn cho nhiều subnet",
+          "Mỗi subnet gắn được tối đa 5 NACL",
+          "Mỗi NACL chỉ gắn được cho một subnet duy nhất",
+          "NACL có thể gắn vào subnet hoặc trực tiếp vào ENI"
+        ],
+        "answer": [0],
+        "explain": "1 subnet ⇒ đúng 1 NACL (default hoặc custom), 1 NACL ⇒ nhiều subnet. NACL chỉ gắn vào subnet, không gắn vào ENI; con số 5 là quota SG trên mỗi ENI."
+      },
+      {
+        "type": "single",
+        "q": "NACL của web subnet có inbound rule 100 ALLOW TCP 80 từ 0.0.0.0/0. Đội bảo mật muốn chặn IP 192.0.2.44 mà vẫn giữ rule 100. Nên tạo rule DENY với rule number nào?",
+        "options": [
+          "200",
+          "32767",
+          "90",
+          "Số nào cũng được vì DENY luôn được xét trước"
+        ],
+        "answer": [2],
+        "explain": "NACL xét từ số nhỏ nhất và dừng ở rule khớp đầu tiên, nên DENY phải có số nhỏ hơn 100. Đặt 200 thì traffic đã khớp ALLOW 100 trước và rule DENY vô dụng."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về Network ACL? (Chọn 2)",
+        "options": [
+          "Stateless: cần rule riêng cho request và response",
+          "Lọc cả traffic giữa hai instance trong cùng một subnet",
+          "Có thể dùng Security Group làm source trong rule",
+          "Rule được xét từ rule number nhỏ nhất, gặp rule khớp đầu tiên thì dừng",
+          "Có thể gắn trực tiếp vào network interface của instance"
+        ],
+        "answer": [0, 3],
+        "explain": "NACL stateless và xử lý theo thứ tự rule number. NACL chỉ lọc traffic vượt ranh giới subnet, chỉ dùng IP/CIDR/port/protocol (không tham chiếu SG) và chỉ gắn vào subnet."
+      }
+    ],
+    "NAT Gateway": [
+      {
+        "type": "single",
+        "q": "Một công ty có private subnet ở 3 AZ. Các instance cần tải patch từ internet nhưng không được nhận kết nối từ internet, và kiến trúc phải tiếp tục hoạt động khi một AZ hỏng. Giải pháp nào đáp ứng?",
+        "options": [
+          "Một NAT Gateway trong public subnet của AZ-A, mọi private subnet trỏ 0.0.0.0/0 tới nó",
+          "Mỗi AZ một NAT Gateway trong public subnet của AZ đó, mỗi AZ một route table private trỏ 0.0.0.0/0 tới NAT Gateway cùng AZ",
+          "Mỗi AZ một Internet Gateway và route private subnet tới IGW cùng AZ",
+          "Mỗi AZ một NAT Gateway đặt trong chính private subnet"
+        ],
+        "answer": [1],
+        "explain": "NAT Gateway chỉ AZ-resilient, nên HA cấp region cần 1 NATGW + 1 route table private cho mỗi AZ. Một NATGW duy nhất sẽ chết theo AZ của nó; IGW thì một VPC chỉ có một."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có VPC cho môi trường test với lưu lượng ra internet rất thấp và chấp nhận availability thấp hơn. Yêu cầu chi phí NAT thấp nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "NAT Gateway ở mỗi AZ",
+          "Egress-Only Internet Gateway",
+          "Gán public IPv4 cho mọi instance private",
+          "NAT instance nhỏ (có thể thuộc free tier) đã tắt Source/Destination Check"
+        ],
+        "answer": [3],
+        "explain": "NAT Gateway tính phí theo giờ và theo GB xử lý, không có free tier; NAT instance nhỏ rẻ hơn cho môi trường test. Egress-Only IGW chỉ dùng cho IPv6, không làm NAT cho IPv4."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư dựng NAT instance trong public subnet, route của private subnet đã trỏ 0.0.0.0/0 tới instance này nhưng traffic từ instance private vẫn bị drop. Cần làm gì?",
+        "options": [
+          "Tắt Source/Destination Check trên NAT instance",
+          "Gắn thêm Security Group thứ hai cho NAT instance",
+          "Bật enableDnsHostnames cho VPC",
+          "Chuyển NAT instance sang private subnet"
+        ],
+        "answer": [0],
+        "explain": "Mặc định EC2 drop gói mà nó không phải source hoặc destination; NAT instance chuyển tiếp gói của instance khác nên bắt buộc tắt Source/Destination Check. NAT phải ở public subnet chứ không phải private."
+      },
+      {
+        "type": "single",
+        "q": "Các instance trong VPC dùng IPv6 cần kết nối ra internet nhưng internet không được khởi tạo kết nối vào chúng. Giải pháp nào đúng?",
+        "options": [
+          "NAT Gateway với route ::/0",
+          "Internet Gateway với route ::/0",
+          "Egress-Only Internet Gateway với route ::/0",
+          "NAT instance với route ::/0"
+        ],
+        "answer": [2],
+        "explain": "IPv6 không dùng NAT Gateway; IPv6 outbound-only dùng Egress-Only IGW. Route ::/0 tới IGW thường cho kết nối hai chiều nên không đáp ứng yêu cầu chặn chiều vào."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về NAT Gateway? (Chọn 2)",
+        "options": [
+          "Có thể gắn Security Group để lọc traffic đi qua",
+          "Không gắn được Security Group; chỉ lọc được bằng NACL của subnet chứa nó",
+          "Phải đặt trong private subnet để bảo vệ Elastic IP",
+          "Không hỗ trợ port forwarding và không dùng làm bastion host được",
+          "Một NAT Gateway tự động chịu lỗi cho cả region"
+        ],
+        "answer": [1, 3],
+        "explain": "NATGW là dịch vụ managed, không truy cập OS nên không gắn SG, không port forwarding, không làm bastion. Nó nằm ở public subnet và chỉ AZ-resilient."
+      }
+    ],
+    "Security Groups": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng 2 tầng: web tier và app tier đều chạy trong Auto Scaling Group nên IP thay đổi liên tục. App tier chỉ được nhận TCP 1337 từ web tier. Giải pháp nào ít công quản trị nhất?",
+        "options": [
+          "Thêm IP của từng web instance vào SG của app tier qua script",
+          "Thêm CIDR của web subnet vào NACL của app subnet",
+          "Trong SG của app tier, thêm inbound TCP 1337 với source là SG của web tier",
+          "Thêm inbound TCP 1337 từ 0.0.0.0/0 vào SG của app tier"
+        ],
+        "answer": [2],
+        "explain": "Tham chiếu SG nghĩa là 'mọi resource gắn SG đó', nên tự áp dụng khi instance được thêm/bớt và không phải quản lý IP. Dùng CIDR subnet chạy được nhưng rộng hơn cần thiết."
+      },
+      {
+        "type": "single",
+        "q": "Một cluster ứng dụng chạy trong ASG, số node thay đổi từ 3 đến 30. Các node cần giao tiếp tự do với nhau trên mọi port. Cấu hình SG nào phù hợp nhất?",
+        "options": [
+          "Thêm rule All traffic với source là chính SG đó (self-reference)",
+          "Thêm rule All traffic với source 0.0.0.0/0",
+          "Tạo một SG riêng cho mỗi node và tham chiếu chéo",
+          "Dùng NACL với rule ALLOW cho CIDR của VPC"
+        ],
+        "answer": [0],
+        "explain": "Self-referencing SG cho phép mọi instance gắn SG đó nói chuyện với nhau và tự xử lý việc thêm/bớt node, đổi IP. NACL không lọc traffic trong cùng subnet và không tham chiếu được SG."
+      },
+      {
+        "type": "single",
+        "q": "Về mặt kỹ thuật, Security Group được gắn vào đối tượng nào?",
+        "options": [
+          "Subnet",
+          "VPC",
+          "EC2 instance (hypervisor)",
+          "Elastic Network Interface (ENI)"
+        ],
+        "answer": [3],
+        "explain": "Console cho chọn SG 'cho instance' nhưng thực chất SG gắn vào primary ENI của instance. NACL mới là thứ gắn vào subnet."
+      },
+      {
+        "type": "single",
+        "q": "SG của web server đang allow TCP 443 từ 0.0.0.0/0. Một kỹ sư muốn chặn IP 203.0.113.99 đang tấn công bằng cách thêm deny rule vào SG. Đánh giá nào đúng?",
+        "options": [
+          "Được, chỉ cần đặt deny rule có độ ưu tiên cao hơn",
+          "Không được vì SG không có explicit deny; cần thêm rule DENY vào NACL của subnet",
+          "Được, nhưng phải thêm vào outbound rules",
+          "Không được; cần tắt Source/Destination Check trên instance"
+        ],
+        "answer": [1],
+        "explain": "SG chỉ có allow cộng implicit deny, nên đã allow 0.0.0.0/0 thì không chặn được một IP con. NACL hỗ trợ DENY tường minh và là công cụ đúng cho việc chặn bad actor."
+      },
+      {
+        "type": "single",
+        "q": "Một web server HTTPS chỉ được bảo vệ bằng Security Group (outbound rules đã bị xóa hết). Để client nhận được response, cần cấu hình gì?",
+        "options": [
+          "Inbound TCP 443 và outbound TCP 1024–65535",
+          "Inbound TCP 443 và outbound TCP 443",
+          "Chỉ cần inbound TCP 443 từ 0.0.0.0/0; response tự được cho qua",
+          "Chỉ cần outbound TCP 1024–65535"
+        ],
+        "answer": [2],
+        "explain": "SG stateful nên response của một request đã được phép tự động được cho qua, không cần mở ephemeral port. Việc phải mở outbound 1024–65535 là đặc trưng của NACL."
+      }
+    ],
+    "Stateful vs Stateless Firewalls": [
+      {
+        "type": "single",
+        "q": "Bob (119.18.36.73, port 13337) truy cập web server 1.3.3.7:443. Từ góc nhìn của web server, gói response gửi về Bob là traffic gì?",
+        "options": [
+          "Inbound, tới port 443",
+          "Outbound, tới IP của Bob và ephemeral port 13337",
+          "Outbound, tới port 443 của Bob",
+          "Inbound, tới ephemeral port 13337"
+        ],
+        "answer": [1],
+        "explain": "Với server, request là inbound tới 443 và response là outbound từ 443 về IP và ephemeral port của client. Chiều của response luôn ngược với request."
+      },
+      {
+        "type": "single",
+        "q": "Một web server trong subnet có NACL cần tự tải bản cập nhật phần mềm qua HTTPS từ internet. Ngoài các rule phục vụ khách truy cập, NACL cần thêm cặp rule nào cho việc cập nhật?",
+        "options": [
+          "Inbound TCP 443 từ 0.0.0.0/0 và outbound TCP 1024–65535",
+          "Chỉ outbound TCP 443 tới 0.0.0.0/0",
+          "Inbound TCP 443 và outbound TCP 443",
+          "Outbound TCP 443 tới 0.0.0.0/0 và inbound TCP 1024–65535 từ 0.0.0.0/0"
+        ],
+        "answer": [3],
+        "explain": "Khi server khởi tạo cập nhật, request là outbound tới 443 và response quay về inbound trên ephemeral port. NACL stateless nên cần cả hai rule; chỉ mở outbound 443 thì response bị chặn."
+      },
+      {
+        "type": "single",
+        "q": "Với mỗi kết nối TCP, firewall stateless và firewall stateful cần lần lượt bao nhiêu rule?",
+        "options": [
+          "2 rule (request + response) và 1 rule (chỉ request)",
+          "1 rule và 2 rule",
+          "2 rule cho cả hai loại",
+          "1 rule cho cả hai loại"
+        ],
+        "answer": [0],
+        "explain": "Stateless coi request và response là hai luồng độc lập nên cần 2 rule; stateful liên kết response với request nên chỉ cần cho phép request."
+      },
+      {
+        "type": "single",
+        "q": "Trong VPC, loại firewall nào là stateful và loại nào là stateless?",
+        "options": [
+          "NACL stateful, Security Group stateless",
+          "Cả NACL và Security Group đều stateful",
+          "Security Group stateful, NACL stateless",
+          "Cả hai đều stateless"
+        ],
+        "answer": [2],
+        "explain": "Security Group stateful, NACL stateless, đây là khác biệt số một giữa hai lớp. Vì NACL stateless nên phải mở dải ephemeral cho response."
+      },
+      {
+        "type": "single",
+        "q": "Bộ yếu tố nào xác định duy nhất một kết nối TCP?",
+        "options": [
+          "Source IP và destination IP",
+          "Source IP, source port, destination IP, destination port",
+          "Destination IP, destination port và protocol",
+          "Source port và destination port"
+        ],
+        "answer": [1],
+        "explain": "Bộ bốn source IP, source port, destination IP, destination port xác định một kết nối; stateful firewall dựa vào đó để nhận ra response (cùng IP/port, đảo chiều)."
+      }
+    ],
+    "VPC Routing and Internet Gateway": [
+      {
+        "type": "single",
+        "q": "Một công ty có VPC trải trên 3 AZ, mỗi AZ có một web subnet cần ra internet. Kiến trúc sư đề xuất tạo một Internet Gateway cho mỗi AZ để tăng availability. Phương án đúng là gì?",
+        "options": [
+          "Gắn một Internet Gateway duy nhất vào VPC vì IGW là region-resilient; route table của các web subnet trỏ 0.0.0.0/0 tới IGW đó",
+          "Tạo 3 Internet Gateway, mỗi AZ một cái, gắn cả ba vào VPC",
+          "Tạo 3 NAT Gateway thay cho Internet Gateway",
+          "Tạo 3 VPC riêng, mỗi VPC một AZ và một IGW"
+        ],
+        "answer": [0],
+        "explain": "IGW là regional, phủ mọi AZ của VPC, và một VPC chỉ có tối đa 1 IGW. Phương án 'mỗi AZ một IGW' là bẫy kinh điển."
+      },
+      {
+        "type": "multi",
+        "q": "Một VPC đã có Internet Gateway được attach. Để EC2 instance trong một subnet truy cập được internet qua IPv4, cần thêm những gì? (Chọn 2)",
+        "options": [
+          "Một NAT Gateway trong cùng subnet",
+          "Cấu hình public IPv4 trực tiếp trên card mạng trong hệ điều hành",
+          "Route 0.0.0.0/0 với target là IGW trong route table gắn với subnet",
+          "Một Egress-Only Internet Gateway",
+          "Public IPv4 cho instance (auto-assign của subnet hoặc Elastic IP)"
+        ],
+        "answer": [2, 4],
+        "explain": "Subnet public cần IGW + default route tới IGW + public IP. Public IPv4 không bao giờ cấu hình trong OS vì IGW làm static NAT; Egress-Only IGW chỉ dành cho IPv6."
+      },
+      {
+        "type": "single",
+        "q": "Route table của một subnet có: 10.16.0.0/16 → local, 0.0.0.0/0 → igw, 52.95.0.0/16 → pcx-1, 52.95.10.0/24 → vgw-1. Gói tin tới 52.95.10.7 sẽ đi theo target nào?",
+        "options": [
+          "igw",
+          "pcx-1",
+          "local",
+          "vgw-1"
+        ],
+        "answer": [3],
+        "explain": "VPC Router dùng longest prefix match: /24 cụ thể hơn /16 và /0 nên thắng. 0.0.0.0/0 chỉ dùng khi không có route cụ thể hơn khớp."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 instance có private IP 10.16.16.20 và public IPv4 43.250.192.20. Khi admin xem cấu hình mạng trong hệ điều hành, sẽ thấy gì?",
+        "options": [
+          "Cả 10.16.16.20 và 43.250.192.20 trên cùng một card mạng",
+          "Chỉ private IP 10.16.16.20; public IPv4 được Internet Gateway ánh xạ bằng static NAT",
+          "Chỉ public IP 43.250.192.20",
+          "Hai card mạng, mỗi card một địa chỉ"
+        ],
+        "answer": [1],
+        "explain": "OS chỉ biết private IP; IGW lưu ánh xạ private ↔ public và dịch địa chỉ 1:1. Riêng IPv6 thì OS được cấu hình chính địa chỉ IPv6 và IGW không dịch."
+      },
+      {
+        "type": "single",
+        "q": "Một admin thêm route 0.0.0.0/0 → IGW vào main route table của VPC. Hệ quả cần lưu ý là gì?",
+        "options": [
+          "Không ảnh hưởng gì vì main route table không gắn với subnet nào",
+          "Route local bị xóa và thay bằng route tới IGW",
+          "Mọi subnet không được associate route table tường minh sẽ có đường ra internet và có thể thành public",
+          "Chỉ subnet đầu tiên của VPC bị ảnh hưởng"
+        ],
+        "answer": [2],
+        "explain": "Subnet không có association tường minh sẽ dùng main route table, nên route tới IGW lan ra mọi subnet 'mặc định'. Route local luôn có và không xóa được."
+      }
+    ],
+    "VPC Sizing and Structure": [
+      {
+        "type": "single",
+        "q": "Một công ty sắp tạo VPC và sau này sẽ nối VPN về on-premises. Các mạng hiện có: on-prem 192.168.10.0/24, AWS pilot cũ 10.0.0.0/16, Azure 172.31.0.0/16, Google Cloud 10.128.0.0/9. Dải nào phù hợp cho VPC mới?",
+        "options": [
+          "10.0.0.0/16",
+          "172.31.0.0/16",
+          "10.16.0.0/16",
+          "10.200.0.0/16"
+        ],
+        "answer": [2],
+        "explain": "10.16.0.0/16 không chồng lấn với mạng nào đã biết. 10.200.0.0/16 nằm trong 10.128.0.0/9 (10.128 → 10.255) nên trùng dải Google Cloud."
+      },
+      {
+        "type": "single",
+        "q": "Một VPC /16 được thiết kế cho 4 AZ (3 dùng + 1 dự phòng) × 4 tier (web, app, db + 1 spare), mỗi tier mỗi AZ một subnet bằng nhau. Mỗi subnet có prefix bao nhiêu?",
+        "options": [
+          "/20",
+          "/18",
+          "/24",
+          "/19"
+        ],
+        "answer": [0],
+        "explain": "16 subnet cần thêm 4 bit (2^4 = 16), nên prefix subnet = /16 + 4 = /20. /18 chỉ chia được 4 subnet."
+      },
+      {
+        "type": "single",
+        "q": "Một subnet /20 trong VPC có bao nhiêu địa chỉ IP dùng được cho tài nguyên?",
+        "options": [
+          "4,096",
+          "4,094",
+          "4,092",
+          "4,091"
+        ],
+        "answer": [3],
+        "explain": "/20 có 4,096 địa chỉ, AWS giữ 5 IP mỗi subnet nên còn 4,091. 4,094 là cách tính mạng truyền thống chỉ trừ network và broadcast."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty không thể thiết lập kết nối VPC peering giữa VPC mới (10.0.0.0/16) và VPC của đối tác (10.0.0.0/16). Nguyên nhân gốc rễ nhất là gì?",
+        "options": [
+          "Hai VPC chưa có Internet Gateway",
+          "CIDR của hai VPC chồng lấn",
+          "Hai VPC dùng tenancy khác nhau",
+          "VPC /16 quá lớn để peering"
+        ],
+        "answer": [1],
+        "explain": "Dải IP chồng lấn khiến peering, VPN, Direct Connect rất khó hoặc không thể; đây là lý do phải lập IP plan tránh dải phổ biến như 10.0 từ đầu. Peering không cần IGW."
+      },
+      {
+        "type": "single",
+        "q": "Vì sao không nên dùng default VPC cho môi trường production, xét theo góc độ IP planning?",
+        "options": [
+          "Default VPC không hỗ trợ subnet ở nhiều AZ",
+          "Default VPC không có Internet Gateway",
+          "Default VPC luôn dùng 172.31.0.0/16, dễ chồng lấn với mạng khác như on-prem hay cloud khác",
+          "Default VPC chỉ có kích thước /28"
+        ],
+        "answer": [2],
+        "explain": "Default VPC có cấu trúc cố định với dải 172.31.0.0/16 giống nhau ở mọi nơi, dễ trùng với mạng khác. Default VPC vẫn có IGW và subnet ở mỗi AZ."
+      }
+    ],
+    "VPC Subnets": [
+      {
+        "type": "single",
+        "q": "Một công ty tạo subnet /28 cho một nhóm EC2 instance, mỗi instance dùng một IP. Subnet này chứa tối đa bao nhiêu instance?",
+        "options": [
+          "16",
+          "14",
+          "13",
+          "11"
+        ],
+        "answer": [3],
+        "explain": "/28 có 16 IP, AWS giữ 5 (network, +1 router, +2 DNS, +3 reserved, broadcast) nên còn 11. 14 là cách tính mạng truyền thống."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng phải tiếp tục chạy khi một AZ hỏng. Kiến trúc sư đề xuất tạo một subnet trải trên hai AZ và đặt instance vào đó. Phương án đúng là gì?",
+        "options": [
+          "Giữ đề xuất, vì subnet có thể trải nhiều AZ nếu VPC là /16",
+          "Tạo nhiều subnet, mỗi subnet ở một AZ khác nhau, và phân bổ instance vào các subnet đó",
+          "Dùng một subnet trong một AZ và bật auto-assign public IPv4",
+          "Đổi AZ của subnet sang AZ khác khi có sự cố"
+        ],
+        "answer": [1],
+        "explain": "Subnet AZ-resilient: nằm trong đúng một AZ và không đổi AZ được. HA đạt được bằng nhiều subnet ở nhiều AZ."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn mọi instance trong VPC dùng DNS server và NTP server nội bộ thay cho mặc định. VPC đang gắn một DHCP option set. Cách làm đúng là gì?",
+        "options": [
+          "Tạo DHCP option set mới với DNS/NTP mong muốn rồi associate nó với VPC",
+          "Sửa trực tiếp DHCP option set hiện tại",
+          "Gắn DHCP option set khác nhau cho từng subnet",
+          "Tắt enableDnsSupport rồi cấu hình DNS trong route table"
+        ],
+        "answer": [0],
+        "explain": "DHCP option set không sửa được và mỗi VPC chỉ gắn một set tại một thời điểm, áp xuống mọi subnet. Muốn thay thì tạo set mới và đổi VPC sang dùng nó."
+      },
+      {
+        "type": "single",
+        "q": "Trong subnet 10.16.16.0/20, địa chỉ nào được AWS dành cho VPC Router?",
+        "options": [
+          "10.16.16.0",
+          "10.16.16.3",
+          "10.16.16.1",
+          "10.16.31.255"
+        ],
+        "answer": [2],
+        "explain": "Network + 1 dành cho VPC Router, +2 cho DNS, +3 dự phòng; 10.16.16.0 là network address và 10.16.31.255 là broadcast."
+      },
+      {
+        "type": "single",
+        "q": "Một VPC có dải IPv6 /56. Mỗi subnet nhận dải IPv6 kích thước bao nhiêu và VPC chứa được tối đa bao nhiêu subnet IPv6 như vậy?",
+        "options": [
+          "/48, 256 subnet",
+          "/64, 256 subnet",
+          "/64, 16 subnet",
+          "/60, 16 subnet"
+        ],
+        "answer": [1],
+        "explain": "Mỗi subnet nhận một /64 cắt từ /56 của VPC, tức 8 bit chênh lệch = 256 subnet (hex 00 → FF)."
+      }
+    ]
+  }
+}

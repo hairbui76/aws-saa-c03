@@ -1,0 +1,381 @@
+{
+  "chapter": "08 Containers",
+  "lessons": {
+    "Containers Fundamentals": [
+      {
+        "type": "single",
+        "q": "Điểm khác biệt cốt lõi giữa container và máy ảo (VM) chạy trên hypervisor là gì?",
+        "options": [
+          "Container có guest OS và kernel riêng nhưng nhỏ gọn hơn VM",
+          "Container chạy như một process trên host OS và dùng chung kernel của host, không cần guest OS đầy đủ",
+          "Container chỉ chạy được trên phần cứng bare metal, không chạy được trên EC2",
+          "Container được hypervisor Nitro cấp phát RAM và disk riêng giống hệt VM"
+        ],
+        "answer": [1],
+        "explain": "Container chạy như một process cô lập trên host OS và dùng host OS cho phần nặng (kernel, networking, file I/O), nên nhẹ hơn VM. Mỗi VM mới là một OS hoàn chỉnh với guest OS riêng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có 20 ứng dụng web nhỏ, cùng chạy trên Linux. Họ muốn mỗi ứng dụng được cô lập, khởi động nhanh, chạy nhất quán từ môi trường dev tới production và đạt mật độ cao trên ít phần cứng nhất. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Chạy mỗi ứng dụng trên một EC2 instance riêng với AMI riêng",
+          "Mua một EC2 Dedicated Host và chạy 20 VM trên đó",
+          "Đóng gói mỗi ứng dụng thành container image và chạy dưới dạng container",
+          "Cài cả 20 ứng dụng trực tiếp vào cùng một EC2 instance không cô lập"
+        ],
+        "answer": [2],
+        "explain": "Các từ khóa lightweight, portable, consistent, start nhanh, mật độ cao, cùng OS đều chỉ tới container. Mỗi ứng dụng một EC2 instance gây trùng lặp guest OS và lãng phí tài nguyên."
+      },
+      {
+        "type": "single",
+        "q": "Hai container được chạy từ cùng một Docker image trên cùng một container host. Phát biểu nào đúng về cách lưu trữ của chúng?",
+        "options": [
+          "Mỗi container có một bản sao đầy đủ của tất cả các layer trong image",
+          "Hai container dùng chung một layer read/write duy nhất",
+          "Các layer của image bị sửa trực tiếp khi container ghi log",
+          "Hai container dùng chung các layer read-only của image, mỗi container có một layer read/write riêng ở trên cùng"
+        ],
+        "answer": [3],
+        "explain": "Image gồm các layer read-only được chia sẻ; khi chạy, mỗi container thêm một layer read/write riêng nên khác biệt giữa chúng chỉ vài MB. Layer của image không bao giờ thay đổi sau khi tạo."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng container lưu file người dùng upload vào file system bên trong container. Mỗi khi container bị thay thế, các file này bị mất. Kiến trúc sư cần giải pháp lưu trữ bền vững, dùng chung được giữa nhiều container. Nên làm gì?",
+        "options": [
+          "Lưu file trên Amazon EFS gắn vào container thay vì layer read/write của container",
+          "Thêm một directive RUN trong Dockerfile để tạo thư mục upload",
+          "Tăng kích thước layer read/write của container",
+          "Build lại image sau mỗi lần có file upload mới"
+        ],
+        "answer": [0],
+        "explain": "Dữ liệu trong layer read/write mất khi container bị xóa, nên dữ liệu bền vững phải nằm ở storage ngoài như EFS. Sửa Dockerfile chỉ thay đổi image, không giữ được dữ liệu phát sinh khi chạy."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về Dockerfile và port của container? (Chọn 2)",
+        "options": [
+          "Directive EXPOSE 80 tự động mở port 80 trên Security Group của host",
+          "Directive EXPOSE chỉ khai báo/tài liệu hóa port container dùng, không tự cấu hình mapping",
+          "Mỗi directive trong Dockerfile tạo ra một máy ảo riêng",
+          "Các layer của image có thể được chỉnh sửa trực tiếp sau khi build",
+          "Mapping port thật được làm bằng -p host:container (Docker) hoặc port mapping trong container definition của ECS"
+        ],
+        "answer": [1, 4],
+        "explain": "EXPOSE chỉ tài liệu hóa port; việc map port thật làm bằng -p hoặc port mapping trong ECS container definition. EXPOSE không đụng tới Security Group, và layer image là read-only."
+      }
+    ],
+    "ECR": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy workload trên Amazon ECS và Amazon EKS. Họ cần một container image registry private, được quản lý hoàn toàn, kiểm soát truy cập bằng IAM, với chi phí vận hành thấp nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Lưu image dưới dạng file tar trong một S3 bucket",
+          "Dùng repository public trên Docker Hub",
+          "Dùng Amazon ECR private repository",
+          "Tự dựng registry trên một EC2 instance"
+        ],
+        "answer": [2],
+        "explain": "ECR là managed container registry của AWS, tích hợp IAM và dùng trực tiếp với ECS/EKS. Docker Hub public cho phép mọi người pull và không tích hợp IAM."
+      },
+      {
+        "type": "single",
+        "q": "Đội bảo mật yêu cầu quét lỗ hổng cho container image trong ECR, bao gồm cả gói của hệ điều hành lẫn thư viện ngôn ngữ lập trình trong image. Tính năng nào đáp ứng?",
+        "options": [
+          "ECR enhanced scanning dùng Amazon Inspector",
+          "ECR basic scanning",
+          "Amazon GuardDuty",
+          "Amazon Macie"
+        ],
+        "answer": [0],
+        "explain": "Enhanced scanning dùng Amazon Inspector để quét lỗ hổng cả OS lẫn software package theo từng layer. Basic scanning chỉ ở mức cơ bản, không đầy đủ như yêu cầu."
+      },
+      {
+        "type": "single",
+        "q": "Mô hình quyền truy cập của public registry trong Amazon ECR là gì?",
+        "options": [
+          "Mọi thao tác pull và push đều cần quyền",
+          "Ai cũng push được, nhưng pull cần quyền",
+          "Chỉ các account trong cùng AWS Organization được pull",
+          "Ai cũng pull được, nhưng push cần quyền"
+        ],
+        "answer": [3],
+        "explain": "Public registry cho phép mọi người pull (read-only công khai), còn push cần quyền. Mô hình mọi thao tác đều cần quyền là của private registry."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty build image tại us-east-1 nhưng cần image có sẵn ở eu-west-1 cho mục đích DR và ở một AWS account khác của bộ phận vận hành, với ít công sức nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Bật S3 Cross-Region Replication trên bucket chứa layer của ECR",
+          "Cấu hình ECR replication cross-region và cross-account",
+          "Viết pipeline pull image rồi push thủ công sang từng region/account",
+          "Chia sẻ repository qua AWS RAM"
+        ],
+        "answer": [1],
+        "explain": "ECR hỗ trợ replication image cả cross-region và cross-account, được quản lý sẵn. Bucket S3 chứa layer do AWS quản lý nên không cấu hình S3 CRR trực tiếp được, còn pipeline thủ công tốn công vận hành."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty muốn (1) kiểm toán ai đã push/pull image trong ECR và (2) tự động kích hoạt quy trình deploy mỗi khi có image mới được push. Nên dùng dịch vụ nào? (Chọn 2)",
+        "options": [
+          "AWS CloudTrail",
+          "AWS Config",
+          "AWS X-Ray",
+          "Amazon EventBridge",
+          "AWS Trusted Advisor"
+        ],
+        "answer": [0, 3],
+        "explain": "Mọi API action của ECR được ghi vào CloudTrail để audit; ECR sinh event tới EventBridge để xây workflow event-driven. AWS Config theo dõi cấu hình tài nguyên, không phải lịch sử push/pull."
+      }
+    ],
+    "ECS Launch Types EC2 vs Fargate": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn chạy ứng dụng container trên AWS mà không phải quản lý server, capacity hay availability của container host. Giải pháp nào có chi phí vận hành thấp nhất?",
+        "options": [
+          "ECS EC2 mode với Auto Scaling Group",
+          "Cài Docker trực tiếp trên EC2 instance",
+          "EKS với self-managed nodes",
+          "ECS với Fargate launch type"
+        ],
+        "answer": [3],
+        "explain": "Fargate là serverless: AWS quản lý container host, bạn chỉ khai báo CPU/memory cho task. ECS EC2 mode vẫn bắt bạn lo capacity và availability của cluster."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã container hóa ứng dụng, có workload lớn và ổn định 24/7, và đã mua sẵn nhiều Reserved Instances. Ban lãnh đạo ưu tiên chi phí hơn công sức quản trị. Launch type nào phù hợp nhất?",
+        "options": [
+          "ECS EC2 mode",
+          "ECS Fargate",
+          "AWS Lambda",
+          "EC2 thuần không dùng container"
+        ],
+        "answer": [0],
+        "explain": "EC2 mode tận dụng được Reserved Instances và Spot, phù hợp workload lớn, ổn định, tổ chức nhạy cảm về giá. Fargate phù hợp khi ưu tiên giảm overhead quản trị hơn là giá."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chạy một batch job container khoảng 1 giờ mỗi ngày, thời gian còn lại không có tải. Họ muốn tối ưu chi phí và không phải lo hạ tầng. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "ECS EC2 mode với Auto Scaling Group tối thiểu 2 instance",
+          "Một EC2 instance chạy Docker liên tục",
+          "Chạy task trên ECS Fargate khi job cần chạy",
+          "EC2 Dedicated Host chạy Docker"
+        ],
+        "answer": [2],
+        "explain": "Workload batch/periodic hợp với Fargate vì chỉ trả tiền CPU/memory khi task chạy. Giữ fleet EC2 chạy liên tục cho tải không đều là lãng phí vì vẫn trả tiền instance khi rảnh."
+      },
+      {
+        "type": "single",
+        "q": "Khi chạy task trên ECS Fargate, networking của task được hiện thực như thế nào?",
+        "options": [
+          "Task dùng chung IP của Fargate Shared Infrastructure, không nằm trong VPC của khách hàng",
+          "Mỗi task được inject một ENI riêng vào subnet trong VPC của bạn và được bảo vệ bằng Security Group",
+          "Task chỉ truy cập được qua NAT Gateway do AWS quản lý, không có IP trong VPC",
+          "Task dùng IP của EC2 container instance mà nó chạy trên đó"
+        ],
+        "answer": [1],
+        "explain": "Fargate task chạy trên hạ tầng dùng chung nhưng được inject vào VPC bằng một ENI riêng (awsvpc), nên hoạt động như tài nguyên VPC bình thường với Security Group. Dùng IP của container instance là đặc điểm của EC2 mode."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về ECS EC2 mode?",
+        "options": [
+          "ECS EC2 mode là serverless, AWS lo capacity của cluster",
+          "Không thể dùng Spot Instances làm container host",
+          "Container instance là EC2 do AWS quản lý, bạn không thấy và không bị tính tiền instance",
+          "Bạn vẫn trả tiền container instance khi chúng đang chạy dù không có task nào, và tự chịu trách nhiệm capacity của cluster (qua ASG)"
+        ],
+        "answer": [3],
+        "explain": "Trong EC2 mode, instance nằm trong account bạn, bị tính tiền kể cả khi rảnh và bạn lo capacity/availability qua Auto Scaling Group. EC2 mode không phải serverless và vẫn dùng được Spot/RI."
+      }
+    ],
+    "ECS": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên Amazon ECS cần ghi dữ liệu vào một DynamoDB table. Cách nào cấp quyền theo best practice?",
+        "options": [
+          "Gắn quyền DynamoDB vào instance role của container host",
+          "Tạo IAM role với quyền DynamoDB và gán làm Task Role trong task definition",
+          "Lưu access key của IAM user vào biến môi trường của container",
+          "Gắn quyền DynamoDB vào task execution role"
+        ],
+        "answer": [1],
+        "explain": "Task Role là IAM role mà task assume để nhận temporary credentials, là cách best practice cấp quyền AWS cho container. Task execution role dành cho ECS agent/Fargate pull image và gửi log, không phải cho code trong container."
+      },
+      {
+        "type": "single",
+        "q": "Task chạy trên ECS Fargate không khởi động được vì không pull được image từ private ECR repository và không gửi được log tới CloudWatch Logs. Cần cấu hình role nào?",
+        "options": [
+          "Task Role",
+          "EC2 instance profile",
+          "Service-linked role của Auto Scaling",
+          "Task execution role"
+        ],
+        "answer": [3],
+        "explain": "Task execution role là role cho ECS agent/Fargate để pull image từ ECR và gửi log tới CloudWatch Logs. Task Role chỉ cấp quyền cho code chạy trong container."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng production chạy trên ECS cần luôn có 5 bản sao, tự thay thế task bị lỗi và được phân phối tải qua Application Load Balancer. Nên dùng thành phần nào?",
+        "options": [
+          "ECS Service với desired count là 5 và gắn ALB",
+          "Run task thủ công 5 lần từ task definition",
+          "Thêm 5 container definition vào cùng một task definition",
+          "Tăng kích thước Auto Scaling Group của cluster lên 5 instance"
+        ],
+        "answer": [0],
+        "explain": "Service định nghĩa số bản sao task, thay thế task lỗi và gắn load balancer, cho scaling và HA. Task đơn lẻ chạy thủ công không tự scale, không tự HA."
+      },
+      {
+        "type": "multi",
+        "q": "Theo mô hình khái niệm của ECS, thông tin nào thuộc task definition chứ không phải container definition hay service? (Chọn 2)",
+        "options": [
+          "CPU và memory cấp cho task",
+          "URL của image trên registry",
+          "Task role",
+          "Port mapping của container",
+          "Số bản sao task cần duy trì (desired count)"
+        ],
+        "answer": [0, 2],
+        "explain": "Task definition chứa resources (CPU/memory), network mode, compatibility và task role. Image và port thuộc container definition; số bản sao thuộc service."
+      },
+      {
+        "type": "single",
+        "q": "Trong Amazon ECS, một task là gì?",
+        "options": [
+          "Một EC2 instance chạy ECS agent",
+          "Một container image được lưu trong ECR",
+          "Một ứng dụng self-contained gồm một hoặc nhiều container, được mô tả bởi task definition",
+          "Một cấu hình quy định số bản sao và load balancer"
+        ],
+        "answer": [2],
+        "explain": "Task là một ứng dụng hoàn chỉnh gồm 1 hoặc nhiều container (ví dụ web + database). Cấu hình số bản sao và load balancer là service, còn EC2 chạy ECS agent là container instance."
+      }
+    ],
+    "EKS": [
+      {
+        "type": "single",
+        "q": "Một công ty đang chạy nhiều ứng dụng trên Kubernetes on-premises và muốn chuyển lên AWS với ít thay đổi nhất, đồng thời tránh bị khóa vào một vendor. Dịch vụ nào phù hợp?",
+        "options": [
+          "Amazon ECS với Fargate",
+          "AWS Elastic Beanstalk",
+          "Amazon EKS",
+          "AWS App Runner"
+        ],
+        "answer": [2],
+        "explain": "EKS là Kubernetes do AWS quản lý, cloud agnostic nên phù hợp khi đã dùng Kubernetes hoặc muốn tránh lock-in. ECS là orchestration riêng của AWS, phải chuyển đổi manifest."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng Amazon EKS và muốn chạy pod mà không phải provision, cấu hình hay scale bất kỳ EC2 instance nào, với overhead vận hành thấp nhất. Nên chọn kiểu node nào?",
+        "options": [
+          "Self-managed nodes",
+          "Fargate (định nghĩa Fargate profile)",
+          "Managed node groups",
+          "Self-managed nodes dùng Spot Instances"
+        ],
+        "answer": [1],
+        "explain": "Với Fargate profile, pod chạy trên Fargate, không phải chọn instance type hay lo scale/cluster packing. Managed node groups vẫn là EC2, chỉ tự động hóa provisioning và lifecycle."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn tạo và vận hành cluster Kubernetes theo kiểu EKS ngay trong data center on-premises của mình. Lựa chọn nào phù hợp nhất?",
+        "options": [
+          "Amazon ECS Anywhere",
+          "EKS với Fargate profile",
+          "AWS Local Zones",
+          "EKS Anywhere"
+        ],
+        "answer": [3],
+        "explain": "EKS Anywhere cho phép tạo EKS cluster on-premises hoặc bất kỳ đâu. ECS Anywhere dùng cho ECS chứ không phải Kubernetes."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về kiến trúc control plane của Amazon EKS?",
+        "options": [
+          "Control plane và etcd do AWS quản lý, chạy multi-AZ trong VPC do AWS quản lý, giao tiếp với worker node qua ENI được inject vào VPC của khách hàng",
+          "Control plane chạy trên worker node EC2 trong VPC của khách hàng",
+          "Khách hàng phải tự vận hành etcd trên EC2 để đảm bảo HA",
+          "Control plane chỉ chạy trong một AZ, khách hàng phải tự dựng bản dự phòng"
+        ],
+        "answer": [0],
+        "explain": "Control plane (kể cả etcd) do AWS vận hành, scale theo tải và chạy trên nhiều AZ trong VPC của AWS; nó nói chuyện với node qua ENI inject vào customer VPC. Khách hàng không phải tự quản etcd."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng trên EKS có nhiều pod chạy trên nhiều AZ và tất cả cần đọc/ghi chung một tập file một cách bền vững. Storage nào phù hợp nhất?",
+        "options": [
+          "Amazon EBS volume gắn vào một node",
+          "Amazon EFS",
+          "Storage ephemeral mặc định của node",
+          "Instance Store của worker node"
+        ],
+        "answer": [1],
+        "explain": "EFS là file system dùng chung được qua nhiều AZ, phù hợp cho nhiều pod chia sẻ file. EBS gắn vào một node trong một AZ nên không chia sẻ giữa các AZ được."
+      }
+    ],
+    "Kubernetes": [
+      {
+        "type": "single",
+        "q": "Đơn vị compute nhỏ nhất trong Kubernetes là gì?",
+        "options": [
+          "Node",
+          "Service",
+          "Container",
+          "Pod"
+        ],
+        "answer": [3],
+        "explain": "Pod là đơn vị compute nhỏ nhất, chứa một hoặc nhiều container chia sẻ storage và networking. Bạn làm việc với pod, pod lo container bên trong."
+      },
+      {
+        "type": "single",
+        "q": "Trong control plane Kubernetes, etcd có vai trò gì?",
+        "options": [
+          "Key-value store highly available, là backing store chính cho dữ liệu cluster",
+          "Gán pod chưa có node vào node phù hợp",
+          "Agent trên mỗi node giao tiếp với control plane",
+          "Tích hợp Kubernetes với cloud provider"
+        ],
+        "answer": [0],
+        "explain": "etcd là key-value store HA lưu dữ liệu cluster. Việc gán pod vào node là của kube-scheduler, còn agent trên node là kubelet."
+      },
+      {
+        "type": "single",
+        "q": "Một đội phát triển chạy ứng dụng trên EKS và cần cho người dùng Internet truy cập vào service trong cluster, dùng load balancer gốc của AWS. Cách nào phù hợp?",
+        "options": [
+          "Mở port trực tiếp trên kubelet của từng node",
+          "Cấu hình etcd để định tuyến traffic vào pod",
+          "Dùng Ingress với AWS Load Balancer Controller để tạo ALB/NLB",
+          "Gán Elastic IP cho từng pod"
+        ],
+        "answer": [2],
+        "explain": "Ingress là cách để thứ bên ngoài cluster truy cập service; ingress controller như AWS Load Balancer Controller tạo ALB/NLB. kubelet và etcd không làm nhiệm vụ định tuyến traffic người dùng."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên Kubernetes ghi dữ liệu vào storage mặc định của pod. Khi pod bị evict hoặc chuyển sang node khác, dữ liệu bị mất. Cách nào giải quyết?",
+        "options": [
+          "Chạy nhiều container trong cùng một pod",
+          "Dùng Persistent Volume (trên AWS dùng EBS/EFS/FSx) có vòng đời vượt quá pod",
+          "Tăng số replica của pod",
+          "Tạo Kubernetes Job để chạy lại pod"
+        ],
+        "answer": [1],
+        "explain": "Storage mặc định của pod là ephemeral; Persistent Volume có vòng đời độc lập với pod nên dữ liệu được giữ lại. Tăng replica không làm dữ liệu bền vững hơn."
+      },
+      {
+        "type": "multi",
+        "q": "Thành phần nào chạy trên mỗi worker node trong cluster Kubernetes? (Chọn 2)",
+        "options": [
+          "kubelet",
+          "etcd",
+          "kube-scheduler",
+          "kube-proxy",
+          "cloud-controller-manager"
+        ],
+        "answer": [0, 3],
+        "explain": "Mỗi node chạy container runtime, kubelet (agent giao tiếp control plane) và kube-proxy (networking cho service). etcd, kube-scheduler và cloud-controller-manager thuộc control plane."
+      }
+    ]
+  }
+}

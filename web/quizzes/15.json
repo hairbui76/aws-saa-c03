@@ -1,0 +1,631 @@
+{
+  "chapter": "15 Global Content Delivery",
+  "lessons": {
+    "ACM": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy ứng dụng web trên nhiều EC2 instance và muốn phục vụ HTTPS bằng certificate do ACM cấp, tự động gia hạn, với chi phí vận hành thấp nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Export certificate từ ACM và cài thủ công lên từng EC2 instance",
+          "Đặt Application Load Balancer phía trước các EC2 instance, gắn certificate ACM vào HTTPS listener và terminate TLS tại ALB",
+          "Lưu certificate trong AWS CloudHSM rồi để EC2 instance đọc khi khởi động",
+          "Dùng KMS key để tạo certificate và gắn vào Elastic IP của từng instance"
+        ],
+        "answer": [1],
+        "explain": "ACM không deploy được certificate lên EC2; cách chuẩn là đặt ALB phía trước và terminate TLS ở ALB, ACM tự gia hạn. Cài thủ công lên EC2 làm mất lợi ích tự gia hạn/quản lý của ACM và không phải đáp án đề thi mong đợi."
+      },
+      {
+        "type": "single",
+        "q": "Admin tạo certificate trong ACM ở us-east-1, nhưng khi cấu hình HTTPS listener cho ALB ở ap-southeast-2 thì không chọn được certificate đó. Cần làm gì?",
+        "options": [
+          "Bật ACM cross-region replication để copy certificate sang ap-southeast-2",
+          "Đổi ALB thành Network Load Balancer vì chỉ NLB nhận certificate cross-region",
+          "Chạy lại DNS validation cho certificate ở us-east-1",
+          "Tạo hoặc import certificate vào ACM ở ap-southeast-2 rồi gắn vào listener"
+        ],
+        "answer": [3],
+        "explain": "ACM là dịch vụ regional: certificate bị khóa ở region tạo ra nó, nên ALB ở Sydney cần certificate trong ACM ở Sydney. Không có cơ chế replicate certificate cross-region; DNS validation chỉ chứng minh sở hữu domain chứ không đổi region."
+      },
+      {
+        "type": "single",
+        "q": "Một team tạo certificate trong ACM ở eu-west-1 để gắn vào CloudFront distribution dùng alternate domain name, nhưng certificate không xuất hiện trong danh sách. Nguyên nhân là gì?",
+        "options": [
+          "CloudFront chỉ dùng được certificate nằm trong ACM ở us-east-1 (N. Virginia)",
+          "CloudFront chỉ chấp nhận certificate được import, không chấp nhận certificate do ACM tạo",
+          "Certificate phải được validate bằng email thay vì DNS mới dùng được với CloudFront",
+          "CloudFront yêu cầu certificate nằm cùng region với S3 origin"
+        ],
+        "answer": [0],
+        "explain": "Với ACM, CloudFront được coi như nằm ở us-east-1, nên certificate phải tạo hoặc import ở us-east-1. Region của origin không liên quan; certificate do ACM tạo hay import đều dùng được miễn đúng region."
+      },
+      {
+        "type": "single",
+        "q": "Công ty import vào ACM một certificate mua từ CA bên ngoài. Khi certificate sắp hết hạn, việc gia hạn diễn ra thế nào?",
+        "options": [
+          "ACM tự động gia hạn giống như certificate do ACM tạo",
+          "Route 53 tự động gia hạn nếu domain được host trên Route 53",
+          "Công ty phải tự gia hạn ở nguồn bên ngoài rồi import lại vào ACM",
+          "AWS Support gia hạn certificate khi nhận được yêu cầu"
+        ],
+        "answer": [2],
+        "explain": "Mẹo thi: ACM generate thì tự gia hạn, còn import thì bạn tự chịu trách nhiệm gia hạn và import lại. Route 53 chỉ hỗ trợ DNS validation, không gia hạn certificate import."
+      },
+      {
+        "type": "multi",
+        "q": "ACM có thể deploy certificate trực tiếp tới những dịch vụ nào sau đây? (Chọn 2)",
+        "options": [
+          "Amazon EC2 instance",
+          "Amazon CloudFront",
+          "Web server on-premises",
+          "Application Load Balancer",
+          "Amazon S3 bucket"
+        ],
+        "answer": [1, 3],
+        "explain": "ACM chủ yếu hỗ trợ CloudFront và load balancer (ngoài ra API Gateway). EC2 và on-prem không được hỗ trợ vì ai có quyền root đều lấy được cert; S3 tự xử lý certificate của nó."
+      }
+    ],
+    "CloudFront Architecture": [
+      {
+        "type": "single",
+        "q": "CloudFront cache dữ liệu theo chiều nào?",
+        "options": [
+          "Cả upload và download, upload được ghi vào edge rồi đồng bộ về origin",
+          "Chỉ upload, để giảm tải ghi cho origin",
+          "Chỉ download (read); upload đi thẳng tới origin, không được cache",
+          "Chỉ cache khi origin là S3, với custom origin thì không cache"
+        ],
+        "answer": [2],
+        "explain": "CloudFront chỉ cache cho chiều read/download; không có write caching, upload đi thẳng tới origin. Cả S3 origin và custom origin đều được cache."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty lưu ảnh sản phẩm trong S3 bucket ở ap-southeast-2. Người dùng ở Mỹ và châu Âu phàn nàn tải ảnh chậm, và cùng một ảnh bị kéo xuyên lục địa mỗi lần có request. Giải pháp nào giảm latency và tải cho origin với ít công sức nhất?",
+        "options": [
+          "Tạo CloudFront distribution với S3 bucket làm origin",
+          "Bật S3 Cross-Region Replication sang các region ở Mỹ và châu Âu, dùng DNS để định tuyến",
+          "Dùng AWS Global Accelerator trỏ tới S3 bucket",
+          "Chuyển ảnh sang EBS volume gắn vào EC2 instance lớn hơn"
+        ],
+        "answer": [0],
+        "explain": "CloudFront cache nội dung ở edge location gần người dùng, giảm latency và giảm origin fetch. CRR tốn công vận hành và chi phí lưu trữ nhiều bản; Global Accelerator không cache nên mỗi request vẫn về origin."
+      },
+      {
+        "type": "single",
+        "q": "Julie (Pháp) request whiskers.jpg làm object được kéo từ origin về. Sau đó Moss (London) dùng một edge location khác nhưng cùng Regional Edge Cache request cùng object. Request của Moss được phục vụ thế nào?",
+        "options": [
+          "Cache hit ngay tại edge location của Moss vì mọi edge chia sẻ chung cache",
+          "Cache miss ở cả edge và Regional Edge Cache nên phải origin fetch lại",
+          "Request bị chuyển sang edge location của Julie để lấy object",
+          "Cache miss ở edge của Moss nhưng hit ở Regional Edge Cache, nên không phải về origin"
+        ],
+        "answer": [3],
+        "explain": "Edge của Moss chưa có object nên miss, nhưng Regional Edge Cache đã lưu object từ request của Julie nên hit, rồi edge của Moss cache lại. Các edge location không chia sẻ chung cache với nhau."
+      },
+      {
+        "type": "single",
+        "q": "Một team muốn chạy code tùy biến ngay tại các edge location của CloudFront để sửa request trước khi tới origin. Lựa chọn nào khả thi?",
+        "options": [
+          "Triển khai EC2 instance vào các edge location được chọn trong price class",
+          "Dùng Lambda@Edge gắn vào behavior của distribution",
+          "Chạy ECS task trong Regional Edge Cache",
+          "Tạo endpoint group của Global Accelerator tại edge location"
+        ],
+        "answer": [1],
+        "explain": "Edge location không chạy được EC2; compute tại edge của CloudFront là Lambda@Edge (gắn vào behavior). Global Accelerator chỉ định tuyến mạng, không chạy code."
+      },
+      {
+        "type": "single",
+        "q": "Origin (hoặc origin group), TTL, viewer protocol policy và restricted access thực chất được cấu hình ở đâu trong CloudFront?",
+        "options": [
+          "Trực tiếp trên distribution, tab General",
+          "Trên từng edge location",
+          "Trên behavior thuộc distribution",
+          "Trên Regional Edge Cache"
+        ],
+        "answer": [2],
+        "explain": "Origin gắn với behavior chứ không gắn trực tiếp vào distribution; behavior là lớp trung gian chứa origin, TTL, protocol policy và restrict viewer access. Tab General chứa setting cấp distribution như price class, WAF, CNAME."
+      }
+    ],
+    "CloudFront Behaviors": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng dùng một CloudFront distribution. Trang /login phải public, còn mọi nội dung dưới /private/* chỉ dành cho người dùng có signed cookie và có TTL ngắn hơn. Cách cấu hình đơn giản nhất là gì?",
+        "options": [
+          "Thêm một behavior với path pattern private/* bật Restrict viewer access và TTL riêng; default behavior (*) giữ public",
+          "Tạo hai distribution riêng, một public và một private",
+          "Gắn AWS WAF web ACL chặn /private/* với người dùng chưa đăng nhập",
+          "Bật geographic restriction cho path /private/*"
+        ],
+        "answer": [0],
+        "explain": "Caching control và restrict viewer access nằm ở behavior, nên một distribution có thể có nhiều behavior với cấu hình khác nhau theo path. Hai distribution là thừa; WAF và geo restriction là setting cấp distribution và không cấp quyền bằng signed cookie."
+      },
+      {
+        "type": "single",
+        "q": "Phần lớn người dùng của một website trên CloudFront ở Bắc Mỹ và châu Âu. Công ty muốn giảm chi phí CloudFront và chấp nhận hiệu năng kém hơn cho số ít người dùng ở nơi khác. Nên thay đổi gì?",
+        "options": [
+          "Giảm Default TTL của default behavior",
+          "Chuyển sang AWS Global Accelerator",
+          "Bật Compress objects automatically trên mọi behavior",
+          "Chọn price class chỉ gồm edge location ở Bắc Mỹ và châu Âu"
+        ],
+        "answer": [3],
+        "explain": "Price class (setting cấp distribution) quyết định deploy tới edge location nào; price class North America + Europe là rẻ nhất. Giảm TTL làm tăng origin fetch, không giảm chi phí edge."
+      },
+      {
+        "type": "single",
+        "q": "Setting nào sau đây được cấu hình ở mức distribution, không phải ở behavior?",
+        "options": [
+          "Viewer protocol policy",
+          "AWS WAF web ACL",
+          "Allowed HTTP methods",
+          "Minimum TTL"
+        ],
+        "answer": [1],
+        "explain": "WAF web ACL, price class, alternate domain name, SSL certificate và security policy nằm ở distribution. Viewer protocol policy, allowed methods và TTL nằm ở behavior."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn mọi người dùng truy cập website qua CloudFront bằng HTTPS; ai gõ http:// sẽ được chuyển sang https://. Cần cấu hình gì?",
+        "options": [
+          "Đặt security policy TLSv1.2_2018 trên distribution",
+          "Đặt origin protocol policy = HTTPS only",
+          "Đặt viewer protocol policy = Redirect HTTP to HTTPS trên behavior",
+          "Chọn dedicated IP SSL thay cho SNI"
+        ],
+        "answer": [2],
+        "explain": "Viewer protocol policy (trên behavior) điều khiển kết nối viewer ↔ edge; Redirect HTTP to HTTPS chuyển hướng HTTP sang HTTPS. Security policy chỉ quy định phiên bản TLS tối thiểu; origin protocol policy áp dụng cho chặng edge ↔ origin."
+      },
+      {
+        "type": "multi",
+        "q": "Những setting nào được cấu hình ở mức behavior của CloudFront? (Chọn 2)",
+        "options": [
+          "Price class",
+          "Restrict viewer access (trusted key groups / trusted signers)",
+          "Alternate domain names (CNAME)",
+          "Cache policy và Minimum/Default/Maximum TTL",
+          "Custom SSL certificate từ ACM"
+        ],
+        "answer": [1, 3],
+        "explain": "Mọi caching control (TTL, cache key) và restrict viewer access đều nằm ở behavior. Price class, CNAME và SSL certificate là setting cấp distribution."
+      }
+    ],
+    "CloudFront OAI and OAC": [
+      {
+        "type": "single",
+        "q": "Một công ty phân phối nội dung từ S3 bucket qua CloudFront và phải đảm bảo người dùng chỉ truy cập được qua CloudFront, không truy cập thẳng bucket. Đây là thiết kế mới, cần theo khuyến nghị hiện tại của AWS. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo Origin Access Identity (OAI) và cho phép OAI trong bucket policy",
+          "Dùng S3 presigned URL cho mọi object",
+          "Bật Restrict viewer access với trusted key group trên default behavior",
+          "Cấu hình Origin Access Control (OAC) và bucket policy cho phép cloudfront.amazonaws.com với điều kiện AWS:SourceArn là ARN của distribution"
+        ],
+        "answer": [3],
+        "explain": "OAC là cách AWS khuyến nghị để khóa S3 origin chỉ cho CloudFront; OAI vẫn hoạt động nhưng là legacy. Restrict viewer access chỉ bảo vệ phía viewer, không ngăn truy cập thẳng bucket."
+      },
+      {
+        "type": "single",
+        "q": "S3 bucket làm origin cho CloudFront được mã hóa bằng SSE-KMS. Công ty muốn chỉ CloudFront truy cập được bucket. Nên dùng gì?",
+        "options": [
+          "Origin Access Identity (OAI)",
+          "Origin Access Control (OAC)",
+          "Custom header bí mật do CloudFront chèn vào request",
+          "Chỉ bật S3 Block Public Access"
+        ],
+        "answer": [1],
+        "explain": "OAC hỗ trợ bucket mã hóa SSE-KMS còn OAI thì không, nên S3 + KMS + CloudFront thì chọn OAC. Custom header là cách bảo vệ custom origin, S3 không kiểm tra header đó."
+      },
+      {
+        "type": "multi",
+        "q": "CloudFront dùng một ALB phía trước các EC2 instance làm origin. Công ty muốn đảm bảo chỉ CloudFront gọi được tới ALB. Những biện pháp nào phù hợp? (Chọn 2)",
+        "options": [
+          "Cấu hình Origin Access Control cho ALB origin",
+          "Cho CloudFront chèn custom header bí mật vào request gửi origin (dùng HTTPS toàn tuyến) và chỉ phục vụ request có header đó",
+          "Tạo Origin Access Identity và thêm vào policy của ALB",
+          "Cấu hình Security Group/firewall chỉ cho phép IP range của CloudFront",
+          "Dùng CloudFront signed URL cho mọi request"
+        ],
+        "answer": [1, 3],
+        "explain": "OAI/OAC chỉ áp dụng cho S3 origin; custom origin được bảo vệ bằng custom header bí mật và/hoặc firewall theo IP range CloudFront. Signed URL chỉ bảo vệ chặng viewer ↔ edge."
+      },
+      {
+        "type": "single",
+        "q": "Khi dùng OAC, bucket policy của S3 origin thường cấp quyền s3:GetObject cho principal nào?",
+        "options": [
+          "Canonical user ID của Origin Access Identity",
+          "IAM role do CloudFront tự tạo trong account",
+          "Service principal cloudfront.amazonaws.com, kèm Condition AWS:SourceArn bằng ARN của distribution",
+          "Principal * kèm điều kiện aws:SourceIp là IP range của CloudFront"
+        ],
+        "answer": [2],
+        "explain": "Với OAC, CloudFront ký request và bucket policy cho phép service principal cloudfront.amazonaws.com, giới hạn bằng AWS:SourceArn của đúng distribution. Cấp quyền cho OAI là mô hình legacy."
+      },
+      {
+        "type": "single",
+        "q": "Một team dùng S3 static website endpoint làm origin cho CloudFront và muốn dùng OAC để chặn truy cập trực tiếp, nhưng không cấu hình được. Lý do là gì?",
+        "options": [
+          "S3 static website endpoint được CloudFront coi là custom origin, nên không dùng được OAI/OAC",
+          "OAC chỉ hoạt động khi bucket nằm ở us-east-1",
+          "OAC yêu cầu bucket phải bật S3 Versioning",
+          "OAC chỉ hỗ trợ distribution có price class dùng tất cả edge location"
+        ],
+        "answer": [0],
+        "explain": "OAI/OAC chỉ dành cho S3 origin (chọn bucket từ dropdown); website endpoint là custom origin nên phải bảo vệ bằng custom header và/hoặc giới hạn IP range CloudFront. OAC hỗ trợ mọi region."
+      }
+    ],
+    "CloudFront Origins": [
+      {
+        "type": "single",
+        "q": "Khi cấu hình CloudFront, kỹ sư gõ DNS name của S3 static website endpoint vào ô origin domain thay vì chọn bucket từ dropdown. CloudFront xử lý origin này như thế nào?",
+        "options": [
+          "Như một S3 origin, hỗ trợ OAC",
+          "Như một custom origin, với feature set của custom origin",
+          "Như một MediaStore container endpoint",
+          "Như một origin group tự động failover"
+        ],
+        "answer": [1],
+        "explain": "S3 static website endpoint làm origin là custom origin, nên có các tùy chọn port/origin protocol policy nhưng không dùng được OAI/OAC. Chỉ khi chọn bucket từ dropdown mới là S3 origin."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn CloudFront tự chuyển sang origin dự phòng khi origin chính trả lỗi. Tính năng nào đáp ứng?",
+        "options": [
+          "Route 53 failover routing trỏ tới hai distribution",
+          "Thêm hai behavior có cùng path pattern",
+          "Origin group gồm primary và secondary origin, dùng trong behavior",
+          "Global Accelerator endpoint group trỏ tới hai origin"
+        ],
+        "answer": [2],
+        "explain": "Origin group gộp hai hoặc nhiều origin; khi primary lỗi theo failover criteria thì CloudFront dùng secondary. Không thể có hai behavior cùng path pattern để làm failover."
+      },
+      {
+        "type": "single",
+        "q": "CloudFront phải kết nối tới origin qua port 8443 và yêu cầu phiên bản SSL/TLS tối thiểu khi kết nối tới origin. Loại origin nào hỗ trợ các tùy chọn này?",
+        "options": [
+          "Custom origin (ví dụ EC2 hoặc ALB)",
+          "S3 origin chọn từ dropdown",
+          "S3 origin có bật OAC",
+          "S3 origin có origin path /images"
+        ],
+        "answer": [0],
+        "explain": "Custom port, origin protocol policy và minimum origin SSL protocol chỉ có ở custom origin. S3 origin không cấu hình được port, và origin protocol luôn khớp viewer protocol."
+      },
+      {
+        "type": "single",
+        "q": "Người dùng truy cập https://d111111abcdef8.cloudfront.net/ thì nhận lỗi, nhưng https://d111111abcdef8.cloudfront.net/index.html thì hiển thị bình thường. Cần cấu hình gì?",
+        "options": [
+          "Thêm behavior với path pattern index.html",
+          "Đổi viewer protocol policy sang Redirect HTTP to HTTPS",
+          "Tạo invalidation /*",
+          "Đặt Default root object = index.html trên distribution"
+        ],
+        "answer": [3],
+        "explain": "Default root object là object CloudFront trả khi request tới root mà không chỉ định object; setting này thường bị quên. Invalidation chỉ làm hết hạn cache, không sửa lỗi thiếu root object."
+      },
+      {
+        "type": "single",
+        "q": "Một website tĩnh host trên S3 static website hosting ở us-east-1. Công ty cần hỗ trợ HTTPS và cải thiện hiệu năng cho người dùng toàn cầu với ít công sức nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Gắn certificate ACM trực tiếp vào S3 website endpoint",
+          "Đặt CloudFront distribution phía trước bucket",
+          "Đặt Application Load Balancer phía trước S3 bucket",
+          "Bật S3 Transfer Acceleration cho bucket"
+        ],
+        "answer": [1],
+        "explain": "S3 static website endpoint không hỗ trợ HTTPS; CloudFront giải quyết cả HTTPS (cert mặc định *.cloudfront.net hoặc cert ACM) lẫn hiệu năng nhờ cache ở edge. S3 không dùng ACM, và Transfer Acceleration chủ yếu cho upload."
+      }
+    ],
+    "CloudFront Private Distributions": [
+      {
+        "type": "single",
+        "q": "Một dịch vụ học trực tuyến có hàng trăm video và tài liệu dưới path /premium/ phân phối qua CloudFront. Chỉ người đăng ký trả phí được truy cập toàn bộ nhóm nội dung này, và công ty không muốn thay đổi format URL của ứng dụng. Nên dùng gì?",
+        "options": [
+          "CloudFront signed URL cho từng file",
+          "S3 presigned URL cho từng file",
+          "CloudFront signed cookie",
+          "Geographic restriction trên distribution"
+        ],
+        "answer": [2],
+        "explain": "Signed cookie cấp quyền cho nhiều object (cả một path) và giữ nguyên URL của ứng dụng. Signed URL chỉ cho 1 object và làm URL chứa chữ ký trong query string."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng cần cho phép tải về một file cài đặt duy nhất từ CloudFront private behavior. Client tải file là công cụ dòng lệnh không hỗ trợ cookie. Nên dùng gì?",
+        "options": [
+          "CloudFront signed URL",
+          "CloudFront signed cookie",
+          "Origin Access Control",
+          "Trusted signer với signed cookie"
+        ],
+        "answer": [0],
+        "explain": "Truy cập 1 object hoặc client không hỗ trợ cookie thì dùng signed URL. OAC khóa origin chứ không cấp quyền cho viewer."
+      },
+      {
+        "type": "single",
+        "q": "Công ty thiết kế mới một private behavior và muốn quản lý key ký bằng IAM thông thường, không cần account root user, dễ xoay vòng key. Nên cấu hình signer theo cách nào?",
+        "options": [
+          "Trusted signer dùng CloudFront key pair do root user tạo",
+          "IAM role gắn trực tiếp vào behavior",
+          "KMS customer managed key gắn vào distribution",
+          "Trusted key groups chứa public key"
+        ],
+        "answer": [3],
+        "explain": "Trusted key groups là cách mới, khuyến nghị, quản lý bằng IAM và CloudFront API mà không cần root user. Trusted signer là legacy và bắt buộc root user tạo CloudFront key."
+      },
+      {
+        "type": "single",
+        "q": "Khi review cấu hình CloudFront, bạn thấy một behavior có thiết lập trusted key groups. Điều này có nghĩa là gì?",
+        "options": [
+          "Behavior đó đang dùng OAC để truy cập S3 origin",
+          "Behavior đó là private: request phải kèm signed URL hoặc signed cookie",
+          "Distribution đang dùng dedicated IP cho SSL",
+          "Behavior đó được phép gọi Lambda@Edge"
+        ],
+        "answer": [1],
+        "explain": "Gắn signer (trusted key groups hoặc trusted signers) vào behavior thì behavior trở thành private, yêu cầu signed URL/cookie. OAC liên quan tới phía origin, không phải phía viewer."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã bật Restrict viewer access với signed URL trên CloudFront, nhưng phát hiện người dùng vẫn tải được file trực tiếp từ S3 bucket origin. Cách khắc phục là gì?",
+        "options": [
+          "Chuyển từ signed URL sang signed cookie",
+          "Thêm nhiều public key hơn vào trusted key group",
+          "Cấu hình OAC (hoặc OAI) cho S3 origin và sửa bucket policy chỉ cho phép CloudFront",
+          "Giảm thời hạn hiệu lực của signed URL"
+        ],
+        "answer": [2],
+        "explain": "Private behavior chỉ chặn chặng viewer ↔ edge; nếu S3 origin còn mở thì người dùng bypass CloudFront được. Phải khóa origin bằng OAC/OAI và bucket policy."
+      }
+    ],
+    "CloudFront TTL and Invalidations": [
+      {
+        "type": "single",
+        "q": "Nếu object không có TTL riêng (không có header Cache-Control hay Expires), CloudFront cache object đó bao lâu theo Default TTL mặc định?",
+        "options": [
+          "60 giây",
+          "1 giờ",
+          "7 ngày",
+          "24 giờ (86400 giây)"
+        ],
+        "answer": [3],
+        "explain": "Default TTL mặc định là 24 giờ, áp dụng cho object không có TTL riêng. Default TTL được đặt trên behavior."
+      },
+      {
+        "type": "single",
+        "q": "Một website trên CloudFront cập nhật ảnh banner nhiều lần mỗi ngày. Người dùng phải thấy ảnh mới ngay sau mỗi lần cập nhật. Giải pháp nào hiệu quả về chi phí nhất?",
+        "options": [
+          "Tạo invalidation /* sau mỗi lần cập nhật",
+          "Dùng versioned file names (banner_v2.jpg, banner_v3.jpg...) và cập nhật HTML trỏ sang tên mới",
+          "Bật S3 Versioning trên bucket origin",
+          "Đặt Maximum TTL = 0 cho toàn bộ distribution"
+        ],
+        "answer": [1],
+        "explain": "Versioned file names không cần invalidation, tránh cả cache trình duyệt và rẻ hơn. S3 Versioning giữ nhiều phiên bản dưới cùng một tên nên không giải quyết cache; invalidation liên tục thì tốn phí."
+      },
+      {
+        "type": "single",
+        "q": "Behavior có Minimum TTL = 60 giây và Maximum TTL = 3600 giây. Origin trả object kèm header Cache-Control: max-age=10. CloudFront cache object này bao lâu?",
+        "options": [
+          "60 giây",
+          "10 giây",
+          "3600 giây",
+          "86400 giây"
+        ],
+        "answer": [0],
+        "explain": "Min/Max TTL là giới hạn cho TTL per-object: giá trị dưới Minimum TTL thì dùng Minimum TTL, nên kết quả là 60 giây. Default TTL 86400 chỉ áp dụng khi object không có TTL riêng."
+      },
+      {
+        "type": "single",
+        "q": "Một file ảnh dưới /images/ bị publish nhầm nội dung sai và đã được cache ở nhiều edge location với TTL còn dài. Công ty đã sửa file trên origin và cần mọi edge ngừng trả bản cũ càng sớm càng tốt. Nên làm gì?",
+        "options": [
+          "Giảm Default TTL của behavior xuống 0",
+          "Bật S3 Versioning và khôi phục phiên bản trước",
+          "Tạo cache invalidation với pattern /images/* trên distribution",
+          "Đổi price class để deploy lại distribution"
+        ],
+        "answer": [2],
+        "explain": "Invalidation làm hết hạn mọi object khớp pattern trên mọi edge của distribution bất kể TTL (không tức thời, có phí). Giảm TTL chỉ ảnh hưởng object được cache sau đó, không xóa bản đang còn TTL."
+      },
+      {
+        "type": "multi",
+        "q": "Header nào được dùng để đặt TTL riêng cho từng object trong CloudFront? (Chọn 2)",
+        "options": [
+          "Cache-Control: max-age (hoặc s-maxage)",
+          "Expires",
+          "Last-Modified",
+          "ETag",
+          "Content-Type"
+        ],
+        "answer": [0, 1],
+        "explain": "TTL per-object đặt qua Cache-Control max-age/s-maxage (giây) hoặc Expires (thời điểm cụ thể); với S3 origin thì set qua object metadata. Last-Modified và ETag dùng cho kiểm tra phiên bản, không đặt TTL."
+      }
+    ],
+    "CloudFront and SSL": [
+      {
+        "type": "single",
+        "q": "Một công ty dùng CloudFront với tên miền riêng và HTTPS. Một nhóm khách hàng dùng trình duyệt rất cũ không hỗ trợ SNI và vẫn phải truy cập được. Công ty cần làm gì, và điều này ảnh hưởng chi phí thế nào?",
+        "options": [
+          "Chọn dedicated IP SSL cho distribution, có tính phí (khoảng $600/tháng/distribution theo khóa học)",
+          "Giữ SNI-only, miễn phí, vì CloudFront tự fallback cho client cũ",
+          "Chuyển viewer protocol policy sang HTTP and HTTPS",
+          "Dùng self-signed certificate để tương thích với trình duyệt cũ"
+        ],
+        "answer": [0],
+        "explain": "Client không hỗ trợ SNI cần CloudFront cấp dedicated IP ở mỗi edge, có tính phí; SNI-only miễn phí nhưng không phục vụ được client đó. Self-signed certificate không dùng được với CloudFront."
+      },
+      {
+        "type": "single",
+        "q": "CloudFront dùng một EC2 web server làm custom origin qua HTTPS. Web server đang dùng self-signed certificate và CloudFront không kết nối được tới origin. Cách khắc phục nào đúng?",
+        "options": [
+          "Tạo certificate trong ACM rồi deploy lên EC2 instance",
+          "Import self-signed certificate vào ACM ở us-east-1",
+          "Đổi viewer protocol policy sang HTTP and HTTPS",
+          "Cài trên EC2 một certificate publicly trusted do CA bên ngoài cấp, khớp tên DNS mà CloudFront dùng để kết nối origin"
+        ],
+        "answer": [3],
+        "explain": "Chặng origin cũng cần certificate publicly trusted, không self-signed, khớp tên DNS của origin; ACM không deploy được lên EC2 nên phải dùng CA bên ngoài. Viewer protocol policy chỉ ảnh hưởng chặng viewer ↔ edge."
+      },
+      {
+        "type": "single",
+        "q": "Một team muốn thêm alternate domain name cdn.example.com cho distribution nhưng chỉ phục vụ HTTP, không dùng HTTPS. Phát biểu nào đúng?",
+        "options": [
+          "Không cần certificate vì không dùng HTTPS",
+          "Chỉ cần tạo bản ghi CNAME trong Route 53",
+          "Vẫn phải gắn certificate khớp tên cdn.example.com để chứng minh quyền kiểm soát domain",
+          "Phải dùng dedicated IP thay cho SNI"
+        ],
+        "answer": [2],
+        "explain": "Dù dùng HTTPS hay không, alternate domain name vẫn bắt buộc có certificate khớp tên; certificate đóng vai trò chứng minh bạn sở hữu domain. Bản ghi DNS là cần nhưng chưa đủ."
+      },
+      {
+        "type": "single",
+        "q": "SNI (Server Name Indication) giải quyết vấn đề gì?",
+        "options": [
+          "Mã hóa Host header của HTTP để chống sniff",
+          "Cho client gửi tên miền ngay trong TLS handshake, nhờ đó nhiều site HTTPS dùng chung một IP",
+          "Cho phép dùng self-signed certificate với CloudFront",
+          "Tự động gia hạn certificate trên edge location"
+        ],
+        "answer": [1],
+        "explain": "Trước SNI, server phải đưa certificate trong TLS handshake trước khi thấy Host header (Layer 7), nên mỗi IP chỉ phục vụ một site HTTPS. SNI là extension TLS gửi tên miền trong handshake."
+      },
+      {
+        "type": "single",
+        "q": "Viewer protocol policy nào khiến mọi kết nối HTTP tới CloudFront bị từ chối hoàn toàn (không redirect)?",
+        "options": [
+          "HTTP and HTTPS",
+          "Redirect HTTP to HTTPS",
+          "Match viewer",
+          "HTTPS only"
+        ],
+        "answer": [3],
+        "explain": "HTTPS only từ chối hoàn toàn kết nối HTTP; Redirect HTTP to HTTPS thì chuyển hướng sang HTTPS. Match viewer là tùy chọn của origin protocol policy, không phải viewer protocol policy."
+      }
+    ],
+    "Global Accelerator": [
+      {
+        "type": "single",
+        "q": "Một công ty game có server chạy giao thức UDP ở us-east-1. Người chơi ở châu Âu và châu Á gặp độ trễ cao và jitter do đi qua nhiều hop trên internet. Giải pháp nào cải thiện hiệu năng mà không cần đổi giao thức?",
+        "options": [
+          "Đặt CloudFront distribution phía trước game server",
+          "Dùng Route 53 latency-based routing tới một region duy nhất",
+          "Dùng AWS Global Accelerator để người chơi vào edge gần nhất rồi đi trên AWS global backbone",
+          "Bật S3 Transfer Acceleration"
+        ],
+        "answer": [2],
+        "explain": "Global Accelerator là network product hỗ trợ mọi TCP/UDP, đưa traffic vào mạng AWS sớm nhất. CloudFront chỉ hỗ trợ HTTP/HTTPS nên không hợp với game UDP."
+      },
+      {
+        "type": "single",
+        "q": "Khách hàng doanh nghiệp yêu cầu một bộ IP cố định để whitelist trong firewall, trong khi ứng dụng chạy sau ALB ở nhiều region. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "AWS Global Accelerator, cung cấp 2 anycast IP tĩnh",
+          "Gắn Elastic IP trực tiếp lên ALB ở từng region",
+          "CloudFront distribution với alternate domain name",
+          "Route 53 geolocation routing với TTL thấp"
+        ],
+        "answer": [0],
+        "explain": "Global Accelerator cấp 2 anycast IP tĩnh dùng chung cho mọi edge, tiện cho whitelist và phục vụ đa region. ALB không gắn được Elastic IP; CloudFront dùng DNS name với IP thay đổi."
+      },
+      {
+        "type": "single",
+        "q": "Khi tạo một accelerator, AWS Global Accelerator cấp bao nhiêu anycast IP?",
+        "options": [
+          "1",
+          "2",
+          "3",
+          "Một IP cho mỗi region có endpoint"
+        ],
+        "answer": [1],
+        "explain": "Mỗi accelerator được cấp 2 anycast IP, và mọi edge location của Global Accelerator đều dùng cặp IP này. Người dùng ở các nơi khác nhau dùng cùng IP nhưng được định tuyến tới edge gần mình nhất."
+      },
+      {
+        "type": "multi",
+        "q": "Đặc điểm nào sau đây đúng với AWS Global Accelerator? (Chọn 2)",
+        "options": [
+          "Hỗ trợ mọi ứng dụng TCP/UDP, không chỉ HTTP/HTTPS",
+          "Cache nội dung tĩnh tại edge location để giảm tải origin",
+          "Hỗ trợ signed URL và signed cookie",
+          "Cho phép gắn Lambda@Edge để sửa request",
+          "Đưa traffic từ edge gần nhất đi trên AWS global backbone tới endpoint"
+        ],
+        "answer": [0, 4],
+        "explain": "Global Accelerator là network product cho mọi TCP/UDP và dùng AWS global backbone sau edge. Nó không cache và không hiểu HTTP, nên cache, signed URL và Lambda@Edge là tính năng của CloudFront."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng TCP chạy active-active ở hai region. Khi một region gặp sự cố, traffic phải chuyển sang region còn lại trong vài giây, không bị ảnh hưởng bởi DNS cache phía client. Giải pháp nào phù hợp?",
+        "options": [
+          "Route 53 failover routing với health check và TTL 60 giây",
+          "CloudFront origin group với hai ALB",
+          "Transit Gateway inter-region peering",
+          "AWS Global Accelerator với endpoint group ở mỗi region và health check"
+        ],
+        "answer": [3],
+        "explain": "Global Accelerator dùng IP tĩnh không đổi và health check để failover nhanh sang region khỏe, không phụ thuộc DNS TTL. Route 53 failover vẫn chịu ảnh hưởng của DNS cache phía client."
+      }
+    ],
+    "Lambda@Edge": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn A/B testing: một nửa người dùng thấy phiên bản ảnh A, nửa còn lại thấy phiên bản B, mà không redirect và không đổi URL người dùng thấy. Nên gắn Lambda@Edge vào trigger nào?",
+        "options": [
+          "Viewer request",
+          "Origin request",
+          "Origin response",
+          "Viewer response"
+        ],
+        "answer": [0],
+        "explain": "A/B testing dùng viewer request: function sửa URL của request ngay khi edge nhận được, trước khi kiểm tra cache. Origin request chỉ chạy khi cache miss nên không chia đều mọi request."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn chuyển dần traffic từ S3 origin cũ sang S3 origin mới theo tỷ lệ phần trăm tăng dần, mà không phải sửa cấu hình distribution mỗi lần. Giải pháp nào phù hợp?",
+        "options": [
+          "Dùng origin group với primary là origin cũ, secondary là origin mới",
+          "Dùng Route 53 weighted routing giữa hai bucket",
+          "Dùng Lambda@Edge ở trigger origin request để chọn origin theo trọng số",
+          "Dùng CloudFront Functions ở viewer response"
+        ],
+        "answer": [2],
+        "explain": "Migration dần giữa các S3 origin là use case kinh điển của Lambda@Edge ở origin request. Origin group chỉ failover khi primary lỗi, không chia traffic theo trọng số."
+      },
+      {
+        "type": "single",
+        "q": "Lambda@Edge function được gắn vào thành phần nào của CloudFront?",
+        "options": [
+          "Distribution (tab General)",
+          "Origin group",
+          "Edge location được chọn trong price class",
+          "Behavior của distribution"
+        ],
+        "answer": [3],
+        "explain": "Lambda@Edge là tính năng của CloudFront và function được gắn vào behavior. Price class chỉ chọn nhóm edge location để deploy."
+      },
+      {
+        "type": "single",
+        "q": "Giới hạn memory và timeout của Lambda@Edge ở phía viewer (viewer request/viewer response) là bao nhiêu?",
+        "options": [
+          "Memory như Lambda thường, timeout 30 giây",
+          "128 MB, timeout 5 giây",
+          "10 GB, timeout 15 phút",
+          "128 MB, timeout 30 giây"
+        ],
+        "answer": [1],
+        "explain": "Phía viewer chạy với mọi request nên giới hạn 128 MB và 5 giây; phía origin dùng memory như Lambda thường và timeout 30 giây. 10 GB/15 phút là giới hạn Lambda thường."
+      },
+      {
+        "type": "multi",
+        "q": "Một kỹ sư định dùng Lambda@Edge thay cho Lambda thường. Những giới hạn nào của Lambda@Edge cần lưu ý? (Chọn 2)",
+        "options": [
+          "Không truy cập được tài nguyên trong VPC (ví dụ RDS ở private subnet)",
+          "Chỉ chạy được ở trigger origin request",
+          "Không gắn được vào CloudFront behavior",
+          "Không hỗ trợ runtime Python",
+          "Không hỗ trợ Lambda layers"
+        ],
+        "answer": [0, 4],
+        "explain": "Lambda@Edge chạy ở edge (AWS public zone) nên không vào được VPC và không hỗ trợ layers; runtime chỉ Node.js và Python. Nó dùng được ở cả 4 trigger và được gắn vào behavior."
+      }
+    ]
+  }
+}

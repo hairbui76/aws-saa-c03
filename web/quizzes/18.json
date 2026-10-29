@@ -1,0 +1,338 @@
+{
+  "chapter": "18 Security Deployment and Operations",
+  "lessons": {
+    "AWS Config": [
+      {
+        "type": "single",
+        "q": "Một công ty cần biết cấu hình của một Security Group trông như thế nào vào tuần trước, ai đã thay đổi nó, SG đó gắn với instance nào, và liệu nó có tuân thủ tiêu chuẩn nội bộ hay không. Dịch vụ nào đáp ứng yêu cầu này?",
+        "options": ["AWS CloudTrail", "AWS Config", "Amazon GuardDuty", "Amazon Inspector"],
+        "answer": [1],
+        "explain": "AWS Config ghi lại configuration item (cấu hình, relationship, ai thay đổi) theo thời gian và đánh giá compliance bằng Config Rules. CloudTrail chỉ ghi API call, không lưu trạng thái cấu hình và quan hệ giữa resource."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng AWS Organizations muốn NGĂN mọi developer trong các member account mở port 22 ra Internet trên Security Group. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["Tạo AWS Config managed rule kiểm tra SSH bị mở và đánh dấu non-compliant", "Bật Amazon GuardDuty ở mọi account để phát hiện SSH bị mở", "Áp dụng Service Control Policy từ chối API thêm ingress rule vào Security Group cho các account", "Chạy Amazon Inspector Network Reachability hằng ngày"],
+        "answer": [2],
+        "explain": "Yêu cầu là ngăn chặn trước, nên cần cơ chế phân quyền như SCP/IAM. AWS Config không prevent thay đổi; nó chỉ phát hiện và đánh dấu non-compliant sau khi thay đổi đã xảy ra."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty muốn tự động khắc phục các resource bị AWS Config đánh giá là non-compliant mà không cần người can thiệp. Những cách nào phù hợp? (Chọn 2)",
+        "options": ["Dùng Config Rules, để EventBridge bắt sự kiện thay đổi trạng thái compliance và gọi Lambda sửa lại resource", "Bật CloudTrail Insights để tự động revert thay đổi cấu hình", "Cấu hình Amazon Inspector tự động sửa Security Group", "Dùng Config remediation với Systems Manager Automation", "Thêm resource vào trusted IP list của GuardDuty"],
+        "answer": [0, 3],
+        "explain": "Remediation của Config đi qua EventBridge → Lambda (linh hoạt cho việc cấp account) hoặc SSM Automation (hiệu quả cho cấu hình trong instance). CloudTrail Insights chỉ phát hiện hoạt động API bất thường, không revert cấu hình."
+      },
+      {
+        "type": "single",
+        "q": "Configuration history (tập hợp mọi configuration item của một resource) mà AWS Config ghi lại được lưu ở đâu?",
+        "options": ["CloudWatch Logs log group do Config tạo", "CloudTrail event history", "Bảng DynamoDB do AWS quản lý", "S3 config bucket, truy cập trực tiếp hoặc qua AWS Config API"],
+        "answer": [3],
+        "explain": "Configuration history được lưu trong S3 config bucket theo định dạng thống nhất, đọc trực tiếp từ bucket hoặc qua AWS Config API. CloudTrail event history là nơi lưu API call, không phải lịch sử cấu hình."
+      },
+      {
+        "type": "single",
+        "q": "Một đội bảo mật cần một chỗ duy nhất để xem trạng thái cấu hình và compliance của resource trên nhiều region và nhiều account. Họ nên làm gì với AWS Config?",
+        "options": ["Cấu hình Config aggregator để gom dữ liệu cross-region và cross-account", "Chỉ bật AWS Config ở us-east-1 vì Config là global service", "Tạo một organization trail trong CloudTrail", "Viết custom Config rule bằng Lambda ở từng account"],
+        "answer": [0],
+        "explain": "AWS Config là regional service; muốn nhìn cross-region, cross-account thì dùng aggregator. Bật ở us-east-1 không đủ vì Config không phải global, còn organization trail chỉ gom API call chứ không gom cấu hình."
+      }
+    ],
+    "CloudHSM": [
+      {
+        "type": "single",
+        "q": "Một tổ chức tài chính yêu cầu khóa mã hóa phải nằm trong thiết bị đạt FIPS 140-2 Level 3 toàn phần, single-tenant, và AWS không được có quyền truy cập vào khóa. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["AWS KMS với customer managed key", "AWS CloudHSM", "AWS KMS với AWS managed key", "AWS Secrets Manager"],
+        "answer": [1],
+        "explain": "Từ khóa FIPS 140-2 Level 3 overall + single-tenant + khách hàng toàn quyền kiểm soát khóa chỉ tới CloudHSM. KMS (theo khóa học) là shared service, đạt Level 2 tổng thể và AWS vận hành nó."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng Java on-premises đang dùng PKCS#11 và Java Cryptography Extensions (JCE) để thao tác với HSM. Công ty muốn chuyển lên AWS mà ít phải sửa code nhất. Dịch vụ nào phù hợp?",
+        "options": ["AWS KMS với key policy", "AWS Certificate Manager", "AWS Secrets Manager", "AWS CloudHSM"],
+        "answer": [3],
+        "explain": "CloudHSM hỗ trợ API chuẩn công nghiệp PKCS#11, JCE và CNG. KMS chỉ truy cập qua AWS API với quyền IAM nên ứng dụng phải viết lại."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn khóa nằm trong HSM single-tenant do họ kiểm soát, nhưng vẫn muốn dùng các tính năng mã hóa tích hợp sẵn của dịch vụ AWS như S3 SSE và EBS encryption. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["Dùng KMS custom key store dựa trên một CloudHSM cluster", "Cấu hình S3 SSE trỏ trực tiếp tới CloudHSM cluster", "Dùng SSE-S3 với khóa do S3 quản lý", "Dùng KMS AWS managed key aws/s3"],
+        "answer": [0],
+        "explain": "KMS custom key store lưu khóa trong CloudHSM cluster của bạn nhưng vẫn có tích hợp dịch vụ AWS của KMS. CloudHSM tự nó không tích hợp native với S3 SSE, nên không thể trỏ S3 SSE thẳng tới CloudHSM."
+      },
+      {
+        "type": "single",
+        "q": "Cách nào đảm bảo high availability cho CloudHSM?",
+        "options": ["Không cần làm gì, một HSM đơn lẻ đã được AWS tự động HA", "Bật tùy chọn Multi-AZ giống RDS cho HSM", "Tạo cluster ít nhất 2 HSM ở các AZ khác nhau và cấu hình client cân bằng tải qua mọi ENI", "Bật cross-region replication cho HSM"],
+        "answer": [2],
+        "explain": "Một HSM là thiết bị vật lý trong một AZ, mặc định không HA. Muốn HA phải tạo cluster nhiều HSM ở nhiều AZ (chúng tự đồng bộ key và policy), và client phải dùng được mọi ENI."
+      },
+      {
+        "type": "multi",
+        "q": "Trường hợp sử dụng nào phù hợp với CloudHSM nhưng KMS không đáp ứng được theo khóa học? (Chọn 2)",
+        "options": ["Bật default encryption cho EBS volume", "Offload xử lý SSL/TLS cho web server", "Mã hóa server-side cho S3 bucket (SSE)", "Tự động rotate mật khẩu RDS", "Oracle Transparent Data Encryption (TDE) mà AWS không thể giải mã dữ liệu"],
+        "answer": [1, 4],
+        "explain": "SSL/TLS offload và Oracle TDE là use case điển hình của CloudHSM. EBS encryption và S3 SSE là tích hợp native của KMS, còn rotate mật khẩu RDS là việc của Secrets Manager."
+      }
+    ],
+    "GuardDuty": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn dịch vụ giám sát liên tục, dùng machine learning và threat intelligence feeds để phân tích VPC Flow Logs, DNS logs và CloudTrail nhằm phát hiện hoạt động bất thường trong account. Dịch vụ nào đáp ứng yêu cầu?",
+        "options": ["Amazon Inspector", "Amazon Macie", "Amazon GuardDuty", "AWS Config"],
+        "answer": [2],
+        "explain": "GuardDuty là continuous threat detection dựa trên DNS logs, VPC Flow Logs, CloudTrail kết hợp ML và threat intelligence. Inspector chỉ quét lỗ hổng trên workload, không phân tích log tìm hoạt động độc hại."
+      },
+      {
+        "type": "single",
+        "q": "Đội bảo mật muốn khi GuardDuty phát hiện một IP đang dò quét tấn công, IP đó tự động bị chặn ở mức subnet mà không cần người can thiệp. Kiến trúc nào phù hợp?",
+        "options": ["Bật chế độ block của GuardDuty để nó tự chặn IP", "Gửi finding của GuardDuty tới EventBridge, rule gọi Lambda thêm explicit deny vào NACL", "Gửi finding của GuardDuty vào CloudTrail rồi để AWS Config chặn IP", "Bật Shield Standard để tự động chặn IP trong finding"],
+        "answer": [1],
+        "explain": "GuardDuty chỉ phát hiện và tạo finding; việc chặn là event-driven remediation: finding → EventBridge → Lambda cập nhật NACL. GuardDuty không có chế độ tự chặn traffic."
+      },
+      {
+        "type": "single",
+        "q": "Theo bài giảng, nguồn nào KHÔNG nằm trong các nguồn dữ liệu mà GuardDuty phân tích?",
+        "options": ["DNS logs từ Route 53 resolver", "VPC Flow Logs", "CloudTrail S3 data events", "Access logs của Application Load Balancer"],
+        "answer": [3],
+        "explain": "Khóa học liệt kê DNS logs, VPC Flow Logs, CloudTrail event logs, CloudTrail management events và CloudTrail S3 data events. ALB access logs không phải nguồn của GuardDuty."
+      },
+      {
+        "type": "single",
+        "q": "Một doanh nghiệp có 30 AWS account và muốn quản lý tập trung GuardDuty cùng toàn bộ findings tại một nơi với ít vận hành nhất. Cách làm nào phù hợp?",
+        "options": ["Chỉ định một administrator (master) account, mời các account khác (hoặc dùng AWS Organizations) để chúng thành member", "Bật GuardDuty riêng ở từng account và đăng nhập từng account để xem findings", "Tạo CloudTrail organization trail và đọc log bằng Athena", "Dùng AWS Config aggregator để gom findings của GuardDuty"],
+        "answer": [0],
+        "explain": "GuardDuty hỗ trợ mô hình administrator/master + member: account quản lý mời các account khác, hoặc chỉ định delegated administrator qua Organizations. Config aggregator gom cấu hình và compliance, không gom findings của GuardDuty."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về Amazon GuardDuty?",
+        "options": ["Bạn phải tự định nghĩa trước thế nào là hành vi bình thường trong account", "GuardDuty phát hiện và tạo finding; việc chặn tấn công do quy trình remediation như Lambda thực hiện", "GuardDuty chạy theo đợt assessment có thời hạn từ 15 phút tới 1 ngày", "GuardDuty chuyên tìm dữ liệu PII trong S3 bucket"],
+        "answer": [1],
+        "explain": "GuardDuty tự học hành vi bình thường bằng ML, chạy liên tục và chỉ phát hiện, không tự chặn. Assessment 15 phút tới 1 ngày là của Inspector Classic, còn tìm PII trong S3 là Macie."
+      }
+    ],
+    "Inspector": [
+      {
+        "type": "single",
+        "q": "Bộ phận kiểm toán yêu cầu một security report liệt kê các CVE (Common Vulnerabilities and Exposures) có trên hệ điều hành của các EC2 instance. Dịch vụ nào phù hợp?",
+        "options": ["Amazon GuardDuty", "Amazon Macie", "Amazon Inspector", "AWS Config"],
+        "answer": [2],
+        "explain": "Thấy CVE và security report cho EC2 là Inspector. GuardDuty phát hiện hoạt động bất thường từ log, không quét lỗ hổng phần mềm trong OS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn biết các EC2 instance có bị lộ ra Internet hay không, port nào bị lộ, xét cả Security Group, NACL, route table và Internet Gateway, nhưng KHÔNG muốn cài thêm agent. Lựa chọn nào phù hợp?",
+        "options": ["Inspector host assessment với rules package CVE", "Cài Inspector agent và chạy rules package CIS Benchmarks", "Bật VPC Flow Logs và phân tích bằng Athena", "Inspector với rules package Network Reachability"],
+        "answer": [3],
+        "explain": "Network Reachability phân tích end-to-end khả năng truy cập từ mạng public và chạy được không cần agent. CVE và CIS là host assessment nên bắt buộc có agent."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về agent của Amazon Inspector (Classic)? (Chọn 2)",
+        "options": ["Network Reachability bắt buộc phải có agent mới chạy được", "Inspector quét dữ liệu nhạy cảm trong S3 nên cần agent trên bucket", "Network assessment chạy được không cần agent, thêm agent thì có nhiều thông tin hơn", "Agent chỉ cần cho container, không cần cho EC2", "Host assessment (CVE, CIS Benchmarks, security best practices) bắt buộc có agent"],
+        "answer": [2, 4],
+        "explain": "Network assessment không cần agent (agent cho thêm thông tin như finding có listener hay không), còn host assessment phải nhìn vào bên trong OS nên cần agent. Quét dữ liệu nhạy cảm trong S3 là Macie."
+      },
+      {
+        "type": "single",
+        "q": "Trong Inspector Classic, độ dài nào KHÔNG phải là tùy chọn thời gian assessment hợp lệ?",
+        "options": ["15 phút", "7 ngày", "8 giờ", "1 ngày"],
+        "answer": [1],
+        "explain": "Các tùy chọn là 15 phút, 1 giờ, 8 giờ, 12 giờ hoặc 1 ngày. 7 ngày không có trong danh sách."
+      },
+      {
+        "type": "single",
+        "q": "Đội bảo mật muốn kiểm tra cấu hình OS của các EC2 instance so với CIS Benchmarks và xác nhận root login qua SSH đã bị tắt. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["Amazon Inspector với host assessment (CIS Benchmarks và security best practices), có cài agent", "AWS Config managed rule kiểm tra Security Group", "Amazon GuardDuty với trusted IP list", "Amazon Macie với custom data identifier"],
+        "answer": [0],
+        "explain": "CIS Benchmarks và các best practice như disable root login over SSH là rules package của Inspector, cần agent. AWS Config đánh giá cấu hình resource AWS chứ không nhìn vào bên trong OS."
+      }
+    ],
+    "Layer 7 Firewall": [
+      {
+        "type": "single",
+        "q": "Một firewall chỉ hoạt động ở Layer 3/4 xử lý một kết nối HTTP (request từ client và response từ server) như thế nào?",
+        "options": ["Coi request và response là một session nên chỉ cần một rule", "Đọc được HTTP header để quyết định cho phép hay chặn", "Coi request và response là hai luồng riêng không liên quan, nên cần hai rule", "Tự động giải mã HTTPS để kiểm tra nội dung"],
+        "answer": [2],
+        "explain": "Firewall L3/L4 chỉ thấy IP, port, flag và coi hai chiều là hai luồng riêng (stateless, giống NACL). Hiểu session là khả năng Layer 5, còn đọc header là Layer 7."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần chặn request dựa trên HTTP header, URI path và các mẫu SQL injection trước khi chúng tới ứng dụng web chạy sau ALB. Thành phần nào trên AWS làm được việc này?",
+        "options": ["AWS WAF", "Security Groups", "Network ACL", "Shield Standard"],
+        "answer": [0],
+        "explain": "Lọc theo header, URI, SQL injection cần firewall Layer 7, trên AWS là WAF. Security Groups và NACL chỉ thấy IP/port nên dữ liệu HTTP với chúng là opaque."
+      },
+      {
+        "type": "single",
+        "q": "Để firewall Layer 7 kiểm tra được nội dung HTTP bên trong một kết nối HTTPS, điều gì phải xảy ra?",
+        "options": ["Firewall chỉ cần đọc trường SNI trong TLS handshake là đủ", "Client phải gửi private key của mình cho firewall", "Firewall Layer 7 không thể kiểm tra HTTPS trong mọi trường hợp", "Kết nối HTTPS từ client được terminate tại firewall, firewall phân tích HTTP plaintext rồi tạo kết nối HTTPS mới tới backend"],
+        "answer": [3],
+        "explain": "Firewall L7 phải giải mã (terminate TLS) để thấy HTTP, sau đó mở kết nối HTTPS mới tới backend, trong suốt với hai đầu. SNI chỉ cho biết hostname, không cho thấy header hay body."
+      },
+      {
+        "type": "single",
+        "q": "So với firewall chỉ hiểu Layer 3/4, firewall hiểu thêm Layer 5 (session) mang lại lợi ích nào?",
+        "options": ["Nhìn thấy nội dung HTTP như ảnh hay malware", "Hiểu request và response cùng một session nên giảm số rule và xử lý traffic response theo ngữ cảnh", "Chặn được SQL injection và XSS", "Thay thế nội dung không phù hợp bằng nội dung khác"],
+        "answer": [1],
+        "explain": "Layer 5 giúp firewall stateful: một rule thay vì hai, giống cách Security Groups hoạt động. Nhìn và thay nội dung HTTP, chặn SQLi/XSS là khả năng của Layer 7."
+      },
+      {
+        "type": "single",
+        "q": "Cách ghép nào đúng giữa loại firewall và ví dụ trên AWS theo bài học?",
+        "options": ["L3/L4 stateless: Security Groups; có session: NACL; Layer 7: Shield", "L3/L4 stateless: WAF; có session: Security Groups; Layer 7: NACL", "L3/L4 stateless: NACL; có session: Security Groups; Layer 7: WAF", "L3/L4 stateless: NACL; có session: WAF; Layer 7: Security Groups"],
+        "answer": [2],
+        "explain": "NACL là stateless L3/L4, Security Groups là stateful (hiểu session), còn WAF là Layer 7 firewall. Shield là dịch vụ chống DDoS, không phải ví dụ cho firewall Layer 7."
+      }
+    ],
+    "Macie": [
+      {
+        "type": "single",
+        "q": "Một công ty có hàng trăm S3 bucket và cần tự động phát hiện, phân loại các object chứa PII, số thẻ tín dụng và AWS access key bị lộ. Dịch vụ nào đáp ứng yêu cầu với ít vận hành nhất?",
+        "options": ["Amazon Inspector", "Amazon GuardDuty", "AWS Config", "Amazon Macie"],
+        "answer": [3],
+        "explain": "Macie dùng managed data identifiers (ML + pattern matching) để discover và phân loại dữ liệu nhạy cảm trong S3. GuardDuty có thể theo dõi S3 data events nhưng tìm hoạt động bất thường, không phân loại nội dung object."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn Macie nhận diện mã nhân viên theo định dạng riêng (một chữ cái, gạch ngang, 8 chữ số) trong các object S3. Họ nên làm gì?",
+        "options": ["Tạo custom data identifier dùng regex, có thể thêm keywords và ignore words", "Bật thêm managed data identifiers loại Financial", "Viết custom AWS Config rule bằng Lambda", "Thêm định dạng vào trusted IP list"],
+        "answer": [0],
+        "explain": "Dữ liệu đặc thù doanh nghiệp cần custom data identifier dựa trên regex, kèm refiner như keywords, maximum match distance, ignore words. Managed identifiers không phủ định dạng riêng như trong demo biển số xe Úc."
+      },
+      {
+        "type": "single",
+        "q": "Đội bảo mật muốn nhận email ngay khi Macie phát hiện dữ liệu nhạy cảm trong S3, với ít công sức nhất. Kiến trúc nào phù hợp?",
+        "options": ["Cấu hình Macie ghi finding vào CloudTrail, dùng metric filter để gửi email", "Cho Lambda chạy mỗi phút để quét bucket rồi gửi email qua SES", "Tạo EventBridge rule với event type Macie Finding, target là SNS topic có subscription email", "Bật AWS Config rule đánh giá bucket rồi gửi thông báo"],
+        "answer": [2],
+        "explain": "Findings của Macie được gửi tới EventBridge; rule khớp Macie Finding đẩy sang SNS để gửi email (đúng như demo). Tự viết Lambda quét bucket tốn vận hành và lặp lại việc Macie đã làm."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi đã bật Macie, một quản trị viên tắt S3 Block Public Access trên một bucket. Macie tạo ra loại finding nào?",
+        "options": ["SensitiveData:S3Object/Credentials", "Policy:IAMUser/S3BlockPublicAccessDisabled", "Policy:IAMUser/S3BucketEncryptionDisabled", "SensitiveData:S3Object/Personal"],
+        "answer": [1],
+        "explain": "Thay đổi làm giảm bảo mật của bucket sinh policy finding, ở đây là S3BlockPublicAccessDisabled. Lưu ý policy findings chỉ phát hiện thay đổi xảy ra sau khi Macie được bật."
+      },
+      {
+        "type": "multi",
+        "q": "Refiner nào có thể dùng kèm regex khi tạo custom data identifier trong Macie? (Chọn 2)",
+        "options": ["Confidence threshold", "Keywords", "Sampling rate", "Severity override", "Maximum match distance"],
+        "answer": [1, 4],
+        "explain": "Custom data identifier có các refiner keywords, maximum match distance và ignore words. Các tùy chọn còn lại không phải refiner của custom data identifier."
+      }
+    ],
+    "Secrets Manager": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng dùng Amazon RDS và yêu cầu mật khẩu database được tự động xoay vòng mỗi 30 ngày, mật khẩu trong DB luôn khớp với bản ứng dụng lấy về, với chi phí vận hành thấp nhất. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["Lưu mật khẩu trong SSM Parameter Store SecureString và chạy cron job trên EC2 để đổi mật khẩu", "Lưu mật khẩu trong AWS Secrets Manager và bật automatic rotation", "Bật automatic key rotation cho KMS key mã hóa RDS", "Lưu mật khẩu trong EC2 user data và đổi thủ công"],
+        "answer": [1],
+        "explain": "Secrets + rotation + RDS là bộ từ khóa của Secrets Manager: Lambda rotate secret và đổi luôn mật khẩu trong RDS. Parameter Store không có rotation sẵn, còn rotate KMS key không đổi mật khẩu DB."
+      },
+      {
+        "type": "single",
+        "q": "Một đội vận hành cần lưu file cấu hình cho CloudWatch Agent và các tham số ứng dụng theo cấu trúc phân cấp. Dữ liệu này không phải secret và không cần rotation. Dịch vụ nào phù hợp nhất?",
+        "options": ["AWS Secrets Manager", "AWS CloudHSM", "AWS KMS", "AWS Systems Manager Parameter Store"],
+        "answer": [3],
+        "explain": "Cấu hình không phải secret, dạng hierarchical, config cho CloudWatch Agent là use case của Parameter Store. Secrets Manager dành cho secret cần rotation và tích hợp dịch vụ."
+      },
+      {
+        "type": "single",
+        "q": "AWS Secrets Manager thực hiện automatic rotation bằng cơ chế nào?",
+        "options": ["Gọi định kỳ một Lambda function, Lambda dùng execution role để cập nhật secret và dịch vụ tích hợp", "Dùng KMS automatic key rotation hằng năm", "Dùng AWS Config remediation qua SSM Automation", "Tạo EC2 instance tạm thời chạy script đổi mật khẩu"],
+        "answer": [0],
+        "explain": "Rotation chạy bằng Lambda được gọi định kỳ, quyền lấy từ execution role. KMS key rotation chỉ đổi key material, không đổi secret."
+      },
+      {
+        "type": "multi",
+        "q": "Một IAM role cần đọc và giải mã một secret trong Secrets Manager được mã hóa bằng customer managed KMS key. Role cần những quyền nào? (Chọn 2)",
+        "options": ["s3:GetObject trên config bucket", "ssm:GetParameter", "secretsmanager:GetSecretValue trên secret", "kms:Decrypt trên KMS key mã hóa secret", "rds:ModifyDBInstance"],
+        "answer": [2, 3],
+        "explain": "KMS tạo role separation: đọc secret cần quyền với Secrets Manager và quyền dùng KMS key. ssm:GetParameter là của Parameter Store, không liên quan."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên EC2 dùng Secrets Manager SDK để lấy credential database. Cách nào an toàn nhất để SDK xác thực với AWS?",
+        "options": ["Nhúng IAM access key vào file cấu hình của ứng dụng", "Lưu access key trong EC2 user data", "Gắn IAM Role cho EC2 qua instance profile", "Dùng root user access key"],
+        "answer": [2],
+        "explain": "SDK xác thực bằng IAM credentials, lý tưởng là IAM Role (instance role) để không phải quản lý key dài hạn. Access key dùng được nhưng kém an toàn hơn."
+      }
+    ],
+    "Shield": [
+      {
+        "type": "single",
+        "q": "Một startup muốn được bảo vệ trước các cuộc tấn công DDoS phổ biến ở Layer 3/4 mà không tốn thêm chi phí và không phải cấu hình gì. Lựa chọn nào phù hợp?",
+        "options": ["AWS Shield Standard", "AWS Shield Advanced", "AWS WAF với rate-based rule", "Amazon GuardDuty"],
+        "answer": [0],
+        "explain": "Shield Standard miễn phí, tự động bảo vệ L3/L4 ở perimeter cho mọi khách hàng. Shield Advanced trả phí và phải bật tường minh cho từng resource."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty thương mại điện tử muốn có đội chuyên gia DDoS hỗ trợ 24/7, được bồi hoàn chi phí phát sinh khi EC2 phải scale out vì tấn công, và có metrics thời gian thực về các cuộc tấn công. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["AWS Shield Standard kết hợp CloudFront", "Amazon GuardDuty với EventBridge", "AWS Shield Advanced", "AWS WAF với AWS Managed Rules"],
+        "answer": [2],
+        "explain": "SRT, cost protection và real-time metrics là tính năng của Shield Advanced. Shield Standard chỉ chạy nền và không có các tính năng này."
+      },
+      {
+        "type": "single",
+        "q": "Một doanh nghiệp có 10 account trong cùng một AWS Organization muốn đăng ký Shield Advanced. Chi phí subscription theo khóa học là bao nhiêu?",
+        "options": ["$3000/tháng cho mỗi account, tức $30,000/tháng", "$3000/tháng cho cả organization, cam kết 1 năm, cộng phí data out", "$3000/năm cho cả organization", "Miễn phí nếu đã dùng CloudFront"],
+        "answer": [1],
+        "explain": "Shield Advanced tính $3000/tháng mỗi organization (không phải mỗi account), cam kết 1 năm, cộng phí data out. Các account trong cùng Organization dùng chung khoản này."
+      },
+      {
+        "type": "multi",
+        "q": "Tính năng nào chỉ có ở Shield Advanced, không có ở Shield Standard? (Chọn 2)",
+        "options": ["Bảo vệ L3/L4 tại edge khi dùng CloudFront và Route 53", "Cost protection cho chi phí phát sinh do tấn công", "Bảo vệ tự động không cần cấu hình", "Proactive engagement với Shield Response Team (SRT)", "Quét lỗ hổng CVE trên EC2"],
+        "answer": [1, 3],
+        "explain": "Cost protection và SRT/proactive engagement chỉ có ở Shield Advanced. Bảo vệ L3/L4 tại edge có ở cả hai, còn bảo vệ tự động không cần cấu hình là đặc điểm của Standard."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã đăng ký Shield Advanced và muốn bật proactive engagement để SRT chủ động liên hệ khi ứng dụng bị ảnh hưởng. Họ cần cấu hình thêm gì?",
+        "options": ["CloudWatch alarm theo CPU của EC2", "Amazon GuardDuty ở mọi account", "Ghi WAF logs vào S3", "Health-based detection dùng Route 53 health checks"],
+        "answer": [3],
+        "explain": "Health-based detection dùng Route 53 health checks, giảm false positive và là điều kiện bắt buộc để dùng proactive engagement. Các phương án khác không phải yêu cầu của tính năng này."
+      }
+    ],
+    "WAF": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng web chạy sau Network Load Balancer cần được bảo vệ khỏi SQL injection và XSS. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["Associate một Web ACL của AWS WAF trực tiếp với NLB", "Bật Shield Standard cho NLB", "Thay NLB bằng Application Load Balancer và associate một Web ACL của AWS WAF với ALB", "Thêm rule chặn SQL injection vào Security Group"],
+        "answer": [2],
+        "explain": "WAF gắn được vào CloudFront, ALB, API Gateway, AppSync nhưng không gắn vào NLB; cần đổi sang ALB (hoặc đặt CloudFront phía trước). Security Group chỉ thấy IP/port nên không chặn được SQLi."
+      },
+      {
+        "type": "single",
+        "q": "Action nào KHÔNG dùng được cho rate-based rule trong AWS WAF?",
+        "options": ["ALLOW", "BLOCK", "COUNT", "CAPTCHA"],
+        "answer": [0],
+        "explain": "Rate-based rule chỉ có BLOCK, COUNT, CAPTCHA vì ý nghĩa của nó là làm gì đó khi vượt ngưỡng; ALLOW vô nghĩa. ALLOW chỉ có ở regular rule."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty muốn phân tích log của AWS WAF gần thời gian thực để tự động cập nhật Web ACL khi phát hiện tấn công. Nên gửi WAF logs tới đích nào? (Chọn 2)",
+        "options": ["Ghi log trực tiếp vào S3 bucket", "Amazon CloudWatch Logs", "AWS CloudTrail", "Amazon Kinesis Data Firehose", "VPC Flow Logs"],
+        "answer": [1, 3],
+        "explain": "WAF logs gửi được tới S3, CloudWatch Logs hoặc Kinesis Data Firehose; log vào S3 được giao theo lô khoảng 5 phút nên không hợp để phản ứng nhanh. CloudTrail và VPC Flow Logs không phải đích log của WAF."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, khi kiểm tra body của request, AWS WAF inspect bao nhiêu dữ liệu?",
+        "options": ["Toàn bộ body không giới hạn", "1,024 byte đầu tiên", "1 MB đầu tiên", "8,192 byte (8 KB) đầu tiên"],
+        "answer": [3],
+        "explain": "Con số khóa học nhấn mạnh là 8,192 byte đầu. Hiện nay một số dịch vụ như CloudFront mặc định 16 KB, nhưng đáp án thi theo khóa học là 8 KB."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có 3 ALB ở eu-west-1 và 1 CloudFront distribution, muốn áp dụng cùng một bộ rule WAF cho tất cả. Cần tối thiểu bao nhiêu Web ACL?",
+        "options": ["1", "2", "3", "4"],
+        "answer": [1],
+        "explain": "Một Web ACL gắn được cho nhiều resource cùng phạm vi, nên 1 Web ACL regional ở eu-west-1 cho cả 3 ALB và 1 Web ACL global cho CloudFront. Web ACL của CloudFront không gắn được cho resource regional và ngược lại, nên 1 là không đủ."
+      }
+    ]
+  }
+}

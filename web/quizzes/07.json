@@ -1,0 +1,1385 @@
+{
+  "chapter": "07 EC2",
+  "lessons": {
+    "AMI": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy ứng dụng trên EC2 ở us-east-1 từ một custom AMI. Họ muốn launch cùng cấu hình ở eu-west-1 để làm DR. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Dùng trực tiếp AMI ID hiện có khi launch instance ở eu-west-1",
+          "Copy AMI sang eu-west-1 (tạo ra AMI mới với ID mới) rồi launch từ AMI đó",
+          "Đặt permission của AMI thành Public để mọi region đều thấy",
+          "Share AMI cho chính account đó ở region eu-west-1"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "AMI là tài nguyên regional, chỉ dùng được trong region của nó. Copy AMI sang region khác sẽ copy cả snapshot và tạo một AMI hoàn toàn mới với ID khác; đổi permission không làm AMI xuất hiện ở region khác."
+      },
+      {
+        "type": "single",
+        "q": "Một Auto Scaling Group launch instance mất khoảng 20 phút vì script user data phải cài và cấu hình toàn bộ ứng dụng. Công ty muốn instance mới sẵn sàng nhanh nhất có thể khi scale out. Giải pháp nào phù hợp?",
+        "options": [
+          "Chuyển sang instance type lớn hơn để user data chạy nhanh hơn",
+          "Đặt toàn bộ script vào Instance Metadata thay vì user data",
+          "Dùng Spot Instances cho ASG",
+          "Bake một AMI đã cài và cấu hình sẵn ứng dụng, rồi dùng AMI đó trong launch template"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "AMI baking cài sẵn ứng dụng vào image nên instance launch nhanh hơn nhiều so với bootstrapping bằng user data (đổi lại kém linh hoạt hơn). Instance type lớn hơn không loại bỏ được thời gian cài đặt."
+      },
+      {
+        "type": "single",
+        "q": "Khi tạo một AMI từ EC2 instance có boot volume và data volume EBS, chi phí phát sinh từ AMI đó đến từ đâu?",
+        "options": [
+          "Dung lượng lưu trữ của các EBS snapshot mà AMI tham chiếu qua block device mapping",
+          "Phí cố định hằng tháng cho mỗi AMI đã đăng ký",
+          "Dung lượng cấp phát đầy đủ của các EBS volume gốc",
+          "Không phát sinh chi phí nào vì AMI chỉ là metadata"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "AMI là container logic (ID, permissions, block device mapping) trỏ tới các EBS snapshot; bạn trả tiền dung lượng của các snapshot đó. Snapshot chỉ lưu dữ liệu đã dùng, không phải dung lượng cấp phát."
+      },
+      {
+        "type": "single",
+        "q": "Đội vận hành cần cài thêm một agent bảo mật vào AMI chuẩn của công ty. Cách làm đúng là gì?",
+        "options": [
+          "Chỉnh sửa trực tiếp AMI hiện có bằng tính năng Modify AMI",
+          "Mount snapshot của AMI vào một instance và sửa file trong đó, AMI sẽ tự cập nhật",
+          "Launch instance từ AMI hiện có, cài agent, rồi tạo một AMI mới từ instance đó",
+          "Thêm agent vào block device mapping của AMI hiện có"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "AMI không sửa được; muốn thay đổi phải launch → cấu hình → create image để có AMI mới. Sửa snapshot không làm thay đổi AMI đã tạo."
+      },
+      {
+        "type": "multi",
+        "q": "Một AMI ở us-east-1 có snapshot đã mã hóa bằng KMS. Admin copy AMI này sang us-east-2. Những phát biểu nào đúng về kết quả? (Chọn 2)",
+        "options": [
+          "AMI ở us-east-2 giữ nguyên AMI ID của bản gốc",
+          "Snapshot ở us-east-2 vẫn được giải mã bằng KMS key của us-east-1",
+          "AMI ở us-east-2 là một AMI hoàn toàn mới với ID mới",
+          "Không thể copy AMI có snapshot đã mã hóa sang region khác",
+          "Snapshot ở us-east-2 được mã hóa lại bằng KMS key của region đích"
+        ],
+        "answer": [
+          2,
+          4
+        ],
+        "explain": "Copy AMI tạo AMI mới với ID khác, kèm bản copy snapshot. KMS key là regional nên snapshot được mã hóa lại bằng key ở region đích (mặc định aws/ebs hoặc customer managed key)."
+      }
+    ],
+    "Compare - EBS vs Instance Store": [
+      {
+        "type": "single",
+        "q": "Một cluster NoSQL tự replicate dữ liệu giữa nhiều node. Mỗi node cần hơn 500,000 IOPS cho dữ liệu làm việc và có thể dựng lại từ node khác nếu một node mất dữ liệu. Lựa chọn storage nào phù hợp nhất?",
+        "options": [
+          "Instance Store trên các storage optimized instance",
+          "RAID 0 gồm nhiều gp3 volume",
+          "io2 Block Express EBS volume",
+          "Amazon EFS"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Vượt mốc ~260,000 IOPS per instance của EBS và chấp nhận dữ liệu không persistent (ứng dụng tự replicate) thì chọn Instance Store. io2 Block Express chỉ tới 256,000 IOPS/volume và RAID 0 vẫn bị trần ~260,000 IOPS/instance."
+      },
+      {
+        "type": "single",
+        "q": "Gộp nhiều EBS volume thành RAID 0 trên một EC2 instance. Hiệu năng tối đa đạt được bị chặn ở khoảng bao nhiêu (theo khóa học)?",
+        "options": [
+          "Khoảng 260,000 IOPS, trần per-instance",
+          "Khoảng 64,000 IOPS, trần của io1/io2",
+          "Không giới hạn, cứ thêm volume là tăng",
+          "Khoảng 16,000 IOPS, trần của gp3"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "RAID 0 cho hiệu năng gần bằng tổng các volume nhưng luôn bị chặn bởi trần per-instance ~260,000 IOPS (và loại/size instance). Muốn cao hơn nữa phải dùng Instance Store."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn chọn loại EBS volume rẻ nhất để làm boot volume cho các EC2 instance dev. Lựa chọn nào hợp lệ và tiết kiệm nhất?",
+        "options": [
+          "sc1",
+          "gp3",
+          "st1",
+          "io2"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "st1 và sc1 rẻ hơn nhưng là HDD và không dùng được làm boot volume. Trong các loại boot được, gp3 là lựa chọn đa dụng giá tốt nhất; io2 đắt hơn nhiều."
+      },
+      {
+        "type": "multi",
+        "q": "Những workload nào phù hợp với Instance Store thay vì EBS? (Chọn 2)",
+        "options": [
+          "Database phải giữ dữ liệu khi instance stop/start",
+          "Cache hoặc buffer tạm có thể tái tạo, cần hiệu năng rất cao",
+          "Volume cần detach và gắn sang instance khác khi thay thế instance",
+          "Cluster Kafka/HDFS tự replicate dữ liệu giữa nhiều node",
+          "Volume cần sao lưu định kỳ bằng snapshot"
+        ],
+        "answer": [
+          1,
+          3
+        ],
+        "explain": "Instance Store hợp cho dữ liệu tạm (cache, buffer, scratch) hoặc ứng dụng có replication tích hợp. Persistent, detach/reattach và snapshot là các tính năng chỉ EBS có."
+      },
+      {
+        "type": "single",
+        "q": "Một instance type đã đi kèm instance store volume. Về chi phí, instance store khác EBS như thế nào?",
+        "options": [
+          "Instance store tính phí theo GB-tháng giống EBS",
+          "Instance store tính phí theo IOPS đã provision",
+          "Instance store chỉ tính phí khi instance đang stop",
+          "Instance store đã bao gồm trong giá instance, còn EBS tính phí riêng theo GB-tháng"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Instance store nằm sẵn trong giá instance ('use it or lose it'), trong khi EBS trả theo GB-tháng (cộng IOPS/throughput tùy loại). Vì vậy khi ưu tiên chi phí mà instance đã có instance store thì nên tận dụng."
+      }
+    ],
+    "EBS Encryption": [
+      {
+        "type": "single",
+        "q": "Quy định compliance yêu cầu mọi EBS volume mới tạo trong một account phải được mã hóa, không phụ thuộc vào việc người tạo có nhớ chọn hay không. Giải pháp nào ít công sức nhất?",
+        "options": [
+          "Bật EBS encryption by default cho account ở từng region đang dùng",
+          "Viết Lambda function quét và mã hóa lại các volume chưa mã hóa mỗi giờ",
+          "Cài phần mềm full-disk encryption trong OS của mọi instance",
+          "Dùng SSE-S3 cho các EBS volume"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "EBS encryption by default (thiết lập theo region) tự mã hóa mọi volume mới bằng default KMS key. SSE-S3 là cơ chế của S3, không áp dụng cho EBS."
+      },
+      {
+        "type": "single",
+        "q": "Một production EC2 instance dùng EBS volume chưa mã hóa. Công ty cần chuyển sang volume mã hóa. Cách làm đúng là gì?",
+        "options": [
+          "Bật tùy chọn Encrypt trực tiếp trên volume đang gắn",
+          "Detach volume rồi bật encryption, sau đó attach lại",
+          "Tạo snapshot, copy snapshot với tùy chọn encrypt (hoặc tạo volume mã hóa từ snapshot), rồi thay volume cũ bằng volume mã hóa",
+          "Bật EBS encryption by default, volume hiện có sẽ tự được mã hóa"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Không bật mã hóa trực tiếp trên volume đang có được; phải đi qua snapshot → copy/tạo volume có encrypt → thay volume. Encryption by default chỉ áp dụng cho volume mới."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn chia sẻ AMI có snapshot mã hóa bằng key aws/ebs cho một account khác. Account đích không launch được. Cần làm gì?",
+        "options": [
+          "Đặt AMI thành Public để bỏ qua kiểm tra KMS",
+          "Mã hóa lại snapshot bằng customer managed KMS key và cấp quyền cho account đích trong key policy, rồi share AMI",
+          "Gỡ mã hóa khỏi snapshot rồi share",
+          "Share key aws/ebs cho account đích"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Key AWS managed aws/ebs không chia sẻ được; phải dùng customer managed key và cấp quyền trong key policy. Không thể gỡ mã hóa khỏi snapshot qua console/CLI/API."
+      },
+      {
+        "type": "single",
+        "q": "Một tổ chức yêu cầu chính họ giữ khóa mã hóa ở mức hệ điều hành và AWS (EC2, EBS, KMS) không được nắm khóa. Giải pháp nào phù hợp?",
+        "options": [
+          "EBS encryption với AWS managed key aws/ebs",
+          "EBS encryption với customer managed KMS key",
+          "Bật EBS encryption by default",
+          "Dùng software disk encryption bên trong OS"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Với EBS encryption, DEK do KMS quản lý và được giải mã vào memory của EC2 host, OS không biết gì. Muốn OS tự mã hóa và tự giữ key thì dùng software/full-disk encryption trong OS."
+      },
+      {
+        "type": "single",
+        "q": "Một EBS volume được tạo mới và mã hóa. Sau đó tạo snapshot từ volume này rồi tạo một volume mới từ snapshot. Phát biểu nào đúng?",
+        "options": [
+          "Snapshot không được mã hóa, chỉ volume gốc được mã hóa",
+          "Volume mới tạo từ snapshot có DEK mới và khác hoàn toàn",
+          "Snapshot và volume tạo từ snapshot đều được mã hóa và dùng cùng DEK với volume gốc",
+          "DEK plaintext được lưu cùng snapshot trên S3"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Snapshot của volume mã hóa dùng cùng DEK, và volume tạo từ snapshot đó cũng dùng cùng DEK; chỉ volume tạo mới từ đầu mới có DEK mới. DEK chỉ lưu dạng đã mã hóa, bản plaintext chỉ nằm trong memory của EC2 host."
+      }
+    ],
+    "EBS Snapshots": [
+      {
+        "type": "single",
+        "q": "Một EBS volume ở us-east-1a chứa dữ liệu cần dùng cho một instance ở us-east-1b. Cách làm đúng là gì?",
+        "options": [
+          "Detach volume rồi attach trực tiếp vào instance ở us-east-1b",
+          "Bật Multi-Attach để instance ở us-east-1b truy cập volume",
+          "Copy volume sang us-east-1b bằng lệnh Copy Volume",
+          "Tạo snapshot của volume rồi tạo volume mới từ snapshot ở us-east-1b"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "EBS volume là AZ-scoped, không gắn chéo AZ; snapshot lưu trên S3 (regional) nên tạo volume ở AZ khác được. Multi-Attach chỉ hoạt động trong cùng AZ."
+      },
+      {
+        "type": "single",
+        "q": "Công ty thường xuyên restore volume database từ snapshot và nhận thấy truy vấn đầu tiên rất chậm. Họ cần volume đạt hiệu năng đầy đủ ngay sau khi tạo mà không phải thêm thao tác thủ công. Giải pháp nào phù hợp?",
+        "options": [
+          "Bật Fast Snapshot Restore (FSR) cho snapshot ở các AZ cần restore",
+          "Chạy lệnh dd đọc toàn bộ block sau mỗi lần restore",
+          "Chuyển snapshot sang S3 Glacier",
+          "Tạo snapshot thường xuyên hơn"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Volume restore từ snapshot nạp dữ liệu lazily nên có first-read penalty; FSR khởi tạo đầy đủ ngay (tốn thêm phí). dd cũng làm được nhưng là thao tác quản trị thủ công."
+      },
+      {
+        "type": "single",
+        "q": "Một EBS volume cấp phát 100 GB nhưng mới dùng 20 GB. Snapshot đầu tiên của volume được tính phí theo dung lượng nào?",
+        "options": [
+          "100 GB vì snapshot đầu tiên là full copy dung lượng cấp phát",
+          "Khoảng 20 GB dữ liệu đã dùng",
+          "50 GB do được nén",
+          "0 GB vì snapshot đầu tiên miễn phí"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Snapshot đầu là full copy của dữ liệu đã dùng, không phải dung lượng cấp phát, và tính phí theo GB-tháng dữ liệu đã dùng. Ngược lại, EBS volume tính phí theo dung lượng cấp phát."
+      },
+      {
+        "type": "single",
+        "q": "Một volume có 3 snapshot incremental A → B → C. Admin xóa snapshot A để tiết kiệm chi phí. Điều gì xảy ra với B và C?",
+        "options": [
+          "B và C trở nên vô dụng vì thiếu bản full",
+          "B và C vẫn restore được đầy đủ vì EBS tự giữ lại dữ liệu cần thiết",
+          "Chỉ C còn dùng được",
+          "AWS chặn việc xóa A cho tới khi xóa B và C"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Khác backup incremental truyền thống, xóa một snapshot EBS không làm hỏng các snapshot sau; EBS tự di chuyển dữ liệu cần thiết nên mỗi snapshot coi như tự đủ."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần bảo vệ dữ liệu EBS khỏi sự cố toàn region để phục vụ DR, với ít công vận hành. Giải pháp nào phù hợp?",
+        "options": [
+          "Tự động tạo snapshot và copy snapshot sang region khác bằng Data Lifecycle Manager hoặc AWS Backup",
+          "Tạo snapshot thường xuyên trong cùng region",
+          "Bật Multi-Attach cho volume với instance ở region khác",
+          "Dùng RAID 1 giữa hai volume ở hai AZ"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Snapshot trong region chỉ chống được sự cố AZ; DR cấp region cần copy snapshot sang region khác, có thể tự động hóa bằng DLM hoặc AWS Backup. EBS không gắn chéo AZ hay region nên RAID/Multi-Attach không khả thi."
+      }
+    ],
+    "EBS Volume Types": [
+      {
+        "type": "single",
+        "q": "Một công ty có nhiều gp2 volume 500 GB, mỗi volume chỉ cần khoảng 3,000 IOPS. Họ muốn giảm chi phí EBS mà không downtime. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Chuyển sang io1 để có IOPS ổn định",
+          "Dùng Elastic Volumes để chuyển các volume sang gp3",
+          "Chuyển sang st1 vì rẻ hơn",
+          "Giảm kích thước gp2 xuống 100 GB"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "gp3 rẻ hơn gp2 khoảng 20% và có sẵn 3,000 IOPS ở mọi size; Elastic Volumes cho đổi type mà không cần detach. st1 là HDD, kém random I/O; giảm size gp2 cũng giảm baseline IOPS."
+      },
+      {
+        "type": "single",
+        "q": "Một database cần 40,000 IOPS với latency thấp và ổn định trên volume 200 GB. Loại EBS volume nào đáp ứng được?",
+        "options": [
+          "gp3 với IOPS provision thêm",
+          "io1",
+          "st1",
+          "io2"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "gp3 tối đa 16,000 IOPS. io1 tối đa 50 IOPS/GB nên 200 GB chỉ được 10,000 IOPS; io2 cho 500 IOPS/GB (tới 64,000) nên đáp ứng 40,000 IOPS trên volume nhỏ."
+      },
+      {
+        "type": "single",
+        "q": "Một gp2 volume kích thước 100 GB có baseline performance bao nhiêu IOPS?",
+        "options": [
+          "300 IOPS, burst tới 3,000 IOPS nhờ credit bucket",
+          "3,000 IOPS cố định",
+          "100 IOPS cố định",
+          "16,000 IOPS"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "gp2 có baseline 3 IOPS/GB (tối thiểu 100), nên 100 GB → 300 IOPS và có thể burst lên 3,000 nhờ credit bucket. 3,000 IOPS cố định ở mọi size là đặc điểm của gp3."
+      },
+      {
+        "type": "single",
+        "q": "Một hệ thống xử lý log và data warehouse đọc dữ liệu tuần tự với throughput lớn, truy cập thường xuyên. Công ty muốn chi phí thấp. Loại EBS nào phù hợp nhất?",
+        "options": [
+          "sc1",
+          "io2 Block Express",
+          "st1",
+          "gp3"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "st1 (Throughput Optimized HDD) dành cho throughput tuần tự, truy cập thường xuyên như big data, log processing, data warehouse. sc1 rẻ nhất nhưng dành cho dữ liệu lạnh, ít truy cập."
+      },
+      {
+        "type": "multi",
+        "q": "Một gp2 volume 50 GB chạy nhanh lúc đầu nhưng chậm hẳn sau vài giờ tải nặng do cạn burst credit. Những giải pháp nào khắc phục được? (Chọn 2)",
+        "options": [
+          "Chuyển sang gp3 và provision IOPS cần thiết",
+          "Chuyển sang sc1",
+          "Bật Fast Snapshot Restore",
+          "Tăng kích thước gp2 để nâng baseline IOPS",
+          "Reboot instance để nạp lại credit"
+        ],
+        "answer": [
+          0,
+          3
+        ],
+        "explain": "gp2 nạp credit theo baseline 3 IOPS/GB, nên tăng size nâng baseline; gp3 không dùng credit và cho provision IOPS riêng. FSR chỉ liên quan tới restore từ snapshot, sc1 là HDD chậm hơn."
+      }
+    ],
+    "EBS": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng cluster chạy trên nhiều EC2 instance cùng AZ cần truy cập đồng thời cùng một block volume, và ứng dụng tự quản lý việc ghi đồng thời. Giải pháp nào phù hợp?",
+        "options": [
+          "gp2 volume gắn lần lượt vào từng instance",
+          "Instance Store dùng chung giữa các instance",
+          "io1/io2 volume với tính năng Multi-Attach",
+          "st1 volume với Elastic Volumes"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Multi-Attach (io1/io2) cho phép gắn một volume vào nhiều instance cùng AZ; ứng dụng phải tự xử lý ghi đồng thời. Instance Store chỉ instance trên cùng host mới truy cập được."
+      },
+      {
+        "type": "single",
+        "q": "Nhiều EC2 instance ở nhiều AZ cần dùng chung một file system để đọc/ghi file. Giải pháp nào phù hợp?",
+        "options": [
+          "Amazon EFS",
+          "Một EBS volume gp3 gắn vào tất cả instance",
+          "EBS Multi-Attach với io2",
+          "Instance Store trên mỗi instance"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "EBS là block storage AZ-scoped; ngay cả Multi-Attach cũng chỉ trong một AZ. Chia sẻ file system cho nhiều instance ở nhiều AZ là use case của EFS."
+      },
+      {
+        "type": "single",
+        "q": "Một EBS gp3 volume được cấp phát 500 GB nhưng hiện chỉ chứa 50 GB dữ liệu. Công ty bị tính phí dung lượng thế nào?",
+        "options": [
+          "50 GB-tháng vì chỉ tính dữ liệu đã dùng",
+          "Không tính phí khi instance đang stop",
+          "Chỉ tính phí theo IOPS sử dụng",
+          "500 GB-tháng vì EBS tính theo dung lượng đã cấp phát"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "EBS volume tính theo GB-tháng dung lượng đã provision, kể cả khi instance stop. Tính theo dữ liệu đã dùng là cách tính của snapshot."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về khả năng chịu lỗi của EBS volume?",
+        "options": [
+          "Volume tự replicate sang mọi AZ trong region",
+          "Volume được replicate trong một AZ; AZ hỏng thì volume hỏng, nên cần snapshot để bảo vệ ngoài AZ",
+          "Volume chỉ lưu trên một đĩa vật lý duy nhất",
+          "Volume tự replicate sang một region khác"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "EBS replicate qua nhiều thiết bị trong một AZ nên chịu được hỏng đĩa, nhưng chết theo AZ. Snapshot lưu trên S3 (regional) mới bảo vệ được khỏi sự cố AZ."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư tạo EBS volume ở us-east-1a và muốn attach vào instance ở us-east-1c, nhưng instance không xuất hiện trong danh sách chọn. Nguyên nhân là gì?",
+        "options": [
+          "EBS volume là AZ-scoped, chỉ gắn được vào instance cùng AZ",
+          "Instance đang ở trạng thái running",
+          "Volume chưa được format file system",
+          "Volume chưa được mã hóa"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "EBS ở mỗi AZ là deployment riêng; khi attach chỉ thấy instance cùng AZ. Muốn dùng ở AZ khác phải snapshot rồi tạo volume ở AZ đích."
+      }
+    ],
+    "EC2 Architecture and Resilience": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng web chạy trên một EC2 instance duy nhất ở us-east-1a. Công ty yêu cầu ứng dụng tiếp tục phục vụ khi một AZ gặp sự cố. Giải pháp nào đáp ứng?",
+        "options": [
+          "Chuyển instance sang instance type lớn hơn",
+          "Bật EC2 Auto Recovery cho instance",
+          "Dùng Dedicated Host cho instance",
+          "Chạy nhiều instance ở nhiều AZ phía sau Elastic Load Balancer, quản lý bằng Auto Scaling Group"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "EC2 là AZ-resilient: AZ hỏng thì instance trong AZ đó hỏng; HA phải tự rải instance ra nhiều AZ. Auto Recovery chỉ chuyển instance sang host khác trong cùng AZ."
+      },
+      {
+        "type": "single",
+        "q": "Thao tác nào có thể khiến một EC2 instance chuyển sang EC2 host khác?",
+        "options": [
+          "Stop rồi start instance",
+          "Reboot instance từ console",
+          "Restart OS từ bên trong",
+          "Thêm một Security Group vào instance"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Instance chỉ đổi host khi stop/start, host hỏng hoặc AWS bảo trì host. Reboot giữ instance trên host cũ."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn chuyển một EC2 instance đang chạy ở us-east-1a sang us-east-1b với cùng cấu hình và dữ liệu. Cách làm đúng là gì?",
+        "options": [
+          "Stop instance rồi đổi thuộc tính Availability Zone",
+          "Detach ENI và EBS volume rồi gắn vào một instance ở us-east-1b",
+          "Tạo AMI (snapshot) từ instance rồi launch instance mới ở us-east-1b",
+          "Bật Auto Recovery để AWS tự chuyển sang AZ khác"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Instance không tự di chuyển giữa AZ và không gắn được ENI/EBS chéo AZ. Phải tạo bản sao (snapshot/AMI) rồi launch ở AZ đích."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần chạy ứng dụng monolithic (database, middleware, runtime trên cùng OS) 24/7, yêu cầu OS và cấu hình cụ thể theo vendor, đang lift-and-shift từ on-premises. Dịch vụ compute nào là lựa chọn mặc định?",
+        "options": [
+          "AWS Lambda",
+          "Amazon EC2",
+          "AWS Fargate",
+          "Amazon S3 static website hosting"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "EC2 là compute mặc định cho workload truyền thống cần OS cụ thể, chạy dài hạn, monolithic và lift-and-shift. Lambda có giới hạn thời gian chạy và không cho kiểm soát OS."
+      },
+      {
+        "type": "single",
+        "q": "Với EC2 instance chạy trên shared host (mặc định), công ty trả tiền theo cách nào?",
+        "options": [
+          "Trả tiền cho toàn bộ host bất kể số instance",
+          "Trả phí cố định theo region",
+          "Trả theo thời gian chạy và lượng tài nguyên cấp phát của từng instance",
+          "Chỉ trả tiền cho dung lượng instance store"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Shared host: nhiều khách hàng dùng chung phần cứng (cô lập), mỗi khách trả theo instance của mình. Trả tiền cho toàn bộ host là mô hình Dedicated Host."
+      }
+    ],
+    "EC2 Instance Connect and SSH": [
+      {
+        "type": "single",
+        "q": "Admin SSH từ laptop vào một EC2 instance public được, nhưng EC2 Instance Connect trên console báo lỗi kết nối. Security Group chỉ cho phép TCP 22 từ IP của admin. Cần làm gì?",
+        "options": [
+          "Tạo lại key pair ở định dạng PPK",
+          "Thêm rule cho phép TCP 22 từ dải IP của dịch vụ EC2 Instance Connect trong region đó",
+          "Gắn Elastic IP cho instance",
+          "Chạy chmod 400 cho file key"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Với Instance Connect, kết nối SSH tới instance xuất phát từ dịch vụ AWS chứ không phải máy admin, nên SG phải cho phép dải IP của EC2_INSTANCE_CONNECT (lấy từ ip-ranges.json). chmod 400 chỉ sửa lỗi SSH client cục bộ."
+      },
+      {
+        "type": "single",
+        "q": "Một đội 50 kỹ sư cần truy cập shell của các EC2 instance Linux public. Công ty không muốn phân phối private key và muốn quản lý quyền truy cập bằng IAM. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo một key pair chung và lưu trên share drive",
+          "Tạo một key pair riêng cho mỗi kỹ sư và chèn vào instance",
+          "Mở SSH từ 0.0.0.0/0 và tắt xác thực key",
+          "Dùng EC2 Instance Connect với quyền cấp qua IAM identity policy"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "EC2 Instance Connect xác thực bằng quyền IAM, không cần phân phối key, phù hợp truy cập theo quy mô lớn. Phân phối key cho cả team là vấn đề quản trị mà Instance Connect giải quyết."
+      },
+      {
+        "type": "single",
+        "q": "Trên macOS, lệnh ssh -i A4L.pem ec2-user@<public-DNS> báo lỗi private key permissions are too open (0644). Cách khắc phục là gì?",
+        "options": [
+          "Chạy chmod 400 A4L.pem",
+          "Chuyển key sang định dạng PPK",
+          "Mở thêm port 22 trên Security Group",
+          "Đổi username thành root"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "SSH client từ chối key có quyền quá rộng; chmod 400 giới hạn chỉ owner được đọc. PPK là định dạng cho PuTTY, không liên quan lỗi này."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, EC2 Instance Connect sử dụng qua console (trình duyệt) có yêu cầu gì về instance?",
+        "options": [
+          "Instance phải có Session Manager agent",
+          "Instance phải có public addressing (public IPv4)",
+          "Instance phải nằm trong private subnet có NAT Gateway",
+          "Instance phải dùng key pair định dạng PPK"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Instance Connect qua console chỉ kết nối instance có public addressing; với instance private cần Instance Connect CLI kèm private connectivity, Session Manager hoặc EC2 Instance Connect Endpoint."
+      },
+      {
+        "type": "single",
+        "q": "Khi SSH lần đầu tới một instance, client yêu cầu xác nhận host fingerprint. Mục đích của bước này là gì?",
+        "options": [
+          "Tải private key về máy client",
+          "Đăng ký IP của client vào Security Group",
+          "Mã hóa EBS volume của instance",
+          "Xác minh đúng là instance mình muốn kết nối, chống giả mạo khi DNS bị thao túng"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Host fingerprint giúp client xác minh danh tính server, phòng trường hợp DNS bị thao túng trỏ sang máy khác. Nó không liên quan tới key pair hay Security Group."
+      }
+    ],
+    "EC2 Instance Metadata": [
+      {
+        "type": "single",
+        "q": "URL nào dùng để truy vấn instance metadata từ bên trong một EC2 instance?",
+        "options": [
+          "http://169.254.169.253/latest/metadata/",
+          "http://10.0.0.2/latest/meta-data/",
+          "http://169.254.169.254/latest/meta-data/",
+          "http://169.254.169.254/meta-data/latest/"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "IMDS ở 169.254.169.254 ('169.254 repeated') với path /latest/meta-data/ (có dấu gạch nối). 169.254.169.253 là Amazon DNS resolver, không phải metadata."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng trên EC2 cần biết public IPv4 của chính instance để đăng ký với một dịch vụ bên ngoài, nhưng lệnh ifconfig chỉ hiện private IP. Ứng dụng nên lấy thông tin này thế nào?",
+        "options": [
+          "Truy vấn http://169.254.169.254/latest/meta-data/public-ipv4",
+          "Đọc file cấu hình card mạng trong OS",
+          "Gọi Route 53 Resolver ở VPC+2",
+          "Cấu hình public IP tĩnh trên interface trong OS"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "OS không bao giờ thấy public IPv4 vì IGW làm static NAT; ứng dụng phải hỏi instance metadata. Cấu hình public IP trong OS sẽ làm hỏng kết nối mạng."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên EC2 cần đọc object từ S3. Công ty không muốn lưu access key dài hạn trên instance. Giải pháp nào phù hợp?",
+        "options": [
+          "Lưu access key trong user data",
+          "Lưu access key trong biến môi trường của OS",
+          "Đặt bucket policy cho phép truy cập công khai",
+          "Gắn instance role; ứng dụng lấy temporary credentials qua instance metadata"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Instance role cung cấp temporary credentials qua metadata (iam/security-credentials/<role>), không cần lưu access key. User data có thể bị đọc bởi bất kỳ ai có shell trên instance."
+      },
+      {
+        "type": "single",
+        "q": "Đội bảo mật lo ngại lỗ hổng SSRF trong ứng dụng web có thể bị lợi dụng để lấy credentials từ instance metadata. Biện pháp nào phù hợp nhất?",
+        "options": [
+          "Đổi địa chỉ metadata sang IP khác",
+          "Bắt buộc dùng IMDSv2 (session token) cho instance",
+          "Đặt NACL chặn 169.254.169.254",
+          "Mã hóa EBS root volume"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "IMDSv2 yêu cầu lấy session token bằng PUT rồi gửi kèm header trong mỗi request, giảm rủi ro SSRF/open proxy. NACL không lọc traffic tới metadata 169.254.169.254."
+      },
+      {
+        "type": "single",
+        "q": "Một developer đặt mật khẩu database trong user data để script bootstrap dùng. Đánh giá nào đúng?",
+        "options": [
+          "An toàn vì user data được mã hóa bằng KMS",
+          "An toàn vì chỉ root mới đọc được user data",
+          "Không an toàn vì user data đọc được qua metadata (/latest/user-data) mà không cần xác thực; nên dùng SSM Parameter Store hoặc Secrets Manager",
+          "Không an toàn vì user data bị ghi vào CloudTrail công khai"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Metadata (IMDSv1 theo khóa học) không xác thực, không mã hóa; ai có shell trên instance đều đọc được user data. Không đặt bí mật dài hạn trong user data."
+      }
+    ],
+    "EC2 Instance Types": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy dịch vụ encoding video, CPU luôn ở mức rất cao trong khi memory còn dư nhiều. Họ muốn price/performance tốt hơn. Nên chuyển sang family nào?",
+        "options": [
+          "R5 (Memory Optimized)",
+          "C5 (Compute Optimized)",
+          "T3 (Burstable)",
+          "D2 (Dense Storage)"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Compute Optimized (C) cho nhiều CPU hơn trên mỗi đô la, hợp media encoding, HPC, gaming. R là RAM, hợp workload thiếu memory."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng real-time analytics giữ dataset lớn trong memory và thường xuyên hết RAM, trong khi CPU còn thấp. Family nào phù hợp nhất?",
+        "options": [
+          "C5",
+          "I3",
+          "P3",
+          "R5"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "R (RAM) là Memory Optimized cho in-memory cache, real-time analytics. I3 tối ưu IOPS local storage, P3 là GPU."
+      },
+      {
+        "type": "single",
+        "q": "Trong tên instance type m5dn.8xlarge, chữ d biểu thị điều gì?",
+        "options": [
+          "Có local NVMe storage (instance store)",
+          "Dùng CPU AMD",
+          "Dedicated tenancy",
+          "Dùng AWS Graviton (ARM)"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "d = local NVMe storage, n = network optimized, a = AMD, g = Graviton. Không có chữ cái nào trong tên biểu thị dedicated tenancy."
+      },
+      {
+        "type": "single",
+        "q": "Một domain controller thường chỉ dùng 2–3% CPU, thỉnh thoảng burst lên 20–40%. Công ty muốn chi phí thấp nhất. Family nào phù hợp?",
+        "options": [
+          "M5",
+          "C5",
+          "T3/T3a",
+          "X1"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "T là burstable: tải nền thấp, có CPU credit để thỉnh thoảng burst, rẻ hơn. M5 hợp tải đều (steady state) như mail server chạy ~60% CPU liên tục."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty gắn io2 volume 64,000 IOPS vào một instance cỡ nhỏ nhưng chỉ đo được hiệu năng thấp hơn nhiều. Nguyên nhân khả dĩ nhất và cách khắc phục là gì?",
+        "options": [
+          "Volume chưa được mã hóa; bật EBS encryption",
+          "Cần bật Fast Snapshot Restore",
+          "Volume cần chuyển sang gp2 để có burst credit",
+          "Instance type/size nhỏ có băng thông EBS giới hạn và trở thành nút cổ chai; chuyển sang instance lớn hơn (EBS-optimized)"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Instance type quyết định băng thông storage networking; volume nhanh mà instance yếu thì instance là bottleneck. Mã hóa EBS không ảnh hưởng hiệu năng."
+      }
+    ],
+    "EC2 Network Interfaces IPs and DNS": [
+      {
+        "type": "single",
+        "q": "Một phần mềm legacy được license theo MAC address. Công ty muốn có thể thay instance khi hỏng mà không phải xin license mới. Giải pháp nào phù hợp?",
+        "options": [
+          "Gán Elastic IP cho instance và license theo IP đó",
+          "License theo MAC của primary ENI và tạo AMI để launch lại",
+          "Tạo secondary ENI, license theo MAC của ENI đó; khi thay instance thì detach ENI và gắn sang instance mới",
+          "Cấu hình MAC address tĩnh trong OS"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Secondary ENI có MAC riêng và detach/attach sang instance khác (cùng AZ) được, nên license đi theo ENI. Primary ENI không tách khỏi instance được."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng yêu cầu public IPv4 của instance không đổi kể cả khi instance bị stop rồi start. Giải pháp nào đáp ứng?",
+        "options": [
+          "Associate một Elastic IP với instance",
+          "Bật auto-assign public IPv4 trên subnet",
+          "Chỉ dùng reboot thay cho stop/start",
+          "Gắn thêm secondary ENI"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Public IPv4 thường là động: stop/start là đổi IP. Elastic IP được cấp cho account và giữ nguyên cho tới khi release."
+      },
+      {
+        "type": "single",
+        "q": "Một instance có public IPv4 thường là 3.80.10.20. Admin gắn Elastic IP vào primary ENI, sau đó gỡ Elastic IP ra. Instance sẽ có public IPv4 nào?",
+        "options": [
+          "Lấy lại 3.80.10.20",
+          "Không còn public IPv4 nào cho tới khi reboot",
+          "Giữ Elastic IP vì EIP không gỡ được khỏi primary ENI",
+          "Một public IPv4 mới hoàn toàn, không bao giờ là IP cũ"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Gắn EIP vào primary ENI làm public IPv4 thường bị gỡ ngay; khi gỡ EIP, instance nhận một public IPv4 mới, không bao giờ lấy lại IP cũ."
+      },
+      {
+        "type": "single",
+        "q": "Instance A gọi instance B bằng public DNS name của B (ec2-...compute-1.amazonaws.com), cả hai trong cùng VPC. Tên này resolve ra địa chỉ nào?",
+        "options": [
+          "Public IPv4 của B, traffic đi vòng qua Internet Gateway",
+          "Primary private IPv4 của B, traffic đi thẳng trong VPC",
+          "Elastic IP của VPC",
+          "Không resolve được vì public DNS chỉ dùng từ internet"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Public DNS của instance resolve ra private IP khi hỏi từ trong VPC và ra public IP khi hỏi từ ngoài. Nhờ đó traffic nội bộ không vòng ra IGW."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về Elastic Network Interface (ENI) của EC2? (Chọn 2)",
+        "options": [
+          "Primary ENI có thể detach và gắn sang instance khác",
+          "Mọi ENI của một instance phải nằm cùng AZ, dù có thể ở các subnet khác nhau",
+          "ENI của một instance có thể nằm ở AZ khác nếu cùng VPC",
+          "Public IPv4 phải được cấu hình trong OS trên ENI tương ứng",
+          "Security Group gắn trên ENI áp dụng cho mọi IP trên ENI đó; muốn bộ rule khác nhau cho các IP thì cần nhiều ENI"
+        ],
+        "answer": [
+          1,
+          4
+        ],
+        "explain": "ENI phải cùng AZ với instance (có thể khác subnet), và SG áp lên toàn bộ IP của ENI. Primary ENI không tách được; OS không bao giờ thấy public IPv4."
+      }
+    ],
+    "EC2 Purchase Options": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy các job xử lý ảnh hàng loạt, không gấp về thời gian, có thể chạy lại nếu bị dừng giữa chừng. Họ muốn chi phí compute thấp nhất. Purchase option nào phù hợp?",
+        "options": [
+          "On-Demand Instances",
+          "Reserved Instances 3 năm",
+          "Spot Instances",
+          "Dedicated Hosts"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Spot giảm tới 90% so với On-Demand, hợp workload chịu được gián đoạn, chạy lại được, linh hoạt thời gian. Reserved cần cam kết dài hạn cho tải ổn định."
+      },
+      {
+        "type": "single",
+        "q": "Một phần mềm thương mại được license theo số socket và core vật lý. Công ty muốn chạy nó trên EC2 mà vẫn tuân thủ license. Lựa chọn nào phù hợp?",
+        "options": [
+          "Dedicated Hosts",
+          "Dedicated Instances",
+          "Spot Instances",
+          "On-Demand trên shared host"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Dedicated Host cho thấy và kiểm soát host vật lý (có host affinity), phù hợp license theo socket/core. Dedicated Instances không chia sẻ phần cứng nhưng không cho thấy hay quản lý host."
+      },
+      {
+        "type": "single",
+        "q": "Một database production chạy 24/7 ổn định và chắc chắn được dùng trong 3 năm tới. Công ty muốn mức giảm giá sâu nhất. Lựa chọn nào phù hợp?",
+        "options": [
+          "Reserved 1 năm, No Upfront",
+          "Spot Instances với max price cao",
+          "Reserved 3 năm, Partial Upfront",
+          "Reserved 3 năm, All Upfront"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Reserved hợp tải dài hạn, ổn định; kỳ hạn 3 năm + All Upfront cho mức giảm sâu nhất. Spot không phù hợp vì database production không chịu được gián đoạn."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần chạy một hệ thống xử lý giao dịch quan trọng trong khoảng vài tuần (chưa rõ chính xác bao lâu), không được phép gián đoạn. Ban lãnh đạo nhấn mạnh tiết kiệm chi phí. Purchase option nào phù hợp?",
+        "options": [
+          "Spot Instances vì rẻ nhất",
+          "On-Demand Instances",
+          "Reserved Instances 1 năm",
+          "Spot Instances kết hợp max price bằng giá On-Demand"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Ngắn hạn, thời lượng chưa rõ và không chịu được gián đoạn là đúng use case On-Demand. Bẫy: không bao giờ chọn Spot cho workload không chịu gián đoạn dù đề nhấn mạnh chi phí; Reserved cần cam kết 1–3 năm."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty trong ngành tài chính bị yêu cầu không được chia sẻ phần cứng vật lý với khách hàng AWS khác, nhưng không muốn tự quản lý capacity của host. Lựa chọn nào phù hợp?",
+        "options": [
+          "Dedicated Hosts",
+          "Zonal Reserved Instances",
+          "Dedicated Instances",
+          "On-Demand Capacity Reservation"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Dedicated Instances chạy trên host chỉ chứa instance của bạn, không phải trả tiền hay quản lý host (phí region/giờ + phí instance cao hơn). Dedicated Host bắt bạn tự quản lý capacity của host."
+      }
+    ],
+    "EC2 Shutdown Terminate and Termination Protection": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn ngăn nhân viên vô tình terminate các EC2 instance production quan trọng. Giải pháp nào đơn giản nhất?",
+        "options": [
+          "Đổi shutdown behavior sang Stop",
+          "Bật termination protection (DisableApiTermination) cho các instance đó",
+          "Tạo AMI hằng ngày cho các instance",
+          "Bật EC2 Auto Recovery"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Termination protection làm lệnh terminate thất bại cho tới khi attribute DisableApiTermination được tắt. Shutdown behavior chỉ áp dụng khi OS tự shutdown."
+      },
+      {
+        "type": "single",
+        "q": "Công ty muốn admin thường được phép terminate instance, nhưng instance production chỉ bị terminate sau khi senior admin đồng ý. Giải pháp nào phù hợp?",
+        "options": [
+          "Chỉ cấp quyền terminate cho senior admin",
+          "Đặt shutdown behavior thành Terminate cho instance production",
+          "Dùng Spot Instances cho production",
+          "Bật termination protection và chỉ cấp quyền sửa attribute DisableApiTermination cho senior admin qua IAM policy"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Termination protection tạo thêm một quyền riêng (sửa DisableApiTermination), cho phép tách vai trò: senior gỡ bảo vệ, admin thường terminate. Như vậy thêm một bước phê duyệt."
+      },
+      {
+        "type": "single",
+        "q": "Khi chạy lệnh shutdown từ bên trong OS của một EC2 instance EBS-backed với cấu hình mặc định, instance chuyển sang trạng thái nào?",
+        "options": [
+          "Stopped",
+          "Terminated",
+          "Hibernated",
+          "Rebooting"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Shutdown behavior mặc định là Stop; chỉ khi đổi sang Terminate thì shutdown từ OS mới xóa instance."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chạy các instance xử lý job dùng một lần. Script tự chạy lệnh shutdown trong OS khi xong việc, và công ty không muốn account đầy instance ở trạng thái stopped. Cấu hình nào phù hợp?",
+        "options": [
+          "Bật termination protection",
+          "Đặt CloudWatch alarm Reboot",
+          "Đổi shutdown behavior của instance sang Terminate",
+          "Dùng Reserved Instances"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Shutdown behavior = Terminate khiến instance bị xóa khi OS shutdown, hợp với instance disposable. Termination protection làm điều ngược lại."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 On-Demand instance có EBS root volume được stop trong 2 tuần. Trong thời gian này công ty bị tính phí gì?",
+        "options": [
+          "Phí compute theo giây và phí EBS",
+          "Không phí nào cả",
+          "Phí EBS volume vẫn tính, phí compute thì không",
+          "Chỉ phí compute ở mức giảm 50%"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Stop thì không tính phí compute, nhưng EBS volume vẫn bị tính theo dung lượng cấp phát. Public IPv4 thường cũng bị thu hồi khi stop."
+      }
+    ],
+    "EC2 Status Checks and Auto Recovery": [
+      {
+        "type": "single",
+        "q": "Một EC2 instance báo System status check failed, còn Instance status check passed. Điều này thường cho thấy gì?",
+        "options": [
+          "Sự cố phía AWS như mất nguồn, mất mạng hoặc lỗi host; stop/start hoặc recover để chuyển sang host khác",
+          "File system trong OS bị hỏng",
+          "Kernel OS không khởi động được",
+          "Security Group chặn traffic"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "System status check theo dõi EC2 host và dịch vụ EC2; lỗi ở đây là vấn đề phía AWS. File system hỏng hay kernel lỗi làm Instance status check fail."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi admin chỉnh cấu hình mạng trong OS, gán tĩnh public IPv4 vào interface, instance báo Instance status check failed. Cách xử lý phù hợp là gì?",
+        "options": [
+          "Chờ AWS thay thế host",
+          "Bật EC2 Auto Recovery để chuyển host",
+          "Sửa lại cấu hình mạng trong OS (bỏ public IPv4 khỏi interface) vì đây là lỗi bên trong instance",
+          "Gắn Elastic IP vào instance"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Instance status check fail là vấn đề của bạn (OS, file system, cấu hình mạng); OS không bao giờ được cấu hình public IPv4. Chuyển host không sửa được lỗi cấu hình OS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có một EC2 instance đơn lẻ chỉ dùng EBS. Họ muốn instance tự phục hồi khi host bị lỗi, giữ nguyên instance ID và IP, với ít vận hành nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo Auto Scaling Group với min = max = 1 ở nhiều AZ",
+          "Bật termination protection",
+          "Tạo snapshot hằng giờ",
+          "Tạo CloudWatch alarm trên status check với action Recover"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "EC2 Recover action chuyển instance sang host mới trong cùng AZ với cấu hình và IP addressing giữ nguyên. ASG sẽ thay bằng instance mới (ID mới) chứ không phục hồi instance cũ."
+      },
+      {
+        "type": "multi",
+        "q": "Những giới hạn nào đúng với EC2 Auto Recovery (action Recover)? (Chọn 2)",
+        "options": [
+          "Tự chuyển instance sang AZ khác khi cả AZ sập",
+          "Chỉ phục hồi trong cùng AZ, không bảo vệ khi toàn bộ AZ gặp sự cố",
+          "Hỗ trợ mọi instance type, kể cả đời cũ",
+          "Không hỗ trợ instance có instance store volume",
+          "Thay thế hoàn toàn nhu cầu dùng ASG và ELB cho HA"
+        ],
+        "answer": [
+          1,
+          3
+        ],
+        "explain": "Recover chỉ trong cùng AZ, chỉ cho instance type đời mới và instance toàn EBS (không instance store). Đây là tính năng hẹp, không phải giải pháp HA tổng thể."
+      },
+      {
+        "type": "single",
+        "q": "Admin cấu hình status check alarm với action Terminate cho một instance đơn lẻ không nằm trong ASG. Khi alarm kích hoạt, chuyện gì xảy ra?",
+        "options": [
+          "Instance được terminate và AWS tự launch instance thay thế",
+          "Instance bị terminate và không có gì thay thế, dịch vụ bị mất",
+          "Instance được chuyển sang host mới",
+          "Instance được reboot"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Terminate chỉ có ý nghĩa khi có cơ chế như Auto Scaling Group tự tạo instance thay thế. Trên instance đơn lẻ, terminate là mất instance."
+      }
+    ],
+    "Horizontal vs Vertical Scaling": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng legacy monolithic không thể sửa code, cần thêm CPU và memory. Công ty chấp nhận downtime ngắn trong cửa sổ bảo trì. Cách scale đơn giản nhất là gì?",
+        "options": [
+          "Thêm instance phía sau Application Load Balancer",
+          "Dùng Auto Scaling Group với target tracking",
+          "Chuyển session ra ElastiCache",
+          "Vertical scaling: đổi sang instance type/size lớn hơn"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Vertical scaling không cần sửa ứng dụng nên hợp với monolith, đổi lại cần reboot (downtime) và bị trần ở size lớn nhất. Horizontal yêu cầu ứng dụng hỗ trợ chạy nhiều bản và session off-host."
+      },
+      {
+        "type": "single",
+        "q": "Một website thương mại điện tử có lưu lượng tăng đột biến không đoán trước. Yêu cầu: không downtime khi scale và gần như không giới hạn capacity. Giải pháp nào phù hợp?",
+        "options": [
+          "Horizontal scaling: nhiều instance phía sau Elastic Load Balancer, quản lý bằng Auto Scaling Group",
+          "Vertical scaling lên instance lớn nhất trong family",
+          "Lên lịch resize instance mỗi đêm",
+          "Dùng một Dedicated Host lớn"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Horizontal scaling thêm/bớt instance mà không gián đoạn, gần như không giới hạn và phản ứng nhanh. Vertical cần reboot khi resize và có trần size."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi chuyển sang chạy nhiều instance phía sau load balancer, người dùng liên tục bị logout và mất giỏ hàng. Giải pháp kiến trúc bền vững nhất là gì?",
+        "options": [
+          "Quay lại một instance lớn duy nhất",
+          "Tăng instance size của từng instance",
+          "Lưu session bên ngoài instance, ví dụ trong DynamoDB hoặc ElastiCache, để instance trở thành stateless",
+          "Lưu session trên Instance Store"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Horizontal scaling cần off-host sessions để vào instance nào cũng được. Lưu session trên Instance Store vẫn là lưu trên từng host nên không giải quyết vấn đề."
+      },
+      {
+        "type": "single",
+        "q": "Nhược điểm nào thuộc về vertical scaling?",
+        "options": [
+          "Ứng dụng phải hỗ trợ chạy nhiều bản song song",
+          "Mỗi lần resize cần reboot, chi phí tăng không tuyến tính ở size lớn và có trần hiệu năng",
+          "Cần load balancer đứng trước các instance",
+          "Phải đưa session ra ngoài host"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Vertical scaling gây gián đoạn khi resize, instance lớn có premium và bị giới hạn ở size lớn nhất. Các phương án còn lại là yêu cầu của horizontal scaling."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng đang chạy trên 5 instance nhỏ giống nhau. Thêm 1 instance thì capacity tăng khoảng bao nhiêu, so với một bước vertical scaling thông thường?",
+        "options": [
+          "Tăng khoảng 100%, giống bước vertical",
+          "Tăng khoảng 5%, thấp hơn nhiều so với bước vertical",
+          "Tăng khoảng 20%, mịn hơn so với bước vertical thường gấp đôi tài nguyên",
+          "Không tăng cho tới khi reboot"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Horizontal scaling granular hơn: thêm 1 vào 5 instance là ~20%. Một bước vertical (ví dụ t3.large → t3.xlarge) thường gấp đôi vCPU và memory."
+      }
+    ],
+    "Instance Store": [
+      {
+        "type": "single",
+        "q": "Một EC2 instance M5 (chỉ EBS) đang chạy cần thêm instance store volume làm scratch space. Cách làm đúng là gì?",
+        "options": [
+          "Attach instance store volume vào instance đang chạy từ console",
+          "Launch instance mới với instance type có instance store (ví dụ M5d) và cấu hình instance store lúc launch",
+          "Stop instance rồi thêm instance store volume",
+          "Tạo snapshot rồi khôi phục thành instance store"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Instance store chỉ gắn được lúc launch, không thêm sau được (khác EBS), và chỉ có ở một số instance type (thường có chữ d). Instance store cũng không có snapshot."
+      },
+      {
+        "type": "multi",
+        "q": "Những sự kiện nào làm mất dữ liệu trên instance store volume? (Chọn 2)",
+        "options": [
+          "Reboot OS",
+          "Stop rồi start instance",
+          "Tạo EBS snapshot cho root volume",
+          "Đổi instance type (resize)",
+          "Gắn thêm một EBS volume"
+        ],
+        "answer": [
+          1,
+          3
+        ],
+        "explain": "Stop/start và resize khiến instance chuyển host và nhận volume ephemeral mới, trống. Reboot giữ instance trên host cũ nên dữ liệu còn nguyên."
+      },
+      {
+        "type": "single",
+        "q": "Một instance type công ty đang dùng đã có sẵn 2 instance store volume NVMe chưa dùng. Ứng dụng cần không gian scratch tạm cho xử lý dữ liệu, có thể tái tạo. Công ty muốn tối ưu chi phí. Nên làm gì?",
+        "options": [
+          "Dùng instance store volume có sẵn làm scratch space",
+          "Gắn thêm io2 volume cho scratch",
+          "Gắn thêm gp3 volume cho scratch",
+          "Dùng EFS làm scratch"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Instance store đã bao gồm trong giá instance ('use it or lose it') và có hiệu năng cao nhất, hợp dữ liệu tạm có thể tái tạo. Gắn thêm EBS/EFS là tốn chi phí không cần thiết."
+      },
+      {
+        "type": "single",
+        "q": "Làm sao nhận biết nhanh một instance type có local NVMe instance store qua tên?",
+        "options": [
+          "Có chữ g sau generation, ví dụ m6g",
+          "Có chữ a sau generation, ví dụ m5a",
+          "Có chữ d sau generation, ví dụ m5dn hoặc r5d",
+          "Có chữ n sau generation, ví dụ c5n"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "d = local NVMe storage; g = Graviton (ARM), a = AMD, n = network optimized."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty lưu dữ liệu quan trọng trên instance store và muốn sao lưu bằng tính năng của AWS. Đánh giá nào đúng?",
+        "options": [
+          "Dùng EBS snapshot cho instance store volume",
+          "Bật Fast Snapshot Restore cho instance store",
+          "Bật replication tự động giữa các AZ cho instance store",
+          "Instance store không hỗ trợ snapshot; phải tự replicate hoặc copy dữ liệu sang EBS/S3, và không nên đặt dữ liệu không thể tái tạo trên instance store"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Instance store là ephemeral và không có snapshot; muốn bảo vệ dữ liệu phải tự replicate hoặc copy sang EBS/S3. Dữ liệu cần persistent nên đặt trên EBS."
+      }
+    ],
+    "Reserved Instances and Savings Plans": [
+      {
+        "type": "single",
+        "q": "Một batch job chạy hằng ngày lúc 23:00 trong 5 giờ, kéo dài ít nhất một năm. Theo khóa học, lựa chọn mua nào phù hợp nhất?",
+        "options": [
+          "Standard Reserved Instance 1 năm",
+          "Spot Instances",
+          "Scheduled Reserved Instances",
+          "Dedicated Hosts"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Scheduled Reserved cho nhu cầu dài hạn nhưng không liên tục, theo khung giờ lặp lại (khóa học vẫn dạy dù hiện nay AWS không còn bán). Standard Reserved hợp tải 24/7 nên sẽ lãng phí 19 giờ mỗi ngày."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần chắc chắn launch được 10 instance ở một AZ cụ thể cho một sự kiện có thời lượng chưa xác định, và không thể cam kết 1 hoặc 3 năm. Giải pháp nào phù hợp?",
+        "options": [
+          "On-Demand Capacity Reservation",
+          "Regional Reserved Instances",
+          "Spot Instances",
+          "Compute Savings Plan"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "On-Demand Capacity Reservation giữ capacity ở một AZ mà không cần cam kết dài hạn (không giảm giá, trả tiền dù không dùng). Regional RI không giữ capacity; Savings Plans chỉ giảm giá."
+      },
+      {
+        "type": "single",
+        "q": "Một tổ chức đang chuyển dần workload từ EC2 sang Fargate và Lambda trong 3 năm tới, muốn có mức giảm giá nhờ cam kết chi tiêu. Lựa chọn nào phù hợp?",
+        "options": [
+          "EC2 Instance Savings Plan",
+          "Standard Reserved Instances",
+          "Zonal Reserved Instances",
+          "Compute Savings Plan"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Compute Savings Plan áp dụng cho EC2, Fargate và Lambda, linh hoạt nhất (giảm tới ~66%). EC2 Instance Savings Plan giảm sâu hơn (~72%) nhưng chỉ áp dụng cho EC2."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty mua Regional Reserved Instances và cho rằng capacity đã được đảm bảo ở mọi AZ. Họ cần cả giảm giá lẫn giữ capacity ở một AZ cụ thể. Nên chọn gì?",
+        "options": [
+          "Giữ Regional RI vì đã giữ capacity ở mọi AZ",
+          "Zonal Reserved Instances ở AZ đó",
+          "Compute Savings Plan",
+          "Spot Instances với max price cao"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Regional RI chỉ giảm giá ở mọi AZ, không reserve capacity. Zonal RI cho cả giảm giá và capacity, nhưng chỉ trong AZ đã chọn."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cam kết Savings Plan $20/giờ. Trong một giờ, lượng compute sử dụng (tính theo giá Savings Plan) lên tới $26. Phần vượt được tính thế nào?",
+        "options": [
+          "Phần vượt bị chặn, instance không launch được",
+          "Phần vượt được tính theo giá Spot",
+          "Phần vượt được tính theo giá On-Demand",
+          "Phần vượt được trừ vào cam kết của giờ tiếp theo"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Usage được tính theo giá Savings Plan cho tới hết mức cam kết mỗi giờ; vượt mức thì trả giá On-Demand."
+      }
+    ],
+    "Storage Fundamentals": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng ghi dữ liệu với IO size 16 KB và đạt 100 IOPS. Throughput tương ứng là bao nhiêu?",
+        "options": [
+          "16 MB/s",
+          "1.6 MB/s",
+          "100 MB/s",
+          "160 KB/s"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Throughput = IO size × IOPS = 16 KB × 100 = 1,600 KB/s ≈ 1.6 MB/s."
+      },
+      {
+        "type": "single",
+        "q": "Một nhóm EC2 instance Linux cần cùng truy cập một file system dùng chung với cấu trúc thư mục qua mạng. Loại storage nào phù hợp?",
+        "options": [
+          "Block storage (EBS gp3)",
+          "Object storage (S3)",
+          "Instance Store",
+          "File storage (EFS)"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "File storage cung cấp file system dựng sẵn có cấu trúc thư mục, chia sẻ được cho nhiều client. EBS là block storage, mặc định gắn một instance; S3 là object, không mount như file system."
+      },
+      {
+        "type": "single",
+        "q": "Loại storage nào có thể dùng làm boot volume cho EC2 instance?",
+        "options": [
+          "Block storage như EBS hoặc Instance Store",
+          "File storage như EFS",
+          "Object storage như S3",
+          "Cả file storage và object storage"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Chỉ block storage mới boot được vì OS cần truy cập mức thấp vào storage. File (EFS/FSx) và object (S3) không boot được."
+      },
+      {
+        "type": "single",
+        "q": "Dữ liệu của một ứng dụng phải sống sót khi EC2 host bị lỗi phần cứng hoặc instance chuyển sang host khác. Loại storage nào phù hợp?",
+        "options": [
+          "Direct-attached storage (Instance Store)",
+          "RAM của instance",
+          "Network-attached storage (EBS), vốn persistent",
+          "Ephemeral volume ephemeral0"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "EBS là network-attached và persistent, tách khỏi phần cứng host. Instance Store là direct-attached và ephemeral, mất dữ liệu khi host hỏng hoặc instance đổi host."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng cần lưu hàng triệu ảnh, cho hàng triệu người dùng truy cập đồng thời ở quy mô web, không cần mount vào OS. Loại storage nào phù hợp nhất?",
+        "options": [
+          "Block storage (EBS)",
+          "Object storage (S3)",
+          "File storage (EFS)",
+          "Instance Store"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Object storage là tập hợp phẳng object truy cập theo key, cực kỳ scalable cho truy cập đồng thời lớn. Block và file storage không được thiết kế cho quy mô web như vậy."
+      }
+    ],
+    "Virtualization": [
+      {
+        "type": "single",
+        "q": "Trong EC2, công nghệ SR-IOV được hiện thực dưới tên tính năng nào?",
+        "options": [
+          "EBS Multi-Attach",
+          "Elastic Network Interface",
+          "Instance Metadata Service",
+          "Enhanced Networking"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "SR-IOV cho phép card mạng vật lý tự chia thành nhiều card logic gán thẳng cho guest; trong EC2 đó chính là Enhanced Networking. ENI là network interface logic, không phải SR-IOV."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng HPC cần throughput mạng cao, latency thấp và ổn định ngay cả khi tải cao, đồng thời ít tốn CPU host cho I/O. Giải pháp nào phù hợp?",
+        "options": [
+          "Dùng instance hỗ trợ Enhanced Networking (SR-IOV), thường kết hợp cluster placement group",
+          "Dùng instance chạy trên emulated virtualization",
+          "Gắn thêm nhiều Elastic IP",
+          "Dùng instance type T3 để có burst credit"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Enhanced Networking (SR-IOV) cho tốc độ cao hơn, latency thấp và nhất quán, ít tốn CPU host; thường đi cùng cluster placement group. Burst credit của T3 là về CPU, không phải mạng."
+      },
+      {
+        "type": "single",
+        "q": "Đặc điểm nào mô tả paravirtualization?",
+        "options": [
+          "Guest OS không sửa đổi, hypervisor dịch lệnh privileged bằng binary translation",
+          "CPU tự bẫy lệnh privileged và chuyển cho hypervisor",
+          "Mã nguồn guest OS được sửa để gọi hypercall tới hypervisor thay cho lệnh privileged",
+          "Card mạng tự chia thành nhiều card logic cho từng guest"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Paravirtualization sửa guest OS để dùng hypercall (và paravirtual driver), nên chỉ áp dụng cho OS sửa được. Binary translation là emulated virtualization; CPU trap là hardware-assisted; chia card logic là SR-IOV."
+      },
+      {
+        "type": "single",
+        "q": "Vì sao emulated (software) virtualization không phù hợp cho workload nặng?",
+        "options": [
+          "Vì phải sửa mã nguồn guest OS",
+          "Vì hypervisor dịch lệnh privileged bằng binary translation hoàn toàn bằng phần mềm, hiệu năng có thể giảm một nửa hoặc hơn",
+          "Vì cần CPU hỗ trợ tập lệnh ảo hóa",
+          "Vì card mạng phải hỗ trợ SR-IOV"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Emulated virtualization không cần sửa OS nhưng chặn và dịch lệnh privileged bằng phần mềm nên rất chậm. Sửa guest OS là đặc điểm của paravirtualization."
+      },
+      {
+        "type": "single",
+        "q": "Hardware-assisted virtualization gần như loại bỏ chi phí xử lý lệnh privileged. Vấn đề hiệu năng còn lại mà SR-IOV giải quyết là gì?",
+        "options": [
+          "Guest OS phải được sửa để dùng hypercall",
+          "CPU không trap được lệnh privileged",
+          "Không chạy được nhiều guest OS trên một host",
+          "I/O (network, disk) vẫn phải đi qua một lớp phần mềm trung gian dẫn về card vật lý chung, làm giảm hiệu năng và tốn CPU host"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Với hardware-assisted, thiết bị I/O trong VM vẫn là thiết bị logic qua lớp phần mềm dẫn về một card vật lý. SR-IOV làm chính thiết bị phần cứng virtualization-aware nên guest dùng card logic trực tiếp."
+      }
+    ]
+  }
+}

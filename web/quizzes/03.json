@@ -1,0 +1,757 @@
+{
+  "chapter": "03 AWS Fundamentals",
+  "lessons": {
+    "AWS Global Infrastructure": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy 6 EC2 instance cho ứng dụng web ở region Sydney (ap-southeast-2, có 3 AZ). Yêu cầu: ứng dụng vẫn phục vụ được khi một AZ gặp sự cố, với chi phí thấp nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Dồn cả 6 instance vào một AZ và nâng lên instance type lớn hơn",
+          "Phân tán instance qua nhiều AZ trong region, ví dụ 2 instance mỗi AZ",
+          "Nhân bản toàn bộ hạ tầng sang một region thứ hai ở chế độ active/active",
+          "Chạy instance tại các edge location gần người dùng"
+        ],
+        "answer": [1],
+        "explain": "Chịu được mất một AZ chỉ cần trải tài nguyên qua nhiều AZ trong cùng region (mất 1 AZ vẫn còn 4/6 server). Multi-region chịu được cả mất region nhưng tốn kém hơn mức yêu cầu."
+      },
+      {
+        "type": "single",
+        "q": "Một ngân hàng ở Đức có quy định bắt buộc dữ liệu khách hàng phải lưu trữ trong lãnh thổ Đức. Kiến trúc sư nên làm gì?",
+        "options": [
+          "Triển khai ở us-east-1 và bật mã hóa dữ liệu at rest",
+          "Lưu dữ liệu tại một CloudFront edge location đặt ở Đức",
+          "Triển khai tài nguyên ở region Frankfurt (eu-central-1); dữ liệu mặc định không rời region nếu không chủ động cấu hình",
+          "Dùng Route 53 geolocation routing để buộc dữ liệu lưu ở Đức"
+        ],
+        "answer": [2],
+        "explain": "Region mang lại geopolitical separation: dữ liệu chịu luật nơi đặt region và AWS cam kết không chuyển dữ liệu ra khỏi region nếu bạn không cấu hình. Edge location chỉ dùng phân phối nội dung/cache, không phải nơi lưu trữ dữ liệu chính."
+      },
+      {
+        "type": "multi",
+        "q": "Những dịch vụ nào là globally resilient (một database toàn cục, replicate qua nhiều region, không cần chọn region)? (Chọn 2)",
+        "options": [
+          "IAM",
+          "Amazon EC2",
+          "Route 53",
+          "Amazon RDS",
+          "Amazon EBS"
+        ],
+        "answer": [0, 2],
+        "explain": "IAM và Route 53 là dịch vụ global, chịu được mất nhiều region. RDS là region resilient; EC2 và EBS là AZ resilient."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào về Availability Zone (AZ) là đúng?",
+        "options": [
+          "AZ là khái niệm logic: một AZ có thể là một data center hoặc một phần của nhiều data center, và các AZ được nối bằng mạng dự phòng tốc độ cao",
+          "Mỗi AZ tương ứng chính xác với một data center vật lý",
+          "Mọi region đều có đúng 3 AZ",
+          "Các AZ trong cùng region kết nối với nhau qua Internet công cộng"
+        ],
+        "answer": [0],
+        "explain": "AZ là phần compute, storage, networking, power cô lập trong region, nhưng không bằng một data center; AWS không công bố cấu trúc vật lý. Số AZ mỗi region thay đổi từ 2 đến 6, nối bằng mạng riêng của AWS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty streaming video có người xem trên toàn thế giới và muốn giảm độ trễ tải nội dung với chi phí vận hành thấp nhất. Thành phần hạ tầng AWS nào phù hợp nhất?",
+        "options": [
+          "Triển khai cụm EC2 ở mọi region AWS",
+          "Mở rộng ứng dụng ra tất cả AZ trong một region",
+          "Đặt EC2 trong Local Zone ở từng thành phố",
+          "Dùng CloudFront để cache nội dung tại các edge location gần người xem"
+        ],
+        "answer": [3],
+        "explain": "Edge location nhiều hơn region rất nhiều, nằm gần người dùng và chuyên phân phối nội dung (CloudFront) nên latency thấp. Triển khai EC2 ở mọi region hay Local Zone đều tốn kém và phức tạp hơn nhiều cho bài toán phân phối nội dung."
+      }
+    ],
+    "AWS Local Zones": [
+      {
+        "type": "single",
+        "q": "Một công ty giao dịch tài chính có văn phòng ở Los Angeles. Hạ tầng hiện chạy ở region us-west-2 (Oregon), cách văn phòng hàng trăm km. Họ cần độ trễ thấp nhất có thể giữa văn phòng và các EC2 instance. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Đặt CloudFront distribution phía trước các EC2 instance ở us-west-2",
+          "Dùng AWS Global Accelerator trỏ về us-west-2",
+          "Tạo subnet trong Local Zone us-west-2-lax-1a để mở rộng VPC và chạy EC2 tại đó",
+          "Dùng cluster placement group trong us-west-2"
+        ],
+        "answer": [2],
+        "explain": "Local Zone là hạ tầng AWS đặt tại thành phố, mở rộng VPC của parent region bằng subnet, cho độ trễ thấp nhất tới người dùng ở đó. CloudFront và Global Accelerator chỉ tối ưu đường đi, compute vẫn nằm ở Oregon xa văn phòng."
+      },
+      {
+        "type": "single",
+        "q": "Local Zone có tên `us-west-2-las-1` nằm ở đâu và parent region của nó là gì?",
+        "options": [
+          "Los Angeles, parent region us-west-1 (N. California)",
+          "Las Vegas, parent region us-west-2 (Oregon)",
+          "Las Vegas, parent region us-west-1 (N. California)",
+          "Los Angeles, parent region us-west-2 (Oregon)"
+        ],
+        "answer": [1],
+        "explain": "Tên Local Zone có dạng <region cha>-<mã thành phố>-<số>: `las` là Las Vegas và tiền tố `us-west-2` là parent region Oregon. `lax` mới là Los Angeles."
+      },
+      {
+        "type": "single",
+        "q": "Một EBS volume gắn với EC2 instance chạy trong Local Zone. Khi tạo EBS snapshot, snapshot được lưu ở đâu?",
+        "options": [
+          "Trên instance store của host trong Local Zone",
+          "Trên một EBS volume khác trong cùng Local Zone",
+          "Trong S3 của region có độ trễ thấp nhất tới Local Zone",
+          "Trong S3 của parent region"
+        ],
+        "answer": [3],
+        "explain": "Một số chức năng của Local Zone vẫn dựa vào parent region; điển hình là EBS snapshot được lưu vào S3 của parent region nên vẫn hưởng replication qua nhiều AZ của region đó."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty triển khai toàn bộ ứng dụng vào một Local Zone duy nhất để có độ trễ thấp. Yêu cầu mới là ứng dụng phải highly available. Nhận định nào đúng?",
+        "options": [
+          "Local Zone chỉ là một zone, không có resilience sẵn; cần thiết kế thêm (nhiều zone hoặc dùng AZ của region) để đạt HA",
+          "Local Zone tự replicate tài nguyên qua 3 AZ nên đã HA sẵn",
+          "Bật Direct Connect tới Local Zone sẽ làm ứng dụng fault tolerant",
+          "Local Zone có Multi-AZ tích hợp giống một region đầy đủ"
+        ],
+        "answer": [0],
+        "explain": "Local Zone giống một AZ đặt gần bạn: chỉ là một zone, không có resilience sẵn. Direct Connect chỉ cải thiện kết nối, không tạo redundancy cho hạ tầng."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về AWS Local Zones là đúng? (Chọn 2)",
+        "options": [
+          "Mọi dịch vụ AWS đều có sẵn ở mọi Local Zone mà không cần opt-in",
+          "Subnet trong Local Zone là phần mở rộng của VPC ở parent region và có kết nối private với phần còn lại của VPC",
+          "Local Zone chỉ cache nội dung tĩnh giống một CloudFront edge location, không chạy được compute",
+          "Local Zone hoạt động hoàn toàn độc lập, không gắn với region nào",
+          "Local Zone thường hỗ trợ Direct Connect cho kết nối riêng hiệu năng cao từ văn phòng"
+        ],
+        "answer": [1, 4],
+        "explain": "Local Zone gắn với parent region, mở rộng VPC bằng subnet và hỗ trợ Direct Connect. Khác edge location, Local Zone chạy được EC2/subnet; nhưng hỗ trợ dịch vụ hạn chế và nhiều dịch vụ phải opt-in."
+      }
+    ],
+    "AWS Public vs Private Services": [
+      {
+        "type": "single",
+        "q": "Theo mô hình ba network zone của AWS, Amazon S3 chạy trong zone nào?",
+        "options": [
+          "Public Internet zone",
+          "AWS Public Zone",
+          "AWS Private Zone (bên trong VPC)",
+          "Default VPC của từng account"
+        ],
+        "answer": [1],
+        "explain": "S3 là public service, có public endpoint chạy trong AWS Public Zone: mạng AWS nối với Internet nhưng không phải một phần của Internet. AWS Private Zone là các VPC, nơi chạy private service như EC2."
+      },
+      {
+        "type": "single",
+        "q": "Một nhân viên lo ngại vì S3 là ‘public service’ nên dữ liệu trong bucket có thể bị bất kỳ ai trên Internet đọc. Nhận định nào đúng?",
+        "options": [
+          "Đúng, mọi object trong S3 mặc định đọc được ẩn danh qua Internet",
+          "S3 chạy trong VPC của khách hàng nên chỉ truy cập được từ VPC",
+          "Public chỉ là khái niệm networking (có public endpoint); truy cập dữ liệu vẫn cần được authorize, mặc định không identity nào ngoài root user có quyền",
+          "S3 chỉ được coi là public khi truy cập qua Direct Connect public VIF"
+        ],
+        "answer": [2],
+        "explain": "Public/private trong AWS là chuyện đường mạng, không phải quyền. Truy cập cần cả đường mạng tới được và được authorize (IAM policy, bucket policy); mặc định S3 private."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 instance trong VPC có Internet Gateway (IGW) và public IPv4 gọi API của S3. Lưu lượng này đi như thế nào?",
+        "options": [
+          "Đi qua IGW vào AWS Public Zone, không chạm vào Public Internet",
+          "Đi qua IGW ra Public Internet rồi mới quay lại S3",
+          "Đi trực tiếp trong AWS Private Zone vì S3 nằm trong VPC",
+          "Bắt buộc phải đi qua NAT Gateway rồi ra Internet"
+        ],
+        "answer": [0],
+        "explain": "Tài nguyên trong VPC gọi AWS public service qua IGW thì lưu lượng nằm trên mạng AWS (AWS Public Zone), không đi qua Public Internet. S3 không nằm trong VPC."
+      },
+      {
+        "type": "single",
+        "q": "Các EC2 instance trong private subnet (không có route tới IGW hay NAT Gateway) cần đọc dữ liệu từ S3. Giải pháp nào có chi phí và vận hành thấp nhất?",
+        "options": [
+          "Triển khai NAT Gateway trong public subnet và thêm route",
+          "Gán public IPv4 cho các instance",
+          "Thiết lập Direct Connect public VIF",
+          "Tạo Gateway VPC Endpoint cho S3 và cập nhật route table"
+        ],
+        "answer": [3],
+        "explain": "Gateway VPC Endpoint cho phép subnet private truy cập S3/DynamoDB mà không cần IGW/NAT và không tốn phí giờ như NAT Gateway. Gán public IP vô ích khi subnet không có route ra IGW."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty muốn hệ thống on-premises truy cập private tới các EC2 instance trong VPC (không đi qua public endpoint). Những lựa chọn nào phù hợp? (Chọn 2)",
+        "options": [
+          "Internet Gateway",
+          "AWS Site-to-Site VPN",
+          "Gateway VPC Endpoint",
+          "AWS Direct Connect",
+          "NAT Gateway"
+        ],
+        "answer": [1, 3],
+        "explain": "On-premises chỉ vào được VPC private khi có kết nối riêng ảo (Site-to-Site VPN) hoặc vật lý (Direct Connect). IGW/NAT phục vụ đường ra Internet, Gateway Endpoint phục vụ truy cập S3/DynamoDB từ VPC."
+      }
+    ],
+    "CloudFormation Basics": [
+      {
+        "type": "single",
+        "q": "Section nào là bắt buộc duy nhất trong một CloudFormation template?",
+        "options": [
+          "Parameters",
+          "AWSTemplateFormatVersion",
+          "Outputs",
+          "Resources"
+        ],
+        "answer": [3],
+        "explain": "Resources là section bắt buộc duy nhất và phải có ít nhất một resource. AWSTemplateFormatVersion là tùy chọn; nếu bỏ trống CFN tự giả định."
+      },
+      {
+        "type": "single",
+        "q": "Một template có cả `AWSTemplateFormatVersion` và `Description`. Quy tắc nào về vị trí của `Description` là đúng?",
+        "options": [
+          "Description phải là dòng đầu tiên của template",
+          "Description phải đứng ngay sau AWSTemplateFormatVersion",
+          "Description phải đặt sau section Resources",
+          "Không có ràng buộc thứ tự nào giữa hai section này"
+        ],
+        "answer": [1],
+        "explain": "Đây là bẫy hay gặp: nếu có cả hai thì Description phải đứng ngay sau AWSTemplateFormatVersion. Các section khác không có ràng buộc này."
+      },
+      {
+        "type": "single",
+        "q": "Một nhóm dùng một CloudFormation template để tạo EC2 instance ở nhiều region. Template hiện hard-code AMI ID nên bị lỗi khi deploy ở region khác. Cách nào giúp template portable với ít công sức vận hành nhất?",
+        "options": [
+          "Sao chép AMI sang từng region và sửa template thủ công mỗi lần deploy",
+          "Đưa AMI ID vào section Outputs để các stack khác dùng lại",
+          "Dùng parameter đọc SSM Parameter Store public parameter để tự lấy AMI Amazon Linux 2 mới nhất của region đang deploy",
+          "Tạo một template riêng cho mỗi region"
+        ],
+        "answer": [2],
+        "explain": "Parameter kiểu SSM public parameter tự resolve AMI mới nhất theo region nên template chạy được ở mọi region (Mappings cũng là một lựa chọn). Outputs chỉ trả giá trị sau khi stack tạo xong, không giải quyết việc chọn AMI."
+      },
+      {
+        "type": "single",
+        "q": "Khi tạo stack từ một template có tạo IAM Role và Instance Profile, CloudFormation yêu cầu thao tác gì để tiếp tục?",
+        "options": [
+          "Xác nhận capability CAPABILITY_IAM (hoặc CAPABILITY_NAMED_IAM)",
+          "Bật termination protection cho stack",
+          "Thêm DeletionPolicy: Retain cho IAM Role",
+          "Tạo change set trước khi tạo stack"
+        ],
+        "answer": [0],
+        "explain": "Tạo IAM resource được CFN coi là thay đổi rủi ro cao nên phải xác nhận rõ CAPABILITY_IAM/CAPABILITY_NAMED_IAM. DeletionPolicy chỉ liên quan việc giữ resource khi xóa stack."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư xóa định nghĩa EC2 instance khỏi template rồi update stack. Điều gì xảy ra?",
+        "options": [
+          "Instance vẫn chạy nhưng không còn được stack quản lý",
+          "Update stack thất bại vì không thể xóa resource khỏi stack đang tồn tại",
+          "CloudFormation xóa (terminate) physical instance để logical và physical resource khớp nhau",
+          "CloudFormation chỉ stop instance và giữ lại EBS volume"
+        ],
+        "answer": [2],
+        "explain": "Nhiệm vụ của CFN là giữ logical và physical resource đồng bộ: xóa logical resource khỏi template rồi áp lại thì CFN xóa physical resource tương ứng. Muốn giữ lại khi xóa thì phải dùng DeletionPolicy."
+      }
+    ],
+    "CloudWatch Basics": [
+      {
+        "type": "single",
+        "q": "Đội vận hành cần theo dõi memory utilization và dung lượng đĩa đã dùng bên trong OS của các EC2 instance Linux. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Bật detailed monitoring cho các instance",
+          "Cài CloudWatch Agent trên instance và cấp quyền IAM để gửi metric lên CloudWatch",
+          "Bật AWS CloudTrail để ghi lại metric hệ điều hành",
+          "Dùng metric MemoryUtilization có sẵn trong namespace AWS/EC2"
+        ],
+        "answer": [1],
+        "explain": "Metric bên trong OS (memory, disk đã dùng, process) AWS không nhìn thấy từ hypervisor nên cần CloudWatch Agent. Detailed monitoring chỉ tăng tần suất metric có sẵn lên 1 phút, không thêm metric memory."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn nhận email thông báo khi CPUUtilization của một EC2 instance vượt 80%. Giải pháp nào đơn giản nhất?",
+        "options": [
+          "Tạo trail CloudTrail và gửi log tới SNS",
+          "Tạo EventBridge scheduled rule chạy mỗi 5 phút để kiểm tra CPU",
+          "Tạo CloudWatch Alarm trên metric CPUUtilization với action gửi SNS notification tới email",
+          "Tạo AWS Config rule giám sát CPU"
+        ],
+        "answer": [2],
+        "explain": "Thông báo khi metric vượt ngưỡng là đúng vai trò của CloudWatch Alarm + SNS. CloudTrail ghi lại ai gọi API gì, không phải metric hiệu năng."
+      },
+      {
+        "type": "single",
+        "q": "Ngay sau khi tạo, một CloudWatch Alarm hiển thị trạng thái INSUFFICIENT_DATA. Điều này nghĩa là gì?",
+        "options": [
+          "Alarm cấu hình sai và cần tạo lại",
+          "Metric đã vi phạm ngưỡng và action sắp được thực thi",
+          "Instance đang bị stop nên không gửi metric",
+          "Chưa đủ dữ liệu để đánh giá tiêu chí; thường gặp khi alarm mới được tạo"
+        ],
+        "answer": [3],
+        "explain": "INSUFFICIENT_DATA chỉ là trạng thái chưa đủ dữ liệu để đánh giá, không phải lỗi. Vi phạm ngưỡng là trạng thái ALARM."
+      },
+      {
+        "type": "single",
+        "q": "Metric CPUUtilization nhận dữ liệu từ nhiều EC2 instance. CloudWatch dùng gì để lọc dữ liệu của một instance cụ thể?",
+        "options": [
+          "Dimension, ví dụ cặp name/value InstanceId",
+          "Namespace AWS/EC2",
+          "Log stream",
+          "Alarm state"
+        ],
+        "answer": [0],
+        "explain": "Dimension là cặp name/value gửi kèm data point (InstanceId, InstanceType...) để tách dữ liệu trong cùng một metric. Namespace chỉ là container chứa nhiều metric, không phân biệt instance."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng trên EC2 cần metric CPU với độ chi tiết 1 phút thay vì mặc định. Kiến trúc sư nên làm gì?",
+        "options": [
+          "Không cần làm gì vì basic monitoring đã có chu kỳ 1 phút",
+          "Bật detailed monitoring cho instance (có phí thêm)",
+          "Tạo custom namespace bắt đầu bằng AWS/ để gửi metric chi tiết",
+          "Chuyển sang dùng CloudWatch Events để lấy metric"
+        ],
+        "answer": [1],
+        "explain": "Basic monitoring có chu kỳ 5 phút; detailed monitoring cho 1 phút và tính phí thêm. Namespace dạng AWS/<service> được dành riêng cho AWS, custom metric phải dùng namespace của bạn."
+      }
+    ],
+    "DNS Record Types": [
+      {
+        "type": "single",
+        "q": "Quản trị viên tạo record CNAME `www` trỏ thẳng tới địa chỉ 203.0.113.10 nhưng cấu hình không hợp lệ. Nên dùng loại record nào thay thế?",
+        "options": [
+          "AAAA record",
+          "MX record",
+          "A record",
+          "NS record"
+        ],
+        "answer": [2],
+        "explain": "CNAME chỉ trỏ tới một tên khác, không bao giờ trỏ tới IP. Map tên tới IPv4 dùng A record; AAAA dành cho IPv6."
+      },
+      {
+        "type": "single",
+        "q": "Domain có hai MX record: `MX 10 mail` và `MX 20 mail.other.domain.`. Mail server gửi thư sẽ xử lý thế nào?",
+        "options": [
+          "Dùng mail.other.domain trước vì priority 20 lớn hơn",
+          "Chia đều thư giữa hai server",
+          "Chỉ dùng mail.other.domain vì là FQDN có dấu chấm cuối",
+          "Dùng mail.<domain> (priority 10) trước; record priority 20 chỉ dùng khi record trước không hoạt động"
+        ],
+        "answer": [3],
+        "explain": "Với MX, số priority càng nhỏ càng được ưu tiên. Chia đều chỉ xảy ra khi các record có priority bằng nhau."
+      },
+      {
+        "type": "single",
+        "q": "Khi thêm domain vào Google Workspace hoặc Amazon WorkMail, nhà cung cấp yêu cầu thêm một chuỗi ngẫu nhiên vào DNS để chứng minh bạn sở hữu domain. Loại record nào được dùng?",
+        "options": [
+          "MX record",
+          "NS record",
+          "TXT record",
+          "CNAME record"
+        ],
+        "answer": [2],
+        "explain": "TXT record gắn text tùy ý vào domain; use case phổ biến nhất là xác minh quyền sở hữu domain (ngoài ra còn SPF chống spam). MX chỉ dùng để tìm mail server."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty sẽ chuyển website sang IP mới vào tuần sau. A record hiện có TTL 86400 giây. Họ muốn người dùng chuyển sang IP mới nhanh nhất có thể sau khi đổi. Nên làm gì?",
+        "options": [
+          "Hạ TTL của record xuống thấp vài ngày trước đợt thay đổi",
+          "Tăng TTL lên cao hơn để resolver cache lâu hơn",
+          "Đổi NS record của domain sang name server khác",
+          "Xóa A record rồi tạo lại đúng lúc chuyển đổi"
+        ],
+        "answer": [0],
+        "explain": "Resolver cache kết quả theo TTL; hạ TTL trước khi thay đổi để cache cũ hết hạn nhanh. Xóa rồi tạo lại record không giúp gì vì resolver vẫn giữ cache cũ đến khi hết TTL."
+      },
+      {
+        "type": "single",
+        "q": "Một client hỏi resolver của ISP tên `www.amazon.com`; resolver trả kết quả ngay từ cache vì vẫn còn trong TTL. Đây là loại câu trả lời gì?",
+        "options": [
+          "Authoritative answer",
+          "Non-authoritative answer",
+          "Delegation (NS) response",
+          "Câu trả lời từ root zone"
+        ],
+        "answer": [1],
+        "explain": "Câu trả lời từ cache của resolver là non-authoritative. Authoritative answer chỉ đến từ name server host zone của domain sau khi walking the tree."
+      }
+    ],
+    "Default VPC": [
+      {
+        "type": "single",
+        "q": "Cấu trúc mạng của Default VPC trong mọi region là gì?",
+        "options": [
+          "CIDR 10.0.0.0/16, một subnet /24 mỗi AZ",
+          "CIDR 192.168.0.0/16, một subnet /20 mỗi AZ",
+          "CIDR 172.16.0.0/12, một subnet /16 mỗi AZ",
+          "CIDR 172.31.0.0/16, một subnet /20 mỗi AZ"
+        ],
+        "answer": [3],
+        "explain": "Default VPC luôn dùng 172.31.0.0/16 ở mọi region với một subnet /20 mỗi AZ (một /16 chứa được 16 subnet /20)."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về số lượng Default VPC?",
+        "options": [
+          "Mỗi region có đúng một Default VPC và không thể xóa",
+          "Mỗi region có tối đa một Default VPC; có thể xóa và tạo lại từ console",
+          "Mỗi region có tối đa 5 Default VPC",
+          "Mỗi AZ có một Default VPC riêng"
+        ],
+        "answer": [1],
+        "explain": "Tối đa một Default VPC mỗi region (có thể là 0 nếu đã xóa) và tạo lại bằng Actions → Create default VPC. Custom VPC thì tạo được nhiều trong một region."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chuẩn bị chạy production và cần kết nối hybrid với mạng on-premises đang dùng dải 172.31.0.0/16. Lựa chọn VPC nào phù hợp?",
+        "options": [
+          "Dùng Default VPC vì đã có sẵn IGW và public subnet",
+          "Xóa Default VPC rồi tạo lại để nhận một CIDR khác",
+          "Tạo custom VPC với CIDR không trùng với mạng on-premises",
+          "Dùng Default VPC và cấu hình subnet tự gán public IPv4 cho on-premises"
+        ],
+        "answer": [2],
+        "explain": "Default VPC có CIDR cố định 172.31.0.0/16 nên trùng với on-prem và không phù hợp production; tạo lại vẫn ra đúng CIDR cũ. Custom VPC cho phép tự chọn CIDR và cấu hình đầy đủ cho hybrid."
+      },
+      {
+        "type": "multi",
+        "q": "Những thành phần nào được tạo sẵn cùng Default VPC? (Chọn 2)",
+        "options": [
+          "Internet Gateway",
+          "NAT Gateway",
+          "Default Security Group",
+          "Gateway VPC Endpoint cho S3",
+          "Site-to-Site VPN connection"
+        ],
+        "answer": [0, 2],
+        "explain": "Default VPC đi kèm IGW, default Security Group và default NACL, subnet tự gán public IPv4. NAT Gateway, VPC endpoint hay VPN phải tự tạo."
+      },
+      {
+        "type": "single",
+        "q": "Một AZ trong region gặp sự cố. Điều gì xảy ra với Default VPC của region đó?",
+        "options": [
+          "Subnet trong AZ bị sự cố hỏng theo, các subnet ở AZ khác vẫn hoạt động vì VPC là region resilient còn subnet là AZ resilient",
+          "Toàn bộ Default VPC ngừng hoạt động vì VPC nằm trong một AZ",
+          "Subnet tự động di chuyển sang AZ khác còn hoạt động",
+          "Không ảnh hưởng gì vì subnet được replicate qua mọi AZ"
+        ],
+        "answer": [0],
+        "explain": "Mỗi subnet nằm trong đúng một AZ và không đổi được AZ; VPC trải qua nhiều AZ của region. Vì vậy mất một AZ chỉ làm hỏng subnet ở AZ đó."
+      }
+    ],
+    "EC2 Basics": [
+      {
+        "type": "single",
+        "q": "Một công ty đã stop toàn bộ EC2 instance của môi trường test nhưng hóa đơn vẫn có phí EC2 liên quan. Nguyên nhân nhiều khả năng nhất là gì?",
+        "options": [
+          "CPU vẫn bị tính tiền khi instance ở trạng thái stopped",
+          "EBS volume của instance vẫn được cấp phát và tính phí storage",
+          "Memory được giữ chỗ nên vẫn bị tính tiền",
+          "Instance stopped vẫn bị tính phí network theo giờ"
+        ],
+        "answer": [1],
+        "explain": "Khi stopped, CPU, memory và network không bị tính phí, nhưng EBS chứa OS và dữ liệu vẫn được cấp phát nên vẫn tính phí storage."
+      },
+      {
+        "type": "single",
+        "q": "Một môi trường EC2 không còn cần nữa và công ty muốn loại bỏ hoàn toàn chi phí của instance. Hành động nào phù hợp?",
+        "options": [
+          "Stop instance",
+          "Đổi instance type xuống t2.micro",
+          "Terminate instance (và xóa snapshot/Elastic IP liên quan)",
+          "Gỡ Security Group khỏi instance"
+        ],
+        "answer": [2],
+        "explain": "Chỉ terminate mới loại bỏ chi phí instance, xóa luôn root volume theo cấu hình mặc định; đây là thao tác một chiều. Stop vẫn để lại phí EBS."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư cần đăng nhập vào EC2 instance Windows vừa launch với key pair A4L. Cách kết nối đúng là gì?",
+        "options": [
+          "SSH qua port 22 bằng private key A4L.pem",
+          "RDP qua port 22, dùng private key để xác thực trực tiếp",
+          "SSH qua port 3389 với user ec2-user",
+          "RDP qua port 3389, dùng private key để giải mã mật khẩu local Administrator rồi đăng nhập bằng user/password"
+        ],
+        "answer": [3],
+        "explain": "Windows dùng RDP port 3389; private key chỉ dùng để giải mã mật khẩu Administrator. Đăng nhập trực tiếp bằng private key qua SSH port 22 là cách của Linux."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên một EC2 instance duy nhất. Yêu cầu: ứng dụng tiếp tục phục vụ khi một AZ gặp sự cố. Giải pháp nào phù hợp?",
+        "options": [
+          "Chạy nhiều instance ở nhiều AZ, kết hợp Auto Scaling Group và Elastic Load Balancer",
+          "Đổi sang instance type lớn hơn có phần cứng dự phòng",
+          "Tạo AMI của instance và lưu lại để khôi phục thủ công",
+          "Bật detailed monitoring cho instance"
+        ],
+        "answer": [0],
+        "explain": "EC2 là AZ resilient vì launch vào một subnet trong một AZ; muốn chịu lỗi AZ phải chạy instance ở nhiều AZ. Instance lớn hơn vẫn nằm trong một AZ."
+      },
+      {
+        "type": "multi",
+        "q": "Một AMI (Amazon Machine Image) chứa những thành phần nào? (Chọn 2)",
+        "options": [
+          "Launch permissions (public, owner hoặc chia sẻ cho account cụ thể)",
+          "Elastic IP address của instance gốc",
+          "Block device mapping",
+          "Security Group của instance gốc",
+          "Private key của key pair"
+        ],
+        "answer": [0, 2],
+        "explain": "AMI gồm permissions, boot volume (có thể kèm data volume) và block device mapping. Private key chỉ tải về một lần lúc tạo key pair, AWS chỉ giữ public key."
+      }
+    ],
+    "HA vs FT vs DR": [
+      {
+        "type": "single",
+        "q": "Một bệnh viện vận hành hệ thống điều chỉnh thuốc mê trong phòng mổ; bất kỳ gián đoạn nào cũng nguy hiểm tính mạng bệnh nhân. Kiến trúc nào đáp ứng yêu cầu?",
+        "options": [
+          "Một server với quy trình tự động thay thế khi hỏng",
+          "Active/standby, failover sang server dự phòng khi server chính hỏng",
+          "Fault tolerant: active/active, kết nối đồng thời tới nhiều server với redundancy nhiều tầng",
+          "Backup định kỳ off-site và diễn tập DR hằng quý"
+        ],
+        "answer": [2],
+        "explain": "Yêu cầu không được gián đoạn cần Fault Tolerance (vận hành xuyên lỗi, active/active). Active/standby chỉ là HA, vẫn có thể có gián đoạn ngắn khi failover."
+      },
+      {
+        "type": "single",
+        "q": "Mức uptime 99.999% (‘five 9s’) cho phép tổng downtime khoảng bao nhiêu mỗi năm?",
+        "options": [
+          "8.77 giờ",
+          "52.6 phút",
+          "26.3 giây",
+          "5.26 phút"
+        ],
+        "answer": [3],
+        "explain": "Five 9s cho phép khoảng 5.26 phút/năm, bao gồm cả phát hiện, chẩn đoán và sửa lỗi. 8.77 giờ/năm là mức 99.9%."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào về High Availability (HA) là đúng?",
+        "options": [
+          "HA nhằm giảm thiểu outage; người dùng vẫn có thể bị gián đoạn ngắn (ví dụ phải đăng nhập lại khi failover)",
+          "HA đảm bảo người dùng không bao giờ bị gián đoạn khi có thành phần hỏng",
+          "HA là kế hoạch khôi phục hệ thống sau khi mất toàn bộ site",
+          "HA luôn đắt và phức tạp hơn Fault Tolerance"
+        ],
+        "answer": [0],
+        "explain": "HA tối đa uptime bằng cách thay thế/sửa nhanh, thường tự động, và chấp nhận gián đoạn ngắn. Không gián đoạn là định nghĩa của FT, vốn đắt và phức tạp hơn HA."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty lưu backup trên cùng data center với hệ thống chính. Kiến trúc sư lo ngại hỏa hoạn sẽ làm mất cả dữ liệu lẫn backup. Biện pháp DR phù hợp nhất là gì?",
+        "options": [
+          "Thêm server active/active trong cùng data center",
+          "Lưu backup off-site (ví dụ ở region AWS khác), chuẩn bị tài liệu, thông tin đăng nhập ở site dự phòng và diễn tập DR định kỳ",
+          "Tăng tần suất backup nhưng vẫn giữ ở cùng site",
+          "Nâng cấp phần cứng có nguồn điện dự phòng"
+        ],
+        "answer": [1],
+        "explain": "DR yêu cầu backup off-site, không cùng site với hệ thống chính, cùng kế hoạch chuẩn bị trước và diễn tập định kỳ. Thêm redundancy trong cùng data center vẫn mất hết nếu site bị cháy."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng báo cáo nội bộ chấp nhận được vài phút gián đoạn khi có sự cố, nhưng muốn tự phục hồi nhanh và tối ưu chi phí. Thiết kế nào phù hợp?",
+        "options": [
+          "Active/active đa region với năng lực dư thừa ở mọi tầng",
+          "Một instance duy nhất, khôi phục thủ công từ backup hàng tuần",
+          "Thiết kế HA: Multi-AZ với tự động thay thế (ví dụ Auto Scaling Group hoặc active/standby)",
+          "Không cần thiết kế gì vì AWS đã đảm bảo HA cho mọi instance"
+        ],
+        "answer": [2],
+        "explain": "Yêu cầu ‘giảm downtime, phục hồi nhanh’ là HA. Làm FT (active/active đa region) khi chỉ cần HA là lãng phí tiền và thời gian."
+      }
+    ],
+    "Route 53 Fundamentals": [
+      {
+        "type": "single",
+        "q": "Một công ty đã đăng ký domain ở một registrar bên ngoài AWS và muốn dùng Route 53 để host DNS mà không chuyển domain. Họ cần làm gì?",
+        "options": [
+          "Bắt buộc phải transfer domain sang Route 53 trước",
+          "Tạo public hosted zone trong Route 53, rồi cập nhật NS record ở registrar trỏ tới 4 name server Route 53 cấp",
+          "Tạo CNAME ở registrar trỏ tới Route 53",
+          "Tạo private hosted zone và associate với VPC"
+        ],
+        "answer": [1],
+        "explain": "Đăng ký domain và host DNS là hai chức năng tách rời; chỉ cần đổi NS ở registrar sang name server của hosted zone. Private hosted zone chỉ resolve trong VPC, không phục vụ Internet."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần các DNS record nội bộ (ví dụ db.internal.example.com) chỉ resolve được từ bên trong một số VPC, không lộ ra Internet. Giải pháp nào phù hợp?",
+        "options": [
+          "Public hosted zone với TTL thấp",
+          "Đăng ký thêm một domain riêng cho nội bộ",
+          "Dùng TXT record để ẩn thông tin",
+          "Private hosted zone associate với các VPC đó"
+        ],
+        "answer": [3],
+        "explain": "Private hosted zone chỉ resolve được trong các VPC được associate, phù hợp record nhạy cảm. Public hosted zone truy cập được từ Internet."
+      },
+      {
+        "type": "single",
+        "q": "Khi tạo một hosted zone, Route 53 cấp phát bao nhiêu managed name server cho zone đó?",
+        "options": [
+          "1",
+          "2",
+          "4",
+          "13"
+        ],
+        "answer": [2],
+        "explain": "Mỗi hosted zone được gắn một bộ 4 name server rải ở nhiều nơi trên thế giới. 13 là số root server của DNS, không liên quan hosted zone."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty lo ngại DNS của họ sẽ ngừng hoạt động nếu toàn bộ region us-east-1 gặp sự cố. Nhận định nào đúng về Route 53?",
+        "options": [
+          "Route 53 là dịch vụ global, dữ liệu replicate giữa các region nên globally resilient, vẫn chạy khi một hoặc nhiều region hỏng",
+          "Cần tạo một hosted zone riêng trong mỗi region",
+          "Cần bật Multi-AZ cho hosted zone",
+          "Cần cấu hình cross-region replication cho hosted zone"
+        ],
+        "answer": [0],
+        "explain": "Route 53 là một trong số ít dịch vụ global, không cần chọn region và chịu được lỗi cả region. Hosted zone không có khái niệm Multi-AZ hay replication do người dùng cấu hình."
+      },
+      {
+        "type": "multi",
+        "q": "Route 53 thực hiện hai chức năng chính, độc lập nhau. Đó là những chức năng nào? (Chọn 2)",
+        "options": [
+          "Cấp phát chứng chỉ SSL/TLS cho domain",
+          "Cache nội dung tĩnh tại edge location",
+          "Đăng ký domain (làm việc với registry của TLD)",
+          "Cân bằng tải layer 7 giữa các target group",
+          "Host zone file trên các managed name server (hosted zone)"
+        ],
+        "answer": [2, 4],
+        "explain": "Route 53 vừa là registrar (đăng ký domain) vừa là DNS hosting (hosted zone). Chứng chỉ là ACM, cache là CloudFront, cân bằng tải layer 7 là ALB."
+      }
+    ],
+    "S3 Basics": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng có hàng nghìn người dùng, mỗi người cần một vùng lưu trữ riêng trên S3. Thiết kế nào phù hợp nhất?",
+        "options": [
+          "Tạo một bucket cho mỗi người dùng",
+          "Tạo một bucket mỗi region và chia người dùng theo region",
+          "Dùng một bucket, mỗi người dùng một prefix riêng, kết hợp IAM policy giới hạn theo prefix",
+          "Gắn một EBS volume cho mỗi người dùng"
+        ],
+        "answer": [2],
+        "explain": "Số bucket mỗi account bị giới hạn (theo khóa học 100 soft / 1000 hard) nên không thể tạo một bucket mỗi user. Một bucket chia theo prefix kèm IAM policy theo prefix scale tốt."
+      },
+      {
+        "type": "single",
+        "q": "Kích thước tối đa của một object trong Amazon S3 là bao nhiêu?",
+        "options": [
+          "5 GB",
+          "5 TB",
+          "160 TB",
+          "Không giới hạn"
+        ],
+        "answer": [1],
+        "explain": "Một object có kích thước từ 0 byte đến 5 TB. Không giới hạn là số object trong một bucket, không phải kích thước object."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư tạo bucket tên `logs` trong account mới của mình và nhận lỗi ‘bucket already exists’, dù account chưa có bucket nào. Nguyên nhân là gì?",
+        "options": [
+          "Tên bucket phải duy nhất toàn cầu trên mọi region và mọi AWS account; tên này đã có người khác dùng",
+          "Tên bucket chỉ cần duy nhất trong region, nên phải đổi sang region khác",
+          "Account mới bị giới hạn 0 bucket cho đến khi xác minh",
+          "Tên bucket phải có ít nhất 10 ký tự"
+        ],
+        "answer": [0],
+        "explain": "Tên bucket duy nhất toàn cầu, khác phần lớn tài nguyên chỉ cần duy nhất trong account/region. Độ dài hợp lệ là 3–63 ký tự nên `logs` không sai về độ dài."
+      },
+      {
+        "type": "single",
+        "q": "Một nhóm Windows server cần một network file share dùng chung để lưu và chỉnh sửa file. Dịch vụ lưu trữ nào phù hợp?",
+        "options": [
+          "Amazon S3 với prefix cho từng thư mục",
+          "Amazon EBS gắn vào một instance",
+          "Amazon S3 Standard và mount bucket như ổ đĩa",
+          "Amazon FSx for Windows File Server"
+        ],
+        "answer": [3],
+        "explain": "S3 là object storage, không mount được và không phải network share; cần file storage như FSx for Windows. EBS là block storage, thường chỉ gắn với một instance."
+      },
+      {
+        "type": "multi",
+        "q": "Những tên nào hợp lệ cho một S3 bucket? (Chọn 2)",
+        "options": [
+          "koala-campaign-1333337",
+          "Koala_Campaign",
+          "192.168.1.1",
+          "my.bucket.logs",
+          "ab"
+        ],
+        "answer": [0, 3],
+        "explain": "Tên bucket dài 3–63 ký tự, chỉ gồm chữ thường, số, dấu chấm, gạch ngang, bắt đầu/kết thúc bằng chữ thường hoặc số và không có dạng địa chỉ IP. `Koala_Campaign` có chữ hoa và gạch dưới; `ab` quá ngắn."
+      }
+    ],
+    "Shared Responsibility Model": [
+      {
+        "type": "single",
+        "q": "Theo Shared Responsibility Model, ai chịu trách nhiệm patch hệ điều hành của EC2 instance?",
+        "options": [
+          "AWS, vì EC2 chạy trên hạ tầng AWS",
+          "Khách hàng, vì EC2 là IaaS và khách quản lý từ OS trở lên",
+          "AWS với Linux, khách hàng với Windows",
+          "Trách nhiệm chia đôi theo hợp đồng support"
+        ],
+        "answer": [1],
+        "explain": "Với IaaS như EC2, AWS lo facilities, server, hypervisor; khách hàng lo OS, runtime, ứng dụng, dữ liệu. Chỉ dịch vụ managed như RDS thì AWS mới patch OS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đang chạy MySQL trên EC2 và muốn giảm gánh nặng patch OS và database engine. Giải pháp nào chuyển trách nhiệm này sang AWS?",
+        "options": [
+          "Bật detailed monitoring cho instance database",
+          "Chuyển EC2 sang instance type lớn hơn",
+          "Đặt database vào private subnet",
+          "Migrate sang Amazon RDS"
+        ],
+        "answer": [3],
+        "explain": "Với RDS (managed DB), AWS lo host, OS và cài/patch DB engine; khách hàng vẫn lo cấu hình DB, user, SG, mã hóa và dữ liệu. Các lựa chọn khác vẫn giữ database trên EC2 do khách tự quản lý."
+      },
+      {
+        "type": "multi",
+        "q": "Những trách nhiệm nào thuộc về AWS (security ‘OF’ the cloud)? (Chọn 2)",
+        "options": [
+          "Cấu hình Security Group của EC2",
+          "Quản lý IAM user và policy",
+          "Bảo mật vật lý của data center",
+          "Client-side encryption dữ liệu",
+          "Hypervisor trên các EC2 host"
+        ],
+        "answer": [2, 4],
+        "explain": "AWS chịu trách nhiệm hạ tầng toàn cầu, phần cứng, data center và phần mềm như hypervisor. Security Group, IAM và mã hóa là security ‘IN’ the cloud của khách hàng."
+      },
+      {
+        "type": "single",
+        "q": "Với dịch vụ IaaS như EC2, ranh giới trách nhiệm giữa AWS và khách hàng nằm ở đâu?",
+        "options": [
+          "AWS quản lý đến hypervisor; khách hàng quản lý từ OS trở lên (runtime, ứng dụng, dữ liệu)",
+          "AWS quản lý đến OS; khách hàng quản lý runtime trở lên",
+          "AWS quản lý mọi thứ trừ dữ liệu",
+          "Khách hàng quản lý cả hypervisor và OS"
+        ],
+        "answer": [0],
+        "explain": "Trong IaaS, facilities, infrastructure, server và hypervisor do nhà cung cấp quản lý; OS trở lên do khách hàng. AWS chỉ quản lý OS ở các mô hình PaaS/SaaS/managed."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chuyển ứng dụng sang AWS Lambda (serverless). Phần nào vẫn thuộc trách nhiệm của khách hàng?",
+        "options": [
+          "Patch OS và runtime nền tảng của Lambda",
+          "Scale hạ tầng server chạy function",
+          "Code của function, IAM role của function và dữ liệu",
+          "Bảo mật mạng vật lý giữa các AZ"
+        ],
+        "answer": [2],
+        "explain": "Dịch vụ càng managed thì phần của khách càng ít, nhưng code, quyền truy cập (IAM) và dữ liệu luôn là trách nhiệm của khách hàng. Runtime, OS và scale do AWS lo với Lambda."
+      }
+    ]
+  }
+}

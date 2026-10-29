@@ -1,0 +1,634 @@
+{
+  "chapter": "19 CloudFormation",
+  "lessons": {
+    "CFN Change Sets": [
+      {
+        "type": "single",
+        "q": "Một đội DevOps muốn xem trước resource nào sẽ được thêm, sửa, xóa hoặc bị replace trước khi áp template mới vào một CloudFormation stack production, và chỉ áp dụng khi đã được duyệt. Tính năng nào đáp ứng yêu cầu?",
+        "options": ["Drift detection", "CloudFormation StackSets", "Change sets", "Bật stack termination protection rồi update stack trực tiếp"],
+        "answer": [2],
+        "explain": "Change set là bản preview các thay đổi; stack không đổi gì cho tới khi bạn Execute. Drift detection phát hiện thay đổi đã làm tay ngoài CloudFormation, không phải thay đổi sắp áp từ template mới."
+      },
+      {
+        "type": "single",
+        "q": "Trong ba kiểu tác động lên physical resource khi update stack, kiểu nào tạo resource mới (ID mới), xóa resource cũ và có thể gây mất dữ liệu?",
+        "options": ["Replacement", "No interruption", "Some interruption", "Rollback"],
+        "answer": [0],
+        "explain": "Replacement tạo bản mới của physical resource rồi xóa bản cũ, nên có thể mất dữ liệu. Some interruption chỉ gây gián đoạn tạm thời (ví dụ EC2 reboot hoặc stop/start) mà không mất dữ liệu."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư tạo change set và thấy action Remove trên logical resource RDS vì template mới đã bỏ resource này. Anh ta muốn dữ liệu vẫn được giữ lại khi resource bị xóa khỏi stack. Cách nào thực sự bảo vệ dữ liệu?",
+        "options": ["Tạo thêm một change set thứ hai để so sánh", "Đặt DeletionPolicy Retain hoặc Snapshot trên resource RDS", "Bật drift detection cho stack", "Triển khai template qua StackSets"],
+        "answer": [1],
+        "explain": "Change set chỉ để xem trước, không bảo vệ gì. Muốn giữ dữ liệu khi resource bị xóa thì dùng DeletionPolicy Retain hoặc Snapshot."
+      },
+      {
+        "type": "single",
+        "q": "Một stack có ba change set cho ba phiên bản template. Điều gì xảy ra với hai change set còn lại sau khi execute một change set?",
+        "options": ["Chúng được giữ lại để execute tuần tự sau đó", "Chúng được merge vào change set vừa execute", "Chúng tự chuyển sang trạng thái CREATE_PENDING", "CloudFormation xóa chúng vì đã lỗi thời"],
+        "answer": [3],
+        "explain": "Execute một change set tạo ra thao tác UpdateStack bình thường; các change set khác của stack bị xóa vì không còn phản ánh đúng trạng thái stack."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về CloudFormation change set? (Chọn 2)",
+        "options": ["Tạo change set không làm thay đổi stack cho tới khi bạn chủ động Execute", "Change set đảm bảo việc update chắc chắn thành công", "Change set phát hiện các thay đổi làm tay bên ngoài CloudFormation", "Change set triển khai template ra nhiều account và region", "Một stack có thể có nhiều change set cùng lúc"],
+        "answer": [0, 4],
+        "explain": "Change set chỉ mô tả CloudFormation sẽ làm gì và một stack có thể có nhiều change set. Nó không đảm bảo update thành công (vẫn có thể lỗi do quota, quyền IAM); phát hiện thay đổi làm tay là drift detection."
+      }
+    ],
+    "CFN Conditions": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn dùng một template duy nhất cho cả dev và prod: dev chỉ có 1 EC2 instance, prod có 2 instance và mỗi instance có một Elastic IP. Cách nào phù hợp nhất?",
+        "options": ["Dùng Mappings để tra danh sách resource theo môi trường", "Dùng parameter EnvType, condition IsProd và gắn Condition: IsProd vào các resource chỉ có ở prod", "Viết hai template riêng cho dev và prod", "Dùng DependsOn để bỏ qua resource không cần thiết"],
+        "answer": [1],
+        "explain": "Quy trình là parameter → condition (true/false) → resource dùng Condition. Mappings chỉ để tra giá trị, không quyết định resource có được tạo hay không."
+      },
+      {
+        "type": "single",
+        "q": "Một logical resource được gắn condition và condition đó đánh giá là false. CloudFormation làm gì với resource này?",
+        "options": ["Tạo resource rồi xóa ngay sau đó", "Tạo resource ở trạng thái stopped", "Không tạo physical resource cho logical resource đó", "Báo lỗi và rollback stack"],
+        "answer": [2],
+        "explain": "Resource có condition false đơn giản là không được tạo; không phải tạo xong rồi xóa. Resource không gắn condition thì luôn được tạo."
+      },
+      {
+        "type": "single",
+        "q": "CloudFormation đánh giá section Conditions vào thời điểm nào khi tạo stack?",
+        "options": ["Sau khi mọi resource đã CREATE_COMPLETE", "Song song với việc tạo Outputs", "Chỉ khi update stack, không đánh giá khi create", "Trước khi xử lý Resources và tạo physical resource"],
+        "answer": [3],
+        "explain": "Conditions được đánh giá trước, rồi CloudFormation mới xử lý Resources. Nhờ đó nó biết resource nào cần tạo ngay từ đầu."
+      },
+      {
+        "type": "single",
+        "q": "Template đã có condition IsProd. Nhóm muốn InstanceType là m5.large khi prod và t3.micro khi không phải prod, mà không tạo hai resource riêng. Hàm nào phù hợp?",
+        "options": ["!If [IsProd, m5.large, t3.micro]", "!Select [0, !GetAZs '']", "!Join ['', [m5, .large]]", "!ImportValue IsProd"],
+        "answer": [0],
+        "explain": "Fn::If chọn giá trị property theo condition. Các hàm còn lại không đánh giá condition; ImportValue dùng để lấy export của stack khác."
+      },
+      {
+        "type": "single",
+        "q": "Yêu cầu nào nên giải quyết bằng Conditions thay vì Mappings?",
+        "options": ["Tra AMI ID theo region đang tạo stack", "Chọn tên SSH key pair tương ứng với từng môi trường từ một bảng tra", "Chỉ tạo bucket policy khi môi trường là prod và bucket được tạo (dùng Fn::And)", "Tra cấu hình database theo môi trường từ bảng tĩnh"],
+        "answer": [2],
+        "explain": "Conditions dùng để quyết định có tạo resource hay không, kể cả lồng điều kiện bằng Fn::And. Các phương án còn lại là tra giá trị tĩnh, đúng vai trò của Mappings."
+      }
+    ],
+    "CFN Cross-Stack References": [
+      {
+        "type": "single",
+        "q": "Một công ty có một shared VPC stack sống lâu dài. Nhiều application stack ngắn hạn trong cùng account và cùng region cần triển khai EC2 vào subnet của VPC này và phải tham chiếu ID động thay vì nhập tay. Giải pháp nào phù hợp?",
+        "options": ["Dùng nested stacks, mỗi app stack nhúng template VPC", "Export VPC ID và subnet ID trong Outputs của shared VPC stack, app stack dùng Fn::ImportValue", "Dùng CloudFormation StackSets để triển khai VPC", "Nhập tay VPC ID và subnet ID làm parameter cho mỗi app stack"],
+        "answer": [1],
+        "explain": "Cross-stack reference (Export + ImportValue) cho phép dùng chung resource thật với vòng đời độc lập. Nested stacks chỉ tái sử dụng template nên mỗi lần tạo ra một VPC mới; nhập tay là giá trị tĩnh, không phải tham chiếu."
+      },
+      {
+        "type": "single",
+        "q": "Một stack ở eu-west-1 cần dùng VPC ID mà một stack ở us-east-1 đã export. Phát biểu nào đúng?",
+        "options": ["Fn::ImportValue hoạt động bình thường giữa các region của cùng account", "Chỉ cần đổi export name thành dạng ARN đầy đủ là import được", "Cross-stack reference không hỗ trợ cross-region; cần cách khác như lưu giá trị vào SSM Parameter Store", "Dùng Ref với tên export để lấy giá trị từ region khác"],
+        "answer": [2],
+        "explain": "Danh sách exports là riêng cho từng region của từng account, nên ImportValue không hỗ trợ cross-region hay cross-account. Muốn chia sẻ qua region phải dùng cách khác như SSM Parameter Store hoặc custom resource."
+      },
+      {
+        "type": "single",
+        "q": "Export name trong CloudFormation phải duy nhất ở phạm vi nào?",
+        "options": ["Trong một region của một account", "Toàn cầu trên mọi account AWS", "Chỉ trong một stack", "Trong toàn bộ AWS Organization"],
+        "answer": [0],
+        "explain": "Mỗi region trong mỗi account có danh sách exports riêng, và export name phải duy nhất trong danh sách đó. Ví dụ chỉ có một SHAREDVPCID trong us-east-1 của account đó."
+      },
+      {
+        "type": "multi",
+        "q": "Tình huống nào phù hợp với cross-stack references hơn nested stacks? (Chọn 2)",
+        "options": ["Template vượt giới hạn 500 resource của một stack", "Mỗi lần commit, pipeline dựng môi trường test ngắn hạn dùng chung một VPC và NAT Gateway có sẵn để tiết kiệm chi phí", "Mỗi dự án cần một VPC riêng được dựng từ template VPC chuẩn", "Kiến trúc service-oriented, một stack cung cấp dịch vụ cho các stack khác có vòng đời khác nhau", "Triển khai cùng một template ra nhiều account và region"],
+        "answer": [1, 3],
+        "explain": "Cross-stack reference tái sử dụng chính resource của stack đang chạy, hợp với shared services và vòng đời khác nhau. Vượt 500 resource và mỗi dự án VPC riêng là nested stacks; nhiều account/region là StackSets."
+      },
+      {
+        "type": "single",
+        "q": "Trong stack sử dụng, hàm nào được dùng thay cho Ref để lấy giá trị một stack khác đã export?",
+        "options": ["Fn::GetAtt", "Fn::FindInMap", "Fn::Sub", "Fn::ImportValue"],
+        "answer": [3],
+        "explain": "Ref chỉ dùng trong cùng stack; giá trị export từ stack khác được lấy bằng Fn::ImportValue với export name. GetAtt dùng cho thuộc tính resource trong cùng stack hoặc output của nested stack."
+      }
+    ],
+    "CFN Custom Resources": [
+      {
+        "type": "single",
+        "q": "Việc xóa một CloudFormation stack liên tục thất bại vì S3 bucket trong stack còn object do người dùng upload. Công ty muốn bucket được dọn sạch và xóa tự động khi xóa stack. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["Đặt DeletionPolicy Retain cho bucket", "Thêm Lambda-backed custom resource tham chiếu bucket, Lambda xóa mọi object khi nhận Delete event", "Thêm DependsOn từ bucket tới Lambda function", "Bật S3 Versioning cho bucket"],
+        "answer": [1],
+        "explain": "Custom resource nhận event Delete trước khi bucket bị xóa, Lambda dọn bucket nên bucket xóa thành công. Retain chỉ giữ lại bucket chứ không xóa nó, không đúng yêu cầu."
+      },
+      {
+        "type": "single",
+        "q": "Thuộc tính bắt buộc duy nhất của một custom resource là gì và nó trỏ tới đâu?",
+        "options": ["TemplateURL, trỏ tới template trong S3", "Handle, trỏ tới một WaitConditionHandle", "RoleARN, trỏ tới IAM role CloudFormation assume", "ServiceToken, trỏ tới ARN của Lambda function hoặc SNS topic"],
+        "answer": [3],
+        "explain": "ServiceToken là property bắt buộc duy nhất, chứa ARN của Lambda function hoặc SNS topic nhận event. TemplateURL là của nested stack, Handle là của WaitCondition."
+      },
+      {
+        "type": "single",
+        "q": "Lambda function đứng sau một custom resource xử lý xong nhưng không gửi response nào về CloudFormation. Điều gì xảy ra?",
+        "options": ["Stack bị treo ở trạng thái IN_PROGRESS cho tới khi hết timeout rồi fail", "CloudFormation tự coi là SUCCESS sau khi Lambda kết thúc", "CloudFormation tự gọi lại Lambda tối đa 3 lần rồi đánh dấu SUCCESS", "Custom resource bị bỏ qua và stack vẫn CREATE_COMPLETE"],
+        "answer": [0],
+        "explain": "Code phải gửi response (Status SUCCESS hoặc FAILED) tới ResponseURL, một pre-signed S3 URL. Không có response thì stack chờ tới khi hết timeout (mặc định 1 giờ)."
+      },
+      {
+        "type": "single",
+        "q": "Khi triển khai, một công ty cần CloudFormation lấy thông tin cấu hình từ một hệ thống bên thứ ba và provision một tài nguyên mà CloudFormation không hỗ trợ native. Lựa chọn nào phù hợp?",
+        "options": ["cfn-init với section packages", "CloudFormation StackSets", "Custom resource dùng Lambda function", "Mappings với FindInMap"],
+        "answer": [2],
+        "explain": "Custom resource cho phép làm những việc CloudFormation không hỗ trợ native và tích hợp hệ thống bên ngoài: gửi event tới Lambda/SNS, nhận dữ liệu về qua response. cfn-init chỉ cấu hình bên trong OS của EC2."
+      },
+      {
+        "type": "single",
+        "q": "Trong demo, custom resource tham chiếu bucket và Lambda. Vì sao khi xóa stack, Lambda kịp dọn bucket trước khi bucket bị xóa?",
+        "options": ["Vì bucket có DeletionPolicy Snapshot", "Vì custom resource tham chiếu bucket tạo implicit dependency; khi xóa, CloudFormation đi ngược thứ tự phụ thuộc nên custom resource bị xóa trước bucket", "Vì S3 tự động xóa object khi bucket thuộc một stack", "Vì CloudFormation luôn xóa Lambda function đầu tiên"],
+        "answer": [1],
+        "explain": "Tham chiếu tạo implicit dependency (không cần DependsOn): khi tạo thì bucket trước, khi xóa thì ngược lại. Vì vậy event Delete tới Lambda trước khi CloudFormation xóa bucket đã trống."
+      }
+    ],
+    "CFN Deletion Policy": [
+      {
+        "type": "single",
+        "q": "Một công ty sắp xóa CloudFormation stack chứa RDS instance. Họ không cần giữ database đang chạy nhưng phải giữ một bản sao dữ liệu để khôi phục khi cần. DeletionPolicy nào phù hợp?",
+        "options": ["Retain", "Snapshot", "Delete", "Bật stack termination protection"],
+        "answer": [1],
+        "explain": "Snapshot chụp snapshot rồi mới xóa resource, nên chỉ còn lại bản sao dữ liệu. Retain giữ nguyên cả database đang chạy, tốn chi phí không cần thiết."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, resource type nào KHÔNG hỗ trợ DeletionPolicy Snapshot?",
+        "options": ["AWS::EC2::Volume", "AWS::RDS::DBInstance", "AWS::Redshift::Cluster", "AWS::EC2::Instance"],
+        "answer": [3],
+        "explain": "Snapshot hỗ trợ EBS volume, ElastiCache, Neptune, RDS, Redshift; EC2 instance không hỗ trợ. Muốn giữ dữ liệu EC2 thì đặt Snapshot trên EBS volume hoặc Retain cho instance."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư đặt DeletionPolicy Retain cho RDS instance rồi sửa một property của nó mà thay đổi đó buộc replacement. Điều gì xảy ra theo khóa học?",
+        "options": ["Retain giữ lại database cũ và tạo database mới bên cạnh", "CloudFormation từ chối update vì resource có DeletionPolicy", "DeletionPolicy không áp dụng cho replacement nên database cũ bị xóa và dữ liệu có thể mất", "CloudFormation tự chụp snapshot database cũ trước khi replace"],
+        "answer": [2],
+        "explain": "DeletionPolicy chỉ có tác dụng khi resource bị xóa (bỏ khỏi template hoặc xóa stack), không bảo vệ khi bị replace. Muốn bảo vệ trường hợp replace thì dùng UpdateReplacePolicy; muốn biết trước resource nào bị replace thì dùng change set."
+      },
+      {
+        "type": "single",
+        "q": "Một đội muốn xóa toàn bộ stack khi dự án kết thúc nhưng S3 bucket chứa log audit trong stack phải còn nguyên trong account. Cấu hình nào đáp ứng yêu cầu với ít công sức nhất?",
+        "options": ["Đặt DeletionPolicy: Retain trên logical resource của bucket", "Bật stack termination protection", "Đặt DeletionPolicy: Snapshot trên bucket", "Tạo change set trước khi xóa stack"],
+        "answer": [0],
+        "explain": "Retain dùng được với mọi loại resource và giữ nguyên physical resource khi stack bị xóa. Termination protection chặn xóa cả stack, trái với yêu cầu; S3 bucket không hỗ trợ Snapshot."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về CloudFormation DeletionPolicy? (Chọn 2)",
+        "options": ["Giá trị mặc định cho mọi resource là Retain", "Snapshot hỗ trợ cả EC2 instance", "Snapshot tạo bởi DeletionPolicy vẫn tồn tại sau khi stack bị xóa, bạn phải tự dọn và chúng tiếp tục tốn phí", "DeletionPolicy chặn việc xóa toàn bộ stack", "Retain dùng được với mọi loại resource"],
+        "answer": [2, 4],
+        "explain": "Snapshot không còn do stack quản lý nên phải tự dọn, và Retain áp dụng được cho mọi resource. Mặc định chung là Delete; chặn xóa cả stack là việc của termination protection."
+      }
+    ],
+    "CFN DependsOn": [
+      {
+        "type": "single",
+        "q": "Một CloudFormation stack tạo VPC, Internet Gateway, VPCGatewayAttachment, EC2 instance và Elastic IP gắn vào instance. Stack lúc tạo hoặc xóa thành công, lúc lại lỗi liên quan tới Elastic IP. Cách sửa nào phù hợp?",
+        "options": ["Thêm DependsOn: InternetGatewayAttachment vào resource Elastic IP", "Thêm CreationPolicy vào EC2 instance", "Thêm WaitCondition giữa VPC và Internet Gateway", "Thêm DependsOn: VPC vào Internet Gateway"],
+        "answer": [0],
+        "explain": "EIP cần IGW đã attach vào VPC nhưng template không có Ref nối chúng, nên phải khai báo DependsOn: EIP tạo sau attachment và xóa trước attachment. Đây là ca kinh điển hay xuất hiện trong đề."
+      },
+      {
+        "type": "single",
+        "q": "CloudFormation tự suy ra thứ tự tạo giữa hai resource (implicit dependency) khi nào?",
+        "options": ["Khi hai resource cùng Type", "Khi hai resource được khai báo liền nhau trong template", "Khi resource A dùng !Ref hoặc !GetAtt tới resource B", "Khi hai resource cùng gắn một condition"],
+        "answer": [2],
+        "explain": "Chỉ tham chiếu được resource đã CREATE_COMPLETE, nên Ref/GetAtt tạo implicit dependency. Thứ tự khai báo trong template không quyết định thứ tự tạo; CFN tạo song song khi có thể."
+      },
+      {
+        "type": "single",
+        "q": "Resource B có DependsOn: A. Khi xóa stack, CloudFormation xử lý thứ tự thế nào?",
+        "options": ["Xóa A trước, rồi tới B", "Xóa B trước, rồi tới A", "Xóa A và B song song", "DependsOn chỉ áp dụng khi create nên thứ tự xóa ngẫu nhiên"],
+        "answer": [1],
+        "explain": "DependsOn ảnh hưởng cả create, update và delete: khi xóa thì resource phụ thuộc (B) bị xóa trước, theo thứ tự ngược với lúc tạo."
+      },
+      {
+        "type": "single",
+        "q": "Resource B chỉ được tạo sau khi ứng dụng bên trong EC2 instance A đã cài đặt và cấu hình xong. Dùng gì cho phù hợp?",
+        "options": ["Chỉ cần DependsOn: A trên B", "Dùng !Ref A trong property của B", "Dùng Mappings để tra trạng thái của A", "Thêm CreationPolicy trên A, gửi cfn-signal khi bootstrap xong, và để B phụ thuộc A"],
+        "answer": [3],
+        "explain": "DependsOn chỉ chờ resource A được tạo xong theo EC2, không biết bootstrap bên trong OS. Chờ bootstrapping xong là bài toán của CreationPolicy/WaitCondition + cfn-signal."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về thuộc tính DependsOn?",
+        "options": ["Chỉ nhận đúng một resource", "Nhận một resource hoặc một list resource", "Chỉ có tác dụng khi create stack", "Bắt buộc phải khai báo kèm mỗi khi đã dùng !Ref"],
+        "answer": [1],
+        "explain": "DependsOn nhận một resource hoặc list resource và áp dụng cho create, update, delete. Khi đã có Ref/GetAtt thì dependency có sẵn, không cần DependsOn thừa."
+      }
+    ],
+    "CFN Intrinsic Functions": [
+      {
+        "type": "single",
+        "q": "Một template cần đưa public DNS name của EC2 instance có logical ID Instance vào Outputs. Hàm nào phù hợp?",
+        "options": ["!Ref Instance", "!GetAtt Instance.PublicDnsName", "!ImportValue Instance", "!FindInMap [Instance, PublicDnsName]"],
+        "answer": [1],
+        "explain": "GetAtt lấy thuộc tính phụ như PublicIp, PublicDnsName. Ref Instance chỉ trả giá trị chính là instance ID."
+      },
+      {
+        "type": "single",
+        "q": "Một template phải chạy được ở mọi region và không được đặt cứng tên Availability Zone cho subnet. Cách nào phù hợp?",
+        "options": ["!Ref AWS::Region", "!Join ['', [!Ref AWS::Region, 'a']]", "!Split [',', 'us-east-1a,us-east-1b']", "!Select [0, !GetAZs '']"],
+        "answer": [3],
+        "explain": "GetAZs trả danh sách AZ của region hiện tại, Select lấy phần tử theo index (bắt đầu từ 0). Ghép region với chữ a là đặt cứng giả định và không đảm bảo AZ tồn tại."
+      },
+      {
+        "type": "single",
+        "q": "VPC có CIDR 10.16.0.0/16. Template dùng !Cidr [!GetAtt VPC.CidrBlock, '16', '12']. Mỗi dải CIDR được sinh ra có kích thước nào?",
+        "options": ["/12", "/16", "/20", "/24"],
+        "answer": [2],
+        "explain": "cidrBits = 12 là số bit host, nên prefix là 32 − 12 = /20; count = 16 là số dải được sinh. Nhầm cidrBits thành prefix sẽ ra /12."
+      },
+      {
+        "type": "single",
+        "q": "User data cho EC2 trong template CloudFormation phải được đưa vào dưới dạng nào?",
+        "options": ["Bọc bằng Fn::Base64, thường kèm Fn::Sub để thay ${AWS::StackName}, ${AWS::Region}", "Bọc bằng Fn::Join để nối từng dòng script", "Bọc bằng Fn::Split để tách thành list lệnh", "Không cần hàm nào, CloudFormation tự mã hóa"],
+        "answer": [0],
+        "explain": "User data EC2 phải ở dạng Base64, nên viết script dạng text rồi bọc bằng !Base64, thường kèm !Sub để đưa giá trị runtime vào. Join chỉ ghép chuỗi, không mã hóa."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về intrinsic functions của CloudFormation? (Chọn 2)",
+        "options": ["!Ref với logical resource EC2 instance trả về instance ID", "!GetAtt lấy được thuộc tính của resource nằm trong một stack độc lập khác", "Index của !Select bắt đầu từ 1", "User data của resource Instance không thể dùng ${Instance.InstanceId} trong !Sub vì instance chưa tồn tại", "!GetAZs luôn trả đủ mọi AZ bất kể default VPC bị xóa bớt subnet"],
+        "answer": [0, 3],
+        "explain": "Ref của logical resource thường trả physical ID; Sub không tự tham chiếu được resource đang được tạo. GetAtt không vượt ranh giới stack độc lập (dùng ImportValue), Select bắt đầu từ 0, và GetAZs phụ thuộc subnet của default VPC."
+      }
+    ],
+    "CFN Mappings": [
+      {
+        "type": "single",
+        "q": "Một template cần tự chọn AMI ID đúng với region đang tạo stack mà người dùng không phải nhập gì. Trong các phương án sau, cách nào phù hợp?",
+        "options": ["Parameter kiểu String không có default", "Section Mappings kết hợp !FindInMap với pseudo parameter AWS::Region", "Section Conditions với Fn::Equals", "Section Outputs với Export"],
+        "answer": [1],
+        "explain": "Mappings là bảng tra tĩnh; dùng AWS::Region làm top-level key thì luôn khớp region đang tạo stack. Parameter không default bắt người dùng tự tra AMI."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty yêu cầu template luôn dùng AMI Amazon Linux mới nhất ở mọi region mà không phải sửa template mỗi khi AWS phát hành AMI mới. Cách nào phù hợp nhất?",
+        "options": ["Mappings liệt kê AMI ID theo region, cập nhật hằng quý", "Đặt cứng AMI ID mới nhất của us-east-1", "Parameter kiểu AWS::SSM::Parameter::Value<AWS::EC2::Image::Id> trỏ tới SSM public parameter", "Condition kiểm tra AMI có phải bản mới nhất"],
+        "answer": [2],
+        "explain": "SSM public parameter do AWS duy trì nên luôn trả AMI mới nhất đúng region. Mappings là dữ liệu tĩnh, phải tự cập nhật khi có AMI mới."
+      },
+      {
+        "type": "single",
+        "q": "Cú pháp đúng của Fn::FindInMap là gì?",
+        "options": ["!FindInMap [MapName, TopLevelKey, SecondLevelKey]", "!FindInMap [TopLevelKey, MapName, SecondLevelKey]", "!FindInMap [SecondLevelKey, TopLevelKey, MapName]", "!FindInMap MapName.TopLevelKey.SecondLevelKey"],
+        "answer": [0],
+        "explain": "Thứ tự là tên mapping, top-level key (ví dụ !Ref AWS::Region), rồi second-level key (ví dụ HVM64)."
+      },
+      {
+        "type": "single",
+        "q": "Đặc điểm nào đúng về section Mappings?",
+        "options": ["Mappings gọi API để lấy giá trị lúc tạo stack", "Mappings tự cập nhật khi AWS phát hành AMI mới", "Mappings quyết định resource có được tạo hay không", "Mappings chỉ chứa giá trị cố định viết sẵn trong template"],
+        "answer": [3],
+        "explain": "Mapping là bảng tra key → value tĩnh, không gọi API và không tự cập nhật. Bật/tắt việc tạo resource là việc của Conditions."
+      },
+      {
+        "type": "single",
+        "q": "Yêu cầu: chỉ tạo NAT Gateway thứ hai khi môi trường là prod. Thành phần nào của template phù hợp?",
+        "options": ["Một mapping EnvMap với FindInMap", "Một condition dựa trên parameter môi trường, gắn vào resource NAT Gateway", "DependsOn từ NAT Gateway thứ hai tới NAT Gateway thứ nhất", "Một Output có Export"],
+        "answer": [1],
+        "explain": "Quyết định có tạo resource hay không là việc của Conditions. Mappings chỉ tra giá trị, không bật/tắt resource."
+      }
+    ],
+    "CFN Nested Stacks": [
+      {
+        "type": "single",
+        "q": "Một template CloudFormation cho một giải pháp lớn đã vượt giới hạn 500 resource của một stack. Mọi thành phần được tạo, cập nhật và xóa cùng nhau. Kiến trúc nào phù hợp?",
+        "options": ["Nested stacks", "Cross-stack references", "CloudFormation StackSets", "Change sets"],
+        "answer": [0],
+        "explain": "Nested stacks chia giải pháp thành nhiều stack con do root stack tạo, vượt được giới hạn 500 resource/stack và giữ chung vòng đời. StackSets là để triển khai ra nhiều account/region."
+      },
+      {
+        "type": "single",
+        "q": "Một đội platform viết sẵn một template VPC chuẩn. Mỗi dự án mới cần một VPC riêng được dựng từ template này cùng với AD và ứng dụng của dự án, tất cả có chung vòng đời. Cách nào phù hợp nhất?",
+        "options": ["Export VPC ID từ một shared VPC stack và dùng Fn::ImportValue", "Copy nội dung template VPC vào template của mỗi dự án", "Dùng nested stacks, root stack của mỗi dự án tham chiếu template VPC qua AWS::CloudFormation::Stack", "Dùng StackSets triển khai VPC vào một account"],
+        "answer": [2],
+        "explain": "Nested stacks tái sử dụng template (code) dạng module, mỗi lần dùng tạo VPC mới, hợp với yêu cầu VPC riêng và lifecycle linked. Export/ImportValue là để dùng chung một VPC thật."
+      },
+      {
+        "type": "single",
+        "q": "Root stack cần lấy VPC ID do nested stack VPCSTACK tạo ra để truyền vào ADSTACK. Cách nào đúng?",
+        "options": ["!Ref VPCSTACK.VPC để tham chiếu trực tiếp logical resource VPC bên trong stack con", "!ImportValue VPCSTACK", "!FindInMap [VPCSTACK, VPC, Id]", "Stack con khai báo VPC ID trong Outputs, root stack dùng !GetAtt VPCSTACK.Outputs.<TênOutput>"],
+        "answer": [3],
+        "explain": "Root stack chỉ tham chiếu được outputs của stack con qua GetAtt <NestedStack>.Outputs.X; không tham chiếu trực tiếp logical resource bên trong được. Không cần Export cho nested stack."
+      },
+      {
+        "type": "single",
+        "q": "Logical resource type nào được dùng trong root stack để tạo một nested stack?",
+        "options": ["AWS::CloudFormation::StackSet", "AWS::CloudFormation::CustomResource", "AWS::CloudFormation::Stack", "AWS::CloudFormation::WaitCondition"],
+        "answer": [2],
+        "explain": "Nested stack là logical resource AWS::CloudFormation::Stack với TemplateURL và Parameters. Thiếu giá trị cho tham số bắt buộc (không có default) của template con thì stack con tạo thất bại."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng cùng một template VPC trong 10 root stack giống nhau theo mô hình nested stacks. Kết quả là gì?",
+        "options": ["Một VPC duy nhất được 10 root stack dùng chung", "10 VPC riêng biệt, mỗi root stack một VPC", "Root stack thứ hai bị lỗi vì VPC đã tồn tại", "10 VPC dùng chung một NAT Gateway"],
+        "answer": [1],
+        "explain": "Nested stacks tái sử dụng code chứ không tái sử dụng resource, nên 10 root stack tạo 10 VPC. Muốn dùng chung một VPC thật thì dùng cross-stack references."
+      }
+    ],
+    "CFN Outputs": [
+      {
+        "type": "single",
+        "q": "Sau khi stack WordPress tạo xong, đội vận hành muốn thấy ngay URL truy cập trang web trên tab Outputs của console. Khai báo nào phù hợp?",
+        "options": ["Thêm parameter WordpressURL với Default là DNS name", "Thêm metadata AWS::CloudFormation::Init chứa URL", "Thêm output WordpressURL với Value: !Join ['', ['https://', !GetAtt Instance.DNSName]]", "Thêm mapping chứa URL theo region"],
+        "answer": [2],
+        "explain": "Outputs hiện giá trị trên console và CLI sau khi stack tạo xong; Join + GetAtt ghép thành URL động. Parameter là input, không thể biết trước DNS name của instance."
+      },
+      {
+        "type": "single",
+        "q": "Trong kiến trúc nested stacks, stack cha muốn dùng một giá trị do stack con tạo ra. Cách đúng là gì?",
+        "options": ["Stack con khai báo giá trị trong Outputs, stack cha dùng !GetAtt StackCon.Outputs.TenOutput", "Stack cha dùng !Ref trực tiếp tới logical resource trong stack con", "Stack con Export giá trị, stack cha bắt buộc dùng !ImportValue", "Stack cha đọc giá trị từ Mappings của stack con"],
+        "answer": [0],
+        "explain": "Outputs của stack con được trả về stack cha và đọc bằng GetAtt <Stack>.Outputs.<Name>. Stack cha không tham chiếu trực tiếp resource bên trong stack con được."
+      },
+      {
+        "type": "single",
+        "q": "Một stack độc lập (không phải nested stack) cần dùng Security Group ID do một stack khác trong cùng account và region tạo ra. Cần làm gì?",
+        "options": ["Chỉ cần khai báo Output, stack kia tự đọc được", "Dùng !GetAtt OtherStack.Outputs.SGId", "Khai báo Security Group ID trong Mappings của stack kia", "Khai báo Output kèm Export Name ở stack nguồn, stack sử dụng gọi Fn::ImportValue"],
+        "answer": [3],
+        "explain": "Output thường chỉ hiện trên console/CLI; muốn stack độc lập khác dùng thì phải Export, bên dùng gọi ImportValue. GetAtt .Outputs chỉ dùng được giữa stack cha và nested stack."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về section Outputs?",
+        "options": ["Mọi template hợp lệ bắt buộc phải có Outputs", "Giá trị output chỉ có khi stack ở trạng thái CREATE_COMPLETE", "Mọi output đều tự động được stack khác đọc mà không cần cấu hình", "Output chỉ xem được qua CLI, không hiện trên console"],
+        "answer": [1],
+        "explain": "Outputs là section tùy chọn và giá trị chỉ có khi stack CREATE_COMPLETE. Output hiện trên cả console và CLI, và chỉ dùng được ở stack khác khi Export."
+      },
+      {
+        "type": "multi",
+        "q": "Giá trị khai báo trong Outputs của một stack (không Export) được hiển thị hoặc sử dụng ở đâu? (Chọn 2)",
+        "options": ["Tự động truyền vào user data của mọi EC2 instance trong account", "Console UI (tab Outputs) và CLI", "Stack cha, khi stack này là nested stack", "Stack ở account khác qua Fn::ImportValue", "Tự động ghi vào SSM Parameter Store"],
+        "answer": [1, 2],
+        "explain": "Output hiện ở console và CLI và được trả về stack cha khi dùng nested stack. ImportValue cần Export và không hoạt động cross-account; Outputs không tự ghi vào SSM hay user data."
+      }
+    ],
+    "CFN Physical and Logical Resources": [
+      {
+        "type": "single",
+        "q": "Template đặt cứng BucketName: 'accatpics1333333337'. Stack đầu tiên tạo thành công, nhưng stack thứ hai từ cùng template trong cùng account thất bại. Cách sửa nào giúp template dùng được nhiều lần?",
+        "options": ["Tạo stack thứ hai ở region khác", "Bỏ property BucketName để CloudFormation tự đặt tên duy nhất", "Thêm DependsOn giữa hai stack", "Đặt DeletionPolicy Retain cho bucket"],
+        "answer": [1],
+        "explain": "Tên S3 bucket là globally unique nên đặt cứng tên khiến template chỉ dùng được một lần, kể cả ở region khác. Bỏ BucketName thì CFN tự sinh tên dạng <stack>-<logicalID>-<chuỗi ngẫu nhiên>."
+      },
+      {
+        "type": "single",
+        "q": "Một template tạo EC2 thành công ở us-east-1 nhưng ở us-west-2 thì lỗi 'image ID does not exist'. Nguyên nhân và cách sửa phù hợp nhất là gì?",
+        "options": ["Instance type không có ở us-west-2; đổi sang t3.micro", "Thiếu quyền IAM ở us-west-2; thêm stack role", "us-west-2 không hỗ trợ CloudFormation; dùng StackSets", "AMI ID là tài nguyên theo region; thay giá trị đặt cứng bằng parameter, Mappings hoặc SSM public parameter"],
+        "answer": [3],
+        "explain": "AMI ID khác nhau giữa các region nên đặt cứng sẽ khóa template vào một region. Cách sửa là parameter, pseudo parameter kết hợp Mappings, hoặc SSM public parameter."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về template, stack, logical resource và physical resource?",
+        "options": ["Một template có thể tạo nhiều stack; mỗi logical resource trong stack ứng với một physical resource thật", "Mỗi template chỉ tạo được đúng một stack", "Logical resource là resource thật trong account, physical resource là phần khai báo trong template", "Stack chỉ chứa physical resource, không chứa logical resource"],
+        "answer": [0],
+        "explain": "Template là mã nguồn, có thể tạo 1, 100 hay nhiều stack ở nhiều region; stack tạo physical resource cho mỗi logical resource. Template ≠ stack là ý quan trọng khi so sánh nested stacks và cross-stack references."
+      },
+      {
+        "type": "single",
+        "q": "Mặc định, khi xóa một CloudFormation stack thì điều gì xảy ra với các physical resource nó tạo?",
+        "options": ["Chúng được giữ lại và tách khỏi stack", "Chúng được snapshot rồi giữ lại", "Chúng (thường) bị xóa theo stack", "Chúng chuyển sang quản lý bởi stack khác"],
+        "answer": [2],
+        "explain": "Mặc định xóa stack thì xóa physical resource, giúp account được dọn sạch. Chữ thường là vì có ngoại lệ qua DeletionPolicy Retain/Snapshot."
+      },
+      {
+        "type": "single",
+        "q": "Một stack tạo thất bại và rollback. Cách debug chuẩn được khóa học khuyên là gì?",
+        "options": ["Xem CloudTrail để tìm API call cuối cùng", "Mở tab Events của stack và tìm dòng lỗi CREATE_FAILED đầu tiên", "Xem tab Outputs của stack", "Tạo change set để xem lỗi"],
+        "answer": [1],
+        "explain": "Tab Events cho biết từng bước; dòng lỗi màu đỏ đầu tiên thường là nguyên nhân gốc, các lỗi sau là hệ quả. Outputs chỉ có giá trị khi stack CREATE_COMPLETE."
+      }
+    ],
+    "CFN Stack Roles": [
+      {
+        "type": "single",
+        "q": "Một admin muốn kỹ sư helpdesk chỉ quản lý hạ tầng thông qua CloudFormation, không được tự tạo EC2 hay DynamoDB trực tiếp. Giải pháp nào đáp ứng yêu cầu với quyền tối thiểu?",
+        "options": ["Cấp cho kỹ sư quyền AdministratorAccess nhưng yêu cầu dùng CloudFormation", "Cấp cho kỹ sư quyền trực tiếp trên EC2 và DynamoDB kèm quyền CloudFormation", "Admin tạo IAM role có quyền với resource làm stack role; kỹ sư chỉ có quyền CloudFormation trên stack và iam:PassRole cho role đó", "Cho kỹ sư dùng EC2 instance role để chạy CloudFormation CLI"],
+        "answer": [2],
+        "explain": "Với stack role, CloudFormation assume role để thao tác resource, nên người dùng chỉ cần quyền trên stack và iam:PassRole. Cấp quyền trực tiếp trên resource cho phép kỹ sư làm ngoài CloudFormation, trái yêu cầu."
+      },
+      {
+        "type": "multi",
+        "q": "Một IAM user tạo stack có gắn stack role do admin chuẩn bị sẵn. User này cần những quyền nào? (Chọn 2)",
+        "options": ["Quyền CloudFormation như cloudformation:CreateStack, UpdateStack, DeleteStack", "ec2:RunInstances cho các instance trong template", "iam:CreateRole để tạo stack role", "iam:PassRole cho đúng stack role đó", "sts:AssumeRole để tự assume stack role"],
+        "answer": [0, 3],
+        "explain": "User chỉ cần quyền trên stack và iam:PassRole; CloudFormation tự assume role để tạo resource. User không cần quyền trực tiếp trên resource và cũng không tự assume role được."
+      },
+      {
+        "type": "single",
+        "q": "Mặc định (không gắn stack role), CloudFormation dùng quyền của ai để tạo resource?",
+        "options": ["Quyền của root user trong account", "Quyền của identity đang thao tác stack (ví dụ IAM user dùng console/CLI)", "Quyền của service-linked role do AWS tạo tự động", "Không cần quyền vì CloudFormation là dịch vụ AWS"],
+        "answer": [1],
+        "explain": "Mặc định CloudFormation dùng quyền của identity đang thao tác, nên identity đó cần cả quyền trên stack lẫn quyền trên mọi resource. Stack role tách hai loại quyền này ra."
+      },
+      {
+        "type": "single",
+        "q": "Trust policy của một CloudFormation stack role phải cho phép principal nào assume role?",
+        "options": ["ec2.amazonaws.com", "lambda.amazonaws.com", "IAM user sẽ tạo stack", "cloudformation.amazonaws.com"],
+        "answer": [3],
+        "explain": "Chính dịch vụ CloudFormation assume stack role, nên trust policy phải tin principal cloudformation.amazonaws.com. IAM user chỉ pass role, không assume trực tiếp."
+      },
+      {
+        "type": "single",
+        "q": "Lợi ích chính của CloudFormation stack role theo khóa học là gì?",
+        "options": ["Role separation: người tạo quyền và người dùng quyền tách biệt, identity quyền thấp chỉ làm được những gì template đã duyệt cho phép thông qua CloudFormation", "Cho phép triển khai stack sang nhiều account và region", "Cho phép ứng dụng trên EC2 lấy credential tạm thời", "Tự động rotate credential của IAM user"],
+        "answer": [0],
+        "explain": "Stack role giúp phân tách quyền trong một account: admin tạo role, người dùng chỉ dùng role qua CloudFormation. Triển khai sang nhiều account/region là StackSets, còn credential cho ứng dụng trên EC2 là instance role."
+      }
+    ],
+    "CFN StackSets": [
+      {
+        "type": "single",
+        "q": "Một công ty cần bật AWS Config và triển khai cùng bộ Config Rules trên 50 AWS account ở nhiều region, quản lý tập trung từ một chỗ với ít công sức nhất. Giải pháp nào phù hợp?",
+        "options": ["Nested stacks trong một root stack", "Đăng nhập từng account và tạo stack ở từng region", "Cross-stack references với Fn::ImportValue", "CloudFormation StackSets"],
+        "answer": [3],
+        "explain": "StackSets dùng một template để create/update/delete stack trên nhiều account và region từ admin account. Nested stacks và cross-stack chỉ hoạt động trong một account/region."
+      },
+      {
+        "type": "single",
+        "q": "Các account của công ty đều nằm trong AWS Organizations. Họ muốn mọi account mới thêm vào một OU tự động nhận baseline bảo mật qua CloudFormation mà không phải tạo IAM role thủ công. Cấu hình nào phù hợp?",
+        "options": ["StackSet self-managed permissions với AWSCloudFormationStackSetExecutionRole tạo tay ở mỗi account", "StackSet service-managed permissions nhắm tới OU, bật automatic deployment", "Stack role trong management account", "Nested stack cho mỗi account"],
+        "answer": [1],
+        "explain": "Service-managed dùng AWS Organizations, role được tạo tự động và có thể nhắm theo OU; automatic deployment tự triển khai cho account mới. Self-managed đòi tự tạo role ở từng account."
+      },
+      {
+        "type": "single",
+        "q": "Trong CloudFormation StackSets, stack instance là gì?",
+        "options": ["Một tham chiếu tới một stack trong một region của một account; vẫn còn để ghi nhận lỗi kể cả khi stack tạo thất bại", "Một EC2 instance do StackSet tạo ra", "Bản sao của StackSet ở mỗi target account", "Một template đặc biệt có cú pháp riêng cho StackSets"],
+        "answer": [0],
+        "explain": "StackSet (ở admin account) chứa nhiều stack instance; mỗi stack instance là vỏ chứa cho một stack thật ở một account/region. Template của StackSet là template bình thường, không có cú pháp riêng."
+      },
+      {
+        "type": "single",
+        "q": "Một StackSet triển khai tới 10 account với maximum concurrent accounts = 2. Việc triển khai diễn ra thế nào?",
+        "options": ["Cả 10 account được triển khai cùng lúc", "Chỉ 2 account được triển khai, 8 account còn lại bị bỏ qua", "Triển khai thành 5 đợt, mỗi đợt 2 account", "Cho phép tối đa 2 account thất bại trước khi dừng"],
+        "answer": [2],
+        "explain": "Concurrent accounts là số account được deploy cùng lúc, nên 10 account chia thành 5 đợt. Số lần thất bại cho phép là failure tolerance, một tham số khác."
+      },
+      {
+        "type": "single",
+        "q": "Một quản trị viên muốn gỡ một account khỏi StackSet nhưng vẫn giữ nguyên các resource đã triển khai trong account đó. Cần làm gì?",
+        "options": ["Xóa stack instance với cấu hình mặc định", "Bật tùy chọn retain stacks khi xóa stack instance", "Đặt failure tolerance bằng 0", "Giảm maximum concurrent accounts xuống 1"],
+        "answer": [1],
+        "explain": "Mặc định xóa stack instance thì stack và resource ở target account bị xóa theo. Bật retain stacks thì stack được giữ lại, chỉ tách khỏi StackSet."
+      }
+    ],
+    "CFN Template and Pseudo Parameters": [
+      {
+        "type": "single",
+        "q": "Một template nhận mật khẩu database qua parameter. Công ty muốn giá trị này bị ẩn khi người dùng gõ và khi hiển thị trên console. Thuộc tính nào của parameter phù hợp?",
+        "options": ["AllowedPattern", "MaxLength", "NoEcho: true", "Description"],
+        "answer": [2],
+        "explain": "NoEcho ẩn giá trị khi nhập và khi hiển thị. AllowedPattern chỉ ràng buộc định dạng bằng regex, không ẩn gì. Với secret thật nên cân nhắc dynamic reference tới Secrets Manager hoặc SSM Parameter Store."
+      },
+      {
+        "type": "single",
+        "q": "Một đội muốn người dùng chỉ được chọn một trong ba instance type t3.micro, t3.small, t3.medium khi tạo stack. Cấu hình parameter nào phù hợp?",
+        "options": ["AllowedValues với danh sách ba instance type", "NoEcho: true", "Type: CommaDelimitedList", "Mappings với ba instance type"],
+        "answer": [0],
+        "explain": "AllowedValues giới hạn giá trị hợp lệ và console hiện dạng danh sách lựa chọn. Mappings là bảng tra, không ràng buộc input của người dùng."
+      },
+      {
+        "type": "single",
+        "q": "Một template phải chạy được ở mọi region, luôn dùng AMI Amazon Linux mới nhất và người dùng không phải nhập gì. Cấu hình parameter nào đáp ứng yêu cầu?",
+        "options": ["Parameter kiểu String không có default, người dùng tự tra AMI ID", "Parameter kiểu AWS::EC2::Image::Id với default là AMI ID của us-east-1", "Đặt cứng ImageId trong resource", "Parameter kiểu AWS::SSM::Parameter::Value<AWS::EC2::Image::Id> với default là path SSM public parameter của AMI"],
+        "answer": [3],
+        "explain": "Parameter kiểu SSM trỏ tới public parameter tự lấy AMI mới nhất đúng region, đây là stage3 hoàn toàn portable trong demo. Default là AMI ID của us-east-1 vẫn fail ở region khác."
+      },
+      {
+        "type": "multi",
+        "q": "Giá trị nào là pseudo parameter mà AWS tự cung cấp, dùng được bằng !Ref mà không cần khai báo trong section Parameters? (Chọn 2)",
+        "options": ["AWS::EC2::VPC::Id", "AWS::Region", "AWS::CloudFormation::Init", "AWS::SSM::Parameter::Value", "AWS::StackName"],
+        "answer": [1, 4],
+        "explain": "AWS::Region và AWS::StackName (cùng AWS::StackId, AWS::AccountId) là pseudo parameter. AWS::EC2::VPC::Id là parameter type, AWS::CloudFormation::Init là khối metadata của cfn-init."
+      },
+      {
+        "type": "single",
+        "q": "Khi bỏ property BucketName khỏi resource AWS::S3::Bucket, CloudFormation đặt tên bucket theo dạng nào?",
+        "options": ["Tên trùng với logical ID của resource", "<tên stack>-<logical ID>-<chuỗi ngẫu nhiên>", "<account ID>-<region>", "Báo lỗi vì BucketName là bắt buộc"],
+        "answer": [1],
+        "explain": "Tên stack duy nhất trong region, logical ID duy nhất trong template, cộng thêm chuỗi ngẫu nhiên nên tên luôn duy nhất. Đây là quy tắc đầu tiên để template portable: không đặt tên cứng."
+      }
+    ],
+    "CFN Wait Conditions and cfn-signal": [
+      {
+        "type": "single",
+        "q": "Một stack CloudFormation báo CREATE_COMPLETE sau khoảng 1 phút, nhưng ứng dụng trên EC2 instance phải 5 phút sau mới cài xong, và đôi khi cài lỗi mà stack vẫn báo thành công. Công ty muốn stack chỉ hoàn tất khi bootstrapping thành công. Giải pháp nào phù hợp?",
+        "options": ["Thêm DependsOn vào EC2 instance", "Thêm CreationPolicy vào EC2 instance và chạy cfn-signal ở cuối user data", "Cài cfn-hup trên instance", "Tăng kích thước instance để bootstrap nhanh hơn"],
+        "answer": [1],
+        "explain": "CreationPolicy khiến resource chờ success signal trong timeout; cfn-signal -e $? gửi kết quả bootstrap về. DependsOn chỉ chờ resource tạo xong; cfn-hup để áp lại cấu hình khi update stack."
+      },
+      {
+        "type": "single",
+        "q": "Một Auto Scaling Group trong template khởi tạo 3 instance. Stack chỉ được tiếp tục khi cả 3 instance cài ứng dụng xong trong vòng 15 phút. Cấu hình nào phù hợp?",
+        "options": ["WaitCondition với Count 1 và Timeout 900", "DependsOn từ ASG tới Launch Template", "Custom resource dùng Lambda kiểm tra instance", "CreationPolicy trên ASG với ResourceSignal Count 3 và Timeout PT15M, mỗi instance gửi cfn-signal"],
+        "answer": [3],
+        "explain": "CreationPolicy dùng được cho ASG; mỗi instance gửi một signal, cần đủ 3 trong 15 phút. AWS khuyến nghị CreationPolicy cho EC2 và ASG vì gắn trực tiếp với resource."
+      },
+      {
+        "type": "single",
+        "q": "Trong quá trình tạo stack, một phần resource chỉ được tạo sau khi một hệ thống cấp license on-premises xác nhận, đồng thời thông tin license từ hệ thống đó cần được dùng ở chỗ khác trong template. Giải pháp nào phù hợp?",
+        "options": ["WaitCondition kèm WaitConditionHandle; hệ thống ngoài gửi JSON tới presigned URL, dữ liệu đọc bằng !GetAtt WaitCondition.Data", "CreationPolicy trên EC2 instance", "DependsOn tới một resource giả", "Parameter có NoEcho để nhập thông tin license"],
+        "answer": [0],
+        "explain": "WaitCondition là cổng chờ tổng quát; WaitConditionHandle sinh presigned URL nên hệ thống ngoài gửi signal không cần AWS credentials, và Data được đọc qua GetAtt. CreationPolicy không truyền được dữ liệu về stack."
+      },
+      {
+        "type": "single",
+        "q": "Timeout tối đa có thể cấu hình cho CreationPolicy hoặc WaitCondition là bao lâu?",
+        "options": ["15 phút", "1 giờ", "12 giờ", "24 giờ"],
+        "answer": [2],
+        "explain": "Timeout tối đa là 12 giờ (43200 giây). 15 phút (PT15M) chỉ là giá trị ví dụ hay dùng trong bài."
+      },
+      {
+        "type": "single",
+        "q": "Resource có CreationPolicy yêu cầu 1 success signal trong 15 phút. Hết 15 phút mà chưa nhận được signal nào. Điều gì xảy ra?",
+        "options": ["CloudFormation bỏ qua và đánh dấu resource CREATE_COMPLETE", "Resource bị coi là thất bại (implicit failure) và stack fail", "CloudFormation tự gia hạn thêm 15 phút", "Stack tạm dừng chờ người dùng xác nhận thủ công"],
+        "answer": [1],
+        "explain": "Hết timeout mà chưa đủ success signal là thất bại ngầm định, resource và stack fail (mặc định rollback). Gửi failure signal thì là thất bại tường minh."
+      }
+    ],
+    "cfn-hup": [
+      {
+        "type": "single",
+        "q": "Một công ty dùng cfn-init để cấu hình web server trên EC2. Họ muốn mỗi khi update stack với metadata mới, cấu hình bên trong OS của các instance đang chạy tự cập nhật theo mà không phải thay instance. Giải pháp nào phù hợp?",
+        "options": ["Sửa user data để chạy lại script mỗi lần update", "Thêm CreationPolicy và cfn-signal", "Cài và cấu hình cfn-hup để theo dõi metadata và chạy lại cfn-init khi có thay đổi", "Dùng change set trước mỗi lần update"],
+        "answer": [2],
+        "explain": "cfn-hup định kỳ kiểm tra metadata của logical resource và chạy lại cfn-init khi phát hiện thay đổi. User data chỉ chạy một lần lúc launch; đổi user data chỉ làm instance stop/start mà script không chạy lại."
+      },
+      {
+        "type": "single",
+        "q": "Điều gì kích hoạt cfn-hup chạy action đã cấu hình?",
+        "options": ["Metadata của logical resource mà nó theo dõi thay đổi sau một lần update stack", "Instance bị reboot", "Có event mới trong CloudTrail", "CloudWatch alarm chuyển sang trạng thái ALARM"],
+        "answer": [0],
+        "explain": "cfn-hup theo dõi path metadata (ví dụ Resources.Instance.Metadata.AWS::CloudFormation::Init); chỉ thay đổi metadata mới kích hoạt nó. Trong demo, parameter được tham chiếu trong metadata nên đổi parameter làm metadata đổi theo."
+      },
+      {
+        "type": "single",
+        "q": "Trong file /etc/cfn/cfn-hup.conf, giá trị mặc định của interval (khoảng thời gian giữa các lần kiểm tra metadata) là bao nhiêu?",
+        "options": ["1 phút", "5 phút", "60 phút", "15 phút"],
+        "answer": [3],
+        "explain": "Interval tính bằng phút, mặc định 15; demo đặt 1 phút để thấy thay đổi nhanh hơn."
+      },
+      {
+        "type": "single",
+        "q": "Yêu cầu: stack CloudFormation chỉ được báo hoàn tất khi ứng dụng trên EC2 đã cấu hình xong. Công cụ nào phù hợp?",
+        "options": ["cfn-hup", "CreationPolicy kết hợp cfn-signal", "Change sets", "DeletionPolicy"],
+        "answer": [1],
+        "explain": "Chờ bootstrapping xong là việc của CreationPolicy + cfn-signal. cfn-hup chỉ theo dõi thay đổi metadata sau khi update stack, không báo trạng thái tạo về stack."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về vai trò của các helper script CloudFormation? (Chọn 2)",
+        "options": ["cfn-init áp cấu hình desired state từ metadata vào instance", "cfn-signal là công cụ áp cấu hình packages và files", "cfn-hup theo dõi thay đổi metadata và kích hoạt chạy lại cfn-init", "cfn-hup được cài và chạy sẵn mặc định, không cần cấu hình", "User data tự chạy lại mỗi khi update stack"],
+        "answer": [0, 2],
+        "explain": "cfn-init áp cấu hình, cfn-signal báo kết quả, cfn-hup theo dõi và kích hoạt chạy lại. cfn-hup phải tự cài và cấu hình (cfn-hup.conf, hooks.d), và user data chỉ chạy lần launch đầu."
+      }
+    ],
+    "cfn-init": [
+      {
+        "type": "single",
+        "q": "Một đội muốn khai báo ngay trong template CloudFormation những gói cần cài, file cần tạo và service phải chạy trên EC2, theo kiểu desired state và idempotent thay vì viết script bash dài. Giải pháp nào phù hợp?",
+        "options": ["Viết toàn bộ script trong UserData", "Dùng custom resource gọi Lambda cài phần mềm", "Dùng Mappings chứa danh sách gói", "Khai báo AWS::CloudFormation::Init trong Metadata của instance và gọi cfn-init từ user data"],
+        "answer": [3],
+        "explain": "cfn-init đọc AWS::CloudFormation::Init và đưa instance về desired state, idempotent sẵn. User data là procedural, phải tự viết logic kiểm tra đã cài hay chưa."
+      },
+      {
+        "type": "single",
+        "q": "Khối cấu hình AWS::CloudFormation::Init nằm ở đâu trong template?",
+        "options": ["Trong section Parameters", "Resources → <EC2Instance> → Metadata → AWS::CloudFormation::Init", "Trong property UserData của instance", "Trong section Outputs"],
+        "answer": [1],
+        "explain": "Chỉ thị cfn-init được lưu trong Metadata của logical resource mà nó áp vào. UserData chỉ chứa lệnh gọi cfn-init và cfn-signal."
+      },
+      {
+        "type": "single",
+        "q": "Trong cfn-init, configSet dùng để làm gì?",
+        "options": ["Chọn những config key nào sẽ được dùng và thứ tự chạy của chúng", "Định nghĩa timeout chờ signal", "Chọn region mà cfn-init kết nối tới", "Lưu mật khẩu cho database"],
+        "answer": [0],
+        "explain": "configSet gom nhiều config key và quy định thứ tự, ví dụ wordpress_install gồm install_cfn → software_install → ... → configure_wordpress. Lệnh cfn-init chọn configSet bằng --configsets."
+      },
+      {
+        "type": "single",
+        "q": "Section nào trong một config key của cfn-init đảm bảo service được enabled (khởi động cùng OS) và ensureRunning?",
+        "options": ["packages", "commands", "services", "files"],
+        "answer": [2],
+        "explain": "services đảm bảo service enabled và đang chạy. commands chạy lệnh tùy ý (phần procedural), packages cài gói, files tạo file."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng khi so sánh user data thuần với cfn-init?",
+        "options": ["cfn-init là tính năng của EC2, user data là tính năng của CloudFormation", "User data là procedural và là tính năng của EC2; cfn-init là desired state, native của CloudFormation nhưng vẫn được gọi từ user data", "cfn-init tự chạy khi instance boot mà không cần user data", "User data idempotent sẵn, cfn-init thì không"],
+        "answer": [1],
+        "explain": "User data là script EC2 chạy từng dòng; CloudFormation chỉ base64 rồi đẩy vào. cfn-init là desired state, idempotent, nhưng vẫn phải được gọi từ user data với --stack, --resource, --region."
+      }
+    ]
+  }
+}

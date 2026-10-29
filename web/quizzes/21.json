@@ -1,0 +1,692 @@
+{
+  "chapter": "21 Machine Learning",
+  "lessons": {
+    "Comprehend": [
+      {
+        "type": "single",
+        "q": "Một công ty bán lẻ thu thập hàng chục nghìn review sản phẩm dạng text mỗi ngày và muốn tự động phân loại review là tích cực, tiêu cực, trung lập hay trộn lẫn, không phải tự huấn luyện model. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Kendra",
+          "Amazon Comprehend",
+          "Amazon Rekognition",
+          "Amazon Translate"
+        ],
+        "answer": [1],
+        "explain": "Comprehend là dịch vụ NLP managed, có sẵn sentiment analysis trên text với model pre-trained. Kendra dùng để tìm kiếm trong tài liệu chứ không phân tích sentiment."
+      },
+      {
+        "type": "single",
+        "q": "Một contact center lưu file ghi âm cuộc gọi trong S3 và muốn phân tích sentiment của khách hàng trong từng cuộc gọi. Kết hợp dịch vụ nào phù hợp?",
+        "options": [
+          "Đưa trực tiếp file audio vào Amazon Comprehend",
+          "Amazon Polly để chuyển audio thành text, sau đó Amazon Comprehend",
+          "Amazon Lex để phân tích file ghi âm",
+          "Amazon Transcribe để chuyển audio thành text, sau đó Amazon Comprehend để phân tích sentiment"
+        ],
+        "answer": [3],
+        "explain": "Comprehend chỉ làm việc trên text, nên audio phải qua Transcribe (speech-to-text) trước. Polly làm chiều ngược lại (text-to-speech) nên không dùng được."
+      },
+      {
+        "type": "single",
+        "q": "Khi phân tích sentiment, Amazon Comprehend có thể trả về những nhãn nào?",
+        "options": [
+          "Positive, Negative, Neutral, Mixed",
+          "Positive, Negative",
+          "Happy, Sad, Angry, Calm",
+          "Safe, Unsafe, Unknown"
+        ],
+        "answer": [0],
+        "explain": "Sentiment của Comprehend gồm Positive, Negative, Neutral và Mixed, mỗi nhãn kèm confidence score từ 0 đến 1. Các nhãn cảm xúc như Happy/Calm là kiểu face analysis của Rekognition."
+      },
+      {
+        "type": "single",
+        "q": "Đội compliance cần tự động quét toàn bộ các S3 bucket trong tài khoản để phát hiện object chứa dữ liệu nhạy cảm và PII. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Comprehend với real-time analysis",
+          "Amazon GuardDuty",
+          "Amazon Macie",
+          "Amazon Textract"
+        ],
+        "answer": [2],
+        "explain": "Quét S3 bucket ở quy mô tài khoản để tìm dữ liệu nhạy cảm/PII là việc của Macie. Comprehend phát hiện PII trong văn bản do ứng dụng gửi tới, không tự quét các bucket."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty bảo hiểm muốn dùng Comprehend để phân loại hồ sơ theo các nhãn nghiệp vụ nội bộ và nhận diện mã sản phẩm riêng của công ty trong văn bản. Hai tính năng nào cần dùng? (Chọn 2)",
+        "options": [
+          "Comprehend Medical",
+          "Custom classification",
+          "Built-in key phrase extraction",
+          "Amazon Kendra index",
+          "Custom entity recognition"
+        ],
+        "answer": [1, 4],
+        "explain": "Model custom của Comprehend gồm custom classification (phân loại theo nhãn của bạn) và custom entity recognition (entity riêng của doanh nghiệp). Model built-in không biết các nhãn hay mã sản phẩm nội bộ; Comprehend Medical dành cho văn bản y tế."
+      }
+    ],
+    "Forecast": [
+      {
+        "type": "single",
+        "q": "Một chuỗi bán lẻ muốn dự báo nhu cầu từng mặt hàng trong 3 tháng tới dựa trên dữ liệu bán hàng lịch sử và lịch khuyến mãi, với dịch vụ managed và không phải tự xây model. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Fraud Detector",
+          "Amazon Comprehend",
+          "Amazon Forecast",
+          "Amazon Kendra"
+        ],
+        "answer": [2],
+        "explain": "Forecast là dịch vụ managed dự báo time-series từ historical data cộng related data (như khuyến mãi). Các dịch vụ còn lại phục vụ phát hiện gian lận, NLP và tìm kiếm."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về vai trò của dữ liệu thời tiết đối với Amazon Forecast?",
+        "options": [
+          "Thời tiết có thể được đưa vào như related data để giải thích và cải thiện dự báo nhu cầu",
+          "Forecast là dịch vụ chuyên dự báo thời tiết cho các region của AWS",
+          "Forecast không chấp nhận bất kỳ dữ liệu nào ngoài historical data",
+          "Dữ liệu thời tiết phải được xử lý bằng Amazon Comprehend trước khi đưa vào Forecast"
+        ],
+        "answer": [0],
+        "explain": "Forecast dự báo dữ liệu time-series như nhu cầu, không phải dự báo thời tiết; thời tiết chỉ là một loại related data đầu vào bên cạnh historical data. Đây là bẫy thường gặp với tên dịch vụ."
+      },
+      {
+        "type": "single",
+        "q": "Ngoài giá trị dự báo, Amazon Forecast cung cấp output nào giúp hiểu tại sao nhu cầu thay đổi?",
+        "options": [
+          "Confidence score cho từng entity",
+          "Fraud score kèm rules",
+          "Sentiment theo từng giai đoạn",
+          "Forecast explainability"
+        ],
+        "answer": [3],
+        "explain": "Forecast trả về forecast và forecast explainability, giải thích các yếu tố (như thời tiết, khuyến mãi) làm nhu cầu thay đổi. Fraud score là của Fraud Detector; entity confidence score là của Comprehend."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên EC2 Auto Scaling Group có traffic tăng giảm theo chu kỳ hằng ngày rất rõ ràng. Công ty muốn tự động scale trước khi traffic tăng, với công sức thấp nhất. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Dùng Amazon Forecast dự báo traffic rồi viết Lambda điều chỉnh desired capacity",
+          "Bật predictive scaling trong scaling policy của Auto Scaling Group",
+          "Huấn luyện model dự báo trên Amazon SageMaker",
+          "Dùng scheduled scaling được cập nhật thủ công mỗi tuần"
+        ],
+        "answer": [1],
+        "explain": "Predictive scaling có sẵn trong ASG scaling policies là đáp án đơn giản nhất để scale theo dự báo. Forecast hay SageMaker cũng dự báo được nhưng đòi hỏi tích hợp và vận hành nhiều hơn."
+      },
+      {
+        "type": "single",
+        "q": "Đội data science của một công ty cần tự xây, huấn luyện và deploy một model ML tùy ý cho bài toán không phải time-series (ví dụ phân loại khách hàng theo hành vi). Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Forecast",
+          "Amazon Comprehend",
+          "Amazon SageMaker",
+          "Amazon Fraud Detector"
+        ],
+        "answer": [2],
+        "explain": "Forecast chuyên cho time-series; khi cần tự xây và huấn luyện model tùy ý thì chọn SageMaker, nền tảng ML phủ toàn bộ vòng đời. Fraud Detector và Comprehend chỉ giải các bài toán chuyên biệt."
+      }
+    ],
+    "Fraud Detector": [
+      {
+        "type": "single",
+        "q": "Một sàn thương mại điện tử bị tấn công bởi hàng loạt lượt đăng ký tài khoản giả. Họ muốn dùng Amazon Fraud Detector để chấm điểm từng lượt đăng ký mới, vốn chưa có lịch sử khách hàng. Nên chọn model type nào?",
+        "options": [
+          "Transaction Fraud",
+          "Account Takeover",
+          "Online Fraud",
+          "Custom classification"
+        ],
+        "answer": [2],
+        "explain": "Online Fraud dùng khi có ít dữ liệu lịch sử về đối tượng, như đăng ký tài khoản mới. Transaction Fraud cần lịch sử giao dịch của khách hàng; custom classification là tính năng của Comprehend."
+      },
+      {
+        "type": "single",
+        "q": "Một ngân hàng muốn phát hiện giao dịch thẻ tín dụng đáng ngờ dựa trên lịch sử giao dịch của từng khách hàng (cửa hàng hay dùng, giá trị, quốc gia, thời điểm trong ngày). Model type nào của Fraud Detector phù hợp nhất?",
+        "options": [
+          "Transaction Fraud",
+          "Online Fraud",
+          "Account Takeover",
+          "Anomaly Detection của Amazon GuardDuty"
+        ],
+        "answer": [0],
+        "explain": "Transaction Fraud dựa trên lịch sử giao dịch để dựng profile bình thường của khách và phát hiện thanh toán bất thường. Online Fraud dành cho trường hợp ít lịch sử như tài khoản mới."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng phát hiện nhiều lượt đăng nhập vào tài khoản khách hàng từ vị trí hoàn toàn khác thường, nghi do phishing. Họ muốn chấm điểm rủi ro cho các lượt đăng nhập này bằng Fraud Detector. Model type nào phù hợp?",
+        "options": [
+          "Online Fraud",
+          "Transaction Fraud",
+          "Payment Fraud",
+          "Account Takeover"
+        ],
+        "answer": [3],
+        "explain": "Account Takeover phát hiện tài khoản bị chiếm qua phishing hoặc social engineering, như đăng nhập từ vị trí lạ. Fraud Detector chỉ có ba model type: Online Fraud, Transaction Fraud, Account Takeover; không có Payment Fraud."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty thanh toán cần phát hiện gian lận ở tầng nghiệp vụ trong các giao dịch thanh toán và guest checkout của khách hàng. Dịch vụ AWS nào phù hợp nhất?",
+        "options": [
+          "Amazon GuardDuty",
+          "AWS WAF",
+          "Amazon Fraud Detector",
+          "Amazon Cognito"
+        ],
+        "answer": [2],
+        "explain": "Fraud Detector nhắm gian lận nghiệp vụ như thanh toán, đăng ký, guest checkout. GuardDuty phát hiện mối đe dọa trên tài khoản/hạ tầng AWS từ CloudTrail, VPC Flow Logs, DNS logs; WAF chỉ lọc request HTTP ở layer 7."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi Fraud Detector chấm điểm một event, cơ chế nào quyết định việc duyệt, chuyển review thủ công hay chặn event đó?",
+        "options": [
+          "Confidence score của Amazon Comprehend",
+          "Rules (decision logic) dựa trên fraud score và mức chấp nhận rủi ro",
+          "AWS WAF rate-based rules",
+          "Security Group gắn với ứng dụng"
+        ],
+        "answer": [1],
+        "explain": "Mọi event được score, sau đó rules/decision logic phản ứng theo score tùy hoạt động kinh doanh và mức chấp nhận rủi ro (approve, review, block). WAF rules lọc HTTP request chứ không đọc fraud score."
+      }
+    ],
+    "Kendra": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn nhân viên đặt câu hỏi bằng ngôn ngữ tự nhiên (ví dụ: làm sao để xin nghỉ phép?) và nhận câu trả lời từ tài liệu nội bộ nằm rải rác trên S3, Confluence, OneDrive và Salesforce. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Comprehend",
+          "Amazon Athena",
+          "Amazon Lex",
+          "Amazon Kendra"
+        ],
+        "answer": [3],
+        "explain": "Kendra là intelligent/enterprise search dựa trên ML, có nhiều data source connector và trả lời câu hỏi ngôn ngữ tự nhiên như một chuyên gia. Comprehend phân tích text chứ không tìm kiếm; Lex chỉ xây giao diện hội thoại."
+      },
+      {
+        "type": "single",
+        "q": "Trong Amazon Kendra, khi nhận một query, Kendra thực sự tìm kiếm trên thành phần nào?",
+        "options": [
+          "Index, khối dữ liệu đã được tổ chức để tìm kiếm hiệu quả",
+          "Trực tiếp trên data source gốc tại thời điểm query",
+          "Một DynamoDB table do người dùng tự tạo",
+          "Một Lex bot đã được huấn luyện"
+        ],
+        "answer": [0],
+        "explain": "Kendra kết nối tới data source và đánh index; khi query, Kendra tìm trên index chứ không đọc trực tiếp data source gốc."
+      },
+      {
+        "type": "single",
+        "q": "Tài liệu trong các data source của Kendra thay đổi hằng ngày. Làm thế nào để kết quả tìm kiếm luôn phản ánh nội dung mới?",
+        "options": [
+          "Xóa và tạo lại index mỗi ngày",
+          "Bật S3 Event Notifications để gọi Kendra mỗi khi có object mới",
+          "Cấu hình sync theo schedule giữa data source và index",
+          "Dùng Amazon Comprehend để cập nhật index"
+        ],
+        "answer": [2],
+        "explain": "Kendra hỗ trợ đồng bộ data source vào index theo schedule để index luôn cập nhật. Tạo lại index mỗi ngày tốn công và không cần thiết."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty muốn xây chatbot trên website: chatbot hội thoại với người dùng bằng text, hiểu intent, rồi tìm câu trả lời trong kho FAQ và tài liệu hướng dẫn của công ty. Hai dịch vụ nào nên kết hợp? (Chọn 2)",
+        "options": [
+          "Amazon Polly",
+          "Amazon Lex",
+          "Amazon Comprehend",
+          "Amazon Kendra",
+          "Amazon Rekognition"
+        ],
+        "answer": [1, 3],
+        "explain": "Lex xây chatbot hội thoại (nhận câu hỏi, hiểu intent), còn Kendra tìm câu trả lời trong tài liệu và FAQ; hai dịch vụ thường kết hợp như vậy. Comprehend phân tích text (sentiment, entity) chứ không tìm câu trả lời."
+      },
+      {
+        "type": "single",
+        "q": "Câu hỏi What time is the keynote address? khó với hệ thống tìm kiếm thông thường vì từ address có thể bị hiểu là địa chỉ bưu điện. Theo phân loại của Kendra, đây là loại câu hỏi nào và Kendra xử lý ra sao?",
+        "options": [
+          "Factoid; Kendra chỉ trả về tài liệu chứa đúng từ address",
+          "Keyword; Kendra phải suy ra intent để hiểu address là bài phát biểu",
+          "Descriptive; Kendra chuyển câu hỏi sang Amazon Lex",
+          "Structured FAQ; Kendra chỉ trả lời nếu câu hỏi khớp nguyên văn FAQ"
+        ],
+        "answer": [1],
+        "explain": "Câu hỏi keyword trông đơn giản nhưng từ khóa có thể nhiều nghĩa, nên Kendra phải suy ra intent. Factoid là who/what/where; descriptive là dạng how do I."
+      }
+    ],
+    "Lex": [
+      {
+        "type": "single",
+        "q": "Một chuỗi nhà hàng muốn xây bot cho phép khách đặt pizza bằng text trên website hoặc bằng giọng nói qua điện thoại, bot phải hiểu yêu cầu và hỏi lại thông tin còn thiếu. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Transcribe",
+          "Amazon Polly",
+          "Amazon Lex",
+          "Amazon Comprehend"
+        ],
+        "answer": [2],
+        "explain": "Lex xây chatbot/voice bot với ASR và NLU, quản lý intent và slot để hỏi lại thông tin còn thiếu. Transcribe chỉ chuyển speech thành text, không hiểu intent và không hội thoại."
+      },
+      {
+        "type": "single",
+        "q": "Hai năng lực cốt lõi mà Amazon Lex cung cấp là gì?",
+        "options": [
+          "ASR (Automatic Speech Recognition) và NLU (Natural Language Understanding)",
+          "OCR và phân tích form",
+          "Text-to-speech và SSML",
+          "Neural machine translation và attention mechanism"
+        ],
+        "answer": [0],
+        "explain": "Lex cung cấp ASR (speech-to-text) và NLU (nhận intent, intent chaining). Text-to-speech/SSML là Polly; OCR là Textract; dịch máy là Translate."
+      },
+      {
+        "type": "single",
+        "q": "Trong một Lex bot đặt pizza, thông tin Size (small, medium, large) và Crust (normal, cheesy) mà bot cần thu thập để hoàn thành intent OrderPizza được gọi là gì?",
+        "options": [
+          "Sample utterances",
+          "Fulfillment",
+          "Bot",
+          "Slots"
+        ],
+        "answer": [3],
+        "explain": "Slot là tham số của intent và có thể bắt buộc. Sample utterances là các cách nói khác nhau để kích hoạt intent; fulfillment là cách thực hiện intent sau khi đã hiểu."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi Lex bot đã hiểu intent OrderPizza và thu thập đủ slot, cách phổ biến nhất trong kiến trúc serverless để thực sự tạo đơn hàng là gì?",
+        "options": [
+          "Lex tự ghi đơn vào RDS mà không cần code",
+          "Gọi một AWS Lambda function làm fulfillment cho intent",
+          "Gửi đơn hàng sang Amazon Polly",
+          "Dùng Amazon Kendra để lưu đơn hàng"
+        ],
+        "answer": [1],
+        "explain": "Fulfillment của intent thường là Lambda; Lex + Lambda là cặp đôi điển hình trong kiến trúc serverless. Polly và Kendra không xử lý logic nghiệp vụ đặt hàng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn xây contact center có IVR thông minh, cho phép khách hàng nói tự nhiên qua điện thoại để tra cứu đơn hàng thay vì bấm phím. Kết hợp nào phù hợp nhất?",
+        "options": [
+          "Amazon Connect + Amazon Polly",
+          "Amazon Connect + Amazon Transcribe",
+          "Amazon Connect + Amazon Lex",
+          "Amazon Pinpoint + Amazon Comprehend"
+        ],
+        "answer": [2],
+        "explain": "Contact center/IVR thông minh là Amazon Connect + Lex, vì Lex cung cấp hội thoại hai chiều (ASR + NLU). Transcribe chỉ chép lại lời nói, không quản lý intent hay hội thoại."
+      }
+    ],
+    "Polly": [
+      {
+        "type": "single",
+        "q": "Một trang tin tức muốn cung cấp phiên bản audio nghe tự nhiên cho mỗi bài viết để người dùng nghe khi lái xe. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Transcribe",
+          "Amazon Polly",
+          "Amazon Lex",
+          "Amazon Translate"
+        ],
+        "answer": [1],
+        "explain": "Polly chuyển text thành speech lifelike, có cả plugin WordPress để đọc bài viết. Transcribe làm chiều ngược lại (speech-to-text)."
+      },
+      {
+        "type": "single",
+        "q": "Một nền tảng e-learning có nội dung bài giảng dạng text tiếng Anh và cần phát audio bài giảng bằng tiếng Tây Ban Nha cho học viên. Giải pháp nào đúng?",
+        "options": [
+          "Gửi text tiếng Anh vào Polly và chọn giọng tiếng Tây Ban Nha",
+          "Dùng Amazon Transcribe rồi Amazon Polly",
+          "Dùng Amazon Lex để dịch và đọc nội dung",
+          "Dùng Amazon Translate dịch sang tiếng Tây Ban Nha, sau đó dùng Amazon Polly đọc thành audio"
+        ],
+        "answer": [3],
+        "explain": "Polly không dịch: text ở ngôn ngữ nào thì đọc ra ngôn ngữ đó. Cần Translate để dịch text trước, rồi Polly mới đọc. Chọn giọng tiếng Tây Ban Nha cho text tiếng Anh không làm nội dung được dịch."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng dùng Polly cần nhấn mạnh một số từ, đọc thì thầm ở một đoạn và chỉ định cách phát âm một tên riêng. Cách nào phù hợp?",
+        "options": [
+          "Dùng SSML (Speech Synthesis Markup Language) để đánh dấu text",
+          "Chuyển sang output format PCM",
+          "Dùng custom vocabulary của Amazon Transcribe",
+          "Dùng Amazon Comprehend để gắn tag cho text"
+        ],
+        "answer": [0],
+        "explain": "SSML cho phép điều khiển cách Polly nói: emphasis, pronunciation, whispering, kiểu Newscaster. Output format chỉ thay đổi định dạng file audio; custom vocabulary là tính năng của Transcribe."
+      },
+      {
+        "type": "single",
+        "q": "Điểm khác biệt chính giữa Neural TTS (NTTS) và Standard TTS của Polly là gì?",
+        "options": [
+          "Standard TTS hỗ trợ dịch ngôn ngữ, còn NTTS thì không",
+          "NTTS chỉ xuất ra MP3, còn Standard xuất ra mọi định dạng",
+          "Standard TTS ghép các phoneme (concatenative), còn NTTS đi qua spectrogram và vocoder nên giọng tự nhiên hơn nhưng tính toán nặng hơn",
+          "NTTS chuyển speech thành text, còn Standard chuyển text thành speech"
+        ],
+        "answer": [2],
+        "explain": "Standard TTS là kiến trúc concatenative ghép phoneme; NTTS chuyển phoneme sang spectrogram rồi qua vocoder để tạo audio giống người hơn. Không engine nào của Polly dịch ngôn ngữ."
+      },
+      {
+        "type": "single",
+        "q": "Amazon Polly hỗ trợ những định dạng audio output nào?",
+        "options": [
+          "WAV, FLAC, AAC",
+          "MP4, WebM, MKV",
+          "MP3, AAC, WMA",
+          "MP3, Ogg Vorbis, PCM"
+        ],
+        "answer": [3],
+        "explain": "Polly xuất audio dạng MP3, Ogg Vorbis hoặc PCM; PCM hợp khi cần đưa audio thô sang dịch vụ khác."
+      }
+    ],
+    "Rekognition": [
+      {
+        "type": "single",
+        "q": "Người dùng upload ảnh thú cưng lên một S3 bucket. Công ty muốn tự động gắn nhãn nội dung ảnh (cat, dog...) và lưu metadata kèm link ảnh để xử lý nghiệp vụ, theo kiến trúc serverless event-driven. Thiết kế nào phù hợp nhất?",
+        "options": [
+          "S3 Event kích hoạt Lambda, Lambda gọi Rekognition rồi ghi metadata vào DynamoDB",
+          "Cron job trên EC2 quét bucket mỗi giờ và gọi Textract",
+          "S3 Event kích hoạt Lambda gọi Comprehend để phân tích ảnh",
+          "Kinesis Video Streams đọc ảnh từ S3 và gửi tới SageMaker"
+        ],
+        "answer": [0],
+        "explain": "Luồng điển hình là S3 Event → Lambda → Rekognition → DynamoDB. Comprehend chỉ phân tích text; Textract trích text từ tài liệu, không gắn nhãn đối tượng trong ảnh."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty an ninh muốn nhận diện khuôn mặt theo thời gian thực từ luồng video camera giám sát để phân biệt chủ nhà với người lạ. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Lưu video vào S3 rồi chạy Amazon Textract",
+          "Kinesis Data Firehose gửi video tới Amazon Comprehend",
+          "Amazon Kinesis Video Streams kết hợp Amazon Rekognition Video",
+          "Amazon Transcribe phân tích luồng video"
+        ],
+        "answer": [2],
+        "explain": "Video trực tiếp/camera an ninh được phân tích bằng Kinesis Video Streams + Rekognition, kết quả có thể đưa vào Kinesis Data Streams. Textract, Comprehend và Transcribe không phân tích khuôn mặt trong video."
+      },
+      {
+        "type": "single",
+        "q": "Một hệ thống giao thông cần đọc biển số xe từ ảnh chụp tự động tại các trạm thu phí. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Textract Analyze Document",
+          "Amazon Comprehend",
+          "Amazon Kendra",
+          "Amazon Rekognition"
+        ],
+        "answer": [3],
+        "explain": "Text trong ảnh hoặc video tự nhiên như biển số, biển hiệu thì dùng Rekognition. Textract dành cho trích text có cấu trúc từ tài liệu như form, bảng, hóa đơn."
+      },
+      {
+        "type": "single",
+        "q": "Amazon Rekognition tính phí theo cách nào?",
+        "options": [
+          "Theo số giờ chạy của cluster phân tích",
+          "Pay-as-you-use, theo số ảnh hoặc theo phút video được phân tích",
+          "Phí cố định hằng tháng theo số camera",
+          "Theo số ký tự text tìm thấy trong ảnh"
+        ],
+        "answer": [1],
+        "explain": "Rekognition là pay-as-you-use, tính theo ảnh (per image) hoặc theo phút video (per minute). Không có cluster hay phí cố định."
+      },
+      {
+        "type": "multi",
+        "q": "Một mạng xã hội cho phép người dùng upload ảnh đại diện. Hai yêu cầu nào có thể đáp ứng trực tiếp bằng Amazon Rekognition? (Chọn 2)",
+        "options": [
+          "Phát hiện ảnh có nội dung không phù hợp (content moderation)",
+          "Trích bảng và cặp key-value từ form đăng ký scan",
+          "Dịch chú thích ảnh sang ngôn ngữ khác",
+          "Chuyển mô tả ảnh thành giọng nói",
+          "So sánh khuôn mặt trong ảnh đại diện với ảnh trên giấy tờ đã xác minh"
+        ],
+        "answer": [0, 4],
+        "explain": "Rekognition hỗ trợ content moderation và face comparison. Trích bảng/key-value từ form là Textract; dịch là Translate; chuyển text thành giọng nói là Polly."
+      }
+    ],
+    "SageMaker": [
+      {
+        "type": "single",
+        "q": "Đội data scientist của một công ty cần một nền tảng ML fully managed để lấy và chuẩn bị dữ liệu, huấn luyện, đánh giá, deploy và giám sát model tùy chỉnh của riêng họ. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Rekognition",
+          "Amazon Comprehend",
+          "Amazon Forecast",
+          "Amazon SageMaker"
+        ],
+        "answer": [3],
+        "explain": "SageMaker bao phủ toàn bộ vòng đời ML (fetch, clean, prepare, train, evaluate, deploy, monitor) cho model tùy chỉnh. Rekognition, Comprehend và Forecast là AI service có sẵn cho bài toán chuyên biệt."
+      },
+      {
+        "type": "single",
+        "q": "Trong SageMaker, thành phần nào là đơn vị cô lập cho một dự án, gồm EFS volume, users, apps, policies và cấu hình VPC?",
+        "options": [
+          "SageMaker Studio",
+          "SageMaker Domain",
+          "SageMaker endpoint",
+          "ML EC2 instance (ml.*)"
+        ],
+        "answer": [1],
+        "explain": "SageMaker Domain là vùng cô lập/nhóm cho một dự án, chứa EFS, users, apps, policies, VPC và phải tạo trước khi dùng Studio. SageMaker Studio là IDE cho vòng đời ML."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về chi phí khi dùng Amazon SageMaker?",
+        "options": [
+          "SageMaker tính phí cố định theo số user trong domain",
+          "SageMaker tính phí theo số model được tạo, bất kể tài nguyên",
+          "Bản thân SageMaker không thu phí riêng; bạn trả tiền cho tài nguyên nó tạo ra như compute training, endpoint, storage",
+          "SageMaker miễn phí hoàn toàn, kể cả instance training"
+        ],
+        "answer": [2],
+        "explain": "SageMaker không thu phí riêng nhưng tài nguyên thì có, và thường lớn, tốn kém. Khi tối ưu chi phí, cần chú ý endpoint chạy liên tục và instance ml.* lớn."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng cần phát hiện và so sánh khuôn mặt trong ảnh người dùng upload. Một kỹ sư đề xuất tự huấn luyện model nhận diện khuôn mặt trên SageMaker. Giải pháp nào có ít công sức vận hành nhất?",
+        "options": [
+          "Dùng Amazon Rekognition",
+          "Huấn luyện model trên SageMaker và deploy endpoint chạy liên tục",
+          "Dùng SageMaker Studio để xây pipeline training hằng tuần",
+          "Chạy model mã nguồn mở trên EC2 GPU instance"
+        ],
+        "answer": [0],
+        "explain": "Khi đã có AI service chuyên dụng giải đúng bài toán (face detection/comparison), chọn dịch vụ đó (Rekognition) thay vì tự train trên SageMaker để giảm công sức vận hành."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi huấn luyện xong model trên SageMaker, ứng dụng cần gửi inference request tới model. Cần triển khai gì?",
+        "options": [
+          "Một SageMaker Domain mới",
+          "Một Lex bot gọi tới model",
+          "Một Kendra index chứa model",
+          "Một SageMaker endpoint (hosting) cho model"
+        ],
+        "answer": [3],
+        "explain": "Model được triển khai thành endpoint để ứng dụng gọi, với kiến trúc hosting từ serverless đến compute chạy liên tục. Domain chỉ là vùng làm việc cho dự án, không phục vụ inference."
+      }
+    ],
+    "Textract": [
+      {
+        "type": "single",
+        "q": "Một công ty kế toán nhận hàng nghìn hóa đơn và biên lai scan mỗi ngày, cần trích tự động vendor, ngày, tổng tiền và từng line item. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Amazon Rekognition text detection",
+          "Amazon Textract Analyze Expense",
+          "Amazon Comprehend custom entity recognition",
+          "Amazon Kendra"
+        ],
+        "answer": [1],
+        "explain": "Textract Analyze Expense chuyên trích vendor, giá, line items, ngày từ hóa đơn/biên lai. Rekognition đọc text trong ảnh tự nhiên nhưng không hiểu cấu trúc hóa đơn."
+      },
+      {
+        "type": "single",
+        "q": "Một fintech triển khai quy trình KYC, khách hàng upload hộ chiếu hoặc bằng lái xe. Hệ thống cần trích các trường như số giấy tờ, họ tên, ngày sinh về một schema chung để lưu vào cùng một database. Tính năng nào phù hợp nhất?",
+        "options": [
+          "Textract Analyze Expense",
+          "Rekognition face comparison",
+          "Textract Analyze ID",
+          "Comprehend PII detection"
+        ],
+        "answer": [2],
+        "explain": "Analyze ID chuẩn hóa nhiều loại giấy tờ về một schema chung (ví dụ số bằng lái và số hộ chiếu đều thành Document number), rất hợp cho KYC/AML. Analyze Expense dành cho hóa đơn/biên lai."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty luật cần trích text từ các file PDF hợp đồng dài hàng trăm trang lưu trong S3. Cách dùng Textract nào phù hợp?",
+        "options": [
+          "Dùng API asynchronous: start job, chờ thông báo hoàn tất (thường qua SNS) rồi lấy kết quả",
+          "Dùng API synchronous cho từng file để có kết quả tức thì",
+          "Chuyển PDF sang ảnh rồi dùng Rekognition",
+          "Upload từng file qua console Textract"
+        ],
+        "answer": [0],
+        "explain": "Tài liệu lớn nhiều trang dùng asynchronous API (start job rồi lấy kết quả khi xong, thường kèm SNS). Synchronous dành cho tài liệu cỡ thường; console demo chỉ cho tài liệu dưới 11 trang, dưới 5 MB."
+      },
+      {
+        "type": "single",
+        "q": "Một bệnh viện cần số hóa phiếu đăng ký bệnh nhân scan, giữ nguyên cặp key-value (ví dụ Họ tên: ...) và cấu trúc các bảng, kể cả chữ viết tay. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Rekognition",
+          "Amazon Transcribe Medical",
+          "Amazon Comprehend Medical",
+          "Amazon Textract Analyze Document (Forms và Tables)"
+        ],
+        "answer": [3],
+        "explain": "OCR có cấu trúc (key-value, bảng, chữ in/viết tay/đóng dấu) là Textract. Rekognition đọc text trong ảnh tự nhiên nhưng không hiểu form/bảng; Comprehend Medical phân tích text đã có chứ không đọc tài liệu scan."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty cần pipeline tự động: khi tài liệu scan (PDF, ảnh) được upload vào S3, hệ thống trích text và phát hiện PII trong text đó. Hai dịch vụ nào là thành phần chính của pipeline? (Chọn 2)",
+        "options": [
+          "Amazon Textract",
+          "Amazon Polly",
+          "Amazon Comprehend",
+          "Amazon Transcribe",
+          "Amazon Lex"
+        ],
+        "answer": [0, 2],
+        "explain": "Pipeline phổ biến: S3 upload → Lambda → Textract trích text → Comprehend tìm entity/PII → lưu DB. Transcribe xử lý audio, không xử lý tài liệu scan."
+      }
+    ],
+    "Transcribe": [
+      {
+        "type": "single",
+        "q": "Một công ty truyền thông có thư viện video lớn và muốn tự động tạo phụ đề (subtitles) cho từng video. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Polly",
+          "Amazon Rekognition Video",
+          "Amazon Transcribe",
+          "Amazon Lex"
+        ],
+        "answer": [2],
+        "explain": "Transcribe là ASR chuyển audio thành text, dùng cho subtitles, captions, meeting notes. Polly làm chiều ngược lại (text → speech); Lex dùng cho hội thoại."
+      },
+      {
+        "type": "single",
+        "q": "Một ngân hàng ghi âm cuộc gọi khách hàng và chuyển thành text bằng Transcribe. Quy định yêu cầu số tài khoản và thông tin cá nhân không được xuất hiện trong transcript. Cách đơn giản nhất là gì?",
+        "options": [
+          "Bật PII identification & redaction trong Amazon Transcribe",
+          "Dùng Amazon Macie quét transcript sau khi tạo",
+          "Dùng vocabulary filtering để chặn mọi chữ số",
+          "Dùng Amazon Polly đọc lại transcript và bỏ các đoạn nhạy cảm"
+        ],
+        "answer": [0],
+        "explain": "Transcribe có sẵn tính năng PII identification & redaction để ẩn PII trong transcript. Vocabulary filtering dùng cho từ ngữ không mong muốn chứ không phải nhận diện PII; Macie chỉ phát hiện chứ không redact transcript."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có file ghi âm các cuộc họp bằng tiếng Nhật và cần bản ghi text bằng tiếng Anh. Kết hợp dịch vụ nào đúng?",
+        "options": [
+          "Chỉ Amazon Transcribe với tùy chọn output tiếng Anh",
+          "Amazon Polly rồi Amazon Translate",
+          "Amazon Lex rồi Amazon Comprehend",
+          "Amazon Transcribe để có text tiếng Nhật, sau đó Amazon Translate sang tiếng Anh"
+        ],
+        "answer": [3],
+        "explain": "Transcribe chỉ chuyển speech thành text cùng ngôn ngữ, không dịch; cần thêm Translate để chuyển text sang tiếng Anh. Polly là text → speech nên không dùng cho bài toán này."
+      },
+      {
+        "type": "single",
+        "q": "Amazon Transcribe tính phí theo đơn vị nào?",
+        "options": [
+          "Theo số từ trong transcript",
+          "Theo giây của audio được transcribe",
+          "Theo số file audio upload",
+          "Theo giờ chạy của transcription cluster"
+        ],
+        "answer": [1],
+        "explain": "Transcribe là pay-as-you-use, tính theo từng giây audio được chuyển đổi. Không có cluster nào để chạy theo giờ."
+      },
+      {
+        "type": "single",
+        "q": "Một phòng khám muốn bác sĩ đọc ghi chú khám bệnh và tự động chuyển thành text, với độ chính xác cao cho thuật ngữ y khoa. Lựa chọn nào phù hợp nhất?",
+        "options": [
+          "Amazon Comprehend Medical",
+          "Amazon Transcribe Call Analytics",
+          "Amazon Transcribe Medical",
+          "Amazon Lex"
+        ],
+        "answer": [2],
+        "explain": "Transcribe Medical là biến thể speech-to-text cho thuật ngữ y khoa. Comprehend Medical phân tích văn bản y tế có sẵn, không chuyển audio thành text; Call Analytics dành cho phân tích cuộc gọi."
+      }
+    ],
+    "Translate": [
+      {
+        "type": "single",
+        "q": "Một công ty game muốn người chơi từ nhiều quốc gia trò chuyện với nhau trong in-game chat, mỗi người đọc tin nhắn bằng ngôn ngữ của mình. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Comprehend",
+          "Amazon Polly",
+          "Amazon Translate",
+          "Amazon Lex"
+        ],
+        "answer": [2],
+        "explain": "Dịch text sang text giữa các ngôn ngữ là Translate, với use case như in-game chat, live chat, email. Comprehend chỉ nhận diện ngôn ngữ chứ không dịch."
+      },
+      {
+        "type": "single",
+        "q": "Trong neural machine translation của Amazon Translate, encoder có vai trò gì?",
+        "options": [
+          "Đọc text nguồn và tạo semantic representation (biểu diễn ý nghĩa) của nó",
+          "Viết ra text ở ngôn ngữ đích từ biểu diễn ý nghĩa",
+          "Chuyển text đích thành giọng nói",
+          "Thay thế từng từ nguồn bằng từ tương ứng trong từ điển"
+        ],
+        "answer": [0],
+        "explain": "Encoder đọc text nguồn và tạo semantic representation; decoder đọc ý nghĩa đó và viết ra ngôn ngữ đích. Translate dịch theo ý nghĩa chứ không thay từng từ một."
+      },
+      {
+        "type": "single",
+        "q": "Attention mechanism trong Amazon Translate giúp ích điều gì?",
+        "options": [
+          "Tự động phát hiện PII trong văn bản trước khi dịch",
+          "Tăng tốc độ dịch bằng cách bỏ qua các từ ít quan trọng",
+          "Chọn giọng đọc phù hợp cho ngôn ngữ đích",
+          "Xác định từ nào trong câu nguồn quan trọng nhất cho từng phần câu đích, giúp xử lý từ mơ hồ và giữ đúng ý nghĩa"
+        ],
+        "answer": [3],
+        "explain": "Attention mechanism xác định từ nguồn quan trọng nhất cho từng phần câu đích, giúp xử lý từ/cụm từ mơ hồ và đảm bảo ý nghĩa được dịch đúng. Nó không bỏ qua từ để tăng tốc hay phát hiện PII."
+      },
+      {
+        "type": "multi",
+        "q": "Một thương hiệu toàn cầu thu thập review sản phẩm viết bằng hơn 10 ngôn ngữ và muốn phân tích sentiment thống nhất trên toàn bộ review. Hai dịch vụ nào nên kết hợp? (Chọn 2)",
+        "options": [
+          "Amazon Transcribe",
+          "Amazon Translate",
+          "Amazon Polly",
+          "Amazon Kendra",
+          "Amazon Comprehend"
+        ],
+        "answer": [1, 4],
+        "explain": "Translate chuẩn hóa review về một ngôn ngữ, sau đó Comprehend phân tích sentiment. Transcribe và Polly làm việc với audio, không cần cho review dạng text."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn chuyển các bài giảng audio tiếng Anh thành audio tiếng Việt tự động. Thứ tự dịch vụ nào đúng?",
+        "options": [
+          "Polly → Translate → Transcribe",
+          "Transcribe → Translate → Polly",
+          "Translate → Transcribe → Polly",
+          "Transcribe → Polly (Polly tự dịch sang tiếng Việt)"
+        ],
+        "answer": [1],
+        "explain": "Audio tiếng Anh → Transcribe (text tiếng Anh) → Translate (text tiếng Việt) → Polly (audio tiếng Việt). Polly và Transcribe không dịch, nên thấy đổi ngôn ngữ là phải có Translate."
+      }
+    ]
+  }
+}

@@ -1,0 +1,880 @@
+{
+  "chapter": "10 Route 53",
+  "lessons": {
+    "CNAME vs Alias": [
+      {
+        "type": "single",
+        "q": "Một công ty host domain example.com trên Route 53 và muốn người dùng truy cập ứng dụng bằng naked domain example.com, trỏ tới một Application Load Balancer. Giải pháp nào đáp ứng yêu cầu với chi phí và vận hành thấp nhất?",
+        "options": [
+          "Tạo CNAME record cho example.com trỏ tới DNS name của ALB",
+          "Tạo A record alias cho example.com trỏ tới ALB",
+          "Tạo A record cho example.com chứa các IP hiện tại của ALB",
+          "Tạo NS record cho example.com trỏ tới DNS name của ALB"
+        ],
+        "answer": [1],
+        "explain": "Alias dùng được ở zone apex, trỏ trực tiếp tới tài nguyên AWS và query miễn phí. Chuẩn DNS không cho phép CNAME ở apex, còn IP của ALB có thể thay đổi."
+      },
+      {
+        "type": "single",
+        "q": "Khi tạo alias record trỏ tới một Elastic Load Balancer (IPv4), nên chọn record type nào?",
+        "options": [
+          "CNAME",
+          "MX",
+          "TXT",
+          "A (alias)"
+        ],
+        "answer": [3],
+        "explain": "Type của alias phải khớp với type của record mà nó trỏ tới; ELB cung cấp DNS name dạng A record nên tạo A record alias (thêm AAAA alias nếu dùng IPv6)."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đăng ký và host DNS cho domain ở một nhà cung cấp bên thứ ba. Họ muốn trỏ apex domain tới một CloudFront distribution bằng alias record của Route 53. Điều kiện bắt buộc là gì?",
+        "options": [
+          "Domain phải được host DNS (hosted zone) trên Route 53",
+          "Domain phải được chuyển (transfer) registrar sang Route 53",
+          "CloudFront distribution phải có Elastic IP",
+          "Phải bật DNSSEC cho domain"
+        ],
+        "answer": [0],
+        "explain": "Alias là phần mở rộng riêng của Route 53, chỉ dùng được khi Route 53 host zone của domain. Không cần transfer registrar; chỉ cần chuyển DNS hosting bằng cách cập nhật NS record."
+      },
+      {
+        "type": "multi",
+        "q": "Ưu điểm của Route 53 alias record so với CNAME khi trỏ tới tài nguyên AWS là gì? (Chọn 2)",
+        "options": [
+          "Là chuẩn DNS nên dùng được ở mọi DNS provider",
+          "Dùng được ở zone apex (naked domain)",
+          "Có thể trỏ tới bất kỳ IP nào ngoài AWS",
+          "Tự động đặt TTL bằng 0 để failover tức thời",
+          "Query tới tài nguyên AWS qua alias không bị tính phí"
+        ],
+        "answer": [1, 4],
+        "explain": "Alias hỗ trợ apex và miễn phí query khi trỏ tới tài nguyên AWS. Alias không phải chuẩn DNS nên chỉ dùng được trên Route 53, và nó trỏ tới tài nguyên AWS hoặc record cùng zone chứ không phải IP tùy ý."
+      },
+      {
+        "type": "single",
+        "q": "Trong hosted zone catagram.io trên Route 53, cấu hình nào KHÔNG hợp lệ?",
+        "options": [
+          "www.catagram.io CNAME trỏ tới DNS name của ELB",
+          "catagram.io A record alias trỏ tới ELB",
+          "catagram.io CNAME trỏ tới DNS name của ELB",
+          "www.catagram.io A record alias trỏ tới ELB"
+        ],
+        "answer": [2],
+        "explain": "Chuẩn DNS không cho phép CNAME ở apex nên catagram.io CNAME là không hợp lệ. CNAME ở record thường như www thì vẫn hợp lệ, còn alias dùng được ở cả hai."
+      }
+    ],
+    "R53 DNSSEC": [
+      {
+        "type": "single",
+        "q": "Khi bật DNSSEC signing cho một public hosted zone trong Route 53, KMS key dùng để tạo KSK phải đáp ứng điều kiện nào?",
+        "options": [
+          "Symmetric key ở cùng region với tài nguyên của ứng dụng",
+          "AWS managed key alias/aws/route53 ở bất kỳ region nào",
+          "Asymmetric customer managed key ở region us-east-1",
+          "Symmetric key ở us-east-1 có bật automatic rotation"
+        ],
+        "answer": [2],
+        "explain": "Route 53 tạo KSK từ một asymmetric KMS key (customer managed) và key này bắt buộc nằm ở us-east-1. Key symmetric không dùng được để ký DNSSEC."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về Zone Signing Key (ZSK) khi bật DNSSEC trên Route 53?",
+        "options": [
+          "ZSK được Route 53 tạo và quản lý hoàn toàn nội bộ, KMS không tham gia",
+          "ZSK được tạo từ KMS key ở us-east-1 giống KSK",
+          "ZSK phải được upload thủ công lên registrar dưới dạng DS record",
+          "ZSK được lưu trong DS record của zone cha"
+        ],
+        "answer": [0],
+        "explain": "Chỉ KSK dựa trên KMS key; ZSK do Route 53 tạo và quản lý nội bộ. DS record ở zone cha chứa hash của public KSK, không phải ZSK."
+      },
+      {
+        "type": "single",
+        "q": "Domain example.org được đăng ký ở một registrar bên thứ ba nhưng DNS host trên Route 53. Admin đã bật DNSSEC signing và zone đang ở trạng thái Signing. Bước nào cần làm để hoàn tất chain of trust?",
+        "options": [
+          "Tạo thêm một private hosted zone cùng tên",
+          "Bật DNSSEC validation trên Route 53 Resolver của VPC",
+          "Thêm DNSKEY record thủ công vào hosted zone",
+          "Thêm DS record (hash của public KSK) cho domain qua registrar bên thứ ba để đưa vào zone cha .org"
+        ],
+        "answer": [3],
+        "explain": "Chain of trust cần DS record ở zone cha; khi registrar không phải Route 53 thì phải tự thêm DS qua registrar đó. DNSKEY đã được Route 53 tự tạo khi bật signing."
+      },
+      {
+        "type": "multi",
+        "q": "Để phát hiện sớm sự cố DNSSEC cần xử lý khẩn trên một hosted zone đã ký, nên tạo CloudWatch alarm cho metric nào? (Chọn 2)",
+        "options": [
+          "DNSSECInternalFailure",
+          "HealthCheckStatus",
+          "DNSSECKeySigningKeysNeedingAction",
+          "ConnectionTime",
+          "ChildHealthCheckHealthyCount"
+        ],
+        "answer": [0, 2],
+        "explain": "DNSSECInternalFailure và DNSSECKeySigningKeysNeedingAction báo lỗi KSK hoặc lỗi tương tác với KMS. Các metric còn lại thuộc Route 53 health check, không liên quan DNSSEC."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty bật DNSSEC validation trên Route 53 Resolver cho VPC. Điều gì xảy ra với các truy vấn DNS?",
+        "options": [
+          "Mọi zone không bật DNSSEC sẽ không resolve được nữa",
+          "Với zone có DNSSEC, record không qua được validation sẽ không được trả về; zone không bật DNSSEC vẫn resolve bình thường",
+          "Mọi truy vấn DNS từ VPC được mã hóa end-to-end",
+          "Resolver tự động ký DNSSEC cho các private hosted zone"
+        ],
+        "answer": [1],
+        "explain": "Validation chỉ ảnh hưởng zone có DNSSEC: record sai chữ ký bị loại, còn zone không ký vẫn trả kết quả bình thường. DNSSEC bảo đảm tính toàn vẹn và nguồn gốc, không mã hóa query."
+      }
+    ],
+    "R53 Failover Routing": [
+      {
+        "type": "single",
+        "q": "Website chính của một công ty chạy trên EC2. Khi site chính lỗi, công ty muốn người dùng tự động được chuyển tới một trang bảo trì tĩnh, chạy trên dịch vụ khác để không bị ảnh hưởng bởi cùng sự cố, với chi phí thấp nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Weighted routing với weight 100 cho EC2 và 0 cho trang bảo trì",
+          "Simple routing với hai giá trị: IP của EC2 và IP của trang bảo trì",
+          "Multivalue routing với hai record, mỗi record có health check",
+          "Failover routing: primary trỏ tới EC2 kèm health check, secondary là alias tới S3 static website endpoint"
+        ],
+        "answer": [3],
+        "explain": "Failover routing trả primary khi healthy và secondary khi primary unhealthy, đúng mô hình active-passive với trang bảo trì out-of-band trên S3. Multivalue là active-active nên vẫn trả trang bảo trì cả khi site chính đang tốt."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng failover routing nhưng nhận thấy người dùng mất vài phút mới được chuyển sang secondary khi primary lỗi. Cách nào giúp rút ngắn thời gian chuyển đổi?",
+        "options": [
+          "Chuyển sang simple routing",
+          "Giảm TTL của record và dùng health check interval Fast (10 giây)",
+          "Tăng failure threshold của health check",
+          "Gắn thêm health check vào record secondary"
+        ],
+        "answer": [1],
+        "explain": "Độ trễ failover bằng thời gian phát hiện lỗi (interval x threshold) cộng thời gian cache theo TTL, nên giảm TTL và dùng Fast check giúp chuyển nhanh hơn. Tăng failure threshold làm phát hiện lỗi chậm hơn."
+      },
+      {
+        "type": "single",
+        "q": "Để record secondary www.example.com trong failover routing là alias tới S3 static website endpoint, S3 bucket cần thỏa điều kiện nào?",
+        "options": [
+          "Tên bucket phải trùng tên record, tức là www.example.com",
+          "Bucket phải bật versioning",
+          "Bucket phải nằm cùng region với EC2 primary",
+          "Bucket phải được mã hóa bằng SSE-KMS"
+        ],
+        "answer": [0],
+        "explain": "Tên bucket phải khớp tên DNS thì mới alias được tới website endpoint. Versioning, region hay mã hóa không phải điều kiện cho alias."
+      },
+      {
+        "type": "single",
+        "q": "Failover routing của Route 53 hiện thực mô hình kiến trúc nào?",
+        "options": [
+          "Active-active, trả nhiều record healthy cùng lúc",
+          "Phân chia traffic theo tỷ lệ phần trăm",
+          "Active-passive: chỉ trả secondary khi primary unhealthy",
+          "Định tuyến theo region có latency thấp nhất"
+        ],
+        "answer": [2],
+        "explain": "Failover dùng primary và secondary, chỉ chuyển sang secondary khi health check của primary fail. Muốn active-active thì dùng multivalue, weighted hoặc latency routing."
+      },
+      {
+        "type": "single",
+        "q": "Trong cấu hình failover routing, primary EC2 bị lỗi và traffic đã chuyển sang trang trên S3. Sau đó EC2 được khởi động lại và phục vụ bình thường. Điều gì xảy ra?",
+        "options": [
+          "Khi health check của primary trở lại healthy, Route 53 tự động trả lại primary (fail back) sau khi cache theo TTL hết hạn",
+          "Admin phải xóa record secondary thì traffic mới quay lại EC2",
+          "Traffic ở lại S3 vĩnh viễn cho tới khi tạo lại health check",
+          "Route 53 chia đều traffic giữa EC2 và S3"
+        ],
+        "answer": [0],
+        "explain": "Failover hoạt động cả hai chiều: khi health check primary chuyển healthy, query lại trả primary, client thấy thay đổi sau khi TTL hết. Không cần thao tác thủ công."
+      }
+    ],
+    "R53 Geolocation Routing": [
+      {
+        "type": "single",
+        "q": "Một hosted zone có geolocation record cho country United States và country Canada, không có record default. Một người dùng ở UK gửi query. Route 53 trả về gì?",
+        "options": [
+          "Record United States, vì đây là record đầu tiên",
+          "Record Canada, vì là record gần UK hơn",
+          "NO ANSWER",
+          "Ngẫu nhiên một trong hai record"
+        ],
+        "answer": [2],
+        "explain": "Geolocation khớp theo state, country, continent rồi default; không có gì khớp và không có default thì trả NO ANSWER. Geolocation không chọn record gần nhất."
+      },
+      {
+        "type": "single",
+        "q": "Do ràng buộc bản quyền, một công ty chỉ được phục vụ nội dung video cho người dùng ở United States, người dùng ở nơi khác phải nhận trang thông báo. Routing policy nào phù hợp?",
+        "options": [
+          "Geolocation routing",
+          "Latency routing",
+          "Geoproximity routing",
+          "Weighted routing"
+        ],
+        "answer": [0],
+        "explain": "Geolocation trả record theo vị trí khớp tag, phù hợp giới hạn nội dung theo vùng và tuân thủ pháp lý theo quốc gia. Latency và geoproximity chọn theo hiệu năng/khoảng cách, không theo ranh giới quốc gia."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng geolocation routing với record cho một số quốc gia châu Âu. Người dùng ở các nước khác báo không truy cập được website. Cách khắc phục nào đúng?",
+        "options": [
+          "Chuyển các record sang simple routing",
+          "Gắn health check cho tất cả record",
+          "Tăng TTL của các record",
+          "Thêm một geolocation record Default làm catch-all"
+        ],
+        "answer": [3],
+        "explain": "Không có record khớp và không có default thì Route 53 trả NO ANSWER; record Default đảm bảo người dùng ở mọi nơi đều nhận được câu trả lời. Health check không giải quyết việc thiếu record khớp."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về geolocation routing?",
+        "options": [
+          "Trả record của tài nguyên gần người dùng nhất theo khoảng cách",
+          "Trả record khớp với vị trí của người dùng (state, country, continent, default), không phải record gần nhất",
+          "Trả record có latency thấp nhất tới người dùng",
+          "Cho phép dùng bias để mở rộng vùng phục vụ"
+        ],
+        "answer": [1],
+        "explain": "Geolocation là về location (vị trí khớp), không phải proximity. Gần nhất theo khoảng cách và bias là geoproximity, còn latency thấp nhất là latency routing."
+      },
+      {
+        "type": "multi",
+        "q": "Một website muốn người dùng ở Pháp nhận bản tiếng Pháp, người dùng ở Đức nhận bản tiếng Đức, và người dùng ở mọi nơi khác nhận bản tiếng Anh. Cần cấu hình gì trên Route 53? (Chọn 2)",
+        "options": [
+          "Geolocation record gắn tag country France và Germany trỏ tới endpoint tương ứng",
+          "Latency record cho eu-west-3 và eu-central-1",
+          "Weighted record 50/50 giữa endpoint tiếng Pháp và tiếng Đức",
+          "Geolocation record Default trỏ tới endpoint tiếng Anh",
+          "Geoproximity record với bias +50 cho endpoint tiếng Anh"
+        ],
+        "answer": [0, 3],
+        "explain": "Nội dung theo ngôn ngữ/quốc gia là use case của geolocation: record theo country cho Pháp và Đức, record Default cho phần còn lại. Latency routing có thể đưa người dùng Pháp sang endpoint tiếng Đức nếu latency thấp hơn."
+      }
+    ],
+    "R53 Geoproximity Routing": [
+      {
+        "type": "single",
+        "q": "Một công ty có ứng dụng ở us-east-1 và eu-west-1, định tuyến theo vị trí địa lý của người dùng. Region eu-west-1 vừa được nâng cấp capacity, công ty muốn mở rộng vùng địa lý mà eu-west-1 phục vụ để kéo thêm traffic về đó. Giải pháp nào phù hợp?",
+        "options": [
+          "Geolocation routing với record Default trỏ tới eu-west-1",
+          "Geoproximity routing với bias dương cho eu-west-1",
+          "Latency routing với health check cho us-east-1",
+          "Multivalue routing với thêm record cho eu-west-1"
+        ],
+        "answer": [1],
+        "explain": "Geoproximity định tuyến theo khoảng cách và bias dương mở rộng vùng phục vụ của tài nguyên, kéo thêm traffic về nó. Geolocation không có cơ chế co giãn vùng theo khoảng cách."
+      },
+      {
+        "type": "single",
+        "q": "Trong geoproximity routing, đặt bias dương (+) cho một tài nguyên có tác dụng gì?",
+        "options": [
+          "Giảm vùng phục vụ của tài nguyên đó",
+          "Tăng tần suất health check của tài nguyên",
+          "Ưu tiên tài nguyên có latency thấp hơn",
+          "Tăng kích thước vùng địa lý tài nguyên đó phục vụ và thu hẹp vùng của các tài nguyên lân cận"
+        ],
+        "answer": [3],
+        "explain": "Bias + nới rộng vùng phục vụ của tài nguyên và giảm vùng của tài nguyên lân cận; bias - thu hẹp vùng. Bias không liên quan tới latency hay health check."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có endpoint ở một AWS region và một data center on-premises. Họ muốn định tuyến người dùng tới endpoint gần nhất theo khoảng cách địa lý. Routing policy nào hỗ trợ khai báo vị trí của endpoint on-premises?",
+        "options": [
+          "Geoproximity routing, khai báo latitude/longitude cho endpoint ngoài AWS",
+          "Latency routing, khai báo region gần nhất cho data center",
+          "Geolocation routing, khai báo country của data center",
+          "Failover routing với data center làm secondary"
+        ],
+        "answer": [0],
+        "explain": "Geoproximity cho phép khai báo AWS region cho tài nguyên AWS hoặc tọa độ latitude/longitude cho tài nguyên ngoài AWS. Latency routing chỉ gắn record theo AWS region."
+      },
+      {
+        "type": "single",
+        "q": "Có 3 tài nguyên ở US, UK và Úc dùng geoproximity routing. Một người dùng ở Saudi Arabia gần UK hơn Úc. Admin đặt bias dương cho UK và bias dương lớn hơn nhiều cho Úc, đủ để vùng của Úc mở rộng tới Trung Đông. Người dùng sẽ được định tuyến tới đâu?",
+        "options": [
+          "UK, vì UK luôn gần hơn",
+          "US, vì là record mặc định",
+          "Úc, vì bias lớn đã mở rộng vùng phục vụ của Úc bao trùm vị trí người dùng",
+          "Không có câu trả lời"
+        ],
+        "answer": [2],
+        "explain": "Route 53 chọn tài nguyên có khoảng cách nhỏ nhất sau khi tính bias, nên bias đủ lớn có thể kéo người dùng về Úc dù UK gần hơn. Không có bias thì người dùng sẽ về UK."
+      },
+      {
+        "type": "single",
+        "q": "Khác biệt chính giữa geoproximity routing và latency routing là gì?",
+        "options": [
+          "Geoproximity không hỗ trợ health check, latency thì có",
+          "Geoproximity quyết định theo khoảng cách địa lý (có bias), latency quyết định theo database latency giữa vùng người dùng và AWS region",
+          "Latency routing cho phép khai báo tọa độ cho tài nguyên on-premises",
+          "Geoproximity có thể trả NO ANSWER khi không có tài nguyên khớp"
+        ],
+        "answer": [1],
+        "explain": "Geoproximity dựa vào khoảng cách cộng bias, còn latency dựa vào latency ước tính tới region. Cả hai đều hỗ trợ health check; NO ANSWER là hành vi của geolocation."
+      }
+    ],
+    "R53 Health Checks": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn Route 53 health check không chỉ kiểm tra web server có phản hồi, mà còn kiểm tra trang trả về có chứa đúng nội dung mong đợi. Kiểu health check nào phù hợp?",
+        "options": [
+          "TCP health check",
+          "HTTP/HTTPS health check thông thường",
+          "HTTP/HTTPS health check với string matching",
+          "Calculated health check"
+        ],
+        "answer": [2],
+        "explain": "String matching kiểm tra chuỗi tìm kiếm xuất hiện trọn vẹn trong 5,120 byte đầu của body, chính xác nhất. HTTP thông thường chỉ cần status 2xx/3xx, không kiểm tra nội dung."
+      },
+      {
+        "type": "single",
+        "q": "Một Route 53 health check liên tục báo unhealthy, trong khi ứng dụng trên EC2 vẫn phục vụ người dùng bình thường. Nguyên nhân khả dĩ nhất là gì?",
+        "options": [
+          "Security Group, firewall hoặc WAF đang chặn traffic từ các Route 53 health checker",
+          "TTL của record quá cao",
+          "Hosted zone chưa bật DNSSEC",
+          "Record đang dùng simple routing"
+        ],
+        "answer": [0],
+        "explain": "Health checker phân tán toàn cầu phải được phép truy cập target; chặn chúng (tưởng là bot) sẽ gây báo động giả. TTL hay DNSSEC không ảnh hưởng tới kết quả health check."
+      },
+      {
+        "type": "single",
+        "q": "Một Route 53 endpoint health check được coi là healthy khi nào?",
+        "options": [
+          "Khi tất cả health checker đều báo healthy",
+          "Khi hơn 50% health checker báo healthy",
+          "Khi health checker ở region gần endpoint nhất báo healthy",
+          "Khi từ 18% health checker trở lên báo healthy"
+        ],
+        "answer": [3],
+        "explain": "Nếu từ 18% health checker báo healthy thì health check tổng là healthy, ngược lại là unhealthy. Đây là con số hay được hỏi cùng với interval 30s (Standard) và 10s (Fast)."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trong private subnet, không có endpoint public. Công ty muốn Route 53 failover dựa trên metric nội bộ của ứng dụng (ví dụ memory) do CloudWatch Agent thu thập. Loại health check nào phù hợp?",
+        "options": [
+          "Endpoint health check theo private IP của instance",
+          "Health check dựa trên CloudWatch alarm",
+          "HTTP health check với string matching",
+          "TCP health check tới port 443"
+        ],
+        "answer": [1],
+        "explain": "Health checker của Route 53 chỉ thấy endpoint public; với tài nguyên private hoặc metric nội bộ thì dùng health check theo trạng thái CloudWatch alarm. Endpoint health check theo private IP không truy cập được."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về Route 53 health checks? (Chọn 2)",
+        "options": [
+          "Health check được tạo riêng, record chỉ tham chiếu tới health check",
+          "Health check chỉ kiểm tra được tài nguyên AWS",
+          "Request interval Fast là 10 giây, mặc định (Standard) là 30 giây",
+          "TCP health check là kiểu chính xác nhất",
+          "Health check bị disable luôn được coi là unhealthy"
+        ],
+        "answer": [0, 2],
+        "explain": "Health check tồn tại độc lập và có interval 30s hoặc 10s (Fast). Nó check được bất cứ thứ gì có IP public, TCP là kiểu kém chính xác nhất, và health check bị disable luôn được coi là healthy."
+      }
+    ],
+    "R53 Interoperability": [
+      {
+        "type": "single",
+        "q": "Một công ty đã đăng ký domain ở GoDaddy từ nhiều năm và muốn dùng Route 53 để quản lý DNS mà không chuyển domain. Cần làm gì?",
+        "options": [
+          "Transfer domain sang Route 53 rồi tạo hosted zone",
+          "Tạo public hosted zone trên Route 53 và cập nhật NS record ở GoDaddy trỏ tới 4 name server của zone",
+          "Tạo private hosted zone và associate với VPC",
+          "Tạo CNAME ở GoDaddy trỏ apex domain về Route 53"
+        ],
+        "answer": [1],
+        "explain": "Đổi nơi host DNS chỉ cần tạo public hosted zone và cập nhật NS record ở registrar hiện tại. Transfer domain là việc của registrar và không cần thiết ở đây."
+      },
+      {
+        "type": "single",
+        "q": "Khi đăng ký domain qua Route 53, việc nào thuộc vai trò DNS hosting (không phải registrar)?",
+        "options": [
+          "Thu phí đăng ký domain hằng năm",
+          "Liên lạc với registry của TLD để đăng ký domain",
+          "Yêu cầu registry thêm NS record cho domain vào zone TLD",
+          "Cấp phát 4 name server và tạo zone file (public hosted zone) trên đó"
+        ],
+        "answer": [3],
+        "explain": "DNS hosting cung cấp name server và zone file; registrar nhận tiền đăng ký và làm việc với registry của TLD. Trên console, hosting nằm ở Hosted zones còn registrar nằm ở Registered domains."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, mô hình kết hợp nào giữa Route 53 và bên thứ ba bị coi là kém giá trị nhất và ít gặp?",
+        "options": [
+          "Route 53 chỉ làm registrar, DNS hosting ở bên thứ ba",
+          "Route 53 chỉ làm DNS hosting, registrar là bên thứ ba",
+          "Route 53 làm cả registrar và DNS hosting",
+          "Route 53 làm DNS hosting cho cả public và private hosted zone"
+        ],
+        "answer": [0],
+        "explain": "Registrar-only bỏ phí phần tạo nhiều giá trị nhất của Route 53 là DNS hosting, trong khi chức năng registrar không có gì đặc biệt. Hosting-only mới là mẫu phổ biến."
+      },
+      {
+        "type": "single",
+        "q": "Một domain được đăng ký qua Route 53 nhưng công ty muốn host DNS ở một nhà cung cấp bên thứ ba. Quy trình đúng là gì?",
+        "options": [
+          "Tạo public hosted zone trên Route 53 rồi xóa nó",
+          "Transfer domain ra khỏi Route 53 trước",
+          "Tạo zone ở nhà cung cấp bên thứ ba, lấy danh sách name server của họ, cập nhật vào domain trong Route 53 để Route 53 yêu cầu registry đặt NS record trỏ tới đó",
+          "Tạo CNAME trong Route 53 trỏ tới name server của bên thứ ba"
+        ],
+        "answer": [2],
+        "explain": "Ở mô hình registrar-only, Route 53 vẫn làm việc với registry; bạn đưa name server của bên host cho Route 53 để registry cập nhật NS record. Không cần transfer domain."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đăng ký domain qua Route 53 nhưng đang host DNS ở Hover. Giờ họ muốn dùng failover routing với health check của Route 53. Cần làm gì?",
+        "options": [
+          "Không cần thay đổi, failover routing hoạt động vì Route 53 là registrar",
+          "Tạo health check trên Route 53 và cấu hình failover tại Hover",
+          "Chuyển DNS hosting sang Route 53: tạo public hosted zone, tạo record failover và cập nhật NS của domain trỏ về Route 53",
+          "Bật DNSSEC trên domain để kích hoạt routing policy"
+        ],
+        "answer": [2],
+        "explain": "Alias, routing policy và health check chỉ có khi Route 53 làm DNS hosting; vai trò registrar không mang lại các tính năng này. Vì vậy phải chuyển hosting về Route 53 bằng cách đổi NS record."
+      }
+    ],
+    "R53 Latency Routing": [
+      {
+        "type": "single",
+        "q": "Một công ty triển khai ứng dụng ở us-east-1, eu-west-1 và ap-southeast-2 cho người dùng toàn cầu. Họ muốn mỗi người dùng được đưa tới region mang lại hiệu năng tốt nhất. Routing policy nào phù hợp?",
+        "options": [
+          "Latency routing",
+          "Geolocation routing",
+          "Weighted routing",
+          "Simple routing với ba giá trị"
+        ],
+        "answer": [0],
+        "explain": "Latency routing trả record có latency ước tính thấp nhất tới người dùng, đúng nhu cầu tối ưu performance toàn cầu. Geolocation chọn theo vị trí khớp tag và có thể trả NO ANSWER."
+      },
+      {
+        "type": "single",
+        "q": "Giới hạn nào áp dụng cho latency routing records cùng một tên?",
+        "options": [
+          "Tối đa 8 record cho mỗi tên",
+          "Tổng weight của các record phải bằng 100",
+          "Chỉ một record cho mỗi AWS region",
+          "Chỉ dùng được với tài nguyên on-premises"
+        ],
+        "answer": [2],
+        "explain": "Mỗi latency record gắn với một record region, và mỗi region chỉ được một record cùng tên. Con số 8 là giới hạn số record healthy trả về của multivalue."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng dùng latency routing có gắn health check. Record của region có latency thấp nhất tới người dùng đang unhealthy. Route 53 trả về gì?",
+        "options": [
+          "NO ANSWER",
+          "Record unhealthy đó, vì latency được ưu tiên hơn health",
+          "Ngẫu nhiên một record bất kỳ",
+          "Record của region có latency thấp tiếp theo còn healthy"
+        ],
+        "answer": [3],
+        "explain": "Khi kết hợp health check, record latency thấp nhất mà unhealthy sẽ bị bỏ qua và Route 53 trả record có latency thấp kế tiếp. Latency routing luôn trả region tốt nhất còn healthy."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về database latency mà Route 53 dùng cho latency routing?",
+        "options": [
+          "Được đo real-time cho từng query",
+          "Không real-time, được cập nhật ở background và không tính tới sự cố mạng cục bộ",
+          "Dựa trên khoảng cách địa lý giữa người dùng và region",
+          "Do khách hàng tự nhập thủ công cho từng region"
+        ],
+        "answer": [1],
+        "explain": "Database latency được AWS cập nhật ở background, không real-time và không phản ánh sự cố mạng cục bộ, nhưng vẫn cải thiện đáng kể hiệu năng. Dựa trên khoảng cách địa lý là geoproximity."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng multi-region cần cải thiện hiệu năng ở tầng mạng: dùng static anycast IP, đi qua backbone AWS và failover giữa region không phụ thuộc vào DNS cache của client. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Route 53 latency routing với TTL thấp",
+          "Amazon CloudFront",
+          "Route 53 geoproximity routing",
+          "AWS Global Accelerator"
+        ],
+        "answer": [3],
+        "explain": "Global Accelerator cung cấp anycast IP, đưa traffic vào backbone AWS và failover nhanh không phụ thuộc DNS cache. Latency routing vẫn là giải pháp DNS nên chịu ảnh hưởng của TTL; CloudFront dành cho cache nội dung."
+      }
+    ],
+    "R53 Multivalue Routing": [
+      {
+        "type": "single",
+        "q": "Một công ty có 5 web server ngang hàng, không dùng load balancer. Họ muốn DNS trả về nhiều IP cho client, nhưng chỉ những server còn hoạt động. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Simple routing với một record chứa 5 IP",
+          "Failover routing với 5 record",
+          "Weighted routing với weight 0 cho mọi record",
+          "Multivalue answer routing, mỗi record một IP kèm health check riêng"
+        ],
+        "answer": [3],
+        "explain": "Multivalue trả tối đa 8 record healthy, record fail health check không được trả về. Simple cũng trả nhiều IP nhưng không có health check nên vẫn trả IP server đã chết."
+      },
+      {
+        "type": "single",
+        "q": "Multivalue answer routing được dùng chủ yếu để đạt mục tiêu gì?",
+        "options": [
+          "Active-passive failover sang trang bảo trì",
+          "Tăng availability theo kiểu active-active bằng DNS",
+          "Phân phối kết nối ở tầng mạng như một load balancer",
+          "Định tuyến theo latency thấp nhất"
+        ],
+        "answer": [1],
+        "explain": "Multivalue là active-active bằng DNS để tăng availability. Nó không xử lý kết nối như load balancer; active-passive là failover routing."
+      },
+      {
+        "type": "single",
+        "q": "Khác biệt chính giữa simple routing và multivalue routing là gì?",
+        "options": [
+          "Multivalue có health check cho từng record và không trả record unhealthy; simple không hỗ trợ health check",
+          "Simple trả tối đa 8 giá trị, multivalue trả không giới hạn",
+          "Multivalue chỉ trả một giá trị, simple trả nhiều giá trị",
+          "Simple dùng được cho alias, multivalue thì không"
+        ],
+        "answer": [0],
+        "explain": "Cả hai đều trả nhiều IP và để client chọn, nhưng chỉ multivalue health check từng record và loại record chết. Giới hạn 8 record healthy thuộc về multivalue."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng cần phân phối kết nối thực sự giữa các instance, health check tầng ứng dụng và sticky session. Kiến trúc sư đề xuất dùng Route 53 multivalue routing. Nhận xét nào đúng?",
+        "options": [
+          "Phù hợp, vì multivalue hỗ trợ sticky session",
+          "Phù hợp, vì multivalue phân phối đều kết nối giữa các instance",
+          "Không phù hợp; multivalue không thay thế load balancer, nên dùng Application Load Balancer",
+          "Không phù hợp; nên dùng simple routing"
+        ],
+        "answer": [2],
+        "explain": "Multivalue chỉ trả danh sách IP healthy để client tự chọn, không xử lý kết nối hay sticky session. Các yêu cầu đó cần ELB như ALB."
+      },
+      {
+        "type": "single",
+        "q": "Một tên www có 12 multivalue record, trong đó 3 record đang fail health check. Một query sẽ nhận được gì?",
+        "options": [
+          "Tối đa 8 record được chọn ngẫu nhiên trong 9 record healthy",
+          "Cả 12 record, theo thứ tự ngẫu nhiên",
+          "9 record healthy",
+          "Một record healthy duy nhất"
+        ],
+        "answer": [0],
+        "explain": "Multivalue trả tối đa 8 record healthy; nếu có hơn 8 thì chọn ngẫu nhiên 8. Record fail health check không bao giờ được trả về."
+      }
+    ],
+    "R53 Private Hosted Zones": [
+      {
+        "type": "single",
+        "q": "Một công ty cần đặt DNS name nội bộ (ví dụ db.internal.example) cho các tài nguyên trong VPC và không muốn các record này lộ ra DNS công cộng. Giải pháp nào phù hợp?",
+        "options": [
+          "Public hosted zone với record trỏ tới private IP",
+          "Private hosted zone associate với VPC",
+          "Ghi tên vào file hosts của từng instance",
+          "Dùng DHCP option set để công bố record"
+        ],
+        "answer": [1],
+        "explain": "Private hosted zone chỉ resolve được từ các VPC đã associate, không truy cập được từ Internet. Public hosted zone sẽ làm lộ record ra DNS công cộng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn cùng tên miền example.com: nhân viên trong VPC resolve được thêm các record nội bộ như accounting.example.com, còn người dùng Internet chỉ thấy www và MX. Kiến trúc nào phù hợp?",
+        "options": [
+          "Hai public hosted zone trùng tên ở hai account khác nhau",
+          "Geolocation routing phân biệt người dùng nội bộ và bên ngoài",
+          "Một private hosted zone duy nhất cho cả nội bộ và Internet",
+          "Split-view DNS: public hosted zone và private hosted zone trùng tên example.com, private zone associate với VPC"
+        ],
+        "answer": [3],
+        "explain": "Split-view dùng public zone và private zone trùng tên: trong VPC đã associate resolver trả lời từ private zone, từ Internet thì từ public zone. Private zone không bao giờ truy cập được từ Internet."
+      },
+      {
+        "type": "multi",
+        "q": "Một EC2 instance không resolve được record trong một private hosted zone. Nên kiểm tra những gì? (Chọn 2)",
+        "options": [
+          "VPC có NAT Gateway hay chưa",
+          "VPC có Internet Gateway hay chưa",
+          "VPC chứa instance đã được associate với private hosted zone chưa",
+          "Security Group của instance có chặn outbound port 53 tới 0.0.0.0/0 không",
+          "Thuộc tính enableDnsSupport và enableDnsHostnames của VPC đã bật chưa"
+        ],
+        "answer": [2, 4],
+        "explain": "Resolve private zone phụ thuộc vào việc VPC của client đã associate với zone và DNS đã bật cho VPC. Resolver VPC+2 nằm trong VPC nên không cần NAT hay Internet Gateway."
+      },
+      {
+        "type": "single",
+        "q": "Một private hosted zone ở account A cần được resolve từ một VPC ở account B. Cách thực hiện association là gì?",
+        "options": [
+          "Dùng CLI/API: tạo VPC association authorization ở account A, rồi associate từ account B",
+          "Dùng console Route 53 ở account A, chọn VPC của account B trong danh sách",
+          "Chia sẻ private hosted zone qua AWS RAM rồi chấp nhận trên console",
+          "Tạo VPC peering, private zone sẽ tự động resolve được ở VPC kia"
+        ],
+        "answer": [0],
+        "explain": "Associate private zone với VPC khác account chỉ làm được qua CLI/API, gồm hai bước authorization và associate. Console chỉ hỗ trợ VPC trong cùng account, và VPC peering không tự associate zone."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về Route 53 private hosted zone?",
+        "options": [
+          "Phải sở hữu domain đã đăng ký thì mới tạo được private zone",
+          "Private zone được cấp 4 name server public giống public zone",
+          "Tên zone không cần là domain bạn sở hữu, vì private zone không bao giờ được delegate từ DNS công cộng",
+          "Private zone resolve được từ Internet nếu VPC có Internet Gateway"
+        ],
+        "answer": [2],
+        "explain": "Private zone không được delegate công cộng nên tên có thể là bất kỳ (demo dùng ilikedogsreally.com). Nó chỉ resolve được từ VPC đã associate, dù VPC có Internet Gateway hay không."
+      }
+    ],
+    "R53 Public Hosted Zones": [
+      {
+        "type": "single",
+        "q": "Khi tạo một public hosted zone, Route 53 cấp phát bao nhiêu name server cho zone đó?",
+        "options": [
+          "1",
+          "2",
+          "4",
+          "8"
+        ],
+        "answer": [2],
+        "explain": "Route 53 cấp 4 name server riêng cho mỗi public hosted zone và đặt zone file lên đó. Con số 8 là giới hạn record trả về của multivalue routing."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty tạo public hosted zone trên Route 53 cho domain đăng ký ở Hover và thêm đầy đủ record, nhưng domain vẫn không resolve trên Internet. Nguyên nhân khả dĩ nhất là gì?",
+        "options": [
+          "NS record của domain ở registrar/zone TLD chưa trỏ tới 4 name server của hosted zone",
+          "Hosted zone chưa associate với VPC",
+          "Chưa bật DNSSEC cho hosted zone",
+          "Chưa tạo health check cho các record"
+        ],
+        "answer": [0],
+        "explain": "Zone chỉ trở thành authoritative khi NS record trong zone TLD trỏ về 4 name server của nó, việc này phải cập nhật ở registrar bên ngoài. Associate VPC chỉ áp dụng cho private hosted zone."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 instance trong VPC (đã bật DNS) gửi query DNS tới đâu để resolve record trong public hosted zone của Route 53 cũng như các domain công cộng khác?",
+        "options": [
+          "Địa chỉ network + 1 của VPC (VPC router)",
+          "Trực tiếp tới 4 name server của hosted zone",
+          "Địa chỉ network + 3 của VPC",
+          "Route 53 Resolver tại địa chỉ network + 2 của VPC"
+        ],
+        "answer": [3],
+        "explain": "Instance trong VPC dùng Route 53 Resolver ở địa chỉ VPC+2, resolver này query được cả hosted zone của Route 53 lẫn mọi zone công cộng. VPC+1 là VPC router, VPC+3 được dành cho mục đích tương lai."
+      },
+      {
+        "type": "single",
+        "q": "Chi phí của một Route 53 public hosted zone được tính như thế nào?",
+        "options": [
+          "Miễn phí hoàn toàn nếu domain đăng ký qua Route 53",
+          "Phí hằng tháng cho mỗi hosted zone cộng một khoản nhỏ theo số query",
+          "Chỉ tính phí theo số record trong zone",
+          "Phí cố định theo năm, không tính query"
+        ],
+        "answer": [1],
+        "explain": "Mỗi hosted zone có phí hằng tháng cộng phí rất nhỏ cho mỗi query, cần để ý với site lưu lượng lớn. Phí đăng ký domain là phần riêng của vai trò registrar."
+      },
+      {
+        "type": "single",
+        "q": "Một client trên Internet resolve www.animals4life.org (host trên Route 53). Thứ tự truy vấn đúng là gì?",
+        "options": [
+          "Client gửi trực tiếp tới name server Route 53 mà không qua root hay TLD",
+          "Resolver của ISP → root servers → name server của TLD .org (có NS record của domain) → một trong 4 name server Route 53 của zone",
+          "Resolver của ISP → Route 53 Resolver VPC+2 → root servers",
+          "Root servers → name server Route 53 → name server TLD .org"
+        ],
+        "answer": [1],
+        "explain": "Quá trình walking the tree đi từ root tới TLD, nơi NS record delegate cho 4 name server Route 53 của zone. VPC+2 chỉ dành cho client bên trong VPC."
+      }
+    ],
+    "R53 Routing Policies": [
+      {
+        "type": "single",
+        "q": "Routing policy nào của Route 53 là policy duy nhất không hỗ trợ health check?",
+        "options": [
+          "Simple",
+          "Weighted",
+          "Multivalue answer",
+          "Geolocation"
+        ],
+        "answer": [0],
+        "explain": "Simple routing là policy duy nhất không hỗ trợ health check; mọi policy còn lại đều có. Multivalue tuy cũng trả nhiều IP nhưng health check từng record."
+      },
+      {
+        "type": "single",
+        "q": "Một đội phát triển muốn chuyển 10% traffic tới phiên bản mới của ứng dụng để thử nghiệm, 90% vẫn tới phiên bản cũ, chỉ bằng DNS. Routing policy nào phù hợp?",
+        "options": [
+          "Failover",
+          "Latency",
+          "Weighted",
+          "Multivalue answer"
+        ],
+        "answer": [2],
+        "explain": "Weighted routing trả record theo tỷ lệ weight/tổng weight, phù hợp canary hoặc thử phiên bản mới. Multivalue chọn ngẫu nhiên giữa các record healthy, không kiểm soát tỷ lệ."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty phải tuân thủ luật lưu trữ dữ liệu: người dùng ở mỗi quốc gia chỉ được phục vụ bởi endpoint đặt tại quốc gia đó. Routing policy nào phù hợp?",
+        "options": [
+          "Latency",
+          "Geoproximity",
+          "Weighted",
+          "Geolocation"
+        ],
+        "answer": [3],
+        "explain": "Geolocation trả record khớp vị trí người dùng (state, country, continent), phù hợp tuân thủ pháp lý theo vùng. Latency và geoproximity có thể đưa người dùng sang quốc gia khác nếu gần hoặc nhanh hơn."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn định tuyến người dùng tới tài nguyên gần nhất theo khoảng cách địa lý, đồng thời có khả năng nới rộng vùng phục vụ của một region để dồn thêm traffic về đó. Routing policy nào phù hợp?",
+        "options": [
+          "Latency",
+          "Geoproximity với bias",
+          "Geolocation",
+          "Weighted"
+        ],
+        "answer": [1],
+        "explain": "Geoproximity định tuyến theo khoảng cách và dùng bias +/- để co giãn vùng phục vụ. Latency routing dựa trên database latency, không có cơ chế bias."
+      },
+      {
+        "type": "multi",
+        "q": "Routing policy nào có thể trả về nhiều IP cho cùng một tên trong một DNS response để client tự chọn? (Chọn 2)",
+        "options": [
+          "Failover",
+          "Simple",
+          "Latency",
+          "Weighted",
+          "Multivalue answer"
+        ],
+        "answer": [1, 4],
+        "explain": "Simple trả tất cả value của record theo thứ tự ngẫu nhiên; multivalue trả tối đa 8 record healthy. Failover, latency và weighted mỗi lần chọn một record."
+      }
+    ],
+    "R53 Simple Routing": [
+      {
+        "type": "single",
+        "q": "Một công ty nhỏ có một web server duy nhất, không cần health check hay tính năng định tuyến nâng cao, và muốn cấu hình DNS đơn giản nhất. Routing policy nào phù hợp?",
+        "options": [
+          "Failover",
+          "Multivalue answer",
+          "Weighted",
+          "Simple"
+        ],
+        "answer": [3],
+        "explain": "Simple routing dùng khi route tới một service duy nhất, dễ triển khai và quản lý nhất. Các policy khác thêm tính năng không cần thiết ở đây."
+      },
+      {
+        "type": "single",
+        "q": "Một simple routing record www có 3 giá trị IP. Khi client query, Route 53 trả về gì?",
+        "options": [
+          "Chỉ một IP được chọn ngẫu nhiên",
+          "Cả 3 IP trong cùng response theo thứ tự ngẫu nhiên, client tự chọn một",
+          "IP đầu tiên trong danh sách, các IP khác chỉ dùng khi IP đầu lỗi",
+          "Các IP đang healthy theo health check"
+        ],
+        "answer": [1],
+        "explain": "Simple routing trả tất cả value trong cùng một response với thứ tự ngẫu nhiên, client chọn một để kết nối. Simple không có health check nên không lọc IP healthy."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có nhiều web server ngang hàng và yêu cầu DNS tự động ngừng trả IP của server bị lỗi. Routing policy nào phù hợp thay cho simple routing?",
+        "options": [
+          "Multivalue answer routing với health check cho từng record",
+          "Simple routing với TTL thấp",
+          "Simple routing kèm calculated health check",
+          "Geolocation routing với record Default"
+        ],
+        "answer": [0],
+        "explain": "Simple không hỗ trợ health check nên không thể tự bỏ server lỗi; multivalue health check từng record và chỉ trả record healthy. Gắn health check vào simple record là không làm được."
+      },
+      {
+        "type": "single",
+        "q": "Với simple routing, một tên (ví dụ www) có thể có bao nhiêu record trong hosted zone?",
+        "options": [
+          "Tối đa 8 record",
+          "Một record cho mỗi AWS region",
+          "Một record duy nhất, nhưng record đó có thể chứa nhiều giá trị",
+          "Hai record: primary và secondary"
+        ],
+        "answer": [2],
+        "explain": "Simple là một record cho mỗi tên, record đó có thể chứa nhiều value. Một record mỗi region là latency, còn primary/secondary là failover."
+      },
+      {
+        "type": "single",
+        "q": "Một simple routing record chứa IP của 3 server; một server bị hỏng. Điều gì xảy ra với các DNS query sau đó?",
+        "options": [
+          "Route 53 tự động loại IP của server hỏng khỏi response",
+          "Route 53 trả NO ANSWER cho tới khi server được sửa",
+          "Route 53 vẫn trả cả IP của server hỏng, vì simple routing không có health check",
+          "Route 53 chuyển sang trả record secondary"
+        ],
+        "answer": [2],
+        "explain": "Simple routing không kiểm tra tài nguyên còn sống hay không nên vẫn trả IP của server đã chết, client có thể chọn trúng nó. Loại IP lỗi là hành vi của multivalue với health check."
+      }
+    ],
+    "R53 Weighted Routing": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn triển khai canary cho phiên bản mới: 5% người dùng tới môi trường mới, 95% vẫn ở môi trường cũ, điều chỉnh tỷ lệ dần theo thời gian bằng DNS. Giải pháp nào phù hợp?",
+        "options": [
+          "Failover routing với môi trường mới làm secondary",
+          "Weighted routing với weight 95 cho môi trường cũ và 5 cho môi trường mới",
+          "Multivalue routing với hai record",
+          "Latency routing cho hai môi trường"
+        ],
+        "answer": [1],
+        "explain": "Weighted routing trả record theo tỷ lệ weight/tổng weight, phù hợp canary và có thể thay đổi weight dần. Failover chỉ dùng secondary khi primary unhealthy."
+      },
+      {
+        "type": "single",
+        "q": "Ba weighted record cùng tên có weight lần lượt là 30, 60 và 90. Record có weight 90 được trả về khoảng bao nhiêu phần trăm số lần?",
+        "options": [
+          "90%",
+          "33%",
+          "50%",
+          "30%"
+        ],
+        "answer": [2],
+        "explain": "Xác suất bằng weight chia tổng weight: 90 / (30 + 60 + 90) = 50%. Tổng weight không bắt buộc bằng 100."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có hai ALB ở hai region và muốn chia traffic theo tỷ lệ 70/30 giữa chúng ở mức DNS, đồng thời tự bỏ qua ALB không healthy. Cấu hình nào phù hợp?",
+        "options": [
+          "Weighted alias record cho mỗi ALB với weight 70 và 30, bật evaluate target health hoặc gắn health check",
+          "Simple routing với hai giá trị",
+          "Geolocation routing với record Default",
+          "Failover routing với ALB 70% làm primary"
+        ],
+        "answer": [0],
+        "explain": "Weighted routing chia traffic theo tỷ lệ và hỗ trợ health check: chọn trúng record unhealthy thì chọn lại. Failover không chia tỷ lệ mà chỉ dùng secondary khi primary lỗi."
+      },
+      {
+        "type": "single",
+        "q": "Trong weighted routing có health check, record được chọn theo weight nhưng đang unhealthy. Route 53 xử lý thế nào?",
+        "options": [
+          "Trả record đó vì weight được ưu tiên hơn health",
+          "Trả NO ANSWER",
+          "Loại record khỏi phép tính và giảm tổng weight vĩnh viễn",
+          "Bỏ qua record đó và lặp lại quá trình chọn cho tới khi được record healthy; tổng weight không đổi"
+        ],
+        "answer": [3],
+        "explain": "Record unhealthy bị bỏ qua và Route 53 chọn lại; health check không loại record khỏi phép tính và không làm đổi tổng weight."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về Route 53 weighted routing? (Chọn 2)",
+        "options": [
+          "Tổng weight của các record bắt buộc bằng 100",
+          "Đặt weight 0 cho một record thì record đó không được trả về",
+          "Weighted routing không hỗ trợ health check",
+          "Nếu tất cả record đều có weight 0 thì tất cả đều được xét như nhau",
+          "Record unhealthy được loại khỏi tổng weight"
+        ],
+        "answer": [1, 3],
+        "explain": "Weight 0 tạm tắt một record, ngoại lệ là khi mọi record đều weight 0 thì tất cả được xét. Tổng weight không cần bằng 100, weighted có hỗ trợ health check và record unhealthy không làm đổi tổng weight."
+      }
+    ]
+  }
+}

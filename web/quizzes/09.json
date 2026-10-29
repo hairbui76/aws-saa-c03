@@ -1,0 +1,443 @@
+{
+  "chapter": "09 Advanced EC2",
+  "lessons": {
+    "CloudWatch Agent": [
+      {
+        "type": "single",
+        "q": "Một công ty cần giám sát mức sử dụng memory và dung lượng đĩa còn trống của các EC2 instance chạy Linux, đồng thời đặt alarm khi vượt ngưỡng. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Bật EC2 detailed monitoring để có metric memory và disk mỗi 1 phút",
+          "Bật AWS CloudTrail cho các EC2 instance",
+          "Cài CloudWatch Agent trên instance, gắn IAM role có quyền CloudWatch, rồi tạo alarm trên metric agent gửi lên",
+          "Dùng EC2 status checks để theo dõi memory và disk"
+        ],
+        "answer": [2],
+        "explain": "Metric mặc định của EC2 lấy từ phía hypervisor nên không có memory hay disk space; muốn có thì phải cài CloudWatch Agent. Detailed monitoring chỉ tăng tần suất của metric mặc định, không thêm metric bên trong OS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có 200 EC2 instance trong Auto Scaling Group cần gửi Apache access log và error log lên CloudWatch Logs với cùng một cấu hình agent, và muốn cập nhật cấu hình tập trung. Cách nào hiệu quả nhất?",
+        "options": [
+          "Lưu file cấu hình CloudWatch Agent trong SSM Parameter Store và để mọi instance fetch cấu hình đó khi khởi động agent",
+          "SSH vào từng instance và chạy configuration wizard",
+          "Bật CloudTrail data events cho các instance",
+          "Lưu file cấu hình vào instance store của từng instance"
+        ],
+        "answer": [0],
+        "explain": "Cấu hình agent lưu trong Parameter Store được tạo một lần, mọi instance kéo về (fetch-config -c ssm:...), rất hợp khi triển khai quy mô lớn. Chạy wizard trên từng instance không mở rộng được."
+      },
+      {
+        "type": "single",
+        "q": "CloudWatch Agent trên 3 EC2 instance cùng gửi 2 log file (/var/log/secure và /var/log/httpd/access_log) lên CloudWatch Logs với cấu hình mặc định. Dữ liệu sẽ được tổ chức như thế nào?",
+        "options": [
+          "1 log group duy nhất chứa 6 log stream đặt tên theo tên file",
+          "3 log group (mỗi instance một group), mỗi group có 2 log stream",
+          "6 log group riêng biệt, mỗi group một log stream",
+          "2 log group (mỗi log file một group), mỗi group có 3 log stream đặt tên theo instance ID"
+        ],
+        "answer": [3],
+        "explain": "Mô hình là mỗi log file một log group, trong mỗi group có một log stream cho mỗi instance (mặc định đặt theo instance ID). Không phải mỗi instance một log group."
+      },
+      {
+        "type": "single",
+        "q": "CloudWatch Agent đã được cài và cấu hình trên một EC2 instance nhưng không gửi được metric và log lên CloudWatch. Cách khắc phục nào theo best practice?",
+        "options": [
+          "Chạy aws configure với access key của một IAM user có quyền CloudWatch",
+          "Gắn vào instance một IAM role có managed policy CloudWatchAgentServerPolicy",
+          "Đặt access key vào user data của instance",
+          "Bật EC2 detailed monitoring"
+        ],
+        "answer": [1],
+        "explain": "Agent cần quyền gửi dữ liệu, và best practice là IAM role gắn vào instance với CloudWatchAgentServerPolicy. Nhúng access key vừa kém an toàn vừa khó quản lý ở quy mô lớn."
+      },
+      {
+        "type": "multi",
+        "q": "Metric nào của EC2 instance KHÔNG có sẵn trong CloudWatch nếu không cài CloudWatch Agent? (Chọn 2)",
+        "options": [
+          "CPUUtilization",
+          "NetworkIn",
+          "Memory utilization",
+          "StatusCheckFailed",
+          "Dung lượng đĩa đã dùng trên file system"
+        ],
+        "answer": [2, 4],
+        "explain": "Memory và disk space là metric bên trong OS, CloudWatch không thấy nếu không có agent. CPU, network và status check đều lấy từ phía hypervisor nên có sẵn mặc định."
+      }
+    ],
+    "Dedicated Hosts": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn chuyển một phần mềm enterprise lên EC2 và dùng lại license hiện có (BYOL). License được tính theo số socket và core vật lý. Lựa chọn nào đáp ứng yêu cầu?",
+        "options": [
+          "EC2 Dedicated Instances",
+          "EC2 Dedicated Hosts",
+          "Reserved Instances với shared tenancy",
+          "Spot Instances trong một cluster placement group"
+        ],
+        "answer": [1],
+        "explain": "Dedicated Host cấp trọn một host vật lý và cho thấy số socket/core, nên license theo socket/core (BYOL) dùng được. Dedicated Instances không cho thấy phần cứng vật lý."
+      },
+      {
+        "type": "single",
+        "q": "Chính sách compliance của một công ty yêu cầu EC2 instance chạy trên phần cứng không chia sẻ với khách hàng AWS khác. Phần mềm không có ràng buộc license theo socket/core. Giải pháp nào đáp ứng yêu cầu với chi phí thấp nhất?",
+        "options": [
+          "EC2 Dedicated Hosts với reservation 3 năm",
+          "Shared tenancy với Reserved Instances",
+          "Đặt instance vào spread placement group",
+          "EC2 Dedicated Instances"
+        ],
+        "answer": [3],
+        "explain": "Khi chỉ cần phần cứng không chia sẻ mà không nhắc license theo socket/core, Dedicated Instances thường đủ và rẻ hơn Dedicated Hosts. Spread placement group chỉ tách rack, không đảm bảo phần cứng riêng."
+      },
+      {
+        "type": "single",
+        "q": "Mô hình tính phí của EC2 Dedicated Host là gì?",
+        "options": [
+          "Tính phí theo host được allocate; các instance chạy trong capacity của host không tính phí thêm",
+          "Tính phí theo từng instance cộng thêm phí dedicated theo region",
+          "Chỉ tính phí theo số vCPU instance thực sự sử dụng",
+          "Tính phí theo host cộng phí theo giờ của từng instance chạy trên host"
+        ],
+        "answer": [0],
+        "explain": "Với Dedicated Host bạn trả cho cả host (On-Demand hoặc Reservation), instance trên host không tính phí thêm. Phí theo instance cộng phí dedicated theo region là mô hình của Dedicated Instances."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng Dedicated Host thế hệ Nitro (R5, 2 socket, 48 core) và muốn chạy đồng thời nhiều instance size khác nhau (12xlarge, 4xlarge, 2xlarge). Phát biểu nào đúng?",
+        "options": [
+          "Không được, mỗi Dedicated Host chỉ chạy một instance size cố định",
+          "Chỉ được nếu chuyển sang Dedicated Instances",
+          "Được, host Nitro cho phép trộn nhiều size miễn tổng số core không vượt capacity của host",
+          "Được, và có thể chạy cả instance thuộc family khác như C5 trên cùng host"
+        ],
+        "answer": [2],
+        "explain": "Host Nitro cho phép trộn nhiều size trong cùng family miễn tổng core không vượt 48. Giới hạn một size cố định chỉ áp dụng cho host thế hệ cũ (non-Nitro), và host luôn gắn với một instance family cụ thể."
+      },
+      {
+        "type": "multi",
+        "q": "Hạn chế nào áp dụng cho EC2 Dedicated Hosts? (Chọn 2)",
+        "options": [
+          "Không thể chia sẻ host cho account khác trong AWS Organization",
+          "Amazon RDS instance không chạy được trên Dedicated Host",
+          "Chỉ có thể thanh toán theo On-Demand, không có reservation",
+          "Không dùng được với EC2 placement groups",
+          "Host Nitro không chạy được nhiều instance size khác nhau"
+        ],
+        "answer": [1, 3],
+        "explain": "Dedicated Host không dùng được với RDS và placement groups. Host vẫn chia sẻ được qua AWS RAM trong Organization, có reservation 1/3 năm, và host Nitro trộn được nhiều size."
+      }
+    ],
+    "EC2 Instance Roles": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên EC2 cần đọc object trong một S3 bucket. Đội bảo mật cấm lưu long-term credential trên instance. Giải pháp nào an toàn nhất và ít vận hành nhất?",
+        "options": [
+          "Tạo IAM role có quyền đọc S3 với trust policy cho ec2.amazonaws.com và gắn vào instance qua instance profile",
+          "Tạo IAM user, lưu access key trong user data của instance",
+          "Bake access key của IAM user vào AMI",
+          "Lưu access key trong file ~/.aws/credentials và rotate thủ công mỗi tháng"
+        ],
+        "answer": [0],
+        "explain": "Instance role cung cấp temporary credentials qua metadata và tự rotate, là best practice cho code chạy trên EC2. Mọi đáp án lưu access key trong instance, AMI hay user data gần như chắc chắn sai."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư dùng CloudFormation để tạo IAM role cho EC2, nhưng không gắn được role vào instance. Điều gì còn thiếu?",
+        "options": [
+          "Một service-linked role cho EC2",
+          "Một IAM user có cùng tên với role",
+          "Một resource AWS::IAM::InstanceProfile chứa role; EC2 gắn instance profile chứ không gắn role trực tiếp",
+          "Một KMS key để mã hóa credential của role"
+        ],
+        "answer": [2],
+        "explain": "Instance profile là wrapper quanh role và là thứ thực sự gắn vào EC2. Console tự tạo instance profile cùng tên, nhưng với CLI/CloudFormation phải tạo riêng rồi nối với role."
+      },
+      {
+        "type": "single",
+        "q": "Ứng dụng trên EC2 lấy credential của instance role từ đâu, và credential này có đặc điểm gì?",
+        "options": [
+          "Từ user data tại latest/user-data; credential là long-term và phải rotate thủ công",
+          "Từ file ~/.aws/config được EC2 ghi sẵn; credential không bao giờ hết hạn",
+          "Từ AWS Secrets Manager; credential được rotate mỗi 30 ngày",
+          "Từ instance metadata tại latest/meta-data/iam/security-credentials/<role-name>; credential là tạm thời do STS cấp và tự rotate trước khi hết hạn"
+        ],
+        "answer": [3],
+        "explain": "Khi role được assume, STS sinh temporary credentials và EC2 đặt chúng trong metadata, tự làm mới trước khi hết hạn. User data không dùng để truyền credential."
+      },
+      {
+        "type": "single",
+        "q": "Admin gắn cho EC2 instance một role chỉ có quyền đọc S3. Tuy nhiên AWS CLI trên instance vẫn hành động với quyền của một IAM user cũ. Nguyên nhân khả dĩ nhất là gì?",
+        "options": [
+          "Instance phải được stop rồi start lại để role có hiệu lực",
+          "Trên instance còn access key trong ~/.aws/credentials hoặc biến môi trường, được CLI ưu tiên hơn instance profile credentials",
+          "Instance role chỉ có hiệu lực với AWS SDK, không áp dụng cho AWS CLI",
+          "Role chưa được gắn quyền iam:PassRole"
+        ],
+        "answer": [1],
+        "explain": "Thứ tự ưu tiên credential của CLI đặt instance profile ở cuối, nên access key trong biến môi trường hoặc file credentials sẽ được dùng trước. Gắn hoặc đổi role không cần stop instance."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 instance production đang chạy cần được cấp thêm quyền truy cập DynamoDB mà không gây downtime. Cách nào phù hợp?",
+        "options": [
+          "Tạo AMI từ instance và launch instance mới có role",
+          "Stop instance, gắn role, rồi start lại",
+          "Gắn hoặc thay instance role (Modify IAM role) ngay khi instance đang chạy, hoặc cập nhật permissions policy của role hiện tại",
+          "Sửa user data để thêm access key rồi reboot"
+        ],
+        "answer": [2],
+        "explain": "Có thể gắn hoặc đổi role cho instance đang chạy mà không cần stop, và credential mới được phân phối qua metadata. Stop/start là không cần thiết và gây downtime."
+      }
+    ],
+    "EC2 Placement Groups": [
+      {
+        "type": "single",
+        "q": "Một nhóm nghiên cứu chạy workload HPC tightly coupled, yêu cầu latency thấp nhất và throughput cao nhất giữa các node. Họ chấp nhận rủi ro về resilience. Cấu hình nào phù hợp nhất?",
+        "options": [
+          "Spread placement group trải trên 3 AZ",
+          "Partition placement group với 7 partition",
+          "Auto Scaling Group trải đều qua nhiều AZ",
+          "Cluster placement group trong một AZ, instance bật enhanced networking"
+        ],
+        "answer": [3],
+        "explain": "Cluster placement group đặt instance sát nhau trong một AZ, cho latency thấp nhất và PPS cao nhất (cần enhanced networking). Spread và partition ưu tiên resilience chứ không phải hiệu năng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có 4 domain controller quan trọng và muốn mỗi instance nằm trên phần cứng riêng biệt (rack, nguồn điện, mạng riêng) để tối đa availability. Placement group nào phù hợp?",
+        "options": [
+          "Cluster placement group",
+          "Spread placement group",
+          "Partition placement group",
+          "Không dùng placement group, đặt cả 4 trên một Dedicated Host"
+        ],
+        "answer": [1],
+        "explain": "Spread placement group đặt mỗi instance trên một rack riêng, phù hợp cho số ít instance quan trọng. Cluster đặt instance sát nhau nên một sự cố phần cứng có thể ảnh hưởng tất cả."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty triển khai cụm Cassandra 90 instance và muốn chia các bản sao dữ liệu vào các fault domain tách biệt, đồng thời cho ứng dụng biết instance nào nằm ở đâu để replicate thông minh. Lựa chọn nào phù hợp?",
+        "options": [
+          "Partition placement group",
+          "Spread placement group",
+          "Cluster placement group",
+          "Dedicated Hosts chia sẻ qua AWS RAM"
+        ],
+        "answer": [0],
+        "explain": "Partition placement group không giới hạn số instance mỗi partition và cung cấp visibility cho ứng dụng topology-aware như HDFS, HBase, Cassandra. Spread bị giới hạn 7 instance mỗi AZ nên không chứa nổi 90 instance trong ít AZ."
+      },
+      {
+        "type": "single",
+        "q": "Một spread placement group trong một region có 3 AZ có thể chứa tối đa bao nhiêu instance?",
+        "options": [
+          "7",
+          "15",
+          "21",
+          "Không giới hạn"
+        ],
+        "answer": [2],
+        "explain": "Spread placement group có giới hạn cứng 7 instance mỗi AZ, nên 3 AZ cho tối đa 21 instance. Không giới hạn số instance là đặc điểm của mỗi partition trong partition placement group."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về cluster placement group? (Chọn 2)",
+        "options": [
+          "Chỉ nằm trong một AZ, AZ được khóa theo instance đầu tiên launch vào group",
+          "Có thể span nhiều AZ để tăng resilience",
+          "Mỗi instance được đặt trên một rack riêng có nguồn điện và mạng riêng",
+          "Best practice là launch tất cả instance cùng lúc và cùng instance type để tránh lỗi insufficient capacity",
+          "Có thể dùng cùng EC2 Dedicated Hosts"
+        ],
+        "answer": [0, 3],
+        "explain": "Cluster PG chỉ một AZ và nên launch tất cả cùng lúc, cùng type để AWS chọn chỗ đủ capacity. Mỗi instance một rack riêng là đặc điểm của spread, và Dedicated Hosts không dùng được với placement group."
+      }
+    ],
+    "EC2 User Data Bootstrapping": [
+      {
+        "type": "single",
+        "q": "Một kỹ sư sửa user data của một EC2 instance đã chạy trước đó (khi instance đang stopped), rồi start lại instance. Điều gì xảy ra với hành vi mặc định?",
+        "options": [
+          "Script mới được chạy lại với quyền root khi instance khởi động",
+          "Instance không start được vì user data đã thay đổi",
+          "User data mới hiển thị trong instance nhưng không được thực thi, vì user data chỉ chạy một lần ở lần launch đầu tiên",
+          "EC2 kiểm tra cú pháp script mới và báo lỗi nếu không hợp lệ"
+        ],
+        "answer": [2],
+        "explain": "Mặc định user data chỉ được thực thi một lần ở lần launch đầu; sửa rồi start lại thì dữ liệu mới hiển thị nhưng không chạy lại. EC2 cũng không validate nội dung user data."
+      },
+      {
+        "type": "single",
+        "q": "Auto Scaling Group của một công ty scale-out chậm vì mỗi instance mới mất 20 phút chạy user data để cài ứng dụng trước khi phục vụ được traffic. Cấu hình môi trường vẫn cần linh hoạt lúc launch. Giải pháp nào giảm boot-time-to-service-time tốt nhất?",
+        "options": [
+          "Tăng instance type để script cài đặt chạy nhanh hơn",
+          "Bake phần cài đặt nặng vào một custom AMI, chỉ dùng user data cho phần cấu hình cuối",
+          "Chuyển toàn bộ script cài đặt sang chạy mỗi lần reboot",
+          "Tăng health check grace period của ASG lên 30 phút"
+        ],
+        "answer": [1],
+        "explain": "Kết hợp AMI baking cho phần nặng và bootstrapping cho cấu hình cuối cho thời gian sẵn sàng thấp mà vẫn linh hoạt. Tăng grace period chỉ che giấu vấn đề chứ không rút ngắn thời gian sẵn sàng."
+      },
+      {
+        "type": "single",
+        "q": "Kích thước tối đa của EC2 user data là bao nhiêu?",
+        "options": [
+          "4 KB",
+          "8 KB",
+          "64 KB",
+          "16 KB"
+        ],
+        "answer": [3],
+        "explain": "User data giới hạn 16 KB; cần nhiều hơn thì user data chỉ nên là script nhỏ đi tải phần lớn hơn về (từ S3, Git...). 4 KB và 8 KB là giới hạn value của Parameter Store standard/advanced tier."
+      },
+      {
+        "type": "single",
+        "q": "Một CloudFormation stack tạo EC2 instance với user data cài ứng dụng. Có lần script lỗi nhưng stack vẫn báo CREATE_COMPLETE và instance vẫn pass status checks. Công ty muốn stack chỉ báo thành công khi việc cấu hình thực sự hoàn tất. Nên dùng gì?",
+        "options": [
+          "CreationPolicy kết hợp cfn-signal từ instance",
+          "Bật EC2 detailed monitoring",
+          "Thêm EC2 status check alarm với hành động recover",
+          "Base64-encode user data bằng Fn::Base64"
+        ],
+        "answer": [0],
+        "explain": "EC2 chỉ giao user data mà không biết script chạy ra sao, nên cần CreationPolicy + cfn-signal để instance báo kết quả về CloudFormation. Status checks vẫn pass dù script lỗi nên không phát hiện được."
+      },
+      {
+        "type": "single",
+        "q": "Một developer đặt mật khẩu database vào user data để script bootstrap cấu hình ứng dụng. Vấn đề và cách làm tốt hơn là gì?",
+        "options": [
+          "User data được mã hóa bằng KMS nên an toàn; không cần thay đổi",
+          "User data chỉ đọc được bởi root nên chấp nhận được; chỉ cần đổi mật khẩu định kỳ",
+          "Ai truy cập được OS của instance đều đọc được user data; nên lưu mật khẩu trong SSM Parameter Store (SecureString) hoặc Secrets Manager và đọc bằng instance role",
+          "Nên chuyển mật khẩu vào tag của EC2 instance"
+        ],
+        "answer": [2],
+        "explain": "User data không bảo mật, có thể đọc qua 169.254.169.254/latest/user-data từ bên trong instance. Secret nên nằm trong Parameter Store SecureString hoặc Secrets Manager, truy cập bằng instance role."
+      }
+    ],
+    "Enhanced Networking and EBS Optimized": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng phân tán gửi rất nhiều gói tin nhỏ giữa các EC2 instance và cần PPS cao hơn, latency thấp và ổn định. Tính năng nào trực tiếp đáp ứng yêu cầu?",
+        "options": [
+          "Enhanced networking (SR-IOV/ENA), kết hợp cluster placement group",
+          "EBS optimized",
+          "Gắn thêm Elastic IP cho mỗi instance",
+          "Spread placement group"
+        ],
+        "answer": [0],
+        "explain": "Enhanced networking cho băng thông cao hơn, PPS cao hơn và latency thấp, ổn định, thường đi kèm cluster placement group. EBS optimized chỉ dành băng thông riêng cho lưu lượng EBS."
+      },
+      {
+        "type": "single",
+        "q": "Enhanced networking dùng SR-IOV cải thiện hiệu năng mạng của EC2 bằng cách nào?",
+        "options": [
+          "Gộp nhiều NIC vật lý thành một NIC logic cho mỗi host",
+          "Định tuyến lưu lượng qua phần mềm hypervisor tối ưu hơn",
+          "NIC vật lý nhận biết ảo hóa và chia thành nhiều logical card, mỗi instance độc quyền một card nên host CPU gần như không tham gia",
+          "Tách lưu lượng EBS sang một đường mạng riêng"
+        ],
+        "answer": [2],
+        "explain": "Với SR-IOV, card mạng vật lý chia thành các virtual function, mỗi instance dùng riêng một cái và NIC tự xử lý, giảm tải CPU host. Tách lưu lượng EBS là việc của EBS optimized."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 instance gắn io2 volume nhưng không đạt được IOPS và throughput đã provision. Kiến trúc sư nên kiểm tra điều gì trước tiên?",
+        "options": [
+          "Bật enhanced networking trên instance",
+          "Chuyển volume sang gp2 để có burst",
+          "Đặt instance vào spread placement group",
+          "Instance có bật EBS optimized không và giới hạn băng thông EBS của instance type"
+        ],
+        "answer": [3],
+        "explain": "EBS là storage qua mạng; EBS optimized cấp băng thông riêng cho EBS và instance type có giới hạn băng thông EBS riêng. Enhanced networking cải thiện lưu lượng data mạng chứ không phải lưu lượng EBS."
+      },
+      {
+        "type": "single",
+        "q": "Một workload HPC dùng MPI, tightly coupled, cần giao tiếp node-to-node với khả năng bypass OS để đạt hiệu năng tối đa. Nên chọn gì?",
+        "options": [
+          "Elastic Network Adapter (ENA) đơn thuần trong spread placement group",
+          "Elastic Fabric Adapter (EFA) trong cluster placement group",
+          "EBS optimized instances với io2 Block Express",
+          "Nhiều ENI gắn vào mỗi instance"
+        ],
+        "answer": [1],
+        "explain": "EFA là ENA cộng khả năng bypass OS dành cho HPC/MPI, thường dùng cùng cluster placement group. ENA đơn thuần không có OS bypass, và spread placement group không tối ưu latency."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về EBS optimized?",
+        "options": [
+          "EBS optimized tăng số IOPS tối đa của EBS volume",
+          "EBS optimized là thiết lập ở mức volume, bật riêng cho từng EBS volume",
+          "EBS optimized luôn tính thêm phí trên mọi instance type",
+          "EBS optimized cấp băng thông riêng cho lưu lượng EBS, tách khỏi lưu lượng data, và bật mặc định không tốn phí trên đa số instance hiện đại"
+        ],
+        "answer": [3],
+        "explain": "EBS optimized là thiết lập theo instance, dành băng thông riêng cho EBS để storage và data không tranh chấp; không nên nhầm với tăng IOPS của volume. Chỉ một số instance đời cũ mới tính phí khi bật."
+      }
+    ],
+    "SSM Parameter Store": [
+      {
+        "type": "single",
+        "q": "Một công ty cần lưu tập trung connection string và mật khẩu cho nhiều ứng dụng, tổ chức theo cấu trúc phân cấp theo ứng dụng, có versioning, mật khẩu được mã hóa bằng KMS, với chi phí thấp nhất. Không có yêu cầu tự động rotate. Giải pháp nào phù hợp?",
+        "options": [
+          "SSM Parameter Store với String và SecureString parameter, đặt tên phân cấp như /app/dbpassword",
+          "AWS Secrets Manager cho mọi giá trị",
+          "Lưu trong user data của các EC2 instance",
+          "Lưu file cấu hình trong một S3 bucket công khai"
+        ],
+        "answer": [0],
+        "explain": "Parameter Store hỗ trợ hierarchy, versioning, SecureString mã hóa KMS, và standard tier miễn phí. Secrets Manager tính phí theo secret, chỉ đáng chọn khi cần rotation tích hợp."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần lưu mật khẩu của Amazon RDS database và yêu cầu mật khẩu được tự động rotate định kỳ với ít công sức nhất. Dịch vụ nào phù hợp?",
+        "options": [
+          "SSM Parameter Store SecureString",
+          "AWS Secrets Manager",
+          "AWS KMS customer managed key với automatic key rotation",
+          "EC2 user data"
+        ],
+        "answer": [1],
+        "explain": "Secrets Manager có rotation tích hợp, đặc biệt cho mật khẩu RDS. Parameter Store không có rotation tích hợp, còn KMS key rotation chỉ xoay key mã hóa chứ không đổi mật khẩu database."
+      },
+      {
+        "type": "single",
+        "q": "Một đội cần lưu một file cấu hình 6 KB vào Parameter Store và đặt expiration policy cho parameter. Lựa chọn nào đáp ứng?",
+        "options": [
+          "Standard tier, vì value tối đa 8 KB",
+          "Standard tier kết hợp StringList",
+          "Lưu dưới dạng SecureString để tăng giới hạn kích thước",
+          "Advanced tier, vì standard chỉ cho value tối đa 4 KB và không hỗ trợ parameter policies"
+        ],
+        "answer": [3],
+        "explain": "Standard tier miễn phí nhưng giới hạn 10,000 parameter, value 4 KB và không có parameter policies; advanced tier cho value 8 KB và có policies (tính phí). Kiểu SecureString không thay đổi giới hạn kích thước."
+      },
+      {
+        "type": "multi",
+        "q": "Một EC2 instance cần đọc giá trị plaintext của một SecureString parameter bằng --with-decryption. IAM role của instance cần những quyền nào? (Chọn 2)",
+        "options": [
+          "secretsmanager:GetSecretValue",
+          "ssm:GetParameters (hoặc ssm:GetParameter)",
+          "ssm:PutParameter",
+          "kms:Decrypt trên KMS key dùng để mã hóa parameter",
+          "kms:CreateKey"
+        ],
+        "answer": [1, 3],
+        "explain": "Quyền SSM và quyền KMS tách biệt: đọc SecureString dạng plaintext cần cả ssm:GetParameter* lẫn kms:Decrypt trên key tương ứng. Thiếu kms:Decrypt thì chỉ nhận được ciphertext hoặc bị từ chối giải mã."
+      },
+      {
+        "type": "single",
+        "q": "Một CloudFormation template được deploy ở nhiều region và cần luôn dùng AMI ID Amazon Linux mới nhất mà không hard-code AMI ID theo region. Cách nào ít công sức nhất?",
+        "options": [
+          "Dùng public parameter của SSM (/aws/service/ami-amazon-linux-latest/...) với kiểu AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+          "Tạo Mappings trong template và cập nhật thủ công mỗi khi có AMI mới",
+          "Viết Lambda-backed custom resource gọi DescribeImages",
+          "Copy AMI sang mọi region rồi dùng cùng AMI ID"
+        ],
+        "answer": [0],
+        "explain": "AWS công bố public parameter chứa AMI ID mới nhất theo từng region, template chỉ cần tham chiếu tới nó. Mappings phải cập nhật thủ công, còn AMI ID khác nhau giữa các region kể cả khi copy."
+      }
+    ]
+  }
+}

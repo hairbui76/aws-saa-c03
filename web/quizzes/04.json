@@ -1,0 +1,631 @@
+{
+  "chapter": "04 IAM Accounts and Organizations",
+  "lessons": {
+    "AWS Control Tower": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn nhanh chóng dựng và quản trị một môi trường multi-account an toàn theo best practice, có SSO, logging/audit tập trung và quy tắc governance áp sẵn cho mọi account, với ít công sức nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Tự tạo AWS Organizations, viết SCP và cấu hình CloudTrail, Config thủ công cho từng account",
+          "AWS Control Tower",
+          "CloudFormation StackSets triển khai template vào từng account",
+          "Chỉ bật IAM Identity Center cho các account"
+        ],
+        "answer": [1],
+        "explain": "Control Tower điều phối Organizations, IAM Identity Center, CloudFormation, Config, CloudTrail... để dựng landing zone chuẩn kèm guardrails và Account Factory. Tự làm với Organizations thì được nhưng tốn nhiều công sức hơn."
+      },
+      {
+        "type": "multi",
+        "q": "Guardrails của AWS Control Tower được thực thi bằng những cơ chế nào? (Chọn 2)",
+        "options": [
+          "Amazon GuardDuty findings",
+          "Service Control Policies (SCP) cho guardrail preventative",
+          "CloudWatch Alarms",
+          "AWS Config rules cho guardrail detective",
+          "IAM permissions boundaries"
+        ],
+        "answer": [1, 3],
+        "explain": "Preventative guardrail dùng SCP để chặn hành động; detective guardrail dùng AWS Config rules để phát hiện cấu hình lệch chuẩn. CloudWatch và GuardDuty không phải cơ chế thực thi guardrail."
+      },
+      {
+        "type": "single",
+        "q": "Đội bảo mật muốn biết các EC2 instance nào trong các account được enroll có public IPv4, nhưng không muốn chặn việc tạo instance. Loại guardrail nào phù hợp?",
+        "options": [
+          "Preventative guardrail dựa trên SCP",
+          "Mandatory preventative guardrail chặn gán public IP",
+          "Detective guardrail dựa trên AWS Config rules",
+          "Account Factory network baseline"
+        ],
+        "answer": [2],
+        "explain": "Detective guardrail chỉ phát hiện và báo trạng thái Clear/In violation, không chặn hành động. Preventative guardrail (SCP) sẽ ngăn hành động xảy ra, vượt quá yêu cầu."
+      },
+      {
+        "type": "single",
+        "q": "Khi thiết lập landing zone, Control Tower mặc định tạo những account nào trong Foundational OU (tên mặc định Security)?",
+        "options": [
+          "Production và Development",
+          "Sandbox và Shared Services",
+          "Management và Billing",
+          "Log Archive và Audit"
+        ],
+        "answer": [3],
+        "explain": "Security OU chứa Log Archive (log tập trung, read-only) và Audit (công cụ audit, SNS, CloudWatch). Sandbox là tên mặc định của Custom OU, không phải account."
+      },
+      {
+        "type": "single",
+        "q": "Các nhóm phát triển cần tự tạo account AWS mới khi bắt đầu dự án, với cấu hình chuẩn, guardrails áp tự động và dải IP VPC không chồng lấn giữa các account. Thành phần nào của Control Tower đáp ứng yêu cầu?",
+        "options": [
+          "Account Factory (có thể dùng qua Service Catalog)",
+          "Control Tower Dashboard",
+          "Log Archive account",
+          "Detective guardrails"
+        ],
+        "answer": [0],
+        "explain": "Account Factory tự động tạo account, áp baseline account và network (ví dụ cấp CIDR VPC tránh chồng lấn) và guardrails; end user có quyền có thể tự phục vụ qua Service Catalog. Dashboard chỉ là trang tổng quan."
+      }
+    ],
+    "AWS Organizations": [
+      {
+        "type": "single",
+        "q": "Một doanh nghiệp có 40 AWS account, mỗi account có payment method và hóa đơn riêng khiến bộ phận tài chính quá tải. Họ muốn một hóa đơn duy nhất và tận dụng giảm giá theo volume. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo AWS Budgets trong từng account",
+          "Tạo IAM user billing trong mỗi account để tổng hợp hóa đơn",
+          "Dùng AWS Organizations với consolidated billing",
+          "Dùng Cost Explorer trong từng account"
+        ],
+        "answer": [2],
+        "explain": "Consolidated billing của Organizations gỡ payment method của member account, gộp chi phí lên management (payer) account thành một hóa đơn và pool mức giảm giá. Budgets và Cost Explorer chỉ theo dõi chi phí, không gộp hóa đơn."
+      },
+      {
+        "type": "single",
+        "q": "Admin ở management account mời account Production (đã có sẵn) vào organization; Production đã chấp nhận. Tuy nhiên admin không thể role switch sang Production bằng OrganizationAccountAccessRole. Nguyên nhân là gì?",
+        "options": [
+          "Với account được invite, role OrganizationAccountAccessRole phải được tạo thủ công trong account đó",
+          "Role switch chỉ hoạt động với account tạo mới trong cùng region",
+          "Phải bật SCP trước khi role switch được",
+          "Account được invite phải gỡ root user trước"
+        ],
+        "answer": [0],
+        "explain": "Account tạo trực tiếp trong organization được AWS tự tạo OrganizationAccountAccessRole; account được invite thì phải tự tạo role này, trust management account. SCP không liên quan tới việc role có tồn tại hay không."
+      },
+      {
+        "type": "multi",
+        "q": "Lợi ích nào có được khi các account dùng consolidated billing trong AWS Organizations? (Chọn 2)",
+        "options": [
+          "Mỗi member account giữ payment method riêng để thanh toán độc lập",
+          "Một hóa đơn hàng tháng cho toàn bộ account",
+          "SCP được áp tự động để giới hạn chi tiêu",
+          "Mỗi member account được thêm 5.000 IAM user",
+          "Mức giá theo volume và lợi ích Reserved Instances/Savings Plans được chia sẻ trong organization"
+        ],
+        "answer": [1, 4],
+        "explain": "Consolidated billing cho một hóa đơn duy nhất và pool lợi ích giá. Member account bị gỡ payment method; SCP là tính năng khác, không phải công cụ giới hạn chi tiêu."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về organization root trong AWS Organizations?",
+        "options": [
+          "Là account root user của management account",
+          "Là IAM user có toàn quyền trên mọi member account",
+          "Là account trả tiền (payer account) của tổ chức",
+          "Là container ở đỉnh cây phân cấp, chứa OU và account; không phải user đăng nhập được"
+        ],
+        "answer": [3],
+        "explain": "Organization root chỉ là container đỉnh của cây (root → OU → account). Account root user là user admin của một account; payer account là management account."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có 30 account trong organization và không muốn tạo IAM user trong từng account. Mô hình đăng nhập nào là best practice?",
+        "options": [
+          "Tạo IAM user giống nhau ở mọi account và đồng bộ password",
+          "Dùng một account chứa identity (IAM user hoặc federation), rồi role switch (assume role) sang các account khác",
+          "Chia sẻ thông tin đăng nhập root user của management account",
+          "Dùng SCP để cấp quyền đăng nhập cho user vào mọi account"
+        ],
+        "answer": [1],
+        "explain": "Best practice là một account login duy nhất rồi role switch, thực chất là sts:AssumeRole vào role trong account đích. SCP không bao giờ cấp quyền."
+      }
+    ],
+    "CloudTrail": [
+      {
+        "type": "single",
+        "q": "Một bucket S3 bị xóa 5 ngày trước và công ty chưa từng cấu hình trail nào. Cách nhanh nhất để biết ai đã xóa là gì?",
+        "options": [
+          "Xem CloudWatch metric của S3",
+          "Tra CloudTrail Event History, vốn bật sẵn và giữ 90 ngày miễn phí",
+          "Tra AWS Config timeline của bucket",
+          "Xem VPC Flow Logs"
+        ],
+        "answer": [1],
+        "explain": "Event History luôn bật ở mọi account, giữ 90 ngày management events miễn phí, kể cả khi không có trail. CloudWatch metric là dữ liệu hiệu năng, không cho biết ai gọi API."
+      },
+      {
+        "type": "single",
+        "q": "Bộ phận compliance yêu cầu lưu lịch sử API call của account trong 7 năm với chi phí thấp. Giải pháp nào phù hợp?",
+        "options": [
+          "Dựa vào CloudTrail Event History",
+          "Bật CloudTrail Insights events",
+          "Bật detailed monitoring trong CloudWatch",
+          "Tạo trail ghi log vào S3 bucket"
+        ],
+        "answer": [3],
+        "explain": "Event History chỉ giữ 90 ngày; trail đổ log (JSON nén) vào S3 lưu vô thời hạn và chỉ tốn phí lưu trữ S3. Insights chỉ phát hiện hoạt động bất thường."
+      },
+      {
+        "type": "single",
+        "q": "Đội bảo mật cần ghi lại mọi lần đọc object (GetObject) trong một bucket S3 chứa dữ liệu nhạy cảm. Trail hiện tại chỉ dùng cấu hình mặc định. Cần làm gì?",
+        "options": [
+          "Bật data events cho bucket đó trong trail (có phí)",
+          "Không cần làm gì vì management events đã bao gồm GetObject",
+          "Bật Insights events",
+          "Bật global service events"
+        ],
+        "answer": [0],
+        "explain": "Mặc định trail chỉ log management events (control plane). Thao tác trên object S3 hay invoke Lambda là data events, phải bật riêng và tính phí."
+      },
+      {
+        "type": "single",
+        "q": "Một trail single-region được tạo ở ap-southeast-2 nhưng không ghi được event CreateUser của IAM. Nguyên nhân là gì?",
+        "options": [
+          "IAM không được CloudTrail ghi log",
+          "Cần bật data events để log hoạt động IAM",
+          "IAM là global service, event được log ở us-east-1; trail phải bao phủ us-east-1 và bật global service events",
+          "CloudTrail cần 24 giờ mới giao event IAM"
+        ],
+        "answer": [2],
+        "explain": "IAM, STS và CloudFront là global service, event luôn log vào us-east-1, nên trail phải bật global service events (ví dụ trail all-regions). Tạo user là management event, không phải data event."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty dùng AWS Organizations muốn gom log API call của mọi account, mọi region về một chỗ, đồng thời đặt alarm khi xuất hiện một API call cụ thể. Những bước nào phù hợp? (Chọn 2)",
+        "options": [
+          "Tạo organization trail từ management account",
+          "Đăng nhập từng member account và tạo trail riêng bằng tay",
+          "Gửi log của trail tới CloudWatch Logs và dùng metric filter kèm alarm",
+          "Dùng Event History vì dữ liệu được lưu vĩnh viễn",
+          "Dùng CloudTrail làm nguồn sự kiện real-time dưới một giây"
+        ],
+        "answer": [0, 2],
+        "explain": "Organization trail tạo từ management account log mọi account, mọi region; đưa sang CloudWatch Logs để dùng metric filter, alarm và xử lý theo sự kiện. CloudTrail không real-time (trễ khoảng 15 phút) và Event History chỉ giữ 90 ngày."
+      }
+    ],
+    "CloudWatch Logs": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn nhận cảnh báo khi số lần SSH đăng nhập thất bại trên đội EC2 Linux vượt ngưỡng. Giải pháp nào phù hợp?",
+        "options": [
+          "Bật CloudTrail data events cho EC2",
+          "Bật detailed monitoring và đặt alarm trên CPUUtilization",
+          "Dùng CloudWatch Agent đẩy log hệ thống lên CloudWatch Logs, tạo metric filter trên log group và đặt alarm trên metric đó",
+          "Bật VPC Flow Logs và đếm số kết nối cổng 22"
+        ],
+        "answer": [2],
+        "explain": "Log bên trong OS cần CloudWatch Agent; metric filter trên log group tìm pattern (SSH thất bại) và tăng metric để đặt alarm. CloudTrail ghi API call vào AWS, không thấy log đăng nhập trong OS."
+      },
+      {
+        "type": "single",
+        "q": "Trong CloudWatch Logs, retention và permissions được cấu hình ở cấp nào?",
+        "options": [
+          "Từng log event",
+          "Log group, áp cho mọi log stream bên trong",
+          "Từng log stream",
+          "Namespace của metric"
+        ],
+        "answer": [1],
+        "explain": "Log group là container chứa các stream cùng loại log và là nơi đặt retention, permissions, metric filter. Không cấu hình riêng ở từng stream."
+      },
+      {
+        "type": "single",
+        "q": "Trong CloudWatch Logs, chuỗi log event có thứ tự đến từ cùng một nguồn (ví dụ `/var/log/messages` của một instance cụ thể) gọi là gì?",
+        "options": [
+          "Log group",
+          "Metric filter",
+          "Namespace",
+          "Log stream"
+        ],
+        "answer": [3],
+        "explain": "Log stream là chuỗi log event có thứ tự từ cùng một nguồn; nhiều stream cùng loại log (mỗi instance một stream) được gom vào một log group."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn đẩy log ứng dụng từ các server on-premises lên CloudWatch Logs. Giải pháp nào phù hợp?",
+        "options": [
+          "Cài unified CloudWatch Agent trên server và cấp credentials có quyền ghi log",
+          "Không thể, vì CloudWatch Logs chỉ nhận log từ tài nguyên trong VPC",
+          "Bắt buộc dựng Direct Connect rồi mới gửi được log",
+          "Tạo CloudTrail trail cho server on-premises"
+        ],
+        "answer": [0],
+        "explain": "CloudWatch Logs là public service nên nhận log từ on-premises hay cloud khác nếu có kết nối mạng và quyền; cần CloudWatch Agent cho log OS/ứng dụng. Không bắt buộc Direct Connect."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về CloudWatch Logs?",
+        "options": [
+          "Là private service, chỉ truy cập được từ bên trong VPC",
+          "Là global service, dữ liệu log tự replicate sang mọi region",
+          "Là public service và regional; nhiều dịch vụ như CloudTrail, Lambda, VPC Flow Logs, Route 53 có thể đổ log vào đây",
+          "Chỉ nhận log qua AWS SDK, không tích hợp sẵn với dịch vụ AWS"
+        ],
+        "answer": [2],
+        "explain": "CloudWatch Logs có endpoint trong AWS Public Zone và hoạt động theo region; nhiều dịch vụ AWS tích hợp sẵn, ngoài ra còn CloudWatch Agent và SDK."
+      }
+    ],
+    "IAM Groups": [
+      {
+        "type": "single",
+        "q": "Admin viết bucket policy với Principal là ARN của IAM group Developers để mọi developer truy cập bucket, nhưng policy không hoạt động. Cách đúng để cấp quyền theo nhóm là gì?",
+        "options": [
+          "Thêm từng developer vào Principal của bucket policy dưới dạng group ARN lồng nhau",
+          "Tạo group lồng bên trong group Developers",
+          "Gắn identity policy (managed policy) cho group Developers; group không thể làm principal trong resource policy",
+          "Cấp credentials cho group Developers để đăng nhập"
+        ],
+        "answer": [2],
+        "explain": "Group không phải identity thật nên không thể là Principal trong resource policy; muốn cấp quyền theo nhóm thì gắn identity policy vào group. Group không có credentials và không lồng nhau được."
+      },
+      {
+        "type": "single",
+        "q": "Một IAM user được tham gia tối đa bao nhiêu IAM group?",
+        "options": [
+          "5",
+          "10",
+          "300",
+          "5.000"
+        ],
+        "answer": [1],
+        "explain": "Mỗi user thuộc tối đa 10 group (hard limit). 300 là số group mỗi account (tăng được), 5.000 là số IAM user mỗi account."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về IAM group là đúng? (Chọn 2)",
+        "options": [
+          "Group có thể chứa group khác (nesting)",
+          "IAM không có sẵn group ‘All Users’; muốn có phải tự tạo và tự quản lý thành viên",
+          "Group có credentials riêng để đăng nhập console",
+          "Group không thể lồng nhau",
+          "Group có thể dùng làm Principal trong S3 bucket policy"
+        ],
+        "answer": [1, 3],
+        "explain": "Group chỉ là container chứa user để gắn quyền: không nesting, không có group All Users mặc định, không credentials và không làm principal trong resource policy."
+      },
+      {
+        "type": "single",
+        "q": "40 developer cần cùng một bộ quyền S3, và quyền này thay đổi thường xuyên. Cách quản lý nào ít công sức nhất?",
+        "options": [
+          "Gắn inline policy cho từng developer",
+          "Tạo 40 role, mỗi developer một role",
+          "Thêm từng developer vào bucket policy",
+          "Tạo group Developers, gắn managed policy cho group và thêm các developer vào"
+        ],
+        "answer": [3],
+        "explain": "Gắn managed policy vào group thì sửa một lần có hiệu lực cho mọi thành viên. Inline policy cho từng user phải sửa 40 bản."
+      },
+      {
+        "type": "single",
+        "q": "Sally thuộc group Developers (Allow `s3:*` trên `*`) và group QA (Deny `s3:*` trên bucket catpics và `catpics/*`). Sally không có policy gắn trực tiếp. Kết quả khi Sally truy cập bucket catpics là gì?",
+        "options": [
+          "Bị từ chối, vì quyền từ mọi group được gộp lại và explicit deny thắng",
+          "Được phép, vì Developers được tạo trước QA",
+          "Được phép, vì allow trong group có ưu tiên cao hơn deny trong group khác",
+          "Lỗi cấu hình, vì user không được thuộc hai group có policy xung đột"
+        ],
+        "answer": [0],
+        "explain": "Quyền hiệu lực là gộp policy trực tiếp và policy của mọi group, rồi áp Deny – Allow – Deny; explicit deny luôn thắng. Thứ tự tạo group không ảnh hưởng."
+      }
+    ],
+    "IAM Identity Policies": [
+      {
+        "type": "single",
+        "q": "Một user có policy gồm hai statement: Allow `s3:*` trên `*` và Deny `s3:*` trên `arn:aws:s3:::catgifs` và `arn:aws:s3:::catgifs/*`. User này truy cập được gì?",
+        "options": [
+          "Mọi bucket S3 trừ bucket catgifs và các object trong đó",
+          "Mọi bucket S3, kể cả catgifs, vì allow trên `*` rộng hơn",
+          "Không truy cập được bucket nào vì có deny",
+          "Chỉ bucket catgifs"
+        ],
+        "answer": [0],
+        "explain": "Theo Deny – Allow – Deny, explicit deny thắng tất cả nên catgifs bị chặn, còn lại được explicit allow. Allow rộng hơn không ghi đè được deny."
+      },
+      {
+        "type": "single",
+        "q": "Một IAM user vừa được tạo và chưa được gắn policy nào, cũng không thuộc group nào. User này có quyền gì?",
+        "options": [
+          "Quyền read-only với mọi dịch vụ",
+          "Không có quyền gì (implicit deny)",
+          "Toàn quyền như account root user",
+          "Quyền đầy đủ với các dịch vụ global như IAM"
+        ],
+        "answer": [1],
+        "explain": "Mọi identity trừ account root user khởi đầu không có quyền; không có allow nào khớp thì bị implicit deny."
+      },
+      {
+        "type": "single",
+        "q": "Một tổ chức có 300 nhân viên vận hành cần cùng một bộ quyền đặc thù của doanh nghiệp, quyền này được cập nhật thường xuyên. Loại policy nào phù hợp nhất?",
+        "options": [
+          "Inline policy gắn cho từng user",
+          "AWS managed policy AdministratorAccess",
+          "Resource policy trên từng tài nguyên",
+          "Customer managed policy, tạo một lần rồi attach cho các identity"
+        ],
+        "answer": [3],
+        "explain": "Managed policy là object riêng, sửa một lần có hiệu lực ngay cho mọi identity; customer managed khớp đúng yêu cầu doanh nghiệp. AWS managed AdministratorAccess cấp quá nhiều quyền."
+      },
+      {
+        "type": "single",
+        "q": "Mọi developer dùng chung một managed policy, nhưng riêng user Tom cần thêm một deny đặc biệt không áp cho người khác. Cách nào phù hợp?",
+        "options": [
+          "Sửa managed policy dùng chung để thêm deny",
+          "Tạo AWS managed policy mới",
+          "Gắn inline policy chứa deny đó trực tiếp cho Tom",
+          "Xóa Tom khỏi mọi group"
+        ],
+        "answer": [2],
+        "explain": "Inline policy dùng cho ngoại lệ của một identity; managed policy dành cho quyền mặc định dùng chung. Sửa managed policy dùng chung sẽ ảnh hưởng mọi developer."
+      },
+      {
+        "type": "single",
+        "q": "Trong một statement của IAM policy, thành phần nào là optional?",
+        "options": [
+          "Effect",
+          "Sid",
+          "Action",
+          "Resource"
+        ],
+        "answer": [1],
+        "explain": "Sid (statement ID) là nhãn mô tả, optional nhưng nên đặt. Effect, Action và Resource quyết định statement khớp request nào và allow hay deny."
+      }
+    ],
+    "IAM Roles": [
+      {
+        "type": "single",
+        "q": "Một Lambda function cần ghi dữ liệu vào DynamoDB. Cách cấp quyền nào an toàn và đúng best practice nhất?",
+        "options": [
+          "Tạo IAM user và hard-code access key vào code function",
+          "Tạo Lambda execution role với trust policy tin dịch vụ Lambda và permissions policy cho DynamoDB",
+          "Lưu access key của root user trong biến môi trường",
+          "Gắn function vào một IAM group có quyền DynamoDB"
+        ],
+        "answer": [1],
+        "explain": "AWS service làm việc thay bạn thì luôn dùng role: runtime assume execution role và nhận temporary credentials. Hard-code access key là rủi ro bảo mật, khó rotate; function không thể là thành viên group."
+      },
+      {
+        "type": "single",
+        "q": "Một app ride-sharing trên mobile có hàng triệu người dùng đăng nhập bằng Google/Facebook và cần đọc/ghi DynamoDB. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo một IAM user cho mỗi người dùng",
+          "Nhúng access key của một IAM user dùng chung vào app",
+          "Tạo một IAM group cho toàn bộ người dùng mobile",
+          "Web Identity Federation: role tin các IdP Google/Facebook, người dùng assume role để nhận temporary credentials (thường qua Cognito)"
+        ],
+        "answer": [3],
+        "explain": "Giới hạn 5.000 IAM user/account khiến không thể tạo user cho mỗi người; Web Identity Federation scale tới hàng trăm triệu user và không lưu AWS credentials trong app."
+      },
+      {
+        "type": "single",
+        "q": "Trust policy của một IAM role xác định điều gì?",
+        "options": [
+          "Những principal nào được phép assume role",
+          "Những action role được thực hiện sau khi assume",
+          "Thời hạn tối đa của long-term credentials",
+          "Những resource nào được phép truy cập role"
+        ],
+        "answer": [0],
+        "explain": "Trust policy trả lời ‘ai được assume’ (user, service, account khác, web identity); permissions policy trả lời ‘assume xong được làm gì’."
+      },
+      {
+        "type": "single",
+        "q": "Một đối tác muốn công ty bạn (hàng nghìn identity) upload dữ liệu vào bucket S3 trong account của đối tác, và đối tác không muốn tạo IAM user cho từng người. Giải pháp nào phù hợp và object upload lên thuộc sở hữu của ai?",
+        "options": [
+          "Đối tác tạo IAM user dùng chung; object thuộc account của bạn",
+          "Bạn tạo role trong account của bạn; object thuộc account của bạn",
+          "Tạo role trong account đối tác cho identity của bạn assume; object thuộc account đối tác",
+          "Đối tác chia sẻ root user; object thuộc root user của đối tác"
+        ],
+        "answer": [2],
+        "explain": "Cross-account role nằm trong account đối tác; khi identity của bạn assume role và upload, object do identity của account đối tác tạo nên thuộc account đối tác, giúp quản lý quyền đơn giản."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào đúng về credentials nhận được khi assume một IAM role? (Chọn 2)",
+        "options": [
+          "Do STS cấp thông qua thao tác sts:AssumeRole",
+          "Không bao giờ hết hạn cho đến khi role bị xóa",
+          "Có thời hạn; hết hạn thì phải assume lại để nhận credentials mới",
+          "Quyền được cố định tại thời điểm assume, sửa permissions policy không ảnh hưởng",
+          "Là access key dài hạn được lưu sẵn trong role"
+        ],
+        "answer": [0, 2],
+        "explain": "STS sinh temporary security credentials có thời hạn. Mỗi lần dùng, quyền được kiểm tra theo permissions policy hiện tại nên sửa policy là có hiệu lực ngay; role không có long-term credentials."
+      }
+    ],
+    "IAM Users and ARNs": [
+      {
+        "type": "single",
+        "q": "Một policy cho phép `s3:GetObject` trên Resource `arn:aws:s3:::catgifs`, nhưng user vẫn bị access denied khi tải object trong bucket. Cần sửa thế nào?",
+        "options": [
+          "Đổi Resource thành `arn:aws:s3:us-east-1::catgifs`",
+          "Thêm account ID vào ARN của bucket",
+          "Đổi Resource thành `arn:aws:s3:::catgifs/*` vì GetObject là action cấp object",
+          "Thay `s3:GetObject` bằng `s3:ListBucket`"
+        ],
+        "answer": [2],
+        "explain": "`arn:aws:s3:::catgifs` chỉ là bucket, `arn:aws:s3:::catgifs/*` là mọi object; hai ARN không chồng nhau. Action cấp object như GetObject cần ARN dạng `/*`."
+      },
+      {
+        "type": "single",
+        "q": "Một doanh nghiệp có 8.000 nhân viên đang dùng Active Directory và muốn mọi người truy cập AWS. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo IAM user cho mỗi nhân viên, chia ra nhiều region để vượt giới hạn",
+          "Dùng identity federation với AD, nhân viên assume IAM role",
+          "Mở support ticket tăng giới hạn IAM user lên 10.000",
+          "Gom nhân viên vào IAM group để tăng số user được phép"
+        ],
+        "answer": [1],
+        "explain": "Giới hạn 5.000 IAM user mỗi account là hard limit; IAM là global nên không thể chia theo region. Hơn 5.000 identity thì dùng federation + role."
+      },
+      {
+        "type": "single",
+        "q": "Trong ARN `arn:aws:s3:::koala-bucket`, hai trường region và account-id để trống (`::`) có nghĩa là gì?",
+        "options": [
+          "Wildcard: áp cho mọi region và mọi account",
+          "Mặc định là region us-east-1 và account hiện tại",
+          "ARN sai cú pháp, bắt buộc phải điền đủ",
+          "Không cần chỉ định, vì tên bucket S3 là duy nhất toàn cầu"
+        ],
+        "answer": [3],
+        "explain": "`::` nghĩa là trường đó không cần chỉ định; `*` mới là wildcard cho mọi giá trị. Hai ký hiệu này không thay thế nhau được."
+      },
+      {
+        "type": "single",
+        "q": "Một developer dùng AWS CLI với danh tính IAM user của mình. User xác thực bằng loại credentials nào?",
+        "options": [
+          "Access keys (long-term credentials)",
+          "Username và password console",
+          "Temporary credentials do STS cấp tự động cho mọi IAM user",
+          "SSH key pair của EC2"
+        ],
+        "answer": [0],
+        "explain": "IAM user dùng password cho console và access key cho CLI/API; cả hai đều là long-term credentials. Temporary credentials của STS gắn với việc assume role."
+      },
+      {
+        "type": "multi",
+        "q": "Trường hợp nào phù hợp dùng IAM user? (Chọn 2)",
+        "options": [
+          "Lambda function cần ghi dữ liệu vào DynamoDB",
+          "Hàng triệu người dùng app mobile đăng nhập bằng Google",
+          "Kiến trúc sư Mike cần truy cập console AWS dài hạn",
+          "Doanh nghiệp 10.000 nhân viên đã có Active Directory",
+          "Ứng dụng backup cài trên một laptop cụ thể cần ghi vào S3 lâu dài"
+        ],
+        "answer": [2, 4],
+        "explain": "IAM user hợp với thực thể cụ thể, có tên, cần truy cập dài hạn (người, ứng dụng, service account). AWS service dùng role; hàng triệu người hoặc hơn 5.000 nhân viên dùng federation + role."
+      }
+    ],
+    "Service Control Policies": [
+      {
+        "type": "single",
+        "q": "Một công ty dùng AWS Organizations muốn chặn mọi account thành viên, kể cả root user của chúng, sử dụng region khác ngoài us-east-1. Giải pháp nào phù hợp?",
+        "options": [
+          "Gắn identity policy deny cho mọi IAM user trong từng account",
+          "Dùng AWS Config rule để phát hiện tài nguyên ngoài us-east-1",
+          "Tạo permissions boundary cho root user",
+          "Gắn SCP deny các region khác us-east-1 vào organization root hoặc OU"
+        ],
+        "answer": [3],
+        "explain": "SCP giới hạn chính account nên gián tiếp giới hạn cả root user của member account, và kế thừa xuống cây tổ chức. Identity policy không áp được cho root user; Config chỉ phát hiện, không chặn."
+      },
+      {
+        "type": "single",
+        "q": "Trong một member account, IAM user có identity policy Allow `ec2:*` và `s3:*`. Account dùng allow list: đã gỡ FullAWSAccess và chỉ có SCP Allow `s3:*`. Quyền hiệu lực của user là gì?",
+        "options": [
+          "Cả EC2 và S3",
+          "Chỉ S3",
+          "Chỉ EC2",
+          "Không có quyền gì"
+        ],
+        "answer": [1],
+        "explain": "Quyền hiệu lực là phần giao của identity policy và SCP: chỉ S3 nằm trong cả hai. EC2 vượt trần SCP nên bị implicit deny."
+      },
+      {
+        "type": "single",
+        "q": "Một SCP deny `s3:*` được gắn vào organization root. Admin trong management account vẫn dùng S3 bình thường. Vì sao?",
+        "options": [
+          "Management account không bao giờ bị SCP ảnh hưởng",
+          "SCP chỉ có hiệu lực sau 24 giờ",
+          "SCP gắn ở root chỉ ảnh hưởng các OU, không ảnh hưởng account",
+          "Admin có AdministratorAccess nên ghi đè được SCP"
+        ],
+        "answer": [0],
+        "explain": "Management account là ngoại lệ: dù SCP gắn trực tiếp, qua OU hay root đều không bị hạn chế, nên không nên chạy workload ở đó. Trong member account, SCP giới hạn được cả role AdministratorAccess."
+      },
+      {
+        "type": "single",
+        "q": "Admin gắn SCP Allow `dynamodb:*` vào một OU. Một IAM user trong account thuộc OU đó chưa có identity policy nào. User có truy cập được DynamoDB không?",
+        "options": [
+          "Có, vì SCP cho phép DynamoDB",
+          "Có, nhưng chỉ đọc",
+          "Không, vì SCP không cấp quyền; user vẫn cần identity policy allow",
+          "Không, vì SCP gắn ở OU không ảnh hưởng account bên trong"
+        ],
+        "answer": [2],
+        "explain": "SCP chỉ là account permissions boundary, quy định trần quyền chứ không bao giờ cấp quyền. Phần chỉ nằm trong SCP mà không có identity policy allow thì không có tác dụng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty yêu cầu chỉ những service đã được phê duyệt mới dùng được trong các account, và service mới AWS ra mắt phải bị chặn cho tới khi được duyệt. Chiến lược SCP nào phù hợp?",
+        "options": [
+          "Deny list: giữ FullAWSAccess và thêm SCP explicit deny cho từng service bị cấm",
+          "Allow list: gỡ FullAWSAccess và tạo SCP explicit allow cho từng service được duyệt",
+          "Không cần SCP, chỉ dùng identity policy",
+          "Gắn FullAWSAccess ở cả root và từng OU"
+        ],
+        "answer": [1],
+        "explain": "Allow list chỉ cho phép service được liệt kê, service mới bị chặn tự động; đổi lại admin overhead cao. Deny list (mặc định) tự động cho phép service mới vì FullAWSAccess dùng wildcard."
+      }
+    ],
+    "Service-linked Roles and PassRole": [
+      {
+        "type": "single",
+        "q": "Đội bảo mật đã tạo sẵn một role cho CloudFormation. Bob cần tạo stack dùng role đó nhưng không được phép tạo hay sửa role. Cần cấp cho Bob quyền gì?",
+        "options": [
+          "iam:CreateRole và iam:PutRolePolicy",
+          "iam:PassRole (kèm iam:ListRoles) trên đúng ARN của role đó",
+          "AdministratorAccess",
+          "iam:CreateServiceLinkedRole"
+        ],
+        "answer": [1],
+        "explain": "iam:PassRole cho phép gán một role có sẵn cho service mà không cần quyền tạo/sửa role, tức role separation. CreateRole/PutRolePolicy cho Bob quyền sửa role, trái yêu cầu."
+      },
+      {
+        "type": "single",
+        "q": "Điểm khác biệt then chốt giữa service-linked role và IAM role thông thường là gì?",
+        "options": [
+          "Service-linked role không có trust policy",
+          "Service-linked role dùng long-term access key",
+          "Service-linked role có thể được nhiều service khác nhau dùng chung",
+          "Service-linked role không xóa được khi service còn đang dùng nó"
+        ],
+        "answer": [3],
+        "explain": "Service-linked role gắn với một service cụ thể, quyền do service định nghĩa sẵn, và chỉ xóa được khi service không còn dùng. Role thường thì xóa bất cứ lúc nào."
+      },
+      {
+        "type": "single",
+        "q": "Một role được dịch vụ AWS tự tạo khi bạn dùng tính năng lần đầu, quyền do chính dịch vụ định nghĩa sẵn để gọi các dịch vụ khác thay bạn. Đây là loại role gì?",
+        "options": [
+          "Service-linked role",
+          "Instance profile",
+          "Cross-account role",
+          "Permissions boundary"
+        ],
+        "answer": [0],
+        "explain": "Service-linked role liên kết với một service, quyền do service định nghĩa và có thể được service tự tạo. Instance profile chỉ là container để gắn role cho EC2."
+      },
+      {
+        "type": "single",
+        "q": "Mặc định, khi Bob tạo một CloudFormation stack mà không truyền role nào, CloudFormation dùng quyền của ai để tạo tài nguyên?",
+        "options": [
+          "Service-linked role của CloudFormation",
+          "Root user của account",
+          "Identity đang tạo stack (Bob), nên Bob cần quyền tạo mọi tài nguyên trong stack",
+          "Role OrganizationAccountAccessRole"
+        ],
+        "answer": [2],
+        "explain": "Mặc định CFN dùng quyền của identity tạo stack. Khi pass một role (cần iam:PassRole), CFN dùng quyền của role, có thể lớn hơn quyền của Bob."
+      },
+      {
+        "type": "single",
+        "q": "Một policy cần cho phép admin tạo service-linked role cho một dịch vụ. Action IAM nào được dùng?",
+        "options": [
+          "iam:CreateRole",
+          "iam:PassRole",
+          "iam:CreateServiceLinkedRole, kèm tên service dạng <service-name>.amazonaws.com tra từ tài liệu",
+          "sts:AssumeRole"
+        ],
+        "answer": [2],
+        "explain": "Tạo SLR cần iam:CreateServiceLinkedRole với tên service (ví dụ qua điều kiện iam:AWSServiceName). Không nên đoán tên service vì mỗi service viết khác nhau và phân biệt hoa thường."
+      }
+    ]
+  }
+}

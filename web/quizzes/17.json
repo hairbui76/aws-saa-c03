@@ -1,0 +1,942 @@
+{
+  "chapter": "17 Hybrid and Migration",
+  "lessons": {
+    "BGP": [
+      {
+        "type": "single",
+        "q": "BGP chạy trên giao thức và port nào?",
+        "options": [
+          "UDP port 179",
+          "TCP port 179",
+          "TCP port 443",
+          "UDP port 500"
+        ],
+        "answer": [1],
+        "explain": "BGP chạy trên TCP 179 nên reliable (có error correction, flow control). UDP 500 là port của IKE trong IPsec, dễ nhầm khi học cùng VPN."
+      },
+      {
+        "type": "single",
+        "q": "Dải ASN 16-bit nào được dành cho private ASN, dùng trong peering riêng mà không cần IANA cấp?",
+        "options": [
+          "1 – 1023",
+          "49152 – 65535",
+          "64512 – 65534",
+          "10000 – 20000"
+        ],
+        "answer": [2],
+        "explain": "Private ASN 16-bit là 64512–65534; ví dụ ASN mặc định phía Amazon của VGW là 64512. 49152–65535 là dải ephemeral port của TCP/UDP, không phải ASN."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có hai đường kết nối tới AWS chạy BGP: link A tốc độ cao làm primary, link B làm backup. Hiện traffic đang ưu tiên đi qua link B. Cách chuẩn để BGP ưu tiên link A là gì?",
+        "options": [
+          "Tăng tốc độ port của link A để BGP tự chọn link nhanh hơn",
+          "Tắt route propagation trên VPC route table",
+          "Thêm static route trong VPC route table trỏ tới link A",
+          "Dùng AS path prepending trên route quảng bá qua link B để đường này trông dài hơn"
+        ],
+        "answer": [3],
+        "explain": "BGP chọn đường theo AS_PATH ngắn nhất, không xét bandwidth; AS path prepending làm link B trông dài hơn nên chỉ còn là backup. Tăng tốc độ link không ảnh hưởng tới lựa chọn của BGP."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn dựng Site-to-Site VPN tới AWS nhưng router on-premises chỉ hỗ trợ IPsec, không hỗ trợ BGP. Lựa chọn nào khả thi?",
+        "options": [
+          "Static VPN, khai prefix thủ công",
+          "Dynamic VPN với route propagation",
+          "Direct Connect private VIF",
+          "Direct Connect transit VIF tới Transit Gateway"
+        ],
+        "answer": [0],
+        "explain": "Dynamic VPN cần BGP trên customer router; không có BGP thì chỉ dùng được static VPN. Direct Connect cũng luôn dùng BGP trên mỗi VIF nên không phải đáp án."
+      },
+      {
+        "type": "single",
+        "q": "Brisbane (AS 200) nối Alice Springs (AS 202) trực tiếp bằng link vệ tinh 5 Mbps, đồng thời có đường cáp quang 1 Gbps qua Adelaide (AS 201). Mặc định BGP ở Brisbane chọn link vệ tinh. Vì sao?",
+        "options": [
+          "BGP ưu tiên đường có latency thấp hơn",
+          "BGP chọn đường có AS_PATH ngắn hơn (202,i so với 201,202,i) và không xét tốc độ link",
+          "Link vệ tinh có next hop 0.0.0.0 nên được coi là local",
+          "iBGP luôn ưu tiên link trực tiếp hơn link qua AS khác"
+        ],
+        "answer": [1],
+        "explain": "BGP là path-vector protocol, chỉ xét độ dài AS_PATH chứ không xét tốc độ hay tình trạng link. Giữa các AS khác nhau là eBGP, không phải iBGP."
+      }
+    ],
+    "Compare - VPN vs Direct Connect": [
+      {
+        "type": "single",
+        "q": "Một công ty cần kết nối mã hóa giữa data center và VPC trong vòng vài giờ tới, băng thông khoảng 500 Mbps, ngân sách thấp. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "AWS Direct Connect dedicated connection 1 Gbps",
+          "Direct Connect hosted connection qua partner",
+          "AWS Site-to-Site VPN qua Internet",
+          "VPC peering giữa VPC và data center"
+        ],
+        "answer": [2],
+        "explain": "VPN dựng trong dưới 1 giờ đến vài giờ, có IPsec sẵn và rẻ; 500 Mbps nằm dưới trần ~1.25 Gbps. DX (dedicated hay hosted) đều cần thời gian provision và không mã hóa sẵn."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty truyền dữ liệu lớn hằng ngày giữa on-premises và AWS, cần khoảng 5 Gbps với latency thấp và ổn định, không muốn đi qua Internet. Có thể chờ vài tuần để triển khai. Giải pháp nào phù hợp?",
+        "options": [
+          "AWS Direct Connect",
+          "Site-to-Site VPN với một VPN connection",
+          "AWS Global Accelerator",
+          "Site-to-Site VPN với hai CGW"
+        ],
+        "answer": [0],
+        "explain": "Cần > 1.25 Gbps, latency ổn định và không qua Internet là dấu hiệu chọn DX. VPN bị giới hạn ~1.25 Gbps mỗi tunnel và latency biến động do đi qua Internet."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã có một Direct Connect làm kết nối chính và muốn thêm khả năng dự phòng với chi phí thấp nhất, chấp nhận hiệu năng giảm khi failover. Nên làm gì?",
+        "options": [
+          "Mua thêm một DX ở một DX location khác",
+          "Mua thêm một DX port ở cùng DX location",
+          "Dùng Snowball Edge làm phương án dự phòng",
+          "Thêm Site-to-Site VPN qua Internet làm backup cho DX"
+        ],
+        "answer": [3],
+        "explain": "DX primary + VPN backup là cách HA rẻ hơn hai DX. Thêm DX ở location khác cho HA tốt nhất nhưng đắt hơn nhiều."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về AWS Direct Connect?",
+        "options": [
+          "Lưu lượng trên DX được mã hóa IPsec mặc định",
+          "DX cho phép truy cập public Internet qua private VIF",
+          "Data transfer vào AWS qua DX được miễn phí, chỉ tính data transfer out",
+          "DX có resilience sẵn vì AWS luôn cấp hai đường vật lý"
+        ],
+        "answer": [2],
+        "explain": "Với DX, data in miễn phí, chỉ tính phí theo giờ của port và data out. DX không mã hóa sẵn, không ra được Internet và không có resilience sẵn."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty cần kết nối hybrid hoạt động ngay trong tuần này, nhưng về lâu dài cần băng thông 10 Gbps với latency ổn định. Hai hành động nào phù hợp? (Chọn 2)",
+        "options": [
+          "Dùng Snowball để truyền dữ liệu trong lúc chờ",
+          "Dựng ngay Site-to-Site VPN để có kết nối trong vài giờ",
+          "Dùng VPC peering tới mạng on-premises",
+          "Dùng Global Accelerator làm kết nối chính lâu dài",
+          "Đặt Direct Connect song song; khi DX sẵn sàng thì chuyển traffic sang DX và giữ VPN làm backup"
+        ],
+        "answer": [1, 4],
+        "explain": "Pattern VPN trước, DX sau: VPN cho kết nối ngay, DX được provision song song (mất tuần đến tháng) và VPN có thể giữ làm backup. VPC peering không nối được với on-prem."
+      }
+    ],
+    "DataSync": [
+      {
+        "type": "single",
+        "q": "Một công ty cần migrate 50 TB dữ liệu từ NAS on-premises (NFS) lên Amazon S3 qua đường mạng hiện có. Việc truyền phải chạy ngoài giờ làm việc, giới hạn băng thông để không ảnh hưởng người dùng, và tự kiểm tra tính toàn vẹn dữ liệu. Giải pháp nào phù hợp?",
+        "options": [
+          "AWS Snowball Edge Storage Optimized",
+          "AWS DataSync với agent on-premises, đặt schedule và bandwidth limit",
+          "AWS Storage Gateway Volume Gateway stored mode",
+          "AWS Transfer Family với SFTP endpoint"
+        ],
+        "answer": [1],
+        "explain": "DataSync truyền online, có schedule, bandwidth limiter, incremental và data validation sẵn. Snowball là thiết bị vật lý (offline), còn Transfer Family dành cho người dùng/đối tác upload qua SFTP."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, một DataSync agent truyền được tốc độ khoảng bao nhiêu?",
+        "options": [
+          "Khoảng 1 Gbps, tương đương 10 TB/ngày",
+          "Khoảng 1.25 Gbps, giới hạn giống VPN",
+          "Khoảng 100 Gbps, tương đương 1 PB/ngày",
+          "Khoảng 10 Gbps, tương đương 100 TB/ngày"
+        ],
+        "answer": [3],
+        "explain": "Mỗi agent ~10 Gbps, tương đương khoảng 100 TB/ngày; muốn nhanh hơn thì thêm agent nếu đường truyền đủ băng thông. 1.25 Gbps là trần của một VPN tunnel."
+      },
+      {
+        "type": "single",
+        "q": "Trong kiến trúc DataSync, agent on-premises giao tiếp với storage nội bộ (SAN/NAS) bằng giao thức nào?",
+        "options": [
+          "NFS hoặc SMB",
+          "iSCSI",
+          "Lustre client",
+          "AS2"
+        ],
+        "answer": [0],
+        "explain": "Agent chạy dưới dạng VM, nói chuyện với storage nội bộ qua NFS (Linux/Unix) hoặc SMB (Windows), rồi gửi tới DataSync endpoint. iSCSI là giao thức của Volume/Tape Gateway."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn các đối tác bên ngoài upload file hằng ngày vào S3 bằng SFTP mà không phải đổi công cụ của họ. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "AWS DataSync",
+          "AWS Storage Gateway File Gateway",
+          "AWS Transfer Family",
+          "AWS Snowball"
+        ],
+        "answer": [2],
+        "explain": "Mẹo phân biệt: Transfer Family cung cấp endpoint SFTP/FTPS/FTP/AS2 cho người dùng/đối tác bên ngoài đẩy file vào S3/EFS. DataSync dùng agent để migrate/đồng bộ dữ liệu từ storage của chính công ty."
+      },
+      {
+        "type": "multi",
+        "q": "Theo khóa học, DataSync có thể ghi dữ liệu tới những đích nào trong AWS? (Chọn 2)",
+        "options": [
+          "Amazon EFS",
+          "Amazon RDS",
+          "Amazon DynamoDB",
+          "Amazon S3",
+          "Amazon Redshift"
+        ],
+        "answer": [0, 3],
+        "explain": "DataSync tích hợp với S3 (mọi storage class), EFS và FSx. Migrate database như RDS là việc của DMS, không phải DataSync."
+      }
+    ],
+    "Direct Connect Public VIF and VPN": [
+      {
+        "type": "single",
+        "q": "Một công ty dùng Direct Connect để kết nối tới VPC và nhận yêu cầu compliance: mọi traffic giữa on-premises và VPC phải được mã hóa end-to-end. Giải pháp nào đáp ứng?",
+        "options": [
+          "Bật mã hóa mặc định trên private VIF",
+          "Chạy IPsec VPN trên private VIF tới VGW",
+          "Chạy IPsec VPN trên public VIF tới public endpoint của VGW hoặc TGW",
+          "Chuyển sang transit VIF vì transit VIF luôn mã hóa"
+        ],
+        "answer": [2],
+        "explain": "DX không mã hóa mặc định; cách chuẩn là IPsec VPN over public VIF tới VGW/TGW. VPN qua private VIF là bẫy vì VPN endpoint có public IP."
+      },
+      {
+        "type": "single",
+        "q": "Vì sao IPsec VPN chạy trên Direct Connect phải dùng public VIF chứ không phải private VIF?",
+        "options": [
+          "Private VIF không hỗ trợ BGP",
+          "Public VIF có băng thông lớn hơn private VIF",
+          "Private VIF chỉ dùng được với Transit Gateway",
+          "VPN endpoint của VGW/TGW có public IP nằm trong AWS public zone, mà private VIF chỉ tới được private IP trong VPC"
+        ],
+        "answer": [3],
+        "explain": "Quy tắc chọn VIF là xem đích: VPN endpoint có public IP nên cần public VIF. Mọi VIF đều dùng BGP, và tunnel VPN vẫn tạo kết nối private vào VPC."
+      },
+      {
+        "type": "single",
+        "q": "Điểm khác biệt chính giữa MACsec và IPsec VPN over DX là gì?",
+        "options": [
+          "MACsec mã hóa một hop ở Layer 2 giữa AWS DX router và thiết bị nhận cross connect, còn IPsec VPN mã hóa end-to-end từ CGW tới VGW/TGW",
+          "MACsec mã hóa end-to-end, còn IPsec VPN chỉ mã hóa một hop",
+          "MACsec có overhead cao hơn nên chỉ dùng cho tốc độ dưới 1 Gbps",
+          "IPsec VPN cần switch hỗ trợ đặc biệt nên ít vendor hỗ trợ hơn MACsec"
+        ],
+        "answer": [0],
+        "explain": "MACsec là single hop Layer 2, overhead thấp, thiết kế cho 10 Gbps trở lên; IPsec VPN là end-to-end, vendor hỗ trợ rộng nhưng overhead cao. Hai công nghệ không cạnh tranh nhau."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã có public VIF trên DX gần us-east-1 và muốn kết nối mã hóa tới một VPC ở eu-west-1 mà không dựng thêm DX. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo private VIF tới VGW ở eu-west-1 qua DX hiện có",
+          "Dựng IPsec VPN qua cùng public VIF tới VGW/TGW ở eu-west-1, đi trên AWS global network",
+          "Bật VPC peering giữa VPC us-east-1 và eu-west-1 rồi dùng private VIF",
+          "Dùng MACsec để mở rộng DX sang region khác"
+        ],
+        "answer": [1],
+        "explain": "Qua cùng một public VIF có thể dựng VPN tới VGW/TGW ở region khác, đi trên AWS global network, có encrypted transit toàn cầu. VPC peering không transitive nên không chuyển tiếp traffic từ on-prem."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có DX 10 Gbps và chạy một IPsec VPN tunnel trên public VIF để mã hóa. Điều gì đúng về throughput của traffic đi qua tunnel này?",
+        "options": [
+          "Đạt gần 10 Gbps vì DX không có overhead",
+          "Tăng gấp đôi vì VPN nén dữ liệu",
+          "Vẫn bị giới hạn bởi overhead mã hóa của VPN (khoảng 1.25 Gbps mỗi tunnel phía AWS)",
+          "Không bị giới hạn vì public VIF bỏ qua trần băng thông của VGW"
+        ],
+        "answer": [2],
+        "explain": "VPN + DX cho bảo mật của VPN và latency ổn định của DX, nhưng throughput vẫn bị giới hạn bởi overhead VPN (~1.25 Gbps/tunnel). Con số gần 10 Gbps chỉ đúng với traffic DX không qua VPN."
+      }
+    ],
+    "Direct Connect Resilience": [
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về một Direct Connect connection đơn lẻ?",
+        "options": [
+          "AWS tự động cấp hai cross connect nên DX có HA sẵn",
+          "Chỉ phần nối từ DX location về Region là single point of failure",
+          "DX tự failover sang Internet khi cáp bị đứt",
+          "Không resilient: DX location, router, cross connect, extension và customer premises đều là single point of failure"
+        ],
+        "answer": [3],
+        "explain": "Direct Connect không resilient mặc định; mọi thành phần từ DX location trở ra là SPOF. Ngược lại, đoạn Region ↔ DX location được AWS nối HA nên coi như luôn HA."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần kết nối DX chịu được lỗi của cả một DX location lẫn sự cố ở một văn phòng của mình. Thiết kế nào phù hợp?",
+        "options": [
+          "Hai DX port ở cùng một DX location, nối về một văn phòng",
+          "DX ở hai DX location khác nhau, nối về hai customer premises khác nhau",
+          "Một DX port 100 Gbps thay cho port 10 Gbps",
+          "Hai VIF trên cùng một DX connection"
+        ],
+        "answer": [1],
+        "explain": "Muốn chịu lỗi cả location thì cần nhiều DX location, lý tưởng là nối về nhiều customer premises. Hai port ở cùng location vẫn còn SPOF là chính location đó; hai VIF vẫn chạy trên cùng một sợi cáp."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần tăng độ sẵn sàng cho kết nối DX duy nhất của mình nhưng ngân sách hạn chế. Giải pháp nào hiệu quả về chi phí nhất?",
+        "options": [
+          "Thêm Site-to-Site VPN qua Internet làm backup cho DX",
+          "Mua thêm DX ở DX location thứ hai",
+          "Triển khai mô hình 2 DX location × 2 port",
+          "Tăng tốc độ port DX hiện tại"
+        ],
+        "answer": [0],
+        "explain": "Mẹo thi: HA nhưng tiết kiệm thì DX primary + Site-to-Site VPN backup. Thêm DX hay mô hình extreme cho resilience cao hơn nhưng đắt hơn nhiều."
+      },
+      {
+        "type": "single",
+        "q": "Khi một công ty đặt hai DX port tại cùng một DX location, AWS bố trí hai port này thế nào?",
+        "options": [
+          "Trên cùng một AWS DX router để giảm latency",
+          "Ở hai DX location khác nhau một cách tự động",
+          "Trên hai AWS DX router khác nhau",
+          "Gộp thành một port có băng thông gấp đôi"
+        ],
+        "answer": [2],
+        "explain": "AWS đặt hai port ở cùng location trên hai AWS DX router khác nhau, nên chịu được lỗi một router. Tuy vậy chúng vẫn ở cùng location nên không chịu được lỗi cả location."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty có 2 DX port tại cùng 1 DX location (trên 2 AWS DX router), 2 customer DX router, 2 extension và 2 router ở cùng 1 văn phòng. Những rủi ro nào vẫn còn? (Chọn 2)",
+        "options": [
+          "Lỗi một AWS DX router",
+          "Lỗi toàn bộ DX location",
+          "Lỗi đoạn kết nối giữa AWS Region và DX location",
+          "Lỗi toàn bộ văn phòng (customer premises), hoặc hai extension đi chung một tuyến cáp vật lý bị cắt cùng lúc",
+          "Lỗi một customer premises router"
+        ],
+        "answer": [1, 3],
+        "explain": "Thiết kế này chịu được lỗi một router hoặc một extension, nhưng vẫn còn SPOF là cả DX location và cả customer premises; hai extension giữa cùng hai địa điểm thường đi chung tuyến cáp. Đoạn Region ↔ DX location do AWS đảm bảo HA."
+      }
+    ],
+    "Direct Connect": [
+      {
+        "type": "single",
+        "q": "Khi một công ty đặt mua AWS Direct Connect dedicated connection, thứ AWS thực sự cấp là gì?",
+        "options": [
+          "Một đường cáp quang hoàn chỉnh từ văn phòng công ty tới AWS Region",
+          "Một VPN tunnel được tối ưu trên AWS backbone",
+          "Một port trên AWS DX router tại DX location; cross connect và extension về văn phòng là việc của công ty hoặc partner",
+          "Một rack riêng trong data center của AWS"
+        ],
+        "answer": [2],
+        "explain": "DX về bản chất là port allocation: AWS cấp port và ủy quyền (LOA-CFA) để bạn nối vào. DX location cũng không phải tòa nhà của AWS, AWS chỉ thuê chỗ ở đó."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có DX và muốn truy cập Amazon S3 và SQS qua đường DX thay vì Internet. Cần tạo loại VIF nào?",
+        "options": [
+          "Public VIF",
+          "Private VIF",
+          "Transit VIF",
+          "Hosted VIF tới VGW"
+        ],
+        "answer": [0],
+        "explain": "Public VIF đi tới AWS public zone để truy cập public services như S3, SQS, Elastic IP. Private VIF chỉ tới private IP trong VPC qua VGW."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn dùng một DX connection để truy cập nhiều VPC đã gắn vào Transit Gateway. Cần cấu hình gì?",
+        "options": [
+          "Một private VIF cho mỗi VPC, gắn trực tiếp vào Transit Gateway",
+          "Public VIF tới Transit Gateway",
+          "VPC peering giữa các VPC rồi dùng một private VIF",
+          "Transit VIF tới Direct Connect Gateway được gắn với Transit Gateway"
+        ],
+        "answer": [3],
+        "explain": "Transit VIF đi tới DX Gateway nối với Transit Gateway để tới nhiều VPC. Private VIF đi tới VGW của một VPC (hoặc qua DX Gateway), không gắn trực tiếp vào TGW."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty vừa đặt Direct Connect và cần kết nối hybrid hoạt động trong 3 ngày tới cho một dự án gấp. Đánh giá nào đúng?",
+        "options": [
+          "DX sẽ sẵn sàng trong vài giờ vì AWS cấp port tự động",
+          "DX thường mất hàng tuần đến hàng tháng để provision; nên dựng Site-to-Site VPN trước rồi thêm DX sau",
+          "Chọn DX hosted connection vì luôn sẵn sàng trong 24 giờ",
+          "Dùng Global Accelerator thay cho DX trong lúc chờ"
+        ],
+        "answer": [1],
+        "explain": "DX không bao giờ là đáp án khi cần kết nối gấp, vì sau khi AWS cấp port còn phải cross connect và kéo cáp. VPN dựng trong vài giờ là cầu nối phù hợp."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào đúng về AWS Direct Connect? (Chọn 2)",
+        "options": [
+          "Có sẵn resilience vì là dịch vụ managed",
+          "Cho phép truy cập public Internet qua DX mà không cần proxy",
+          "Data transfer vào AWS qua DX được miễn phí",
+          "Provision trong vòng dưới 1 giờ",
+          "Không mã hóa mặc định"
+        ],
+        "answer": [2, 4],
+        "explain": "DX miễn phí data in và không mã hóa sẵn (dùng VPN over public VIF hoặc MACsec). DX không có resilience sẵn, không ra Internet và provision mất hàng tuần đến hàng tháng."
+      }
+    ],
+    "Directory Service": [
+      {
+        "type": "single",
+        "q": "Một công ty khởi nghiệp với khoảng 300 nhân viên muốn dùng Amazon WorkSpaces và cần một directory trong AWS. Họ không có AD on-premises và muốn chi phí thấp nhất. Nên chọn gì?",
+        "options": [
+          "AWS Managed Microsoft AD",
+          "AD Connector",
+          "Tự dựng domain controller trên EC2",
+          "Simple AD (Small)"
+        ],
+        "answer": [3],
+        "explain": "Simple AD là lựa chọn mặc định, rẻ nhất cho directory độc lập trong AWS, cỡ Small hỗ trợ tới 500 user. AD Connector cần AD on-prem để proxy về."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chạy SharePoint và ứng dụng dựa trên SQL Server trong AWS, cần schema extension, cần trust với AD on-premises, và directory phải tiếp tục hoạt động khi VPN tới on-prem bị đứt. Nên chọn gì?",
+        "options": [
+          "Simple AD",
+          "AWS Managed Microsoft AD",
+          "AD Connector",
+          "Amazon Cognito user pool"
+        ],
+        "answer": [1],
+        "explain": "Managed Microsoft AD là AD thật, hỗ trợ schema extension, tạo trust với AD on-prem và primary nằm trong AWS nên không phụ thuộc VPN. Simple AD dựa trên Samba, chỉ tương thích một phần và không dành cho tích hợp on-prem."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có AD on-premises và muốn cho nhân viên dùng Amazon WorkSpaces bằng tài khoản hiện có, nhưng không được lưu bất kỳ thông tin directory nào trên cloud. Nên chọn gì?",
+        "options": [
+          "AD Connector",
+          "AWS Managed Microsoft AD với trust relationship",
+          "Simple AD đồng bộ user từ on-prem",
+          "IAM Identity Center với user tạo thủ công"
+        ],
+        "answer": [0],
+        "explain": "AD Connector chỉ là proxy, không lưu dữ liệu directory trên cloud, mọi request được chuyển về AD on-prem. Managed Microsoft AD lưu directory trong AWS."
+      },
+      {
+        "type": "single",
+        "q": "Công ty dùng AD Connector cho Amazon WorkSpaces. Điều gì xảy ra nếu kết nối VPN giữa VPC và on-premises bị đứt?",
+        "options": [
+          "AD Connector chuyển sang dùng bản cache directory trong AWS",
+          "WorkSpaces tự chuyển sang Simple AD",
+          "AD Connector ngừng hoạt động và dịch vụ AWS dùng nó bị gián đoạn",
+          "Không ảnh hưởng vì AD Connector có HA trên nhiều AZ"
+        ],
+        "answer": [2],
+        "explain": "AD Connector phụ thuộc kết nối private và AD on-prem; link đứt thì nó ngừng hoạt động. Triển khai nhiều AZ chỉ bảo vệ phía AWS, không bù được việc mất đường về on-prem."
+      },
+      {
+        "type": "single",
+        "q": "Simple AD có hai cỡ. Giới hạn số user của từng cỡ là bao nhiêu?",
+        "options": [
+          "Small ≤ 100 user, Large ≤ 1.000 user",
+          "Small ≤ 1.000 user, Large ≤ 50.000 user",
+          "Small ≤ 5.000 user, Large không giới hạn",
+          "Small ≤ 500 user, Large ≤ 5.000 user"
+        ],
+        "answer": [3],
+        "explain": "Simple AD (Samba 4) có Small tới 500 user và Large tới 5.000 user. Khi cần quy mô và tính năng AD đầy đủ thì chọn AWS Managed Microsoft AD."
+      }
+    ],
+    "FSx for Lustre": [
+      {
+        "type": "single",
+        "q": "Một nhóm machine learning chạy training trên hàng trăm Linux EC2 instance, cần file system dùng chung với permission POSIX, throughput hàng trăm GB/s và latency dưới 1 ms. Dữ liệu huấn luyện đang nằm trong S3. Giải pháp nào phù hợp?",
+        "options": [
+          "Amazon EFS với Provisioned Throughput",
+          "Amazon FSx for Windows File Server",
+          "Amazon FSx for Lustre với S3 bucket làm data repository",
+          "Storage Gateway File Gateway"
+        ],
+        "answer": [2],
+        "explain": "FSx for Lustre dành cho HPC/ML trên Linux, POSIX, throughput hàng trăm GB/s, và có thể gắn S3 làm repository để lazy load. EFS là shared FS đa dụng, không đạt mức hiệu năng này."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chạy job phân tích ngắn hạn vài ngày, cần hiệu năng cao nhất với chi phí thấp, chấp nhận mất dữ liệu nếu phần cứng lỗi vì dữ liệu gốc vẫn còn trong S3. Nên chọn deployment type nào của FSx for Lustre?",
+        "options": [
+          "Scratch",
+          "Persistent",
+          "Multi-AZ",
+          "Persistent kết hợp automatic backup 35 ngày"
+        ],
+        "answer": [0],
+        "explain": "Scratch dành cho workload tạm thời, hiệu năng thuần túy, không HA và không replication. Persistent dành cho lưu trữ dài hạn; FSx for Lustre không có deployment Multi-AZ."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về FSx for Lustre deployment type Persistent?",
+        "options": [
+          "Replicate dữ liệu sang nhiều AZ nên chịu được lỗi cả AZ",
+          "Không có replication, phần cứng lỗi thì mất dữ liệu",
+          "Chỉ dùng được cho Windows client qua SMB",
+          "Replicate trong một AZ và self-healing khi lỗi phần cứng, nhưng vẫn có thể mất dữ liệu nếu cả AZ lỗi"
+        ],
+        "answer": [3],
+        "explain": "Persistent chỉ HA trong một AZ; muốn bảo vệ trước lỗi AZ thì backup sang S3. Không replication là đặc điểm của Scratch."
+      },
+      {
+        "type": "single",
+        "q": "FSx for Lustre được tạo với một S3 bucket làm repository. Dữ liệu của object trong bucket được nạp vào file system khi nào?",
+        "options": [
+          "Toàn bộ được copy ngay khi tạo file system",
+          "Được lazy load khi client truy cập lần đầu",
+          "Chỉ khi chạy lệnh hsm_archive",
+          "Mỗi giờ một lần theo lịch đồng bộ mặc định"
+        ],
+        "answer": [1],
+        "explain": "Object hiện ra trong file system ngay nhưng chỉ được lazy load khi được truy cập lần đầu. hsm_archive dùng để ghi thay đổi ngược về S3, không phải để nạp vào."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, kích thước tối thiểu và bước tăng của một FSx for Lustre file system là bao nhiêu?",
+        "options": [
+          "Tối thiểu 100 GiB, tăng theo bước 100 GiB",
+          "Tối thiểu 1.17 TiB, tăng theo bước 1.17 TiB",
+          "Tối thiểu 1.2 TiB, tăng theo bước 2.4 TiB",
+          "Tối thiểu 32 GiB, tăng theo bước 1 TiB"
+        ],
+        "answer": [2],
+        "explain": "FSx for Lustre tối thiểu 1.2 TiB và tăng theo bước 2.4 TiB. 1.17 TiB là kích thước của mỗi OST (Object Storage Target), dễ nhầm."
+      }
+    ],
+    "FSx for Windows": [
+      {
+        "type": "single",
+        "q": "Một công ty chuyển các ứng dụng Windows lên EC2 và cần file share dùng chung qua SMB, dùng Windows ACL, tích hợp với Active Directory on-premises hiện có, và không muốn tự quản lý Windows File Server. Giải pháp nào phù hợp?",
+        "options": [
+          "Amazon FSx for Windows File Server",
+          "Amazon EFS",
+          "Amazon FSx for Lustre",
+          "EC2 Windows Server tự cài vai trò File Server"
+        ],
+        "answer": [0],
+        "explain": "Windows/SMB/Active Directory là từ khóa của FSx for Windows, dịch vụ managed, nối được với self-managed AD on-prem. EFS dùng NFS cho Linux; tự dựng trên EC2 thì phải tự quản lý."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên nhiều Linux EC2 instance cần shared file system qua NFS với permission POSIX. Lựa chọn nào phù hợp nhất?",
+        "options": [
+          "Amazon FSx for Windows File Server",
+          "Storage Gateway Tape Gateway",
+          "Amazon S3 với SMB share",
+          "Amazon EFS"
+        ],
+        "answer": [3],
+        "explain": "Mẹo thi: Linux / NFS / POSIX thì chọn EFS; Windows / SMB / AD thì chọn FSx for Windows. FSx for Windows phục vụ client Windows qua SMB."
+      },
+      {
+        "type": "single",
+        "q": "Người dùng Windows muốn tự xem và khôi phục phiên bản trước của file (Previous Versions) trên file share mà không cần admin can thiệp. Tính năng nào của FSx for Windows hỗ trợ điều này?",
+        "options": [
+          "DFS (Distributed File System)",
+          "VSS (Volume Shadow Copy)",
+          "Data deduplication",
+          "S3 Versioning"
+        ],
+        "answer": [1],
+        "explain": "VSS cho phép user-driven restore qua Previous Versions ngay từ phía client. DFS dùng để gom nhiều share thành namespace chung hoặc scale-out, không phải để restore."
+      },
+      {
+        "type": "single",
+        "q": "Một file share FSx for Windows phục vụ nghiệp vụ quan trọng và phải tiếp tục hoạt động khi một AZ gặp sự cố. Nên triển khai thế nào?",
+        "options": [
+          "Single-AZ vì đã replicate trong AZ",
+          "Single-AZ kết hợp VSS",
+          "Multi-AZ deployment",
+          "Bật DFS namespace trên Single-AZ"
+        ],
+        "answer": [2],
+        "explain": "Multi-AZ cho HA thật sự giữa các AZ. Single-AZ chỉ replicate trong một AZ, chịu được lỗi phần cứng nhưng không chịu được lỗi cả AZ."
+      },
+      {
+        "type": "multi",
+        "q": "FSx for Windows File Server có thể dùng những nguồn directory nào làm user store? (Chọn 2)",
+        "options": [
+          "Amazon Cognito user pool",
+          "AWS Managed Microsoft AD (Directory Service)",
+          "IAM users",
+          "Self-managed Active Directory, chạy trên AWS hoặc on-premises",
+          "Một S3 bucket chứa file danh sách user"
+        ],
+        "answer": [1, 3],
+        "explain": "FSx for Windows tích hợp với AWS Managed Microsoft AD hoặc self-managed AD (kể cả on-prem). Cognito dành cho người dùng ứng dụng web/mobile, IAM dành cho quyền gọi AWS API."
+      }
+    ],
+    "IPSec VPN": [
+      {
+        "type": "single",
+        "q": "Trong IPsec, IKE Phase 1 thực hiện những việc gì?",
+        "options": [
+          "Thỏa thuận cipher suite và tạo IPsec SA để mã hóa dữ liệu khối lớn",
+          "Xác thực peer bằng pre-shared key hoặc certificate, trao đổi Diffie-Hellman và tạo IKE SA",
+          "Quảng bá route giữa hai peer bằng BGP",
+          "Chọn interesting traffic theo prefix đích"
+        ],
+        "answer": [1],
+        "explain": "Phase 1 (chậm, nặng): authenticate, DH, sinh Phase 1 symmetric key và tạo IKE SA. Thỏa thuận cipher và tạo IPsec SA là Phase 2."
+      },
+      {
+        "type": "single",
+        "q": "Vì sao IPsec tách quá trình dựng tunnel thành Phase 1 và Phase 2?",
+        "options": [
+          "Để Phase 1 dùng UDP và Phase 2 dùng TCP",
+          "Để mỗi phase dùng một pre-shared key khác nhau",
+          "Vì Phase 2 cần certificate còn Phase 1 thì không",
+          "Phase 2 có thể bị hủy khi hết interesting traffic trong khi Phase 1 vẫn giữ, nên dựng lại Phase 2 rất nhanh mà không phải làm lại phần nặng"
+        ],
+        "answer": [3],
+        "explain": "Phase 2 xây trên Phase 1; khi có traffic mới chỉ cần dựng lại Phase 2 nhẹ và nhanh. Phase 1 là phần nặng (authenticate + DH) nên được giữ lại."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn áp dụng security setting khác nhau cho từng loại traffic đi qua VPN (ví dụ infrastructure, CCTV, financial), mỗi loại có cặp SA và IPsec key riêng. Nên dùng loại VPN nào?",
+        "options": [
+          "Policy-based VPN",
+          "Route-based VPN",
+          "Static VPN với một prefix",
+          "Dynamic VPN dùng BGP"
+        ],
+        "answer": [0],
+        "explain": "Policy-based VPN match traffic theo rule set, mỗi policy một cặp SA với key riêng, linh hoạt nhưng phức tạp hơn. Route-based dùng một cặp SA cho mỗi prefix nên mọi loại traffic dùng chung."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần kết nối được xác thực và mã hóa in-transit giữa văn phòng và VPC, đi qua public Internet, dựng nhanh. Giải pháp nào phù hợp?",
+        "options": [
+          "Direct Connect private VIF",
+          "VPC peering",
+          "AWS Site-to-Site VPN (IPsec)",
+          "AWS Global Accelerator"
+        ],
+        "answer": [2],
+        "explain": "IPsec cung cấp authentication + encryption qua mạng không tin cậy, và là nền của Site-to-Site VPN. DX private VIF không mã hóa và mất nhiều thời gian provision."
+      },
+      {
+        "type": "single",
+        "q": "Trong trao đổi Diffie-Hellman của IKE Phase 1, điều nào đúng?",
+        "options": [
+          "Một peer tạo DH key rồi gửi cho peer kia qua tunnel đã mã hóa",
+          "Hai peer trao đổi DH public key, mỗi bên tự tính ra cùng một DH key, và DH key không bao giờ được truyền qua mạng",
+          "DH key chính là pre-shared key được cấu hình sẵn",
+          "Hai peer trao đổi DH private key để kiểm tra danh tính"
+        ],
+        "answer": [1],
+        "explain": "Mỗi bên dùng private key của mình và public key của đối phương để tự tính ra cùng DH key, không truyền qua mạng. PSK chỉ dùng để xác thực danh tính, không phải key mã hóa."
+      }
+    ],
+    "Site-to-Site VPN": [
+      {
+        "type": "single",
+        "q": "Một công ty cần Site-to-Site VPN có full HA, chịu được lỗi một AZ phía AWS lẫn lỗi router on-premises. Thiết kế nào phù hợp?",
+        "options": [
+          "Một VPN connection với 2 tunnel tới một CGW",
+          "Hai VGW gắn vào cùng một VPC, mỗi VGW một tunnel",
+          "Hai CGW (lý tưởng là khác đường Internet và khác tòa nhà) và hai VPN connection từ cùng VGW",
+          "Một VPN connection dùng dynamic routing BGP"
+        ],
+        "answer": [2],
+        "explain": "Full HA cần thêm CGW thứ hai và VPN connection thứ hai, tổng cộng 4 tunnel. Một VPN connection với một CGW chỉ là partial HA vì CGW là single point of failure; một VPC chỉ gắn được một VGW."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có một VPN connection (2 tunnel tới 2 endpoint ở 2 AZ) nối về một router on-premises duy nhất. Đâu là single point of failure?",
+        "options": [
+          "Customer gateway (router on-premises)",
+          "Endpoint của VGW ở một AZ",
+          "VPC route table",
+          "Tunnel thứ hai"
+        ],
+        "answer": [0],
+        "explain": "Phía AWS VGW đã HA với endpoint ở các AZ khác nhau, chỉ cần một tunnel up là thông. Router on-prem duy nhất mới là SPOF (partial HA)."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi dựng VPN, admin không muốn thêm thủ công route tới mạng on-premises vào từng VPC route table. Nên làm gì?",
+        "options": [
+          "Chuyển sang VPC peering",
+          "Tạo thêm một VPN connection",
+          "Thêm route 0.0.0.0/0 trỏ tới Internet Gateway",
+          "Bật route propagation trên route table để route VGW học được tự động được thêm vào"
+        ],
+        "answer": [3],
+        "explain": "Route propagation tự thêm route mà VGW học được (qua BGP hoặc prefix static khai trên VPN connection) vào route table. Route tới IGW không đưa traffic vào tunnel."
+      },
+      {
+        "type": "single",
+        "q": "Mỗi Site-to-Site VPN connection trên AWS tạo ra bao nhiêu tunnel?",
+        "options": [
+          "1 tunnel",
+          "2 tunnel, mỗi tunnel tới một endpoint AWS ở AZ khác nhau",
+          "4 tunnel, hai tới mỗi AZ",
+          "Số tunnel bằng số subnet trong VPC"
+        ],
+        "answer": [1],
+        "explain": "Một VPN connection nối 1 VGW với 1 CGW và tạo 2 tunnel tới 2 endpoint ở 2 AZ. Con số 4 tunnel xuất hiện khi có hai VPN connection (full HA)."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào đúng về AWS Site-to-Site VPN theo khóa học? (Chọn 2)",
+        "options": [
+          "Có thể dựng trong dưới 1 giờ vì hoàn toàn là cấu hình phần mềm",
+          "Latency thấp và ổn định vì đi trên mạng riêng của AWS",
+          "Static VPN bắt buộc customer router phải hỗ trợ BGP",
+          "Throughput tối đa khoảng 1.25 Gbps cho một VPN connection",
+          "Mặc định không mã hóa dữ liệu"
+        ],
+        "answer": [0, 3],
+        "explain": "VPN dựng nhanh và bị giới hạn ~1.25 Gbps. Nó chạy qua public Internet nên latency biến động, luôn mã hóa IPsec, và BGP chỉ cần cho dynamic VPN."
+      }
+    ],
+    "Snow Family": [
+      {
+        "type": "single",
+        "q": "Một công ty cần chuyển tổng cộng 12 PB dữ liệu lên AWS, rải rác ở 6 data center ở nhiều thành phố khác nhau; đường Internet ở các nơi đều chậm. Giải pháp nào phù hợp?",
+        "options": [
+          "Một Snowmobile đi lần lượt qua 6 data center",
+          "Nhiều thiết bị Snowball Edge gửi tới từng data center",
+          "AWS DataSync qua Internet",
+          "Site-to-Site VPN từ mỗi data center"
+        ],
+        "answer": [1],
+        "explain": "Dữ liệu ≥ 10 PB nhưng rải nhiều site thì dùng nhiều Snowball (Edge), vì một Snowmobile chỉ phục vụ một địa điểm. DataSync qua đường Internet chậm sẽ mất quá lâu."
+      },
+      {
+        "type": "single",
+        "q": "Một doanh nghiệp lớn muốn chuyển toàn bộ 60 PB dữ liệu từ một data center duy nhất lên AWS càng nhanh càng tốt. Theo khóa học, lựa chọn nào phù hợp?",
+        "options": [
+          "Nhiều Snowball 80 TB",
+          "AWS DataSync với nhiều agent",
+          "Storage Gateway Volume Gateway cached mode",
+          "AWS Snowmobile"
+        ],
+        "answer": [3],
+        "explain": "Snowmobile phù hợp cho một site duy nhất với ≥ 10 PB, tối đa 100 PB mỗi xe. Dùng Snowball 80 TB thì cần hàng trăm thiết bị, kém hiệu quả."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty khảo sát địa chất cần nạp dữ liệu cảm biến tại một mỏ ở vùng xa, đồng thời chạy EC2 instance có GPU để xử lý sơ bộ ngay tại chỗ trước khi gửi về AWS. Thiết bị nào phù hợp?",
+        "options": [
+          "Snowball Edge Compute Optimized (có GPU)",
+          "Snowball (thế hệ cũ)",
+          "Snowmobile",
+          "Storage Gateway hardware appliance"
+        ],
+        "answer": [0],
+        "explain": "Snowball Edge có compute (EC2, GPU tùy biến thể) để xử lý dữ liệu tại site xa khi ingest. Snowball đời cũ chỉ có storage, không có compute."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, dải dữ liệu mà Snowball thường kinh tế hơn truyền qua mạng là bao nhiêu?",
+        "options": [
+          "1 GB – 1 TB",
+          "100 GB – 10 TB",
+          "10 TB – 10 PB",
+          "Từ 10 PB trở lên"
+        ],
+        "answer": [2],
+        "explain": "Dải kinh tế của Snowball là 10 TB – 10 PB, có thể đặt nhiều thiết bị cho nhiều địa điểm. Từ 10 PB tại một site thì cân nhắc Snowmobile."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần đồng bộ khoảng 2 TB dữ liệu thay đổi mỗi tuần từ NAS on-premises lên S3, đường mạng đủ băng thông, cần chạy lặp lại theo lịch. Lựa chọn nào phù hợp nhất?",
+        "options": [
+          "Đặt Snowball mỗi tuần",
+          "AWS DataSync",
+          "Snowball Edge Storage Optimized",
+          "Snowmobile"
+        ],
+        "answer": [1],
+        "explain": "Dữ liệu vừa phải, mạng đủ, chuyển online lặp lại theo lịch thì dùng DataSync. Snow Family là thiết bị vật lý, phù hợp khi mạng không đủ cho khối lượng quá lớn."
+      }
+    ],
+    "Storage Gateway": [
+      {
+        "type": "single",
+        "q": "Một công ty sắp hết dung lượng trên SAN on-premises. Server truy cập storage qua iSCSI. Họ muốn mở rộng capacity lên AWS mà server vẫn thấy volume như on-prem, chỉ dữ liệu hay dùng được giữ cục bộ. Giải pháp nào phù hợp?",
+        "options": [
+          "Storage Gateway Volume Gateway stored mode",
+          "Storage Gateway Tape Gateway",
+          "Storage Gateway Volume Gateway cached mode",
+          "AWS DataSync"
+        ],
+        "answer": [2],
+        "explain": "Cached mode giữ primary data trong S3 và chỉ cache dữ liệu hay dùng on-prem, nên mở rộng capacity (data center extension). Stored mode giữ toàn bộ dữ liệu on-prem nên không giải quyết thiếu dung lượng, đây là bẫy hay gặp."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần backup full-disk liên tục cho các server dùng volume iSCSI, phục vụ DR trên AWS, đồng thời mọi dữ liệu phải được đọc với latency thấp ở tốc độ LAN. Dung lượng on-prem còn dư nhiều. Nên chọn mode nào?",
+        "options": [
+          "Volume Gateway stored mode",
+          "Volume Gateway cached mode",
+          "File Gateway với SMB",
+          "Tape Gateway (VTL)"
+        ],
+        "answer": [0],
+        "explain": "Stored mode giữ toàn bộ dữ liệu on-prem (low latency) và upload bất đồng bộ thành EBS snapshot cho backup/DR. Cached mode chỉ giữ dữ liệu hay dùng nên đọc dữ liệu ít dùng sẽ chậm."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng phần mềm backup kết nối tới tape library vật lý qua iSCSI, và phải trả chi phí lớn cho tape, bảo trì library và vận chuyển tape offsite. Họ muốn bỏ phần cứng tape mà không phải đổi phần mềm backup. Giải pháp nào phù hợp?",
+        "options": [
+          "Storage Gateway File Gateway lưu backup vào S3",
+          "AWS Snowball gửi tape hằng tháng",
+          "Volume Gateway cached mode",
+          "Storage Gateway Tape Gateway (VTL), archive tape không dùng sang VTS trên Glacier/Glacier Deep Archive"
+        ],
+        "answer": [3],
+        "explain": "Tape Gateway giả làm iSCSI tape library, media changer và tape drive nên phần mềm backup gần như không phải đổi; VTL nằm trên S3, VTS trên Glacier/Deep Archive. File Gateway dùng NFS/SMB, không phải giao diện tape."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn các server on-premises ghi file qua NFS/SMB, file xuất hiện thành object trong S3 bucket của chính họ để xử lý tiếp bằng Lambda và Athena. Giải pháp nào phù hợp?",
+        "options": [
+          "Volume Gateway cached mode",
+          "Storage Gateway File Gateway",
+          "Tape Gateway",
+          "FSx for Windows File Server"
+        ],
+        "answer": [1],
+        "explain": "File Gateway ánh xạ file thành object trong S3 bucket bạn quản lý, nên dùng được S3 Events, Lambda, Athena. Volume Gateway lưu block trong vùng S3 AWS-managed, không mở bucket ra xem được."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty triển khai File Gateway ở nhiều văn phòng cùng gắn một S3 bucket. Họ cần lưu ý những hạn chế nào? (Chọn 2)",
+        "options": [
+          "File ghi từ một gateway không được tự động upload lên S3",
+          "Các gateway khác không tự thấy file mới; cần refresh hoặc dùng notify when uploaded để báo",
+          "Dữ liệu được lưu trong vùng S3 AWS-managed nên không xem được bucket",
+          "File Gateway chỉ hỗ trợ iSCSI",
+          "Không có file/object locking, hai site cùng sửa một file thì bản ghi sau đè bản trước"
+        ],
+        "answer": [1, 4],
+        "explain": "Với multi-site File Gateway, ghi lên S3 là tự động nhưng gateway khác không tự refresh, và không có locking nên dễ mất dữ liệu. File Gateway dùng NFS/SMB và lưu vào bucket của bạn."
+      }
+    ],
+    "Transfer Family": [
+      {
+        "type": "single",
+        "q": "Một công ty logistics nhận file từ hàng chục đối tác qua SFTP và muốn lưu file trực tiếp vào Amazon S3, không muốn quản lý server SFTP và không thể yêu cầu đối tác đổi công cụ. Giải pháp nào có chi phí vận hành thấp nhất?",
+        "options": [
+          "Chạy SFTP server trên EC2 và mount S3 bằng công cụ bên thứ ba",
+          "Dùng AWS DataSync agent ở phía đối tác",
+          "Dùng Storage Gateway File Gateway với SMB",
+          "Dùng AWS Transfer Family với SFTP endpoint, backend là S3"
+        ],
+        "answer": [3],
+        "explain": "Transfer Family là managed file transfer, cung cấp endpoint SFTP trước S3/EFS mà không phải quản lý server hay đổi ứng dụng của đối tác. Server EC2 tự dựng tốn công vận hành."
+      },
+      {
+        "type": "single",
+        "q": "Một hệ thống cũ chỉ hỗ trợ FTP (không mã hóa) cần đẩy file vào S3 qua AWS Transfer Family. Loại endpoint nào dùng được?",
+        "options": [
+          "VPC endpoint kiểu Internal only",
+          "Public endpoint",
+          "VPC endpoint kiểu Internet-facing với Elastic IP",
+          "Public endpoint kèm Security Group"
+        ],
+        "answer": [0],
+        "explain": "FTP không mã hóa nên chỉ được chạy internal trong VPC (truy cập từ mạng doanh nghiệp qua VPN/DX). Public endpoint chỉ hỗ trợ SFTP và không gắn được Security Group."
+      },
+      {
+        "type": "single",
+        "q": "Các đối tác yêu cầu một IP cố định để whitelist trong firewall trước khi upload file qua SFTP từ Internet vào S3 bằng Transfer Family. Nên cấu hình endpoint loại nào?",
+        "options": [
+          "Public endpoint",
+          "VPC endpoint kiểu Internal only",
+          "VPC endpoint kiểu Internet-facing với Elastic IP",
+          "Public endpoint kèm custom DNS name"
+        ],
+        "answer": [2],
+        "explain": "VPC Internet endpoint dùng Elastic IP nên có IP tĩnh và truy cập được từ Internet, đồng thời kiểm soát được bằng SG/NACL. Public endpoint có IP động do AWS quản lý; Internal only không truy cập được từ Internet."
+      },
+      {
+        "type": "single",
+        "q": "Public endpoint của AWS Transfer Family hỗ trợ giao thức nào?",
+        "options": [
+          "SFTP, FTPS, FTP và AS2",
+          "Chỉ SFTP",
+          "SFTP và AS2",
+          "FTPS và FTP"
+        ],
+        "answer": [1],
+        "explain": "Public endpoint chỉ hỗ trợ SFTP. AS2 cần endpoint kiểu VPC (Internet hoặc Internal), còn FTP chỉ chạy ở VPC Internal."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi đối tác upload file qua Transfer Family, công ty muốn tự động gắn tag và gửi notification cho từng file mà không phải dựng thêm server. Tính năng nào phù hợp?",
+        "options": [
+          "Custom identity provider qua API Gateway",
+          "DataSync task chạy theo lịch",
+          "Managed File Transfer Workflows (MFTW)",
+          "Storage Gateway notify when uploaded"
+        ],
+        "answer": [2],
+        "explain": "MFTW là workflow engine serverless của Transfer Family, định nghĩa các bước xử lý tự động khi file được upload. Custom IdP chỉ dùng để xác thực người dùng."
+      }
+    ],
+    "Transit Gateway": [
+      {
+        "type": "single",
+        "q": "Một công ty có 10 VPC và một data center, cần mọi VPC thông với nhau và với on-premises qua VPN có HA. Hiện tại họ dùng full mesh VPC peering và VPN riêng cho từng VPC, rất khó quản lý. Giải pháp nào giảm độ phức tạp nhiều nhất?",
+        "options": [
+          "Thêm VPC peering và bật transitive routing trên peering",
+          "Dùng AWS Transit Gateway làm hub: VPC attachment cho mỗi VPC và terminate VPN trên TGW",
+          "Gắn thêm một VGW cho mỗi VPC",
+          "Dùng Direct Connect private VIF cho từng VPC"
+        ],
+        "answer": [1],
+        "explain": "Transit Gateway là hub-and-spoke có transitive routing, thay full mesh peering và giảm mạnh số VPN tunnel. VPC peering không hỗ trợ transitive routing, không có tùy chọn bật."
+      },
+      {
+        "type": "single",
+        "q": "Một tổ chức có nhiều AWS account và muốn các VPC ở account khác cùng gắn vào một Transit Gateway trung tâm. Dùng dịch vụ nào để chia sẻ TGW?",
+        "options": [
+          "AWS Organizations SCP",
+          "VPC peering cross-account",
+          "IAM cross-account role",
+          "AWS Resource Access Manager (RAM)"
+        ],
+        "answer": [3],
+        "explain": "TGW được chia sẻ cross-account bằng AWS RAM. SCP chỉ giới hạn quyền, không chia sẻ tài nguyên."
+      },
+      {
+        "type": "single",
+        "q": "Khi tạo VPC attachment cho Transit Gateway, cần chỉ định gì?",
+        "options": [
+          "Một subnet trong mỗi AZ cần dùng TGW",
+          "Mọi subnet trong VPC",
+          "Chỉ Internet Gateway của VPC",
+          "Một VGW gắn vào VPC"
+        ],
+        "answer": [0],
+        "explain": "VPC attachment cần một subnet trong mỗi AZ muốn dùng TGW, giống cách làm của interface VPC endpoint. TGW thay vai trò VGW nên không cần VGW."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng một Transit Gateway cho cả VPC production và development, và yêu cầu hai môi trường không được thông nhau nhưng đều phải tới được mạng on-premises. Nên cấu hình gì?",
+        "options": [
+          "Tạo hai Transit Gateway riêng và peer chúng",
+          "Dùng Security Group để chặn traffic giữa các VPC",
+          "Dùng nhiều TGW route table để tách routing giữa prod và dev",
+          "Tắt transitive routing trên default route table"
+        ],
+        "answer": [2],
+        "explain": "TGW hỗ trợ nhiều route table để xây topology và cách ly nhóm VPC, ví dụ prod và dev không thông nhau. Peer hai TGW lại làm chúng thông nhau, và transitive routing không phải một công tắc để tắt."
+      },
+      {
+        "type": "single",
+        "q": "Để nối đầy đủ 4 VPC với nhau bằng VPC peering (không dùng Transit Gateway) cần bao nhiêu peering connection?",
+        "options": [
+          "4",
+          "6",
+          "8",
+          "12"
+        ],
+        "answer": [1],
+        "explain": "VPC peering không transitive nên cần full mesh n(n−1)/2 = 6 kết nối với n = 4. Dùng TGW chỉ cần 4 VPC attachment."
+      }
+    ]
+  }
+}

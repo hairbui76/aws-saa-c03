@@ -1,0 +1,631 @@
+{
+  "chapter": "20 NoSQL and Analytics",
+  "lessons": {
+    "Athena": [
+      {
+        "type": "single",
+        "q": "Một công ty lưu VPC Flow Logs và CloudTrail logs trong S3. Đội bảo mật chỉ thỉnh thoảng cần chạy truy vấn SQL để điều tra sự cố, không muốn load hay transform dữ liệu và không muốn quản lý hạ tầng. Giải pháp nào đáp ứng yêu cầu với chi phí thấp nhất?",
+        "options": [
+          "Dựng một Amazon Redshift cluster và dùng lệnh COPY để nạp log từ S3",
+          "Dùng Amazon Athena tạo table trỏ tới location S3 và chạy SQL trực tiếp",
+          "Dựng một Amazon EMR cluster chạy liên tục để xử lý log",
+          "Nạp log vào một RDS MySQL instance rồi truy vấn bằng SQL"
+        ],
+        "answer": [1],
+        "explain": "Athena là serverless, query SQL ad-hoc trực tiếp trên S3, không load/ETL và chỉ trả theo dữ liệu quét. Redshift là data warehouse provisioned chạy liên tục, phải load dữ liệu nên tốn kém hơn cho nhu cầu thỉnh thoảng."
+      },
+      {
+        "type": "single",
+        "q": "Amazon Athena tính phí chủ yếu dựa trên yếu tố nào (ngoài phí lưu trữ S3 của dữ liệu gốc)?",
+        "options": [
+          "Số giờ chạy của query engine được provision trước",
+          "Số lượng table và database được định nghĩa trong Athena",
+          "Số node compute được chọn khi tạo workgroup",
+          "Lượng dữ liệu mà mỗi query quét"
+        ],
+        "answer": [3],
+        "explain": "Athena không có chi phí base, không tính theo giờ; chỉ trả cho lượng dữ liệu mà query đọc (khoảng 5 USD/TB quét). Athena không có node hay cluster nào để provision."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào mô tả đúng cơ chế schema-on-read của Athena?",
+        "options": [
+          "Table trong Athena không chứa dữ liệu; nó chỉ mô tả cách diễn giải dữ liệu tại một location S3, và dữ liệu gốc không bị thay đổi",
+          "Khi chạy CREATE EXTERNAL TABLE, Athena sao chép dữ liệu từ S3 vào storage nội bộ đã được định dạng",
+          "Dữ liệu trong S3 phải được ETL sang định dạng Parquet trước khi Athena đọc được",
+          "Athena ghi đè dữ liệu gốc trên S3 theo schema của table sau mỗi query"
+        ],
+        "answer": [0],
+        "explain": "Schema-on-read: dữ liệu gốc trên S3 giữ nguyên, read-only; table chỉ là công thức dịch dữ liệu sang dạng bảng trong lúc đọc. Athena đọc được nhiều định dạng (CSV, JSON, Parquet, ORC, log...) mà không cần ETL hay load."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty dùng Athena để query hàng TB file CSV không nén trong S3, và hầu hết query đều lọc theo ngày. Chi phí Athena đang rất cao. Hai thay đổi nào giúp giảm chi phí query nhiều nhất? (Chọn 2)",
+        "options": [
+          "Chuyển dữ liệu sang storage class S3 Standard-IA",
+          "Chuyển dữ liệu sang định dạng cột như Parquet hoặc ORC có nén",
+          "Bật S3 Transfer Acceleration cho bucket nguồn",
+          "Dùng S3 Select thay cho Athena cho toàn bộ dataset",
+          "Partition dữ liệu theo ngày để query chỉ quét các partition liên quan"
+        ],
+        "answer": [1, 4],
+        "explain": "Athena tính tiền theo dữ liệu quét, nên định dạng cột có nén và partition theo khóa hay lọc giúp quét ít dữ liệu hơn. Đổi storage class hay Transfer Acceleration không giảm lượng dữ liệu quét; S3 Select chỉ lọc trong một object chứ không query cả dataset."
+      },
+      {
+        "type": "single",
+        "q": "Một đội phân tích đang dùng Athena trên dữ liệu S3 và muốn trong cùng một câu SQL kết hợp thêm dữ liệu từ DynamoDB và Amazon RDS mà không phải sao chép dữ liệu về S3. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Dùng S3 Select trên từng object rồi ghép kết quả trong ứng dụng",
+          "Export định kỳ DynamoDB và RDS sang S3 bằng AWS Glue job",
+          "Dùng Athena Federated Query với data source connector chạy trên AWS Lambda",
+          "Dùng Redshift Spectrum để query DynamoDB và RDS"
+        ],
+        "answer": [2],
+        "explain": "Athena Federated Query dùng connector chạy trên Lambda để query nguồn không phải S3 như DynamoDB, RDS, CloudWatch Logs, DocumentDB hay nguồn JDBC. Export bằng Glue vẫn phải di chuyển dữ liệu; Redshift Spectrum query dữ liệu trên S3 chứ không phải DynamoDB."
+      }
+    ],
+    "DAX": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng game dùng DynamoDB có workload đọc rất nhiều, đọc lặp lại cùng dữ liệu, và cần giảm latency đọc từ milliseconds xuống microseconds với ít thay đổi code nhất. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Thêm ElastiCache for Redis và triển khai mô hình cache-aside trong ứng dụng",
+          "Tăng RCU của table lên gấp đôi",
+          "Chuyển table sang DynamoDB Global Tables",
+          "Triển khai DynamoDB Accelerator (DAX) và dùng DAX SDK trong ứng dụng"
+        ],
+        "answer": [3],
+        "explain": "DAX là in-memory cache tích hợp sẵn với DynamoDB, cache hit ở mức microseconds, app chỉ cần dùng DAX SDK. ElastiCache cũng là cache nhưng app phải tự quản logic hit/miss nên nhiều thay đổi code hơn."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về kiến trúc của một DAX cluster?",
+        "options": [
+          "DAX chạy trong VPC, gồm primary node (đọc và ghi) và các replica node (đọc) ở các AZ khác nhau",
+          "DAX là public service giống DynamoDB, truy cập được trực tiếp từ Internet",
+          "DAX chỉ chạy một node duy nhất trong một AZ và không có failover",
+          "DAX lưu dữ liệu bền vững thay cho DynamoDB nên có thể tắt table gốc"
+        ],
+        "answer": [0],
+        "explain": "DAX được triển khai trong VPC, dạng cluster nhiều AZ với primary node và replica; primary hỏng thì một replica được bầu lên. Khác với DynamoDB là public service, nên ứng dụng dùng DAX phải nằm trong VPC đó."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng quản lý tồn kho trên DynamoDB yêu cầu mọi lần đọc đều là strongly consistent. Một kỹ sư đề xuất thêm DAX để giảm tải. Nhận xét nào đúng?",
+        "options": [
+          "DAX phù hợp vì cache hit luôn trả về dữ liệu mới nhất",
+          "DAX phù hợp vì nó tự chuyển eventually consistent read thành strongly consistent",
+          "DAX không mang lại lợi ích vì strongly consistent read đi thẳng xuống DynamoDB và không được cache",
+          "DAX chỉ phù hợp nếu bật thêm DynamoDB Streams"
+        ],
+        "answer": [2],
+        "explain": "Bảng khi nào không dùng DAX ghi rõ: ứng dụng cần strongly consistent read thì DAX không giúp, vì các lần đọc này được chuyển thẳng xuống DynamoDB. DAX hợp với workload read-heavy chấp nhận eventual consistency."
+      },
+      {
+        "type": "single",
+        "q": "Trong DAX, kết quả của một lệnh Query hoặc Scan (kèm các tham số của lệnh) được lưu ở đâu để lần chạy lại đúng lệnh đó được trả từ cache?",
+        "options": [
+          "Item cache",
+          "Query cache",
+          "DynamoDB Stream",
+          "Burst pool của table"
+        ],
+        "answer": [1],
+        "explain": "DAX có hai loại cache: item cache cho GetItem/BatchGetItem và query cache cho kết quả Query/Scan kèm tham số. Burst pool là capacity dự phòng của DynamoDB, không liên quan đến cache."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty có cả RDS MySQL và DynamoDB, đang so sánh DAX với ElastiCache. Hai phát biểu nào đúng về DAX? (Chọn 2)",
+        "options": [
+          "DAX dùng cơ chế write-through: ghi qua DAX SDK thì dữ liệu được ghi vào DynamoDB và vào cache",
+          "DAX có thể làm cache cho cả RDS MySQL lẫn DynamoDB",
+          "Ứng dụng phải tự viết logic xử lý cache miss rồi ghi dữ liệu vào DAX",
+          "DAX tích hợp sẵn với DynamoDB nên ít admin overhead hơn so với dùng cache generic",
+          "DAX phù hợp nhất cho workload write-heavy, hiếm khi đọc"
+        ],
+        "answer": [0, 3],
+        "explain": "DAX chỉ dành cho DynamoDB, tích hợp sẵn, write-through và tự lo hit/miss nên ít quản trị. Cache cho RDS và mô hình app tự xử lý cache miss là đặc điểm của ElastiCache; DAX không hợp với workload write-heavy."
+      }
+    ],
+    "DynamoDB Architecture": [
+      {
+        "type": "single",
+        "q": "Một startup xây dựng ứng dụng serverless dùng API Gateway và Lambda. Họ cần database key/value, không phải quản lý server hay instance nào, tự scale và trả tiền theo mức sử dụng. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Amazon RDS for MySQL Multi-AZ",
+          "Amazon Redshift",
+          "Amazon DynamoDB",
+          "Self-managed MongoDB trên EC2 Auto Scaling Group"
+        ],
+        "answer": [2],
+        "explain": "DynamoDB là NoSQL key/value table-as-a-service, không có server để quản lý, là lựa chọn mặc định cho serverless. RDS vẫn có instance cần chọn size và quản lý; Redshift là data warehouse OLAP."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng lưu hồ sơ người dùng trong DynamoDB, mỗi hồ sơ kèm ảnh đại diện khoảng 2 MB. Thiết kế nào đúng?",
+        "options": [
+          "Lưu ảnh trực tiếp làm attribute dạng binary trong item",
+          "Chia ảnh thành nhiều attribute nhỏ trong cùng một item",
+          "Bật on-demand capacity để tăng giới hạn kích thước item",
+          "Lưu ảnh trong S3 và chỉ giữ đường dẫn (pointer) tới object trong item DynamoDB"
+        ],
+        "answer": [3],
+        "explain": "Mỗi item DynamoDB tối đa 400 KB, tính cả tên và giá trị attribute, nên chia nhỏ trong cùng item cũng không vượt được giới hạn này. Dữ liệu lớn như ảnh, file nên lưu trong S3 và giữ pointer trong DynamoDB. Capacity mode không thay đổi giới hạn kích thước item."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về Point-in-time Recovery (PITR) của DynamoDB?",
+        "options": [
+          "PITR tắt mặc định, bật theo từng table, cho phép restore ra table mới tại bất kỳ thời điểm nào trong 35 ngày với độ mịn 1 giây",
+          "PITR bật mặc định cho mọi table và restore ghi đè lên table hiện tại",
+          "PITR giữ thay đổi trong 7 ngày với độ mịn 5 phút",
+          "PITR chỉ restore được về các mốc snapshot tạo thủ công"
+        ],
+        "answer": [0],
+        "explain": "PITR mặc định tắt, phải bật riêng từng table; khi bật sẽ ghi liên tục thay đổi trong cửa sổ 35 ngày và restore ra table mới với granularity 1 giây. Snapshot thủ công là on-demand backup, một tính năng khác."
+      },
+      {
+        "type": "single",
+        "q": "Một kiến trúc sư cần đảm bảo một DynamoDB table vẫn sẵn sàng nếu một AZ trong region gặp sự cố. Cần làm gì?",
+        "options": [
+          "Bật tùy chọn Multi-AZ trên table như với RDS",
+          "Không cần cấu hình thêm, vì DynamoDB mặc định đã sao chép dữ liệu qua nhiều AZ trong region",
+          "Tạo một read replica của table ở AZ khác",
+          "Tạo on-demand backup mỗi giờ và restore khi AZ hỏng"
+        ],
+        "answer": [1],
+        "explain": "DynamoDB mặc định sao chép dữ liệu qua nhiều storage node ở nhiều AZ; không có tùy chọn bật Multi-AZ như RDS. DynamoDB cũng không có khái niệm read replica theo AZ."
+      },
+      {
+        "type": "single",
+        "q": "Một đội phát triển cần database cho hệ thống đặt hàng với dữ liệu quan hệ, nhiều phép JOIN phức tạp và các truy vấn SQL chuẩn. Một thành viên đề xuất DynamoDB. Lựa chọn nào phù hợp hơn?",
+        "options": [
+          "DynamoDB với PartiQL để chạy JOIN",
+          "DynamoDB Global Tables",
+          "Amazon Athena trên dữ liệu export từ DynamoDB",
+          "Amazon Aurora hoặc Amazon RDS"
+        ],
+        "answer": [3],
+        "explain": "Đề nhắc relational database và SQL thì gần như chắc chắn không phải DynamoDB, vì DynamoDB không hỗ trợ JOIN hay dữ liệu quan hệ. PartiQL chỉ là ngôn ngữ giống SQL chứ không phải SQL thật."
+      }
+    ],
+    "DynamoDB Global Tables": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng di động có người dùng ở Mỹ, châu Âu và châu Á. Ứng dụng cần database NoSQL cho phép đọc và ghi với latency thấp tại region gần người dùng nhất (active-active). Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Amazon Aurora Global Database",
+          "DynamoDB Global Tables",
+          "DynamoDB với on-demand backup restore sang các region khác",
+          "DynamoDB với một DAX cluster ở mỗi region"
+        ],
+        "answer": [1],
+        "explain": "Global Tables cung cấp replication multi-master cross-region, mọi replica đều nhận read và write. Aurora Global Database là relational và region phụ chỉ đọc; DAX chỉ là cache, không replicate ghi giữa region."
+      },
+      {
+        "type": "single",
+        "q": "Trong DynamoDB Global Tables, nếu cùng một item bị ghi gần như đồng thời ở hai region khác nhau thì xung đột được giải quyết thế nào?",
+        "options": [
+          "Region được chỉ định làm master luôn thắng",
+          "Ghi thứ hai bị từ chối với ConditionalCheckFailedException",
+          "Hai phiên bản được giữ song song để ứng dụng tự chọn",
+          "Last writer wins: bản ghi mới nhất thắng và được replicate lên mọi replica"
+        ],
+        "answer": [3],
+        "explain": "Global Tables dùng cơ chế last writer wins, đơn giản và kết quả dễ dự đoán. Không có region master vì mọi replica table ngang hàng (multi-master)."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng dùng DynamoDB Global Tables (chế độ mặc định) ghi item ở us-east-1 rồi đọc lại ngay ở eu-west-2. Mô hình consistency của lần đọc ở eu-west-2 là gì?",
+        "options": [
+          "Eventually consistent, vì replication giữa các region là bất đồng bộ",
+          "Strongly consistent nếu request đặt ConsistentRead=true",
+          "Strongly consistent vì replication là đồng bộ",
+          "Không đọc được cho tới khi replication hoàn tất ở mọi region"
+        ],
+        "answer": [0],
+        "explain": "Strongly consistent read chỉ có trong cùng region nơi ghi; giữa các region luôn là eventually consistent do replication bất đồng bộ (thường dưới 1 giây). Chế độ multi-Region strong consistency mới hơn không phải trọng tâm của khóa học và đề thi."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty yêu cầu ứng dụng dựa trên DynamoDB phải tiếp tục đọc và ghi gần như ngay lập tức nếu toàn bộ một region gặp sự cố, với RPO và RTO gần bằng 0. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Bật PITR và restore sang region khác khi cần",
+          "Tạo on-demand backup hằng ngày và restore cross-region khi có sự cố",
+          "Cấu hình DynamoDB Global Tables với replica ở region thứ hai",
+          "Bật DynamoDB Streams và dùng Lambda sao chép từng item sang S3"
+        ],
+        "answer": [2],
+        "explain": "Global Tables cho replication sub-second và mọi region đều đọc/ghi được, nên RPO/RTO gần 0. Restore backup cross-region chậm hơn nhiều và có thể mất dữ liệu kể từ bản backup gần nhất."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng toàn cầu cần database quan hệ dùng SQL, với một region chính nhận ghi và các region khác phục vụ đọc với latency thấp. Giải pháp nào phù hợp?",
+        "options": [
+          "DynamoDB Global Tables",
+          "Amazon Aurora Global Database",
+          "DynamoDB với DAX ở mỗi region",
+          "Amazon ElastiCache for Redis Global Datastore làm database chính"
+        ],
+        "answer": [1],
+        "explain": "Yêu cầu relational/SQL toàn cầu với một region ghi và region phụ chỉ đọc là đặc trưng của Aurora Global Database. Global Tables là NoSQL multi-master, không hỗ trợ SQL quan hệ."
+      }
+    ],
+    "DynamoDB Indexes LSI and GSI": [
+      {
+        "type": "single",
+        "q": "Một DynamoDB table đang chạy production với hàng triệu item (PK = CustomerID). Đội phát triển cần truy vấn hiệu quả theo attribute OrderStatus mà không phải Scan cả table. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Thêm một Local Secondary Index với sort key là OrderStatus",
+          "Dùng Scan với filter expression OrderStatus",
+          "Bật DynamoDB Streams để lọc theo OrderStatus",
+          "Tạo một Global Secondary Index với partition key là OrderStatus"
+        ],
+        "answer": [3],
+        "explain": "Table đã tồn tại và cần partition key khác thì chỉ có thể dùng GSI, vì GSI tạo được bất kỳ lúc nào. LSI bắt buộc tạo cùng lúc với table và phải giữ nguyên PK; Scan có filter vẫn tốn capacity cho mọi item đã quét."
+      },
+      {
+        "type": "single",
+        "q": "Một đội đang thiết kế table mới với PK = DeviceID và SK = Timestamp. Họ cần thêm một cách truy vấn với cùng PK nhưng sort key là ErrorCode, và truy vấn này bắt buộc strongly consistent read. Họ nên làm gì?",
+        "options": [
+          "Tạo một Local Secondary Index với SK = ErrorCode ngay khi tạo table",
+          "Tạo table trước, sau đó thêm một Global Secondary Index với PK = DeviceID và SK = ErrorCode",
+          "Tạo table trước, sau đó thêm một Local Secondary Index khi cần",
+          "Dùng Query trên base table với filter ErrorCode"
+        ],
+        "answer": [0],
+        "explain": "Cần cùng PK, SK khác, và strongly consistent thì dùng LSI, và LSI phải được tạo cùng lúc với base table. GSI chỉ hỗ trợ eventually consistent read nên không đáp ứng yêu cầu."
+      },
+      {
+        "type": "single",
+        "q": "Giới hạn mặc định về số lượng secondary index trên một DynamoDB base table là bao nhiêu?",
+        "options": [
+          "10 LSI và 10 GSI",
+          "5 LSI và 5 GSI",
+          "5 LSI và 20 GSI",
+          "20 LSI và 5 GSI"
+        ],
+        "answer": [2],
+        "explain": "Mỗi table tối đa 5 LSI (cứng) và mặc định 20 GSI (soft limit, có thể xin tăng)."
+      },
+      {
+        "type": "single",
+        "q": "Một table thời tiết có attribute Alarm chỉ xuất hiện ở một số ít item. Đội tạo GSI với PK = Alarm. Khi Scan GSI này, điều gì xảy ra?",
+        "options": [
+          "Scan đọc mọi item của base table, item không có Alarm trả về giá trị null",
+          "Chỉ những item có attribute Alarm mới nằm trong index, nên Scan chỉ tốn capacity cho dữ liệu liên quan",
+          "Không thể tạo GSI trên attribute không có ở mọi item",
+          "Scan trên GSI luôn là strongly consistent"
+        ],
+        "answer": [1],
+        "explain": "Đây là sparse index: chỉ item có giá trị cho attribute dùng làm key của index mới xuất hiện trong index, nên Scan index chỉ tốn capacity cho phần dữ liệu liên quan. GSI luôn eventually consistent."
+      },
+      {
+        "type": "multi",
+        "q": "Hai phát biểu nào đúng về Global Secondary Index (GSI) trong DynamoDB? (Chọn 2)",
+        "options": [
+          "GSI hỗ trợ strongly consistent read",
+          "GSI phải có cùng partition key với base table",
+          "GSI có thể được tạo bất kỳ lúc nào, kể cả sau khi table đã có dữ liệu",
+          "GSI dùng chung RCU/WCU với base table",
+          "GSI có RCU/WCU riêng khi table dùng provisioned capacity"
+        ],
+        "answer": [2, 4],
+        "explain": "GSI tạo được lúc nào cũng được, có PK/SK khác base table và có capacity riêng. GSI chỉ eventually consistent; dùng chung capacity và bắt buộc cùng PK là đặc điểm của LSI."
+      }
+    ],
+    "DynamoDB Operations and Performance": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng ghi 10 item mỗi giây vào DynamoDB table dùng provisioned capacity, mỗi item có kích thước 2.5 KB. Cần bao nhiêu WCU?",
+        "options": [
+          "10 WCU",
+          "25 WCU",
+          "30 WCU",
+          "40 WCU"
+        ],
+        "answer": [2],
+        "explain": "WCU mỗi item = ROUNDUP(2.5 KB / 1 KB) = 3; nhân với 10 lần ghi/giây = 30 WCU. Đáp án 25 WCU sai vì quên làm tròn lên theo từng item."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng đọc 20 item mỗi giây, mỗi item 6 KB, dùng eventually consistent read. Cần bao nhiêu RCU?",
+        "options": [
+          "15 RCU",
+          "20 RCU",
+          "30 RCU",
+          "40 RCU"
+        ],
+        "answer": [1],
+        "explain": "RCU mỗi item = ROUNDUP(6 KB / 4 KB) = 2; × 20 lần đọc = 40 RCU cho strongly consistent; eventually consistent chỉ cần một nửa = 20 RCU. Đáp án 40 RCU là con số của strongly consistent."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty sắp ra mắt ứng dụng mới trên DynamoDB, chưa biết trước mức traffic và traffic có thể tăng đột biến. Họ muốn giảm tối đa công sức quản trị capacity. Nên chọn cấu hình nào?",
+        "options": [
+          "Provisioned capacity với RCU/WCU đặt thủ công",
+          "Provisioned capacity kèm reserved capacity 1 năm",
+          "Provisioned capacity và dựa vào burst pool để xử lý đột biến",
+          "On-demand capacity mode"
+        ],
+        "answer": [3],
+        "explain": "Tải không đoán trước, spiky, mới ra mắt hoặc muốn ít quản trị thì chọn on-demand. Reserved capacity chỉ hợp khi tải ổn định; burst pool (300 giây) không nên dùng làm chiến lược capacity."
+      },
+      {
+        "type": "single",
+        "q": "Một báo cáo hằng ngày dùng Scan toàn bộ DynamoDB table rồi filter theo attribute Region, tiêu tốn rất nhiều RCU dù chỉ trả về ít item. Cách nào giảm chi phí hiệu quả nhất?",
+        "options": [
+          "Tạo GSI với partition key là Region và dùng Query trên index",
+          "Thêm filter expression chặt hơn để giảm số item trả về",
+          "Chỉ yêu cầu một vài attribute bằng projection expression trong Scan",
+          "Chuyển sang strongly consistent read"
+        ],
+        "answer": [0],
+        "explain": "Scan tính capacity cho mọi item đã quét, kể cả item bị loại; filter và projection không giảm capacity tiêu thụ. Dùng Query trên index (GSI) chỉ đọc item liên quan nên rẻ hơn nhiều."
+      },
+      {
+        "type": "multi",
+        "q": "Hai phát biểu nào đúng về consistency và capacity trong DynamoDB? (Chọn 2)",
+        "options": [
+          "Filter expression trong Query giúp giảm số RCU bị tính",
+          "Eventually consistent read tốn một nửa chi phí: 1 RCU đọc được 8 KB/giây",
+          "Scan chỉ tính capacity cho các item được trả về",
+          "1 WCU tương ứng ghi 4 KB mỗi giây",
+          "Strongly consistent read luôn được phục vụ từ leader node nên luôn trả dữ liệu mới nhất"
+        ],
+        "answer": [1, 4],
+        "explain": "Eventually consistent read chỉ bằng 50% giá (8 KB/s mỗi RCU); strongly consistent read luôn đọc ở leader nên có dữ liệu mới nhất. Filter không giảm capacity, Scan tính mọi item đã quét, và 1 WCU chỉ là 1 KB/s."
+      }
+    ],
+    "DynamoDB Streams and Triggers": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng chat nhóm lưu tin nhắn trong DynamoDB. Mỗi khi có tin nhắn mới, hệ thống cần gửi push notification cho các thành viên theo kiểu serverless, không polling database. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Lambda chạy theo lịch EventBridge mỗi phút để Scan tin nhắn mới",
+          "Cấu hình S3 Event Notifications trên table",
+          "Bật DynamoDB Streams trên table và cấu hình Lambda trigger để gửi thông báo qua SNS",
+          "Dùng DAX để phát hiện item mới"
+        ],
+        "answer": [2],
+        "explain": "DynamoDB Streams + Lambda tạo database trigger serverless: item thay đổi thì Lambda được invoke, không cần polling. Lambda theo lịch là polling và tốn capacity Scan; S3 Events chỉ dành cho object S3."
+      },
+      {
+        "type": "single",
+        "q": "Các record trong DynamoDB Stream được giữ trong cửa sổ bao lâu?",
+        "options": [
+          "7 ngày",
+          "24 giờ",
+          "35 ngày",
+          "365 ngày"
+        ],
+        "answer": [1],
+        "explain": "DynamoDB Streams lưu thay đổi theo thứ tự trong rolling window 24 giờ. 35 ngày là cửa sổ của PITR."
+      },
+      {
+        "type": "single",
+        "q": "Một Lambda function xử lý thay đổi của DynamoDB table cần biết đầy đủ giá trị trước và sau khi item thay đổi mà không phải đọc lại table. Nên chọn stream view type nào?",
+        "options": [
+          "KEYS_ONLY",
+          "NEW_IMAGE",
+          "OLD_IMAGE",
+          "NEW_AND_OLD_IMAGES"
+        ],
+        "answer": [3],
+        "explain": "NEW_AND_OLD_IMAGES chứa cả item trước và sau thay đổi nên thấy đầy đủ thay đổi mà không đọc lại table. OLD_IMAGE chỉ có trạng thái cũ, phải so với table hiện tại để suy ra đã đổi gì."
+      },
+      {
+        "type": "single",
+        "q": "Với stream view type KEYS_ONLY, mỗi stream record chứa gì?",
+        "options": [
+          "Chỉ partition key (và sort key nếu có) của item đã thay đổi",
+          "Toàn bộ item sau khi thay đổi",
+          "Chỉ những attribute đã bị thay đổi",
+          "Toàn bộ item trước khi thay đổi"
+        ],
+        "answer": [0],
+        "explain": "KEYS_ONLY chỉ ghi PK (và SK nếu có); muốn biết thay đổi gì phải tự đọc lại table. Toàn bộ item sau thay đổi là NEW_IMAGE, trước thay đổi là OLD_IMAGE."
+      },
+      {
+        "type": "multi",
+        "q": "Hai phát biểu nào đúng về DynamoDB Streams? (Chọn 2)",
+        "options": [
+          "Streams được bật mặc định cho mọi table mới",
+          "Streams phải được bật theo từng table",
+          "Streams chỉ ghi lại thao tác insert, không ghi update và delete",
+          "Streams ghi lại theo thứ tự các thay đổi insert, update và delete của item",
+          "Streams dùng để phát hiện object mới được upload vào S3"
+        ],
+        "answer": [1, 3],
+        "explain": "Streams mặc định tắt, bật theo từng table, và ghi theo thứ tự mọi insert, update, delete trên item. Thay đổi object S3 thuộc về S3 Events, không phải DynamoDB Streams."
+      }
+    ],
+    "DynamoDB TTL": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng web lưu session người dùng trong DynamoDB. Session phải tự động bị xóa sau 24 giờ, với chi phí và công sức vận hành thấp nhất. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Lambda chạy theo lịch, Scan table và gọi DeleteItem cho session cũ",
+          "Cấu hình S3 Lifecycle Configuration cho table",
+          "Bật DynamoDB TTL và ghi thời điểm hết hạn (epoch seconds) vào một attribute của mỗi item",
+          "Tạo GSI theo ngày tạo rồi xóa theo index"
+        ],
+        "answer": [2],
+        "explain": "TTL tự đánh dấu và xóa item hết hạn trong nền, miễn phí, không tốn WCU. Lambda + Scan + DeleteItem tốn RCU/WCU và phải tự vận hành; S3 Lifecycle chỉ áp dụng cho object S3."
+      },
+      {
+        "type": "single",
+        "q": "Giá trị của TTL attribute trong DynamoDB phải ở định dạng nào?",
+        "options": [
+          "Chuỗi ngày giờ ISO 8601",
+          "Số giây kể từ epoch (Unix time, 1/1/1970)",
+          "Số ngày còn lại trước khi hết hạn",
+          "Số millisecond kể từ khi item được tạo"
+        ],
+        "answer": [1],
+        "explain": "TTL attribute là epoch time tính bằng giây; muốn item hết hạn sau 1 tuần thì ghi epoch time của thời điểm đó. Các định dạng khác không được TTL xử lý."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về chi phí và hiệu năng của việc xóa item bằng DynamoDB TTL?",
+        "options": [
+          "Mỗi lần xóa bởi TTL tiêu tốn 1 WCU như DeleteItem thông thường",
+          "TTL tạm khóa table trong lúc xóa nên làm giảm hiệu năng",
+          "Xóa bởi TTL miễn phí, không tốn WCU và không ảnh hưởng hiệu năng table",
+          "TTL chỉ xóa item khỏi base table, item vẫn còn trong các index"
+        ],
+        "answer": [2],
+        "explain": "Các lệnh delete do TTL là system process chạy nền, không tính phí, không tốn WCU, và xóa item khỏi cả table lẫn mọi index."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty phải tự động xóa dữ liệu sensor trong DynamoDB sau 1 năm để tiết kiệm chi phí, nhưng vẫn phải lưu trữ (archive) các item hết hạn sang S3 để audit. Giải pháp nào ít vận hành nhất?",
+        "options": [
+          "Bật TTL, bật DynamoDB Streams và dùng Lambda ghi các item bị TTL xóa sang S3",
+          "Tạo on-demand backup hằng ngày rồi xóa item thủ công",
+          "Dùng S3 Lifecycle để chuyển item DynamoDB sang S3 Glacier",
+          "Bật PITR và giữ dữ liệu 1 năm"
+        ],
+        "answer": [0],
+        "explain": "Delete do TTL xuất hiện trong DynamoDB Stream, nên Lambda có thể bắt các record này và ghi item hết hạn sang S3. S3 Lifecycle không tác động được lên item DynamoDB; PITR chỉ giữ tối đa 35 ngày."
+      },
+      {
+        "type": "single",
+        "q": "Một developer thấy một số item đã quá thời điểm TTL vẫn xuất hiện trong kết quả Query. Giải thích nào đúng?",
+        "options": [
+          "TTL chỉ hoạt động khi table dùng on-demand capacity",
+          "TTL attribute phải là kiểu String nên item không bị xóa",
+          "TTL chỉ xóa item khi Streams được bật",
+          "Item trước hết chỉ được đánh dấu expired, rồi một tiến trình nền khác mới xóa, nên việc xóa không tức thì; ứng dụng nên tự lọc item quá TTL"
+        ],
+        "answer": [3],
+        "explain": "TTL có hai tiến trình: một tiến trình đánh dấu item expired (vẫn đọc được) và một tiến trình độc lập xóa sau đó, thường trong vòng vài ngày. TTL không phụ thuộc capacity mode hay Streams."
+      }
+    ],
+    "ElastiCache": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng thương mại điện tử dùng Amazon RDS for MySQL. Workload đọc rất nhiều với cùng các truy vấn lặp lại, khiến database quá tải. Đội phát triển sẵn sàng sửa code. Giải pháp nào giảm tải database hiệu quả và tiết kiệm chi phí nhất?",
+        "options": [
+          "Nâng RDS instance lên instance class lớn hơn",
+          "Thêm Amazon ElastiCache và áp dụng mô hình cache-aside trong ứng dụng",
+          "Thêm DynamoDB Accelerator (DAX) trước RDS",
+          "Chuyển RDS sang Multi-AZ"
+        ],
+        "answer": [1],
+        "explain": "ElastiCache offload phần lớn lượt đọc lặp lại sang RAM, sub-millisecond và rẻ hơn scale database quan hệ. DAX chỉ dùng cho DynamoDB; Multi-AZ phục vụ HA chứ không scale đọc."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần giảm tải đọc cho database Aurora MySQL nhưng có yêu cầu không được thay đổi logic code ứng dụng (chỉ được đổi endpoint đọc). Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Amazon ElastiCache for Redis",
+          "Amazon ElastiCache for Memcached",
+          "Thêm Aurora Replicas và dùng reader endpoint cho các lần đọc",
+          "DynamoDB Accelerator (DAX)"
+        ],
+        "answer": [2],
+        "explain": "ElastiCache bắt buộc sửa ứng dụng để xử lý cache hit/miss và invalidation, nên gần như chắc chắn sai khi đề cấm thay đổi code. Aurora Replicas chỉ cần trỏ đọc sang reader endpoint; DAX chỉ dành cho DynamoDB."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trên các EC2 instance trong Auto Scaling Group sau Application Load Balancer. Khi một instance hỏng, người dùng mất giỏ hàng. Công ty muốn ứng dụng stateless và người dùng không bị gián đoạn khi instance hỏng. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Lưu session state trong Amazon ElastiCache để mọi instance đều đọc được",
+          "Bật session stickiness trên load balancer",
+          "Lưu session trên EBS volume của từng instance",
+          "Tăng kích thước tối thiểu của Auto Scaling Group"
+        ],
+        "answer": [0],
+        "explain": "Lưu session ngoài instance trong ElastiCache giúp app stateless; instance nào cũng đọc được session nên failover không gián đoạn. Session stickiness gắn user vào một instance, instance chết thì vẫn mất session."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty đang chọn engine cho ElastiCache. Hai yêu cầu nào chỉ Redis đáp ứng còn Memcached thì không? (Chọn 2)",
+        "options": [
+          "Replication qua nhiều AZ để đạt high availability",
+          "Độ trễ truy cập sub-millisecond",
+          "Hỗ trợ nhiều ngôn ngữ lập trình",
+          "Backup và restore để khôi phục cache sau sự cố",
+          "Kiến trúc multi-threaded tận dụng CPU nhiều core"
+        ],
+        "answer": [0, 3],
+        "explain": "Chỉ Redis có replication/Multi-AZ và backup/restore. Sub-millisecond và hỗ trợ nhiều ngôn ngữ là đặc điểm chung của cả hai; multi-threaded là ưu điểm của Memcached."
+      },
+      {
+        "type": "single",
+        "q": "Một đội cần một lớp cache đơn giản (dữ liệu dạng string), muốn tận dụng tối đa CPU nhiều core qua kiến trúc multi-threaded, và chấp nhận mất dữ liệu cache khi node hỏng. Engine nào phù hợp nhất?",
+        "options": [
+          "ElastiCache for Redis với cluster mode",
+          "DynamoDB Accelerator (DAX)",
+          "ElastiCache for Redis với Multi-AZ",
+          "ElastiCache for Memcached"
+        ],
+        "answer": [3],
+        "explain": "Memcached có cấu trúc dữ liệu đơn giản, multi-threaded và không có persistence, phù hợp khi chấp nhận mất dữ liệu. Redis hợp khi cần HA, backup, transactions hay cấu trúc dữ liệu nâng cao."
+      }
+    ],
+    "Redshift": [
+      {
+        "type": "single",
+        "q": "Một doanh nghiệp muốn gom dữ liệu từ nhiều database OLTP (RDS, Aurora) về một nơi để phân tích xu hướng dài hạn và chạy báo cáo BI trên dữ liệu quy mô petabyte. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon RDS for PostgreSQL với read replicas",
+          "Amazon DynamoDB",
+          "Amazon Redshift",
+          "Amazon ElastiCache for Redis"
+        ],
+        "answer": [2],
+        "explain": "Redshift là data warehouse OLAP, lưu theo cột, quy mô petabyte, dùng cho reporting và analytics dài hạn. RDS là OLTP lưu theo hàng, không tối ưu cho truy vấn phân tích tổng hợp."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã có Redshift cluster và muốn chạy truy vấn trên một dataset rất lớn trong S3 mà không cần load dữ liệu đó vào cluster. Tính năng nào phù hợp?",
+        "options": [
+          "Redshift Spectrum",
+          "Redshift Federated Query",
+          "Lệnh COPY từ S3",
+          "Enhanced VPC Routing"
+        ],
+        "answer": [0],
+        "explain": "Redshift Spectrum query dữ liệu trên S3 mà không load vào Redshift (vẫn cần cluster). Federated Query dùng để query trực tiếp database bên ngoài như RDS/Aurora; COPY là nạp dữ liệu vào."
+      },
+      {
+        "type": "single",
+        "q": "Chính sách bảo mật của công ty yêu cầu toàn bộ traffic khi Redshift COPY dữ liệu từ S3 phải đi qua mạng VPC, chịu Security Group, NACL và đi qua Gateway VPC Endpoint. Cần cấu hình gì?",
+        "options": [
+          "Đặt Redshift cluster trong public subnet",
+          "Bật Redshift Spectrum",
+          "Gắn Elastic IP cho leader node",
+          "Bật Enhanced VPC Routing trên Redshift cluster"
+        ],
+        "answer": [3],
+        "explain": "Mặc định Redshift dùng public route khi gọi dịch vụ AWS như S3. Bật Enhanced VPC Routing thì traffic đi theo cấu hình mạng VPC: Security Group, NACL, custom DNS và các gateway/VPC endpoint."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần kế hoạch DR cho Redshift để có thể dựng lại data warehouse nhanh chóng nếu toàn bộ region chính gặp sự cố, với chi phí hợp lý. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Dựa vào việc Redshift replicate dữ liệu sang một node khác trong cluster",
+          "Cấu hình cross-region snapshot copy để snapshot tự động được sao chép sang region khác",
+          "Tạo manual snapshot và lưu trong cùng region",
+          "Bật Enhanced VPC Routing"
+        ],
+        "answer": [1],
+        "explain": "Cross-region snapshot copy tự động sao chép snapshot sang region khác với retention cấu hình riêng, cho phép dựng cluster mới ở region đích khi mất region chính. Replication giữa các node chỉ chống lỗi phần cứng cục bộ, không chống mất AZ hay region."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về automatic snapshot của Amazon Redshift?",
+        "options": [
+          "Chụp mỗi 24 giờ, retention cố định 7 ngày",
+          "Chụp khi admin yêu cầu và không bao giờ hết hạn",
+          "Chụp khoảng mỗi 8 giờ hoặc mỗi 5 GB dữ liệu thay đổi, retention mặc định 1 ngày và tối đa 35 ngày",
+          "Là full snapshot mỗi lần và được lưu trên EBS trong cùng AZ với cluster"
+        ],
+        "answer": [2],
+        "explain": "Automatic snapshot chạy khoảng mỗi 8 giờ hoặc 5 GB thay đổi, incremental, lưu trên S3, retention mặc định 1 ngày và tối đa 35 ngày. Manual snapshot mới là loại không tự hết hạn."
+      }
+    ]
+  }
+}

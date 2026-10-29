@@ -1,0 +1,116 @@
+{
+  "chapter": "00 Course and Exam",
+  "lessons": {
+    "Animals4life Scenario": [
+      {
+        "type": "single",
+        "q": "Trong kịch bản Animals4life, mạng on-premises tại HQ Brisbane sử dụng dải địa chỉ nào?",
+        "options": ["10.0.0.0/16", "172.31.0.0/16", "192.168.10.0/24", "10.16.0.0/16"],
+        "answer": [2],
+        "explain": "On-prem Brisbane dùng 192.168.10.0/24 (class C). 10.0.0.0/16 là dải của AWS pilot cũ ở Sydney, còn 172.31.0.0/16 là dải của Azure pilot."
+      },
+      {
+        "type": "single",
+        "q": "Animals4life cần tạo một VPC mới. Sau này VPC này phải kết nối được với mạng on-prem Brisbane (192.168.10.0/24), AWS pilot cũ (10.0.0.0/16) và Azure pilot (172.31.0.0/16). Dải CIDR nào phù hợp nhất cho VPC mới?",
+        "options": ["10.0.0.0/16", "10.16.0.0/16", "172.31.0.0/16", "192.168.0.0/16"],
+        "answer": [1],
+        "explain": "10.16.0.0/16 không trùng với dải nào đang dùng. 10.0.0.0/16 và 172.31.0.0/16 trùng hẳn với hai pilot; 192.168.0.0/16 bao trùm 192.168.10.0/24 của on-prem nên cũng overlap."
+      },
+      {
+        "type": "single",
+        "q": "Một tổ chức giống Animals4life phải kết nối văn phòng on-premises với VPC trên AWS và yêu cầu kết nối hoạt động trong vòng 48 giờ. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["Đặt mua một AWS Direct Connect dedicated connection 10 Gbps", "Triển khai AWS Outposts tại văn phòng", "Dùng AWS Snowball để đồng bộ dữ liệu hằng ngày", "Thiết lập AWS Site-to-Site VPN qua internet"],
+        "answer": [3],
+        "explain": "Từ khóa thời hạn ngắn (48 giờ) loại các giải pháp cần nhiều tuần như Direct Connect; Site-to-Site VPN dựng được nhanh qua internet. Direct Connect dễ bị chọn nhầm vì hiệu năng cao, nhưng thời gian triển khai thường tính bằng tuần."
+      },
+      {
+        "type": "multi",
+        "q": "Animals4life muốn chi phí nền gần bằng 0, trả tiền theo mức dùng và giữ đội IT nhỏ nhờ automation. Hai hướng nào phù hợp nhất với các yêu cầu này? (Chọn 2)",
+        "options": ["Xây dựng ứng dụng theo kiến trúc serverless dùng AWS Lambda", "Mua Reserved Instances 3 năm cho toàn bộ hệ thống", "Thuê thêm rack trong colo facility ở Brisbane", "Dựng và dỡ hạ tầng bằng AWS CloudFormation (IaC)", "Triển khai thủ công EC2 qua AWS Management Console cho từng region"],
+        "answer": [0, 3],
+        "explain": "Serverless/Lambda cho chi phí nền gần 0 và trả theo mức dùng; CloudFormation tự động hóa việc dựng/dỡ hạ tầng cho đội IT nhỏ. Reserved Instances 3 năm là cam kết chi phí cố định, trái với yêu cầu chi phí nền thấp và co giãn."
+      },
+      {
+        "type": "single",
+        "q": "Field worker và văn phòng London, New York, Seattle của Animals4life đều truy cập dịch vụ IT đặt tại Brisbane và gặp hiệu năng kém. Theo mẹo thi, từ khóa “global users / performance” gợi ý hướng giải quyết nào?",
+        "options": ["Nâng cấp phần cứng máy chủ tại data center Brisbane", "Dùng CDN (Amazon CloudFront) và kiến trúc multi-region", "Tăng băng thông đường internet của HQ Brisbane", "Chuyển toàn bộ hệ thống sang một region duy nhất là Sydney"],
+        "answer": [1],
+        "explain": "Người dùng toàn cầu cần nội dung và dịch vụ đặt gần họ, tức CDN và multi-region. Chuyển sang một region Sydney vẫn giữ nguyên vấn đề khoảng cách cho người dùng ở châu Âu và Mỹ."
+      }
+    ],
+    "Exam Technique": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng CRM chạy trên nhiều EC2 instance ở nhiều AZ phía sau một Application Load Balancer, không có Auto Scaling Group. Điều gì xảy ra khi một instance bị hỏng?",
+        "options": ["Load balancer terminate instance bị hỏng", "Load balancer tự động khởi tạo instance thay thế", "Load balancer trả lỗi 504 Gateway Timeout cho đến khi instance được thay", "Load balancer ngừng gửi request tới instance bị hỏng"],
+        "answer": [3],
+        "explain": "ALB dùng health check và chỉ ngừng định tuyến tới target unhealthy. Terminate hay thay thế instance là việc của Auto Scaling Group, và vì các instance khác vẫn healthy nên không có lỗi 504."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty yêu cầu mọi dữ liệu lưu trên Amazon S3 phải được encrypt at rest và encryption key phải được lưu trữ on-premises. Hai phương án nào đáp ứng yêu cầu? (Chọn 2)",
+        "options": ["Server-side encryption với Amazon S3 managed keys (SSE-S3)", "Server-side encryption với customer-provided keys (SSE-C)", "Server-side encryption với AWS KMS keys (SSE-KMS)", "Client-side encryption trước khi upload lên S3", "Bật S3 Versioning kết hợp MFA Delete"],
+        "answer": [1, 3],
+        "explain": "SSE-C dùng key khách hàng gửi kèm mỗi request, còn client-side encryption mã hóa trước khi gửi, nên key vẫn nằm on-prem. SSE-S3 và SSE-KMS đều do AWS quản lý key nên không thỏa yêu cầu thứ hai."
+      },
+      {
+        "type": "single",
+        "q": "Theo phương pháp 3 phase, ở Phase 2 khi gặp một câu được nhận định là rất khó, thí sinh nên làm gì?",
+        "options": ["Đánh dấu Mark for Review, bỏ qua và tập trung vào các câu trung bình", "Đoán ngay một đáp án để không bỏ sót câu nào", "Dành thời gian giải bằng được vì câu khó có nhiều điểm hơn", "Quay lại Phase 1 để rà soát các câu dễ"],
+        "answer": [0],
+        "explain": "Phase 2 dồn sức cho câu trung bình vì chúng quyết định đậu/trượt; câu khó được Mark for Review để làm ở Phase 3. Adrian khuyên không đoán ở Phase 1 và 2."
+      },
+      {
+        "type": "single",
+        "q": "Một câu hỏi yêu cầu cấp quyền cho ứng dụng chạy trên EC2 truy cập Amazon S3 theo “best practice security”. Phương án nào đúng?",
+        "options": ["Lưu access key của IAM user trong file cấu hình trên instance", "Truyền access key vào user data của instance", "Gán IAM role cho instance thông qua instance profile", "Dùng thông tin đăng nhập của root user được mã hóa trên đĩa"],
+        "answer": [2],
+        "explain": "“Best practice” nghĩa là làm đúng cách AWS khuyến nghị: dùng EC2 instance role với credential tạm thời. Mọi cách nhúng access key lên instance, kể cả qua user data, đều vi phạm best practice."
+      },
+      {
+        "type": "single",
+        "q": "Trong question technique, “word fluff” là gì?",
+        "options": ["Phần preamble mô tả tên công ty và bối cảnh", "Phần chữ lặp lại giống nhau giữa nhiều đáp án, có thể bỏ qua khi so sánh", "Các đáp án nhắc đến sản phẩm hoặc tính năng không tồn tại", "Những từ chỉ số lượng như one, any, all trong câu hỏi"],
+        "answer": [1],
+        "explain": "Word fluff là phần đầu hoặc cuối lặp lại giữa các đáp án (ví dụ “The load balancer will...”), không giúp phân biệt nên có thể bỏ qua. Preamble cũng phần lớn không quan trọng, nhưng đó là phần mô tả tình huống chứ không phải word fluff."
+      }
+    ],
+    "SAA-C03 Exam Overview": [
+      {
+        "type": "single",
+        "q": "Điểm đậu của kỳ thi SAA-C03 là bao nhiêu?",
+        "options": ["700 / 1000", "750 / 1000", "800 / 1000", "720 / 1000"],
+        "answer": [3],
+        "explain": "SAA-C03 dùng thang điểm scaled 100–1000 và điểm đậu là 720. Kỳ thi chấm kiểu compensatory nên không cần đậu từng domain."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào mô tả đúng format đề SAA-C03?",
+        "options": ["65 câu trong 130 phút, gồm 50 câu tính điểm và 15 câu thử nghiệm không tính điểm", "65 câu trong 180 phút, tất cả đều tính điểm", "75 câu trong 130 phút, gồm 65 câu tính điểm và 10 câu thử nghiệm", "50 câu trong 130 phút, tất cả đều tính điểm"],
+        "answer": [0],
+        "explain": "Đề có 65 câu (50 tính điểm, 15 không tính điểm và không biết là câu nào) trong 130 phút, khoảng 2 phút/câu. 180 phút là thời gian của bài Professional."
+      },
+      {
+        "type": "single",
+        "q": "Domain nào có tỷ trọng cao nhất trong exam guide SAA-C03?",
+        "options": ["Design Resilient Architectures", "Design Secure Architectures", "Design High-Performing Architectures", "Design Cost-Optimized Architectures"],
+        "answer": [1],
+        "explain": "Design Secure Architectures chiếm 30%, sau đó là Resilient 26%, High-Performing 24% và Cost-Optimized 20%."
+      },
+      {
+        "type": "single",
+        "q": "Một lập trình viên mới bắt đầu với AWS muốn lấy chứng chỉ đầu tiên và đã có kế hoạch học tiếp các chứng chỉ khác. Theo lời khuyên của Adrian, nên bắt đầu bằng chứng chỉ nào?",
+        "options": ["AWS Certified Cloud Practitioner, rồi mới học SAA", "AWS Certified Developer – Associate vì phù hợp với vai trò developer", "AWS Certified Solutions Architect – Associate", "AWS Certified SysOps Administrator – Associate"],
+        "answer": [2],
+        "explain": "Adrian khuyên luôn bắt đầu bằng SA Associate, kể cả với developer: kiến trúc là lõi và đây là bài associate dễ nhất. Học Cloud Practitioner riêng trước là học trùng vì nội dung SAA đã bao trùm CLF."
+      },
+      {
+        "type": "single",
+        "q": "Nhận định nào đúng về câu hỏi multiple response trong đề SAA-C03?",
+        "options": ["Đề thường dùng dạng “choose all that apply” và không cho biết số đáp án", "Câu multiple response chỉ có đúng 4 đáp án", "Câu multiple response được chấm điểm từng phần cho mỗi đáp án đúng", "Đề luôn ghi rõ số đáp án cần chọn, ví dụ “choose two”"],
+        "answer": [3],
+        "explain": "Ở cấp associate, multi-select luôn ghi rõ số lượng (choose two/three). Dạng “choose all that apply” chủ yếu xuất hiện ở cấp Professional."
+      }
+    ]
+  }
+}

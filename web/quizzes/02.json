@@ -1,0 +1,1533 @@
+{
+  "chapter": "02 Tech Fundamentals",
+  "lessons": {
+    "Cloud Computing Definition": [
+      {
+        "type": "single",
+        "q": "Theo NIST SP 800-145, đặc tính nào KHÔNG nằm trong 5 đặc tính thiết yếu của cloud computing?",
+        "options": [
+          "Resource Pooling",
+          "Broad Network Access",
+          "Fault Tolerance",
+          "Measured Service"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "5 đặc tính là On-Demand Self-Service, Broad Network Access, Resource Pooling, Rapid Elasticity và Measured Service. Fault Tolerance là mục tiêu kiến trúc, không phải đặc tính định nghĩa cloud."
+      },
+      {
+        "type": "single",
+        "q": "Một nhà cung cấp hạ tầng yêu cầu khách hàng mở ticket và chờ đội provisioning 3 ngày mới có VM mới. Hệ thống này vi phạm đặc tính nào của cloud?",
+        "options": [
+          "On-Demand Self-Service",
+          "Resource Pooling",
+          "Measured Service",
+          "Broad Network Access"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "On-Demand Self-Service yêu cầu tự provision/terminate tài nguyên qua UI/CLI/API mà không cần tương tác với con người bên nhà cung cấp. Phải mở ticket và chờ là dấu hiệu rõ nhất của việc thiếu đặc tính này."
+      },
+      {
+        "type": "single",
+        "q": "Một website thương mại điện tử có lượng truy cập tăng gấp 10 lần trong vài ngày sale rồi giảm về bình thường. Công ty muốn chi phí tăng giảm theo nhu cầu thực tế. Giải pháp nào thể hiện đúng tư duy cloud?",
+        "options": [
+          "Mua thêm server đủ cho tải đỉnh và giữ chạy quanh năm",
+          "Dùng Auto Scaling để scale out khi tải tăng và scale in khi tải giảm",
+          "Provision cố định gấp đôi tải bình thường làm buffer",
+          "Thêm server thủ công trước mỗi đợt sale và giữ lại sau đó"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Rapid Elasticity nghĩa là scale out và scale in tự động theo tải, nhờ đó chi phí đi theo nhu cầu. Provision cố định gấp đôi vẫn là over-provision: lãng phí lúc tải thấp và vẫn có thể thiếu khi tải vượt buffer."
+      },
+      {
+        "type": "single",
+        "q": "Khách hàng AWS chỉ chọn region, còn AWS tự quyết định data center và phần cứng; tài nguyên vật lý được dùng chung cho nhiều khách hàng nhưng cách ly với nhau. Mô tả này ứng với đặc tính nào?",
+        "options": [
+          "Rapid Elasticity",
+          "On-Demand Self-Service",
+          "Measured Service",
+          "Resource Pooling"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Resource Pooling gồm location independence (khách hàng chọn ở mức trừu tượng như region) và multi-tenant (phần cứng dùng chung nhưng cách ly), tạo ra economies of scale. Rapid Elasticity nói về việc scale out/in, không phải chuyện chia sẻ phần cứng."
+      },
+      {
+        "type": "single",
+        "q": "Một nền tảng cho phép tạo VM qua API trong vài giây, truy cập qua HTTPS từ mọi thiết bị và scale tự động, nhưng tính một khoản phí thuê cố định hằng tháng bất kể mức sử dụng. Theo định nghĩa NIST, nền tảng này thiếu đặc tính nào?",
+        "options": [
+          "Broad Network Access",
+          "Rapid Elasticity",
+          "Measured Service",
+          "On-Demand Self-Service"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Measured Service nghĩa là mức sử dụng được đo và tính tiền theo mức dùng (pay for what you consume). Phí thuê cố định bất kể mức dùng là dấu hiệu “không phải cloud” của đặc tính này."
+      }
+    ],
+    "Cloud Deployment Models": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy workload trên AWS và kết nối VPC với data center VMware on-premises truyền thống qua Site-to-Site VPN. Theo Adrian, mô hình này gọi chính xác là gì?",
+        "options": [
+          "Hybrid cloud",
+          "Private cloud",
+          "Multi-cloud",
+          "Hybrid environment / hybrid networking"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Public cloud kết nối với hạ tầng on-prem truyền thống là hybrid environment (hybrid networking). Hybrid cloud phải là public cloud cộng với private cloud thật sự (ví dụ AWS + AWS Outposts) vận hành như một môi trường."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần chạy dịch vụ AWS ngay tại data center của mình vì yêu cầu độ trễ thấp, và muốn dùng cùng API, công cụ và quy trình như trên AWS region. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "AWS Direct Connect",
+          "AWS Outposts",
+          "AWS Storage Gateway",
+          "AWS Site-to-Site VPN"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "AWS Outposts đưa hạ tầng và dịch vụ AWS về on-prem, tạo private cloud kết hợp với AWS thành hybrid cloud. Direct Connect và Site-to-Site VPN chỉ là kết nối mạng giữa on-prem và AWS, không chạy dịch vụ AWS tại chỗ."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty triển khai một nửa hệ thống trên AWS và nửa còn lại (dạng mirrored) trên Microsoft Azure để hệ thống vẫn chạy nếu một nhà cung cấp gặp sự cố. Đây là mô hình nào?",
+        "options": [
+          "Multi-cloud",
+          "Hybrid cloud",
+          "Private cloud",
+          "Hybrid environment"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Dùng nhiều hơn một public cloud là multi-cloud, và cách chia hạ tầng giữa các vendor cho resilience ở cấp nhà cung cấp. Hybrid cloud là public cloud cộng private cloud, thường của cùng vendor."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty theo chiến lược multi-cloud đang cân nhắc mua một công cụ bên thứ ba quản lý AWS, Azure và Google Cloud qua một “single pane of glass”. Theo Adrian, nhược điểm chính của cách này là gì?",
+        "options": [
+          "Công cụ này không hỗ trợ kết nối VPN tới on-premises",
+          "Chi phí data transfer giữa các cloud tăng gấp đôi",
+          "Lớp trừu tượng buộc phải dùng tập tính năng chung thấp nhất, mất các tính năng riêng của từng vendor",
+          "Không thể dùng IAM để phân quyền trên AWS"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Lớp trừu tượng chung buộc dùng lowest common denominator, làm mất những tính năng riêng tạo nên giá trị của mỗi vendor. Adrian khuyên chia hệ thống trực tiếp giữa các vendor thay vì dùng lớp trừu tượng này."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chạy VMware vSphere on-premises và gọi đó là “private cloud”. Điều kiện nào phải thỏa để hạ tầng on-prem thật sự là private cloud?",
+        "options": [
+          "Phải chạy trên phần cứng của chính một public cloud vendor",
+          "Phải thỏa đủ 5 đặc tính thiết yếu của cloud theo NIST",
+          "Phải có kết nối Direct Connect tới AWS",
+          "Chỉ cần có hypervisor ảo hóa máy chủ"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Private cloud là cloud dành riêng chạy on-prem nhưng vẫn phải thỏa đủ 5 đặc tính. Ảo hóa truyền thống như VMware, Hyper-V không mặc nhiên là private cloud vì đa số không thỏa đủ các đặc tính này."
+      }
+    ],
+    "Cloud Service Models": [
+      {
+        "type": "single",
+        "q": "Trong mô hình IaaS (ví dụ Amazon EC2), unit of consumption là tầng nào?",
+        "options": [
+          "O/S",
+          "Runtime",
+          "Application",
+          "Rack space"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Với IaaS, bạn thuê VM tức là tiêu thụ O/S và chịu trách nhiệm mọi thứ phía trên. Runtime là unit của PaaS, Application là của SaaS, rack space là của DC hosting."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đang tự cài MySQL trên EC2 và muốn giảm operational overhead, không phải lo patch OS và quản trị database engine. Giải pháp nào đáp ứng yêu cầu?",
+        "options": [
+          "Chuyển sang EC2 instance type lớn hơn",
+          "Dùng AWS Systems Manager để tự động patch EC2",
+          "Đặt EC2 trong Auto Scaling Group",
+          "Chuyển database sang Amazon RDS"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "RDS là dịch vụ managed (DBaaS) nên AWS lo OS và database engine, giảm việc quản trị. Systems Manager có thể tự động patch nhưng database vẫn chạy trên IaaS và bạn vẫn chịu trách nhiệm OS."
+      },
+      {
+        "type": "single",
+        "q": "Trong mô hình PaaS, khách hàng chịu trách nhiệm quản lý những tầng nào?",
+        "options": [
+          "Chỉ Application",
+          "O/S, Runtime, Data và Application",
+          "Application và Data",
+          "Container, Runtime, Data và Application"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "PaaS có unit of consumption là runtime environment, nên khách hàng chỉ quản lý app và data. Quản lý cả O/S trở lên là IaaS; chỉ dùng application là SaaS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đặt server của mình trong data center của một nhà cung cấp; nhà cung cấp lo tòa nhà, điện, làm mát và an ninh. Mô hình này là gì và unit of consumption là gì?",
+        "options": [
+          "IaaS, unit là O/S",
+          "Data Center Hosting, unit là rack space",
+          "On-Premises, không có unit of consumption",
+          "PaaS, unit là runtime"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "DC hosting: vendor chỉ quản lý Facilities, khách hàng thuê rack space và tự lo phần còn lại. IaaS thì vendor còn lo cả infrastructure, servers và virtualization."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty chạy ứng dụng trên Amazon EC2. Theo mô hình IaaS, hai việc nào thuộc trách nhiệm của công ty? (Chọn 2)",
+        "options": [
+          "Patch hệ điều hành của instance",
+          "Bảo trì hypervisor (virtualization)",
+          "Cài đặt và cập nhật runtime của ứng dụng",
+          "Thay thế phần cứng server hỏng",
+          "Đảm bảo an ninh vật lý của data center"
+        ],
+        "answer": [
+          0,
+          2
+        ],
+        "explain": "Với IaaS, khách hàng quản lý từ O/S trở lên: OS, container, runtime, data, application. Virtualization, servers, infrastructure và facilities do AWS quản lý."
+      }
+    ],
+    "DDoS": [
+      {
+        "type": "single",
+        "q": "Kẻ tấn công dùng botnet gửi hàng loạt gói SYN với source IP giả mạo; server trả SYN-ACK tới địa chỉ giả và giữ kết nối half-open chờ timeout. Đây là loại tấn công nào?",
+        "options": [
+          "Application layer attack (HTTP flood)",
+          "Protocol attack (SYN flood)",
+          "Volumetric attack (DNS amplification)",
+          "DNS cache poisoning"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "SYN flood là protocol attack ở Layer 4, khai thác three-way handshake của TCP. HTTP flood ở Layer 7 dùng request hợp lệ nhưng tốn tài nguyên xử lý, không lợi dụng kết nối half-open."
+      },
+      {
+        "type": "single",
+        "q": "Trong tấn công DNS amplification, tài nguyên nào của nạn nhân bị cạn kiệt chủ yếu?",
+        "options": [
+          "CPU của application server",
+          "Bảng kết nối TCP của server",
+          "Dung lượng ổ đĩa của server",
+          "Băng thông đường truyền của ứng dụng"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "DNS amplification lợi dụng response lớn hơn nhiều so với request và giả mạo IP nạn nhân, khiến lượng response khổng lồ làm nghẽn đường truyền. Bảng kết nối bị cạn là đặc trưng của SYN flood."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng web phía sau Application Load Balancer bị HTTP flood: hàng triệu request GET hợp lệ về mặt giao thức nhắm vào một trang xử lý nặng. Giải pháp nào giúp giảm thiểu tốt nhất?",
+        "options": [
+          "AWS WAF với rate-based rule kết hợp AWS Shield Advanced",
+          "Thêm deny rule cho từng IP tấn công vào Network ACL",
+          "Chỉ dựa vào AWS Shield Standard",
+          "Tăng kích thước EC2 instance phía sau ALB"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "HTTP flood là tấn công Layer 7, cần WAF (rate-based rule) cùng Shield Advanced. Shield Standard chủ yếu bảo vệ Layer 3/4, còn chặn IP trong NACL không hiệu quả vì traffic đến từ quá nhiều IP."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty muốn xây kiến trúc chống DDoS cho website trên AWS. Hai thành phần nào nên được đưa vào kiến trúc? (Chọn 2)",
+        "options": [
+          "Deny rule cho từng IP nguồn trong Network ACL",
+          "Amazon CloudFront đặt trước ứng dụng để hấp thụ traffic tại edge",
+          "Deny rule trong Security Group cho các IP đáng ngờ",
+          "Một EC2 instance duy nhất có cấu hình rất lớn",
+          "AWS Shield"
+        ],
+        "answer": [
+          1,
+          4
+        ],
+        "explain": "Kiến trúc chống DDoS hay gặp gồm CloudFront, Route 53, WAF, Shield và Auto Scaling sau ELB. Chặn từng IP bằng NACL không khả thi vì botnet có hàng triệu IP; Security Group còn không hỗ trợ deny rule."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty lo ngại các tấn công SYN flood và UDP reflection ở Layer 3/4 nhưng muốn chi phí thấp nhất. Lựa chọn nào phù hợp?",
+        "options": [
+          "Đăng ký AWS Shield Advanced",
+          "Triển khai AWS WAF trên mọi ALB",
+          "Dựa vào AWS Shield Standard, miễn phí và tự động bật cho mọi khách hàng AWS",
+          "Tự triển khai IDS/IPS trên EC2"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Shield Standard miễn phí, tự động bảo vệ trước các tấn công Layer 3/4 phổ biến như SYN flood và UDP reflection. Shield Advanced có thêm tính năng nhưng tốn phí, không phải phương án rẻ nhất."
+      }
+    ],
+    "Decimal and Binary Conversion": [
+      {
+        "type": "single",
+        "q": "Số thập phân 133 biểu diễn ở dạng nhị phân 8 bit là gì?",
+        "options": [
+          "10000011",
+          "10001001",
+          "10100001",
+          "10000101"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "133 = 128 + 4 + 1, nên bit ở vị trí 128, 4 và 1 bằng 1: 10000101. 10000011 = 131 vì lấy 2 thay vì 4."
+      },
+      {
+        "type": "single",
+        "q": "Octet nhị phân 11100000 tương ứng với số thập phân nào?",
+        "options": [
+          "192",
+          "240",
+          "224",
+          "248"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "11100000 = 128 + 64 + 32 = 224. 192 là 11000000 (2 bit 1), 240 là 11110000 (4 bit 1)."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về địa chỉ IPv4 ở dạng dotted decimal?",
+        "options": [
+          "Gồm 4 octet 8 bit, tổng 32 bit; mỗi octet có giá trị 0–255",
+          "Gồm 4 octet 16 bit, tổng 64 bit; mỗi octet có giá trị 0–65535",
+          "Gồm 8 nhóm hexa, tổng 128 bit",
+          "Gồm 4 octet 8 bit; mỗi octet có giá trị 1–256"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "IPv4 là số nhị phân 32 bit chia thành 4 octet, mỗi octet 8 bit có giá trị 0 (00000000) đến 255 (11111111). 128 bit chia 8 nhóm hexa là IPv6."
+      },
+      {
+        "type": "single",
+        "q": "Subnet mask 255.255.240.0 tương ứng với prefix nào?",
+        "options": [
+          "/18",
+          "/20",
+          "/22",
+          "/24"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "255.255 là 16 bit 1, còn 240 = 11110000 thêm 4 bit 1, tổng 20 bit → /20. /24 là 255.255.255.0."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư cần kiểm tra trước khi peering: VPC A dùng 10.16.0.0/16 và VPC B dùng 10.16.128.0/20. Hai dải này có chồng lấn không?",
+        "options": [
+          "Không, vì prefix khác nhau",
+          "Không, vì octet thứ ba khác nhau",
+          "Chỉ chồng lấn nếu hai VPC ở cùng region",
+          "Có, vì 10.16.128.0/20 nằm trọn trong 10.16.0.0/16"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "10.16.0.0/16 bao trùm mọi địa chỉ 10.16.x.x, nên 10.16.128.0–10.16.143.255 nằm trọn trong đó. Prefix hay octet thứ ba khác nhau không có nghĩa là không chồng lấn; phải so phần network ở dạng nhị phân."
+      }
+    ],
+    "Digital Signatures": [
+      {
+        "type": "single",
+        "q": "Bob muốn ký số một hợp đồng để đối tác xác minh được hợp đồng do Bob tạo. Bob ký bằng khóa nào và đối tác verify bằng khóa nào?",
+        "options": [
+          "Ký bằng public key của Bob, verify bằng private key của Bob",
+          "Ký bằng private key của Bob, verify bằng public key của Bob",
+          "Ký bằng public key của đối tác, verify bằng private key của đối tác",
+          "Ký và verify bằng cùng một symmetric key"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Chữ ký số dùng private key của người gửi để ký và public key của người gửi để verify. Dùng public key của người nhận là cách mã hóa để giữ bí mật, không phải ký."
+      },
+      {
+        "type": "multi",
+        "q": "Chữ ký số (kết hợp hashing với public key cryptography) đảm bảo hai thuộc tính nào cho dữ liệu? (Chọn 2)",
+        "options": [
+          "Confidentiality: không ai đọc được nội dung",
+          "Availability: dữ liệu luôn truy cập được",
+          "Integrity: dữ liệu không bị sửa đổi",
+          "Authenticity: dữ liệu đến từ đúng người ký",
+          "Compression: giảm kích thước dữ liệu"
+        ],
+        "answer": [
+          2,
+          3
+        ],
+        "explain": "Chữ ký số chứng minh integrity (what, dữ liệu chưa bị sửa) và authenticity (who, đúng người ký). Dữ liệu gốc vẫn giữ nguyên dạng plaintext nên chữ ký số không cung cấp confidentiality."
+      },
+      {
+        "type": "single",
+        "q": "Một auditor yêu cầu chứng minh các log file của AWS CloudTrail không bị chỉnh sửa hay xóa sau khi được ghi vào S3. Giải pháp nào đáp ứng yêu cầu với ít công sức nhất?",
+        "options": [
+          "Bật CloudTrail log file integrity validation",
+          "Bật S3 server-side encryption với SSE-S3 cho bucket",
+          "Mã hóa log bằng AWS KMS customer managed key",
+          "Bật S3 Transfer Acceleration cho bucket"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Log file integrity validation tạo digest file dùng SHA-256 và chữ ký số để phát hiện log bị sửa hoặc xóa. Encryption at rest chỉ giữ bí mật nội dung, không chứng minh log còn nguyên vẹn."
+      },
+      {
+        "type": "single",
+        "q": "Khi nhận được tài liệu đã ký số của Bob, người nhận xác minh như thế nào?",
+        "options": [
+          "Giải mã toàn bộ tài liệu bằng private key của mình",
+          "Gửi tài liệu cho Bob để Bob xác nhận lại",
+          "So sánh signature với public key của Bob xem có giống nhau không",
+          "Dùng public key của Bob verify signature để lấy hash gốc, rồi tự hash tài liệu bằng cùng hash function và so sánh hai hash"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Verify signature bằng public key của Bob cho ra hash gốc của Bob; nếu khớp với hash tự tính thì tài liệu chưa bị sửa và do Bob ký. Tài liệu không cần giải mã vì chữ ký số không mã hóa dữ liệu gốc."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về dữ liệu đã được ký số?",
+        "options": [
+          "Dữ liệu gốc bị chuyển thành ciphertext nên chỉ người có private key mới đọc được",
+          "Muốn đọc dữ liệu bắt buộc phải verify chữ ký trước",
+          "Dữ liệu gốc giữ nguyên định dạng, chữ ký là lớp phủ thêm; ai không cần kiểm tra vẫn dùng dữ liệu bình thường",
+          "Chữ ký số thay thế hoàn toàn nhu cầu mã hóa dữ liệu"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Chữ ký số là lớp phủ thêm: data + signature, dữ liệu gốc không bị biến đổi. Muốn có cả bí mật thì phải mã hóa thêm, ví dụ bằng public key của người nhận."
+      }
+    ],
+    "DNS Fundamentals": [
+      {
+        "type": "single",
+        "q": "Khi resolver không có kết quả trong cache cho www.netflix.com, nó “walk the tree” theo thứ tự nào?",
+        "options": [
+          "TLD (.com) → Root → name server của netflix.com",
+          "Name server của netflix.com → TLD (.com) → Root",
+          "Root → TLD (.com) → name server authoritative của netflix.com",
+          "Root → name server của netflix.com → TLD (.com)"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Root zone trả NS record của TLD .com, TLD trả NS record của netflix.com, cuối cùng name server của netflix.com trả authoritative answer. Danh sách IP root server được hard-code trong mọi DNS server nên đó luôn là điểm bắt đầu."
+      },
+      {
+        "type": "single",
+        "q": "Name server nào được coi là authoritative cho zone netflix.com?",
+        "options": [
+          "Name server được TLD zone .com trỏ tới qua NS records",
+          "Resolver của ISP đã cache kết quả",
+          "Root server gần người dùng nhất",
+          "Bất kỳ DNS server nào có bản sao record trong cache"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Authoritative là nguồn sự thật của zone, chính là name server mà tầng trên (TLD) trỏ tới bằng NS records. Kết quả từ cache của resolver luôn là non-authoritative."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã mua domain qua một registrar bên thứ ba và muốn dùng Amazon Route 53 để quản lý record DNS. Sau khi tạo public hosted zone trên Route 53, cần làm gì để domain dùng Route 53?",
+        "options": [
+          "Chuyển đăng ký domain sang Route 53 là bắt buộc",
+          "Tạo CNAME record ở registrar trỏ tới hosted zone",
+          "Không cần làm gì, TLD tự phát hiện hosted zone mới",
+          "Cập nhật NS records của domain tại registrar để trỏ tới các name server của hosted zone Route 53"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Domain chỉ dùng name server nào được TLD zone trỏ tới bằng NS records, nên phải cập nhật NS qua registrar. Registrar và DNS hosting provider là hai vai trò tách biệt, nên không bắt buộc chuyển đăng ký domain sang Route 53."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về DNS root zone?",
+        "options": [
+          "Root zone chứa mọi record của mọi domain trên Internet",
+          "Nội dung root zone do IANA quản lý, được host trên 13 root server IP, mỗi IP là nhiều server dùng anycast",
+          "Root zone do VeriSign quản lý vì VeriSign là registry của .com",
+          "Root zone chứa NS record trỏ trực tiếp tới name server của từng domain như netflix.com"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "IANA quản lý nội dung root zone; root server có 13 IP do nhiều tổ chức vận hành. Root zone chỉ chứa NS record của các TLD; NS của netflix.com nằm trong TLD zone .com."
+      },
+      {
+        "type": "single",
+        "q": "Trong console Amazon Route 53, “Registered domains” và “Hosted zones” lần lượt đảm nhận vai trò nào?",
+        "options": [
+          "Hosted zones là registrar; Registered domains là DNS hosting provider",
+          "Cả hai đều là DNS resolver",
+          "Registered domains là registrar; Hosted zones là DNS hosting provider",
+          "Registered domains là TLD registry; Hosted zones là root server"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Route 53 làm cả hai vai trò: Registered domains là registrar cho phép mua domain, Hosted zones vận hành name server host zone. TLD registry là tổ chức như VeriSign cho .com, không phải Route 53."
+      }
+    ],
+    "DNSSEC": [
+      {
+        "type": "multi",
+        "q": "DNSSEC bổ sung cho DNS những khả năng nào? (Chọn 2)",
+        "options": [
+          "Data origin authentication: xác minh record thật sự đến từ zone đó",
+          "Mã hóa nội dung truy vấn DNS để bảo vệ quyền riêng tư",
+          "Tự động sửa record sai về giá trị đúng",
+          "Data integrity protection: phát hiện record bị sửa đổi",
+          "Giảm độ trễ truy vấn DNS nhờ cache tốt hơn"
+        ],
+        "answer": [
+          0,
+          3
+        ],
+        "explain": "DNSSEC cung cấp data origin authentication và data integrity protection bằng chữ ký số. Nó không mã hóa truy vấn và không sửa lỗi; chỉ cho biết dữ liệu có đúng nguồn và còn nguyên vẹn hay không."
+      },
+      {
+        "type": "single",
+        "q": "Trong một zone đã bật DNSSEC, khóa nào được dùng để ký RRset DNSKEY?",
+        "options": [
+          "Zone Signing Key (ZSK)",
+          "Key Signing Key (KSK)",
+          "Private key trong DS record",
+          "Khóa của TLS certificate của domain"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "ZSK ký các RRset thông thường trong zone, còn KSK chỉ dùng để ký RRset DNSKEY. Cặp cần nhớ: ZSK ký record, KSK ký key."
+      },
+      {
+        "type": "single",
+        "q": "DS (Delegated Signer) record nằm ở đâu và chứa gì?",
+        "options": [
+          "Nằm ở zone con, chứa public ZSK của zone con",
+          "Nằm ở zone con, chứa chữ ký của mọi RRset",
+          "Nằm ở zone cha, chứa hash của public KSK của zone con",
+          "Nằm ở root zone, chứa private KSK của root"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "DS ở zone cha chứa hash của public KSK zone con, qua đó zone cha khẳng định tin tưởng zone con và tạo chain of trust. Private KSK của root không bao giờ rời HSM."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty host domain trên Amazon Route 53 và muốn bảo vệ người dùng khỏi DNS spoofing/cache poisoning. Cách làm nào đúng?",
+        "options": [
+          "Bật DNSSEC validation trên máy client là đủ, không cần cấu hình hosted zone",
+          "Chuyển mọi record sang CNAME trỏ tới CloudFront",
+          "Bật HTTPS cho website để mã hóa truy vấn DNS",
+          "Bật DNSSEC signing trên hosted zone với KSK dùng KMS customer managed key (asymmetric, us-east-1), rồi thêm DS record vào zone cha"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Trên Route 53, KSK dùng KMS customer managed key asymmetric ở us-east-1, ZSK do Route 53 quản lý, và phải thêm DS record ở zone cha để hoàn tất chain of trust. HTTPS bảo vệ kết nối HTTP chứ không mã hóa hay ký truy vấn DNS."
+      },
+      {
+        "type": "single",
+        "q": "Vì sao DNSSEC tách thành hai khóa ZSK và KSK thay vì chỉ dùng một khóa?",
+        "options": [
+          "Để có thể xoay ZSK thường xuyên mà không phải cập nhật zone cha, vì chỉ KSK được zone cha tham chiếu",
+          "Để ZSK mã hóa truy vấn còn KSK ký record",
+          "Vì mỗi RRset cần hai chữ ký độc lập",
+          "Để zone con có thể bỏ qua DS record ở zone cha"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Thay ZSK chỉ cần ký lại RRSIG và DNSKEY bằng KSK, không động tới zone cha; chỉ KSK được tham chiếu qua DS. Nếu chỉ có một khóa, mỗi lần xoay khóa đều phải cập nhật zone cha."
+      }
+    ],
+    "Encryption Fundamentals": [
+      {
+        "type": "single",
+        "q": "Vì sao các giao thức như TLS dùng asymmetric encryption để thỏa thuận một symmetric key rồi dùng symmetric encryption cho phần còn lại của phiên?",
+        "options": [
+          "Vì symmetric encryption không thể mã hóa dữ liệu nhị phân",
+          "Vì asymmetric giải quyết được bài toán trao đổi khóa nhưng tính toán nặng, còn symmetric nhanh hơn nhiều",
+          "Vì asymmetric encryption không an toàn khi truyền qua internet",
+          "Vì symmetric key có thể công bố công khai"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Asymmetric dễ trao đổi khóa (public key công khai) nhưng chậm; symmetric nhanh nhưng khó chuyển khóa an toàn. Kết hợp hai loại tận dụng ưu điểm của cả hai."
+      },
+      {
+        "type": "single",
+        "q": "Một người muốn mã hóa ổ đĩa laptop của mình; chỉ một mình họ cần giải mã. Phương pháp nào phù hợp nhất?",
+        "options": [
+          "Asymmetric encryption với cặp RSA, gửi public key cho đồng nghiệp",
+          "Hashing bằng SHA2-256",
+          "Symmetric encryption như AES-256",
+          "Steganography để giấu dữ liệu vào ảnh"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Symmetric encryption nhanh, rất hợp cho mã hóa ổ đĩa/file khi chỉ một bên giữ khóa, nên không có bài toán trao đổi khóa. Hashing là một chiều nên không thể lấy lại dữ liệu."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty bật encryption at rest cho toàn bộ EBS volume. Biện pháp này chủ yếu bảo vệ trước rủi ro nào?",
+        "options": [
+          "Ai đó truy cập vật lý hoặc lấy được thiết bị lưu trữ gốc sẽ không đọc được dữ liệu",
+          "IAM user có quyền đọc dữ liệu qua ứng dụng sẽ bị chặn",
+          "Dữ liệu bị nghe lén khi truyền giữa client và server",
+          "Tấn công DDoS vào ứng dụng"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Encryption at rest bảo vệ dữ liệu lưu trữ khỏi truy cập vật lý vào thiết bị. Nó không thay thế kiểm soát truy cập logic (IAM); dữ liệu đang truyền cần encryption in transit."
+      },
+      {
+        "type": "single",
+        "q": "Với asymmetric encryption, Alice muốn gửi dữ liệu bí mật cho Bob. Alice mã hóa bằng khóa nào và ai giải mã được?",
+        "options": [
+          "Private key của Alice; ai có public key của Alice đều giải mã được",
+          "Public key của Alice; Bob giải mã bằng private key của Bob",
+          "Public key của Bob; chính public key đó cũng giải mã được",
+          "Public key của Bob; chỉ private key của Bob giải mã được"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Dữ liệu mã hóa bằng public key của người nhận chỉ giải mã được bằng private key tương ứng; public key không giải mã được thứ nó đã mã hóa. Dùng private key của Alice là thao tác ký, không phải mã hóa giữ bí mật."
+      },
+      {
+        "type": "single",
+        "q": "Steganography mang lại lợi ích gì mà encryption đơn thuần không có?",
+        "options": [
+          "Làm thuật toán mã hóa mạnh hơn AES-256",
+          "Giấu dữ liệu (ví dụ ciphertext) bên trong dữ liệu khác để người ngoài không biết có dữ liệu bí mật, tạo plausible deniability",
+          "Chứng minh danh tính người gửi",
+          "Giúp trao đổi symmetric key an toàn"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Encryption bị nhận ra là đã được dùng nên không có plausible deniability; steganography giấu dữ liệu trong dữ liệu khác như một ảnh. Chứng minh danh tính người gửi là việc của signing."
+      }
+    ],
+    "Hashing": [
+      {
+        "type": "single",
+        "q": "Phát biểu nào KHÔNG đúng về hash function?",
+        "options": [
+          "Output có độ dài cố định bất kể kích thước dữ liệu đầu vào",
+          "Cùng dữ liệu và cùng hàm luôn cho cùng hash",
+          "Có thể giải mã hash để lấy lại dữ liệu gốc nếu có đúng key",
+          "Thay đổi 1 ký tự trong dữ liệu sẽ cho hash hoàn toàn khác"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Hash là một chiều và không dùng key, nên không thể “giải mã” lấy lại dữ liệu gốc; chỉ có thể brute-force. Fixed length, deterministic và khác dữ liệu thì khác hash đều là tính chất cốt lõi."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng đang dùng MD5 để kiểm tra tính toàn vẹn của file nhạy cảm về bảo mật. Đội bảo mật yêu cầu thay đổi. Lựa chọn nào phù hợp?",
+        "options": [
+          "Chuyển sang SHA2-256 vì MD5 có thể bị tạo collision",
+          "Giữ MD5 nhưng hash hai lần",
+          "Chuyển sang mã hóa AES-256 thay cho hash",
+          "Giữ MD5 vì hash là một chiều nên luôn an toàn"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "MD5 có collision (hai dữ liệu khác nhau cho cùng hash) nên không còn tin cậy cho bảo mật; nên dùng SHA2-256 trở lên. AES là encryption, phục vụ bảo mật nội dung chứ không thay thế việc kiểm tra toàn vẹn."
+      },
+      {
+        "type": "single",
+        "q": "Khi dùng hashing để xác thực mật khẩu, server lưu trữ gì?",
+        "options": [
+          "Mật khẩu plaintext để so sánh trực tiếp",
+          "Mật khẩu được mã hóa bằng symmetric key",
+          "Public key của người dùng",
+          "Chỉ hash của mật khẩu, và so sánh với hash nhận được khi đăng nhập"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Server chỉ lưu và so sánh hash nên xác minh được mật khẩu mà không bao giờ lưu mật khẩu. Lưu bản mã hóa vẫn có rủi ro vì kẻ tấn công có thể lấy được plaintext nếu có key."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần lưu số thẻ tín dụng sao cho bảo vệ được nội dung nhưng sau này vẫn lấy lại được giá trị gốc để xử lý thanh toán. Cách nào phù hợp?",
+        "options": [
+          "Lưu hash SHA2-256 của số thẻ",
+          "Mã hóa số thẻ bằng khóa quản lý trong AWS KMS",
+          "Lưu hash MD5 của số thẻ",
+          "Lưu checksum của số thẻ trong ETag của S3"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Hash một chiều nên không thể lấy lại dữ liệu gốc; muốn khôi phục được phải dùng encryption, ví dụ với KMS. Hash phục vụ integrity, không phải confidentiality."
+      },
+      {
+        "type": "single",
+        "q": "Tác giả phần mềm công bố file cài đặt và hash của file ở một hệ thống khác. Người dùng tải file về, tự hash và thấy khớp. Điều gì vẫn CHƯA được đảm bảo, và giải quyết bằng gì?",
+        "options": [
+          "Chưa đảm bảo file được nén đúng; giải quyết bằng SHA2-256",
+          "Chưa đảm bảo file không bị sửa; giải quyết bằng hash lại lần hai",
+          "Chưa đảm bảo chính hash công bố không bị sửa và do đúng tác giả tạo ra; giải quyết bằng chữ ký số",
+          "Chưa đảm bảo file được mã hóa khi truyền; giải quyết bằng steganography"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Hash khớp chứng minh file trùng với hash đã công bố, nhưng không chứng minh hash đó thật sự của tác giả. Chữ ký số (ký hash bằng private key) giải quyết cả integrity lẫn authenticity."
+      }
+    ],
+    "JSON": [
+      {
+        "type": "single",
+        "q": "Một kỹ sư muốn viết IAM identity policy và S3 bucket policy. Định dạng nào bắt buộc phải dùng?",
+        "options": [
+          "YAML",
+          "JSON hoặc YAML tùy chọn",
+          "XML",
+          "JSON"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Policy quyền như IAM policy, bucket policy, SCP, KMS key policy đều là JSON. YAML chỉ là lựa chọn ngang hàng với JSON khi viết CloudFormation template."
+      },
+      {
+        "type": "single",
+        "q": "Trong một IAM policy, trường Statement thường có giá trị là gì về mặt cấu trúc JSON?",
+        "options": [
+          "Một array chứa các object, mỗi object có Effect, Action, Resource",
+          "Một string chứa toàn bộ quyền",
+          "Một object với key là số thứ tự",
+          "Một giá trị boolean"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Statement là array (ngoặc vuông, có thứ tự) chứa các object (ngoặc nhọn, key: value) gồm Effect, Action, Resource, Condition. Object là tập key-value không thứ tự nên không dùng số thứ tự làm key."
+      },
+      {
+        "type": "single",
+        "q": "Điểm khác biệt nào đúng giữa JSON và YAML?",
+        "options": [
+          "JSON bắt buộc thụt lề đúng, YAML thì không",
+          "Chỉ YAML dùng được cho CloudFormation",
+          "Trong JSON thụt lề không quan trọng vì cấu trúc được xác định bằng {} và []; trong YAML thụt lề là cú pháp",
+          "JSON hỗ trợ comment bằng #, YAML thì không"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "JSON xác định cấu trúc bằng ngoặc nhọn, ngoặc vuông và nháy kép nên khoảng trắng tự do; YAML dùng thụt lề làm cú pháp. Comment bằng # là tính năng của YAML, JSON không hỗ trợ comment."
+      },
+      {
+        "type": "single",
+        "q": "Một đội muốn viết CloudFormation template có kèm comment giải thích từng resource ngay trong file. Định dạng nào phù hợp?",
+        "options": [
+          "JSON, dùng // để comment",
+          "YAML, dùng # để comment",
+          "JSON, dùng # để comment",
+          "Cả hai đều không cho phép comment"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "YAML hỗ trợ comment bằng #, còn JSON không hỗ trợ comment. Cả JSON và YAML đều dùng được cho CloudFormation với cấu trúc logic giống nhau."
+      },
+      {
+        "type": "single",
+        "q": "Trong JSON, kiểu giá trị nào sau đây KHÔNG hợp lệ?",
+        "options": [
+          "null",
+          "true",
+          "Một array chứa các object",
+          "Một hàm (function)"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Value trong JSON có thể là string, number, object, array, boolean hoặc null. Hàm không phải kiểu giá trị hợp lệ vì JSON chỉ là định dạng trao đổi dữ liệu."
+      }
+    ],
+    "Layer 1 Physical": [
+      {
+        "type": "single",
+        "q": "Bốn laptop được nối với nhau bằng một hub 4 port. Phát biểu nào đúng về mạng này?",
+        "options": [
+          "Hub học MAC address và chỉ gửi dữ liệu tới đúng port đích",
+          "Mỗi port của hub là một collision domain riêng",
+          "Hub phát lại mọi thứ nhận được ra mọi port khác, kể cả collision; toàn mạng là một collision domain",
+          "Hub chặn collision trước khi chúng lan ra mạng"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Hub là thiết bị L1, chỉ lặp lại tín hiệu ra mọi port, về khái niệm giống một sợi cáp nhiều đầu nối. Học MAC và tách collision domain theo từng port là việc của switch (L2)."
+      },
+      {
+        "type": "single",
+        "q": "Chuẩn Layer 1 KHÔNG định nghĩa thứ nào sau đây?",
+        "options": [
+          "Mức điện áp biểu diễn bit 0 và 1",
+          "Địa chỉ định danh duy nhất cho từng thiết bị",
+          "Tốc độ dữ liệu và khoảng cách tối đa",
+          "Loại đầu nối và phương pháp điều chế"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Layer 1 định nghĩa điện áp, timing, data rate, khoảng cách, modulation, connector. Layer 1 không có địa chỉ thiết bị; MAC address là của Layer 2."
+      },
+      {
+        "type": "single",
+        "q": "Trên cáp quang (fiber), dữ liệu được truyền dưới dạng gì?",
+        "options": [
+          "Ánh sáng",
+          "Tín hiệu điện",
+          "Sóng vô tuyến",
+          "Từ trường"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Cáp quang truyền bằng ánh sáng, cáp đồng bằng tín hiệu điện, Wi-Fi bằng tần số vô tuyến."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần kết nối riêng tư, được mã hóa giữa on-premises và VPC trong vòng vài ngày. Vì sao AWS Direct Connect thường không phải lựa chọn phù hợp cho yêu cầu này?",
+        "options": [
+          "Vì Direct Connect chỉ hỗ trợ IPv6",
+          "Vì Direct Connect chạy logic trên internet công cộng",
+          "Vì Direct Connect không hỗ trợ băng thông trên 1 Gbps",
+          "Vì Direct Connect là kết nối vật lý cần thời gian lắp đặt và không có mã hóa sẵn"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Direct Connect là đường cáp quang vật lý tại DX location nên cần thời gian lắp đặt và mặc định không mã hóa. VPN mới là giải pháp chạy logic trên internet, dựng được nhanh."
+      },
+      {
+        "type": "multi",
+        "q": "Hai hạn chế nào là của một mạng chỉ có Layer 1 (ví dụ nối các máy bằng hub)? (Chọn 2)",
+        "options": [
+          "Không có địa chỉ định danh thiết bị, mọi dữ liệu đều là broadcast",
+          "Không truyền được qua cáp quang",
+          "Chỉ hỗ trợ tối đa 2 thiết bị",
+          "Không phát hiện được collision",
+          "Packet bị hủy khi TTL về 0"
+        ],
+        "answer": [
+          0,
+          3
+        ],
+        "explain": "Layer 1 không có định danh thiết bị, không có media access control và không phát hiện collision, nên không scale được. Hub vẫn nối được nhiều hơn 2 thiết bị, còn TTL là khái niệm của Layer 3."
+      }
+    ],
+    "Layer 2 Data Link": [
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về MAC address?",
+        "options": [
+          "Dài 32 bit, viết dạng dotted decimal",
+          "Dài 48 bit, viết dạng hexadecimal, gồm OUI của hãng sản xuất và phần NIC-specific",
+          "Được gán động bởi DHCP mỗi khi thiết bị khởi động",
+          "Dài 128 bit và dùng để định tuyến xuyên internet"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "MAC là hardware address 48 bit dạng hex, gồm OUI cấp cho hãng và phần riêng của từng card. 32 bit dotted decimal là IPv4, và DHCP cấp IP chứ không cấp MAC."
+      },
+      {
+        "type": "single",
+        "q": "Một văn phòng thay hub bằng switch Layer 2. Điều gì thay đổi?",
+        "options": [
+          "Mỗi port trở thành một broadcast domain riêng",
+          "Switch có thể định tuyến packet giữa các mạng IP khác nhau",
+          "Frame broadcast không còn tới các thiết bị khác",
+          "Mỗi port trở thành một collision domain riêng, switch chỉ forward frame hợp lệ tới đúng port theo MAC address table"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Switch học MAC theo port, store-and-forward frame hợp lệ, nên mỗi port là một collision domain riêng. Broadcast vẫn tới mọi port (vẫn 1 broadcast domain), còn định tuyến giữa các mạng là việc của router L3."
+      },
+      {
+        "type": "single",
+        "q": "Theo CSMA/CD, khi một thiết bị Ethernet phát hiện collision, nó làm gì?",
+        "options": [
+          "Gửi jam signal, chờ một khoảng random backoff rồi thử lại; nếu lại collision thì backoff dài hơn",
+          "Bỏ frame và không bao giờ gửi lại",
+          "Chuyển sang gửi frame dưới dạng broadcast",
+          "Tăng TTL của frame và gửi lại ngay"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Collision Detection gửi jam signal rồi chờ random backoff, mỗi lần trùng lại thì backoff dài hơn để giảm xác suất trùng. Frame không có TTL; TTL là trường của IP packet ở Layer 3."
+      },
+      {
+        "type": "single",
+        "q": "Một Ethernet frame có Destination MAC là ff:ff:ff:ff:ff:ff. Điều này có nghĩa là gì?",
+        "options": [
+          "Frame bị lỗi và sẽ bị FCS loại bỏ",
+          "Frame gửi tới default gateway",
+          "Frame là broadcast tới mọi thiết bị trong mạng cục bộ",
+          "Frame gửi tới mọi thiết bị trên internet"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "MAC đích toàn F là broadcast L2, tới mọi thiết bị trong mạng cục bộ, ví dụ ARP request. Broadcast L2 không vượt qua router ra internet."
+      },
+      {
+        "type": "single",
+        "q": "Một phần mềm thương mại có license gắn với MAC address. Công ty muốn có thể chuyển license sang EC2 instance khác khi instance cũ hỏng. Giải pháp nào phù hợp?",
+        "options": [
+          "Ghi lại MAC của instance cũ và cấu hình lại trên instance mới bằng user data",
+          "Dùng Elastic IP vì MAC đi theo Elastic IP",
+          "Gắn license với một secondary ENI, khi cần thì tách ENI và gắn sang instance mới",
+          "Tạo AMI từ instance cũ vì AMI giữ nguyên MAC address"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Mỗi ENI có MAC riêng và MAC đi theo ENI khi chuyển sang instance khác. Elastic IP chỉ là địa chỉ IP, không mang theo MAC."
+      }
+    ],
+    "Layer 3 Network": [
+      {
+        "type": "single",
+        "q": "Route table của một subnet trong VPC có các route: 10.16.0.0/16 → local, 10.20.0.0/16 → VPC peering, 10.20.5.0/24 → Transit Gateway, 0.0.0.0/0 → Internet Gateway. Traffic tới 10.20.5.10 sẽ đi đâu?",
+        "options": [
+          "Internet Gateway",
+          "VPC peering connection",
+          "Local",
+          "Transit Gateway"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Router chọn route cụ thể nhất (longest prefix match): 10.20.5.0/24 cụ thể hơn 10.20.0.0/16 và 0.0.0.0/0. Default route chỉ dùng khi không route nào cụ thể hơn khớp."
+      },
+      {
+        "type": "single",
+        "q": "Khi viết rule Network ACL theo số protocol, UDP tương ứng với số nào?",
+        "options": [
+          "1",
+          "6",
+          "17",
+          "50"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Trường Protocol trong IPv4 packet: ICMP = 1, TCP = 6, UDP = 17. 6 là TCP, số dễ nhầm nhất."
+      },
+      {
+        "type": "single",
+        "q": "Máy D2 cần gửi packet tới máy D3 nằm ở một mạng khác. D2 dùng ARP để lấy MAC address của ai?",
+        "options": [
+          "Default gateway (router) trên mạng local của D2",
+          "Máy D3",
+          "Mọi router trên đường đi",
+          "Root DNS server"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Đích remote nên D2 gửi frame tới default gateway, do đó ARP để lấy MAC của gateway. ARP chỉ hoạt động trong mạng cục bộ bằng broadcast L2 nên không lấy được MAC của D3."
+      },
+      {
+        "type": "single",
+        "q": "Khi một IP packet đi qua nhiều router từ nguồn tới đích (không có NAT), điều gì thay đổi ở mỗi chặng?",
+        "options": [
+          "Destination IP của packet đổi thành IP của router kế tiếp",
+          "Packet giữ nguyên; frame bọc packet được tạo mới với Destination MAC là của next hop",
+          "Cả packet và frame đều giữ nguyên",
+          "Source IP đổi thành IP của router vừa đi qua"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "IP đích của packet luôn là máy đích; mỗi mạng L2 bọc packet trong một frame mới với MAC đích là next hop. Chỉ NAT mới thay đổi IP trong packet."
+      },
+      {
+        "type": "single",
+        "q": "Địa chỉ 133.33.3.7/16 thuộc dải mạng nào?",
+        "options": [
+          "133.33.3.0 – 133.33.3.255",
+          "133.0.0.0 – 133.255.255.255",
+          "133.33.3.0 – 133.33.3.127",
+          "133.33.0.0 – 133.33.255.255"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "/16 nghĩa là 16 bit đầu (133.33) là network; host part toàn 0 là 133.33.0.0 và toàn 1 là 133.33.255.255. Dải 133.33.3.0–133.33.3.255 là của /24."
+      }
+    ],
+    "Layer 4 Transport": [
+      {
+        "type": "single",
+        "q": "Một web server HTTPS nằm trong subnet có Network ACL chỉ có inbound rule cho phép TCP 443 từ 0.0.0.0/0 và outbound rule mặc định đã bị xóa (chỉ còn deny all). Người dùng không nhận được phản hồi. Cần thêm rule nào?",
+        "options": [
+          "Inbound rule cho dải ephemeral port",
+          "Outbound rule cho TCP 443 tới 0.0.0.0/0",
+          "Không cần thêm rule vì NACL là stateful",
+          "Outbound rule cho dải ephemeral port (high ports) tới 0.0.0.0/0"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "NACL là stateless nên chiều response cần rule riêng; response từ server đi từ port 443 tới ephemeral port của client, nên outbound phải mở dải ephemeral port. Outbound TCP 443 sai vì port đích của response là ephemeral port chứ không phải 443."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 instance có Security Group chỉ có inbound rule cho phép TCP 443. Response từ instance về client có bị chặn không?",
+        "options": [
+          "Không, Security Group là stateful nên response của kết nối được phép tự động được cho qua",
+          "Có, phải thêm outbound rule cho dải ephemeral port",
+          "Có, phải thêm outbound rule cho TCP 443",
+          "Không, vì Security Group không kiểm soát traffic outbound"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Security Group là stateful, coi initiating và response là một kết nối nên chỉ cần allow chiều khởi tạo. Security Group vẫn có outbound rule, nhưng chúng áp dụng cho kết nối do instance khởi tạo."
+      },
+      {
+        "type": "single",
+        "q": "Thứ tự đúng của TCP three-way handshake là gì?",
+        "options": [
+          "SYN-ACK → SYN → ACK",
+          "SYN → ACK → SYN-ACK",
+          "SYN → SYN-ACK → ACK",
+          "ACK → SYN → FIN"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Client gửi SYN với ISN ngẫu nhiên, server trả SYN-ACK với sequence riêng và ack CS+1, client trả ACK. FIN dùng để đóng kết nối, không thuộc handshake."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty game online dùng giao thức UDP, ưu tiên độ trễ thấp hơn độ tin cậy, và cần một load balancer trên AWS. Lựa chọn nào phù hợp?",
+        "options": [
+          "Application Load Balancer vì hoạt động ở Layer 7",
+          "Network Load Balancer vì hoạt động ở Layer 4 và hỗ trợ TCP/UDP",
+          "Classic Load Balancer với HTTP listener",
+          "Amazon CloudFront với cache behavior"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "NLB hoạt động ở Layer 4 nên xử lý được TCP/UDP. ALB ở Layer 7 chỉ hiểu HTTP/HTTPS nên không cân bằng tải traffic UDP."
+      },
+      {
+        "type": "single",
+        "q": "Laptop có IP 1.1.1.1 mở kết nối HTTPS từ ephemeral port 23060 tới server 2.2.2.2:443. Segment phản hồi từ server có source port và destination port là gì?",
+        "options": [
+          "Source 23060, destination 443",
+          "Source 443, destination 443",
+          "Source 80, destination 23060",
+          "Source 443, destination 23060"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Chiều phản hồi đảo ngược port: source là well-known port 443 của server, destination là ephemeral port 23060 của client. Một kết nối được xác định duy nhất bởi bộ 4 (src IP, src port, dst IP, dst port)."
+      }
+    ],
+    "NAT Fundamentals": [
+      {
+        "type": "single",
+        "q": "Các EC2 instance trong private subnet cần tải bản cập nhật phần mềm từ internet qua IPv4, nhưng không được phép nhận kết nối khởi tạo từ internet. Giải pháp nào đáp ứng yêu cầu với ít công sức quản trị nhất?",
+        "options": [
+          "Gán Elastic IP cho từng instance",
+          "Thêm route 0.0.0.0/0 tới Internet Gateway trong route table của private subnet",
+          "Triển khai NAT Gateway trong public subnet và route 0.0.0.0/0 của private subnet tới NAT Gateway",
+          "Triển khai Egress-Only Internet Gateway"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "NAT Gateway thực hiện PAT many:1, cho phép kết nối ra ngoài và response quay về nhưng internet không khởi tạo vào được. Egress-Only Internet Gateway chỉ dành cho IPv6."
+      },
+      {
+        "type": "single",
+        "q": "Một VPC dual-stack có instance cần truy cập internet ra ngoài qua IPv6, nhưng không cho internet khởi tạo kết nối vào qua IPv6. Nên dùng gì?",
+        "options": [
+          "Egress-Only Internet Gateway",
+          "NAT Gateway",
+          "NAT instance",
+          "Internet Gateway với static NAT"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "IPv6 không dùng NAT; mọi địa chỉ IPv6 trên AWS là public-routable, nên outbound-only được kiểm soát bằng Egress-Only Internet Gateway. NAT Gateway chỉ phục vụ IPv4."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 instance trong public subnet có public IPv4. Khi đăng nhập vào hệ điều hành và xem cấu hình mạng, kỹ sư thấy gì?",
+        "options": [
+          "Cả private IP và public IPv4 được cấu hình trên cùng interface",
+          "Chỉ public IPv4 vì instance nằm trong public subnet",
+          "Chỉ private IP; public IPv4 là mapping static NAT nằm ở Internet Gateway",
+          "Không có IP nào vì IP do VPC router quản lý"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Internet Gateway thực hiện static NAT 1:1 giữa private IP và public IPv4; OS của instance không bao giờ thấy public IPv4. Thiết bị private không được cấu hình IP public trên chính nó."
+      },
+      {
+        "type": "single",
+        "q": "Nhiều thiết bị private dùng chung một địa chỉ IP public duy nhất để ra internet; NAT device phân biệt các kết nối nhờ cấp source port public riêng cho mỗi kết nối. Đây là kiểu NAT nào?",
+        "options": [
+          "Static NAT",
+          "Port Address Translation (PAT)",
+          "Dynamic NAT",
+          "IPv6 NAT"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "PAT (overloading) là many:1, phân biệt kết nối bằng port, cũng là cách router gia đình và AWS NAT Gateway hoạt động. Static NAT là 1:1 cố định, như Internet Gateway."
+      },
+      {
+        "type": "single",
+        "q": "Với Dynamic NAT, điều gì xảy ra khi pool IP public đã được cấp hết và một thiết bị private khác cần ra internet?",
+        "options": [
+          "Thiết bị dùng chung IP public với thiết bị khác qua port khác",
+          "NAT device tự cấp thêm IP public mới",
+          "Thiết bị được chuyển sang IPv6",
+          "Truy cập của thiết bị đó thất bại"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Dynamic NAT cấp IP public tạm thời từ pool; nhiều thiết bị dùng chung được nếu không trùng thời điểm, nhưng hết pool thì truy cập thất bại. Dùng chung một IP qua port khác là cơ chế của PAT."
+      }
+    ],
+    "OSI Model": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng web cần định tuyến request tới các nhóm target khác nhau dựa trên URL path và host header. Loại load balancer nào phù hợp?",
+        "options": [
+          "Network Load Balancer vì hoạt động ở Layer 4",
+          "Gateway Load Balancer vì hoạt động ở Layer 3",
+          "Application Load Balancer vì hoạt động ở Layer 7",
+          "Dùng Network ACL để chia traffic theo path"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Path và host header là thông tin HTTP ở Layer 7, nên cần ALB. NLB ở Layer 4 chỉ thấy IP, port, protocol, không đọc được nội dung HTTP."
+      },
+      {
+        "type": "single",
+        "q": "Trong mô hình OSI, nhóm “media layers” gồm những tầng nào?",
+        "options": [
+          "L1 Physical, L2 Data Link, L3 Network",
+          "L4 Transport đến L7 Application",
+          "L1 Physical và L2 Data Link",
+          "L5 Session, L6 Presentation, L7 Application"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Media layers (L1–L3) lo việc đưa dữ liệu từ điểm A tới điểm B. Host layers (L4–L7) lo chia nhỏ, ráp lại và định dạng dữ liệu."
+      },
+      {
+        "type": "single",
+        "q": "Đơn vị dữ liệu (PDU) tương ứng với Layer 2, Layer 3 và Layer 4 lần lượt là gì?",
+        "options": [
+          "Packet, frame, segment",
+          "Frame, segment, packet",
+          "Bit, frame, packet",
+          "Frame, packet, segment"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "L2 Data Link dùng frame, L3 Network dùng packet, L4 Transport dùng segment; L1 truyền bit."
+      },
+      {
+        "type": "single",
+        "q": "Theo quy ước “thiết bị Layer X”, một router (thiết bị Layer 3) hiểu được những tầng nào?",
+        "options": [
+          "Chỉ Layer 3",
+          "Layer 1, Layer 2 và Layer 3",
+          "Layer 3 đến Layer 7",
+          "Layer 2 và Layer 3"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Thiết bị Layer X có chức năng của tầng X và mọi tầng bên dưới, nên router hiểu L1, L2, L3. Vì vậy thiết bị L7 có thể ra quyết định dựa trên thông tin của mọi tầng."
+      },
+      {
+        "type": "multi",
+        "q": "Thành phần AWS nào lọc traffic dựa trên IP, port và protocol ở Layer 3–4, không đọc nội dung HTTP? (Chọn 2)",
+        "options": [
+          "AWS WAF",
+          "Network ACL",
+          "Application Load Balancer",
+          "Amazon CloudFront",
+          "Security Group"
+        ],
+        "answer": [
+          1,
+          4
+        ],
+        "explain": "NACL (stateless) và Security Group (stateful) lọc ở L3–L4 theo IP, port, protocol. WAF, ALB và CloudFront hoạt động ở Layer 7 và đọc được thông tin HTTP."
+      }
+    ],
+    "RPO and RTO": [
+      {
+        "type": "single",
+        "q": "Một server được full backup mỗi 6 giờ lúc 15:00, 21:00, 03:00 và 09:00. Server hỏng lúc 02:00. Lượng dữ liệu bị mất là bao nhiêu?",
+        "options": [
+          "1 giờ",
+          "6 giờ",
+          "5 giờ",
+          "Không mất dữ liệu"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Recovery point gần nhất là bản backup 21:00, nên dữ liệu từ 21:00 tới 02:00 (5 giờ) bị mất. 6 giờ là mức mất tối đa khi sự cố xảy ra ngay trước lần backup kế tiếp."
+      },
+      {
+        "type": "single",
+        "q": "Đồng hồ tính RTO bắt đầu và kết thúc khi nào?",
+        "options": [
+          "Bắt đầu khi đội IT nhận cảnh báo, kết thúc khi restore dữ liệu xong",
+          "Bắt đầu khi sự cố xảy ra, kết thúc khi hệ thống được bàn giao lại cho doanh nghiệp ở trạng thái đã kiểm thử đầy đủ",
+          "Bắt đầu từ lần backup cuối, kết thúc khi sự cố xảy ra",
+          "Bắt đầu khi quyết định restore, kết thúc khi server khởi động lại"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "RTO tính end-to-end từ lúc sự cố xảy ra đến khi bàn giao hệ thống đã kiểm thử, gồm cả phát hiện, điều tra, restore và testing. Khoảng từ lần backup cuối tới lúc sự cố là lượng dữ liệu mất, liên quan RPO."
+      },
+      {
+        "type": "single",
+        "q": "Yêu cầu nghiệp vụ: “không được mất quá 15 phút dữ liệu” và “hệ thống phải hoạt động trở lại trong vòng 2 giờ”. Hai yêu cầu này lần lượt là gì?",
+        "options": [
+          "RPO = 15 phút, RTO = 2 giờ",
+          "RTO = 15 phút, RPO = 2 giờ",
+          "RPO = 2 giờ 15 phút",
+          "RTO = 2 giờ 15 phút"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Lượng dữ liệu chấp nhận mất là RPO; thời gian ngừng hoạt động tối đa là RTO. Đề thi thường cho cả hai và yêu cầu chọn giải pháp rẻ nhất vẫn đáp ứng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty chấp nhận RPO và RTO tính bằng vài giờ cho một hệ thống nội bộ ít quan trọng và muốn chi phí DR thấp nhất. Chiến lược DR nào phù hợp?",
+        "options": [
+          "Multi-site active/active",
+          "Warm standby",
+          "Pilot light",
+          "Backup and restore"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Backup and restore có RPO/RTO tính bằng giờ và rẻ nhất. Pilot light, warm standby và multi-site lần lượt giảm RTO xuống chục phút, phút và gần 0 nhưng đắt hơn."
+      },
+      {
+        "type": "multi",
+        "q": "Một công ty muốn giảm RTO cho hệ thống của mình. Hai biện pháp nào trực tiếp giúp giảm RTO? (Chọn 2)",
+        "options": [
+          "Tăng tần suất backup từ 6 giờ xuống 1 giờ",
+          "Thiết lập monitoring và cảnh báo đánh thức đúng người có quyền quyết định",
+          "Tăng thời gian lưu giữ backup từ 30 lên 90 ngày",
+          "Xây dựng quy trình restore được tài liệu hóa và kiểm thử trước",
+          "Nén backup để giảm dung lượng lưu trữ"
+        ],
+        "answer": [
+          1,
+          3
+        ],
+        "explain": "RTO giảm nhờ planning, monitoring, notification, quy trình chuẩn, phần cứng dự phòng và đào tạo. Tăng tần suất backup giảm RPO (lượng dữ liệu mất), không rút ngắn thời gian khôi phục."
+      }
+    ],
+    "SSL and TLS": [
+      {
+        "type": "single",
+        "q": "Ba pha của TLS handshake (sau khi đã có kết nối TCP) diễn ra theo thứ tự nào?",
+        "options": [
+          "Key exchange → Authentication → Cipher suites",
+          "Authentication → Cipher suites → Key exchange",
+          "Cipher suites → Key exchange → Authentication",
+          "Cipher suites → Authentication → Key exchange"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Client và server thống nhất cipher suite (server gửi certificate), client xác thực server, sau đó trao đổi pre-master key để sinh session key symmetric."
+      },
+      {
+        "type": "single",
+        "q": "Người dùng truy cập https://shop.example.com và trình duyệt cảnh báo certificate không hợp lệ, dù certificate do một CA tin cậy ký và còn hạn. Nguyên nhân khả dĩ nhất là gì?",
+        "options": [
+          "DNS name trên certificate không khớp với shop.example.com",
+          "Server dùng symmetric encryption",
+          "Kết nối TCP chưa được thiết lập",
+          "Cipher suite dùng thuật toán AES"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Ở pha authentication, client kiểm tra certificate do CA tin cậy ký, còn hạn, chưa bị revoke và DNS name khớp. Khi hai điều kiện đầu đã thỏa, tên không khớp là lý do hợp lý nhất."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần certificate TLS public cho Application Load Balancer, muốn miễn phí và tự động gia hạn với ít công sức vận hành nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Mua certificate từ CA bên thứ ba và import vào IAM",
+          "Dùng AWS Certificate Manager (ACM) để cấp public certificate cho ALB",
+          "Tự tạo self-signed certificate trên EC2",
+          "Lưu certificate trong AWS Secrets Manager và cấu hình rotation"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "ACM cấp public certificate miễn phí, tự gia hạn và tích hợp với ELB, CloudFront, API Gateway. Self-signed certificate không được trình duyệt tin vì không do CA tin cậy ký."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn dùng custom domain kèm certificate ACM cho Amazon CloudFront distribution. Certificate phải được tạo ở region nào?",
+        "options": [
+          "Region chứa S3 origin",
+          "Bất kỳ region nào gần người dùng nhất",
+          "us-east-1 (N. Virginia)",
+          "Region chứa Application Load Balancer origin"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Certificate ACM dùng cho CloudFront phải nằm ở us-east-1, bất kể origin ở đâu. Với ALB thì certificate phải cùng region với ALB, đây là điểm dễ nhầm."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi TLS handshake hoàn tất, dữ liệu ứng dụng giữa client và server được mã hóa bằng gì?",
+        "options": [
+          "Public key của server cho mọi message",
+          "Private key của client",
+          "Các session key symmetric sinh ra từ master secret",
+          "Hash SHA-256 của dữ liệu"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "TLS dùng asymmetric chỉ để trao đổi pre-master key, sau đó hai bên sinh master secret và session key symmetric cho phần truyền dữ liệu vì symmetric nhanh hơn nhiều. Hash không phải là mã hóa."
+      }
+    ],
+    "Subnetting": [
+      {
+        "type": "single",
+        "q": "Dải địa chỉ nào sau đây KHÔNG thuộc private IPv4 theo RFC 1918?",
+        "options": [
+          "10.200.0.0/16",
+          "172.32.0.0/16",
+          "192.168.50.0/24",
+          "172.20.0.0/16"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "RFC 1918 gồm 10.0.0.0/8, 172.16.0.0/12 (172.16.0.0–172.31.255.255) và 192.168.0.0/16. 172.32.0.0/16 nằm ngoài 172.16.0.0/12 nên là dải public."
+      },
+      {
+        "type": "single",
+        "q": "Chia 10.16.0.0/16 thành 4 subnet bằng nhau. Subnet thứ hai là gì?",
+        "options": [
+          "10.16.1.0/18",
+          "10.16.128.0/17",
+          "10.16.64.0/18",
+          "10.16.32.0/18"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "4 subnet bằng nhau cần tăng prefix thêm 2 thành /18, mỗi subnet 16.384 địa chỉ: 10.16.0.0, 10.16.64.0, 10.16.128.0, 10.16.192.0. 10.16.128.0/17 là kết quả khi chỉ chia đôi."
+      },
+      {
+        "type": "single",
+        "q": "Default VPC trong mỗi AWS region luôn dùng dải CIDR nào?",
+        "options": [
+          "10.0.0.0/16",
+          "192.168.0.0/16",
+          "172.16.0.0/12",
+          "172.31.0.0/16"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Default VPC luôn là 172.31.0.0/16, một dải class B nằm trong 172.16.0.0/12. Đây cũng là lý do dễ overlap nếu mạng khác dùng cùng dải."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần tạo VPC mới, sau này sẽ peering với VPC 10.0.0.0/16 và 10.16.0.0/16, đồng thời kết nối VPN với on-premises 192.168.0.0/16. Dải CIDR nào phù hợp cho VPC mới?",
+        "options": [
+          "10.24.0.0/16",
+          "10.0.128.0/17",
+          "10.16.0.0/20",
+          "192.168.10.0/24"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "10.24.0.0/16 không trùng với dải nào. 10.0.128.0/17 nằm trong 10.0.0.0/16, 10.16.0.0/20 nằm trong 10.16.0.0/16, 192.168.10.0/24 nằm trong 192.168.0.0/16, nên đều overlap và sẽ chặn peering/VPN."
+      },
+      {
+        "type": "single",
+        "q": "Một subnet /18 chứa bao nhiêu địa chỉ IPv4 (chưa trừ địa chỉ AWS giữ lại)?",
+        "options": [
+          "4.096",
+          "8.192",
+          "32.768",
+          "16.384"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "/18 còn 14 bit host, tức 2^14 = 16.384 địa chỉ, bằng một phần tư /16. Mỗi lần tăng prefix 1 đơn vị, mạng giảm một nửa: /17 = 32.768, /19 = 8.192."
+      }
+    ],
+    "YAML": [
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về thụt lề trong YAML?",
+        "options": [
+          "Thụt lề chỉ để dễ đọc, không ảnh hưởng cấu trúc",
+          "Thụt lề là cú pháp, phải dùng dấu cách (không dùng tab); thụt sâu hơn nghĩa là nằm bên trong cấu trúc thụt nông hơn",
+          "Phải dùng tab để thụt lề",
+          "Mọi phần tử phải nằm cùng một mức thụt lề"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Trong YAML, thụt lề bằng dấu cách quyết định cấu trúc: cùng mức là cùng cấu trúc cha, sâu hơn là nằm bên trong. JSON mới là định dạng mà thụt lề chỉ để dễ đọc."
+      },
+      {
+        "type": "single",
+        "q": "Trong template CloudFormation YAML sau: Resources → s3bucket → (Type, Properties → BucketName), với Type và Properties cùng mức thụt lề. Phát biểu nào đúng?",
+        "options": [
+          "Properties nằm trong Type",
+          "BucketName cùng cấp với Type",
+          "Type và Properties cùng nằm trong dictionary s3bucket",
+          "s3bucket cùng cấp với Resources"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Type và Properties cùng mức thụt lề nên là hai key cùng cấp trong dictionary s3bucket; BucketName thụt sâu hơn nên nằm trong Properties. s3bucket là logical resource nằm trong Resources."
+      },
+      {
+        "type": "single",
+        "q": "Cách viết nào là một list hợp lệ trong YAML?",
+        "options": [
+          "adrianscats: {roffle, truffles, penny}",
+          "adrianscats = roffle; truffles; penny",
+          "adrianscats: <roffle, truffles, penny>",
+          "adrianscats:\n  - roffle\n  - truffles\n  - penny"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "List trong YAML viết dạng block (mỗi phần tử một dòng bắt đầu bằng gạch ngang, cùng mức thụt lề) hoặc inline bằng ngoặc vuông. Ngoặc nhọn biểu diễn dictionary, không phải list."
+      },
+      {
+        "type": "multi",
+        "q": "Hai phát biểu nào đúng về việc dùng YAML và JSON trong AWS? (Chọn 2)",
+        "options": [
+          "CloudFormation chấp nhận template viết bằng YAML",
+          "IAM policy có thể viết bằng YAML",
+          "String trong YAML bắt buộc phải đặt trong dấu nháy",
+          "IAM identity policy và resource policy chỉ dùng JSON",
+          "Top level của tài liệu YAML là một list có thứ tự"
+        ],
+        "answer": [
+          0,
+          3
+        ],
+        "explain": "CloudFormation chấp nhận cả YAML và JSON, còn policy quyền luôn là JSON. Dấu nháy cho string trong YAML là tùy chọn, và top level của YAML là dictionary không thứ tự."
+      },
+      {
+        "type": "single",
+        "q": "Ở top level, một tài liệu YAML là gì?",
+        "options": [
+          "Một dictionary: tập key: value không có thứ tự",
+          "Một list có thứ tự",
+          "Một string duy nhất",
+          "Một array các số"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Top level của YAML là tập key: value không thứ tự (dictionary), tương đương object trong JSON. List là tập giá trị có thứ tự, có thể nằm trong dictionary."
+      }
+    ]
+  }
+}

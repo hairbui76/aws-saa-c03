@@ -1,0 +1,1463 @@
+{
+  "chapter": "14 Serverless and Application Services",
+  "lessons": {
+    "API Gateway": [
+      {
+        "type": "single",
+        "q": "Một công ty đặt Lambda function phía sau API Gateway (REST API). Một số request cần khoảng 45 giây để xử lý dù Lambda được cấu hình timeout 15 phút. Client sẽ nhận mã lỗi nào cho các request này?",
+        "options": [
+          "502 Bad Gateway",
+          "503 Service Unavailable",
+          "504 Integration Timeout",
+          "429 Too Many Requests"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "API Gateway có giới hạn integration timeout 29 giây; vượt quá sẽ trả 504 dù Lambda chạy được 15 phút. 502 là khi Lambda trả output không hợp lệ, không phải do quá thời gian."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng mobile có người dùng trên khắp thế giới gọi một API serverless. Công ty muốn giảm latency cho client ở xa region mà không phải tự dựng thêm hạ tầng. Nên chọn loại endpoint API Gateway nào?",
+        "options": [
+          "Edge-optimized endpoint",
+          "Regional endpoint",
+          "Private endpoint truy cập qua interface VPC endpoint",
+          "Regional endpoint đặt sau Network Load Balancer"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Edge-optimized định tuyến request tới CloudFront POP gần client nhất, phù hợp client phân tán toàn cầu. Regional phù hợp client cùng region, còn Private chỉ dùng được trong VPC."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đang chuyển dần backend từ server on-premises sang Lambda. Họ cần một API managed, serverless, có throttling và authorization, giữ nguyên endpoint cho client trong suốt quá trình migration. Giải pháp nào phù hợp nhất với vận hành thấp nhất?",
+        "options": [
+          "Dựng NGINX reverse proxy trên EC2 Auto Scaling group trỏ về on-prem",
+          "Dùng Route 53 weighted record chuyển dần DNS từ on-prem sang Lambda function URL",
+          "Dùng Global Accelerator trỏ tới server on-prem rồi đổi endpoint sau",
+          "Đặt API Gateway trước HTTP endpoint on-prem, sau đó đổi dần integration sang Lambda"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "API Gateway là public service làm frontend cho backend trong AWS hoặc on-prem, cho phép đổi integration mà client không thấy thay đổi, kèm throttling/authorization sẵn. Phương án NGINX trên EC2 cũng làm được nhưng tăng gánh nặng vận hành."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về API Gateway caching?",
+        "options": [
+          "Cache cấu hình toàn cục cho cả API, TTL mặc định 60 giây",
+          "Cache được định nghĩa theo stage, TTL mặc định 300 giây và tối đa 3600 giây",
+          "Cache có kích thước cố định 500 MB và không thể mã hóa",
+          "TTL mặc định 3600 giây, tối đa 86400 giây"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Cache của API Gateway định nghĩa theo stage, kích thước 500 MB đến 237 GB, TTL mặc định 300 s, cấu hình từ 0 tới 3600 s và có thể encrypt."
+      },
+      {
+        "type": "multi",
+        "q": "Đội vận hành phân tích các mã lỗi mà client nhận từ API Gateway. Những mô tả nào ĐÚNG? (Chọn 2)",
+        "options": [
+          "403 khi request bị WAF chặn hoặc authorizer từ chối",
+          "429 khi Lambda backend trả về output sai định dạng",
+          "502 khi Lambda backend trả về output không hợp lệ",
+          "504 khi request vượt ngưỡng throttling đã cấu hình",
+          "503 khi client gửi header sai"
+        ],
+        "answer": [
+          0,
+          2
+        ],
+        "explain": "403 là Access Denied (authorizer hoặc WAF), 502 là backend trả output không hợp lệ. 429 mới là throttling và 504 là timeout 29 s, nên hai mô tả đó bị tráo nhau."
+      }
+    ],
+    "Amazon MQ": [
+      {
+        "type": "single",
+        "q": "Một công ty có nhiều ứng dụng on-premises giao tiếp qua một Apache ActiveMQ broker bằng JMS. Họ muốn đưa hệ thống messaging lên AWS với ít thay đổi code nhất. Dịch vụ nào phù hợp?",
+        "options": [
+          "Amazon SQS FIFO queue",
+          "Amazon MQ",
+          "Amazon SNS kết hợp SQS fan-out",
+          "Amazon Kinesis Data Streams"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Amazon MQ là broker managed tuân chuẩn mở (JMS, AMQP, MQTT, OpenWire, STOMP) nên migrate được mà gần như không sửa ứng dụng. SQS/SNS dùng AWS API riêng nên phải sửa code."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đã triển khai Amazon MQ trên AWS và muốn producer on-premises tiếp tục gửi message tới broker mới trong giai đoạn coexistence. Yêu cầu nào là BẮT BUỘC?",
+        "options": [
+          "Gửi message tới public endpoint của Amazon MQ qua Internet giống như SQS",
+          "Tạo gateway VPC endpoint cho Amazon MQ",
+          "Thiết lập Site-to-Site VPN hoặc Direct Connect tới VPC chứa broker",
+          "Đăng ký producer on-prem làm subscriber của một SNS topic"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Amazon MQ chạy trong VPC, không phải public service như SNS/SQS, nên cần private networking (VPN/Direct Connect). Đáp án giả định MQ có public endpoint như SQS là bẫy thường gặp."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty triển khai Amazon MQ cho môi trường production và cần khả năng chịu lỗi khi một AZ gặp sự cố. Nên chọn kiểu triển khai nào?",
+        "options": [
+          "Single-instance broker với EBS snapshot định kỳ",
+          "Hai single-instance broker ở hai region khác nhau",
+          "Single-instance broker đặt sau Network Load Balancer",
+          "Active/standby broker pair ở hai AZ dùng EFS làm shared storage"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Active/standby HA pair trải trên hai AZ, mặc định dùng EFS làm shared storage để dữ liệu được replicate giữa hai broker. Single-instance chỉ dành cho dev/test hoặc tiết kiệm chi phí."
+      },
+      {
+        "type": "single",
+        "q": "Một đội đang thiết kế ứng dụng mới trên AWS cần queue và topic, đồng thời muốn CloudWatch alarm và S3 event notification publish trực tiếp vào hệ thống messaging. Lựa chọn nào phù hợp nhất?",
+        "options": [
+          "Dùng SNS và SQS",
+          "Dùng Amazon MQ với ActiveMQ engine",
+          "Dùng Amazon MQ active/standby pair kết hợp EFS",
+          "Tự cài RabbitMQ trên EC2"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Với thiết kế mới cần tích hợp AWS native, mặc định chọn SNS/SQS vì các dịch vụ AWS được thiết kế để publish vào chúng. Amazon MQ không có kiểu tích hợp native đó, chủ yếu dùng khi migrate hệ thống có sẵn."
+      },
+      {
+        "type": "single",
+        "q": "Khi đọc đề SAA-C03, nhóm từ khóa nào gợi ý mạnh nhất rằng đáp án là Amazon MQ?",
+        "options": [
+          "Shard, partition key, rolling window",
+          "JMS, AMQP, MQTT, OpenWire, STOMP",
+          "Visibility timeout, long polling, dead-letter queue",
+          "Topic policy, fan-out, SMS subscription"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Các giao thức/API chuẩn mở JMS, AMQP, MQTT, OpenWire, STOMP (hoặc ActiveMQ/RabbitMQ) là dấu hiệu nhận diện Amazon MQ. Các nhóm còn lại lần lượt gắn với Kinesis, SQS và SNS."
+      }
+    ],
+    "AppFlow": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn đồng bộ định kỳ contact record từ Salesforce vào Amazon Redshift để phân tích, không muốn tự viết code tích hợp. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "AWS Glue",
+          "AWS DMS",
+          "Amazon AppFlow",
+          "AWS DataSync"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "AppFlow là dịch vụ tích hợp dữ liệu fully managed, có connector sẵn cho SaaS như Salesforce và đích như Redshift/S3. DMS dành cho migrate database, Glue thiên về ETL giữa các data store, không chuyên SaaS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng AppFlow để sao chép support ticket từ một ứng dụng SaaS vào S3. Bộ phận bảo mật yêu cầu dữ liệu không đi qua Internet công cộng. Cần bổ sung gì?",
+        "options": [
+          "Dùng AppFlow với AWS PrivateLink",
+          "Chuyển sang Kinesis Data Firehose với HTTP endpoint",
+          "Đặt AppFlow sau NAT Gateway",
+          "Dùng S3 Transfer Acceleration cho bucket đích"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Mặc định AppFlow dùng public endpoint, nhưng có thể dùng PrivateLink để truy cập nguồn private. NAT Gateway vẫn đi ra Internet nên không đáp ứng yêu cầu."
+      },
+      {
+        "type": "single",
+        "q": "Trong Amazon AppFlow, thành phần nào lưu cấu hình và credential để truy cập một ứng dụng, được định nghĩa tách biệt và tái sử dụng cho nhiều flow?",
+        "options": [
+          "Flow",
+          "Connector",
+          "Field mapping",
+          "Connection"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Connection lưu config + credentials và được định nghĩa tách khỏi flow để tái sử dụng. Connector là cách AppFlow nói chuyện với một loại ứng dụng, không chứa credential cụ thể."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn dùng AppFlow để lấy dữ liệu từ một ứng dụng SaaS nội bộ ít phổ biến, nhưng AppFlow không có connector sẵn cho ứng dụng này. Cách tiếp cận nào phù hợp nhất?",
+        "options": [
+          "Chuyển sang viết Glue job tùy biến gọi API của ứng dụng",
+          "Tự viết connector bằng AppFlow Custom Connector SDK",
+          "Dùng Lambda được EventBridge kích hoạt mỗi giờ để copy dữ liệu",
+          "Cài DataSync agent trên server chạy ứng dụng"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Khi thiếu connector, AppFlow cho phép tự viết bằng Custom Connector SDK, không cần đổi sang dịch vụ khác. Glue hay Lambda tự viết đều tăng công sức phát triển và vận hành."
+      },
+      {
+        "type": "single",
+        "q": "Trường hợp nào dưới đây phù hợp nhất để dùng Amazon AppFlow?",
+        "options": [
+          "Copy hàng trăm TB file từ NAS on-prem (NFS/SMB) lên S3",
+          "Đồng bộ dữ liệu từ Slack vào Redshift với field mapping và filter, không cần viết code",
+          "Migrate cơ sở dữ liệu Oracle on-prem sang Amazon RDS",
+          "Đưa click stream liên tục vào S3 theo kiểu near real-time"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "AppFlow chuyên đồng bộ dữ liệu SaaS ↔ AWS bằng flow no-code. File on-prem dùng DataSync, migrate database dùng DMS, còn dữ liệu streaming vào S3 dùng Kinesis Data Firehose."
+      }
+    ],
+    "Cognito": [
+      {
+        "type": "single",
+        "q": "Một game mobile muốn lưu high score của người chơi vào DynamoDB mà không bắt họ tạo tài khoản. Cách nào cấp quyền AWS phù hợp và an toàn nhất?",
+        "options": [
+          "Nhúng access key của một IAM user vào ứng dụng",
+          "Dùng Cognito User Pool để cấp JWT rồi ghi trực tiếp DynamoDB bằng JWT",
+          "Tạo IAM user cho mỗi người chơi khi cài ứng dụng",
+          "Dùng Cognito Identity Pool với unauthenticated identities và một IAM role giới hạn"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Identity Pool hỗ trợ guest qua unauthenticated role, đổi lấy temporary AWS credentials với quyền giới hạn. JWT của User Pool không dùng được để truy cập trực tiếp DynamoDB."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng web có hàng triệu người dùng đăng nhập bằng Google cần upload ảnh trực tiếp vào S3. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Tạo một IAM user cho mỗi người dùng và cấp access key",
+          "Dùng Cognito Identity Pool đổi token Google lấy temporary AWS credentials qua authenticated IAM role",
+          "Dùng S3 bucket policy cho phép mọi principal ghi vào bucket",
+          "Dùng Cognito User Pool và gửi JWT trực tiếp tới S3 API"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Đây là web identity federation: Identity Pool assume authenticated role và trả temporary credentials, scale gần như không giới hạn. IAM user bị giới hạn 5.000 mỗi account và không bao giờ dùng cho end user."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư đề xuất: người dùng đăng nhập Cognito User Pool, rồi ứng dụng dùng JWT nhận được để đọc trực tiếp bảng DynamoDB. Nhận định nào đúng?",
+        "options": [
+          "Không khả thi: hầu hết dịch vụ AWS cần AWS credentials, phải dùng Identity Pool để đổi JWT lấy temporary credentials",
+          "Khả thi nếu bật MFA trên User Pool",
+          "Khả thi vì DynamoDB chấp nhận JWT của User Pool natively",
+          "Không khả thi vì User Pool không hỗ trợ social sign-in"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "User Pool chỉ cho đăng nhập và cấp JWT; nó không cấp quyền truy cập dịch vụ AWS. Cần Identity Pool đổi user pool token lấy temporary AWS credentials (API Gateway là ngoại lệ nhận JWT trực tiếp)."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về Amazon Cognito là ĐÚNG? (Chọn 2)",
+        "options": [
+          "User Pool cấp trực tiếp temporary AWS credentials sau khi đăng nhập",
+          "Identity Pool yêu cầu tạo IAM user cho mỗi identity",
+          "User Pool trả về JSON Web Token (JWT) sau khi đăng nhập thành công",
+          "Guest access được cung cấp bởi User Pool thông qua unauthenticated role",
+          "Identity Pool assume IAM role thay mặt identity và trả về temporary AWS credentials"
+        ],
+        "answer": [
+          2,
+          4
+        ],
+        "explain": "User Pool = sign-in → JWT; Identity Pool = swap identity → temporary AWS credentials qua IAM role. Unauthenticated role (guest) thuộc Identity Pool, không phải User Pool."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng cần hỗ trợ đăng nhập bằng Facebook, Google, Apple và user nội bộ, sau đó truy cập S3. Đội phát triển muốn ứng dụng chỉ xử lý một loại token và giảm công cấu hình. Kiến trúc nào phù hợp nhất?",
+        "options": [
+          "Cấu hình riêng từng IdP trong Identity Pool và xử lý từng loại token trong ứng dụng",
+          "Dùng IAM Identity Center cho người dùng cuối",
+          "Dùng User Pool làm IdP trung gian cho mọi nguồn đăng nhập, rồi Identity Pool chỉ tin User Pool để cấp AWS credentials",
+          "Dùng User Pool và cấp quyền S3 cho JWT qua bucket policy"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "User Pool chuẩn hóa mọi identity về một loại token duy nhất; Identity Pool chỉ cần cấu hình một IdP là User Pool. Cấu hình từng IdP trong Identity Pool vẫn chạy được nhưng ứng dụng phải xử lý nhiều loại token."
+      }
+    ],
+    "Compare - SQS vs SNS vs Kinesis": [
+      {
+        "type": "single",
+        "q": "Khi một video được upload vào S3, công ty cần tạo đồng thời ba bản transcode (480p, 720p, 1080p), mỗi bản do một nhóm worker riêng xử lý và scale độc lập. Kiến trúc nào phù hợp nhất?",
+        "options": [
+          "S3 event notification gửi trực tiếp tới ba SQS queue",
+          "S3 event → SNS topic → ba SQS queue, mỗi queue có Auto Scaling group riêng",
+          "S3 event → một SQS queue dùng chung cho cả ba nhóm worker",
+          "S3 event → Kinesis Data Firehose → ba S3 bucket"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "SNS fan-out tới nhiều SQS queue cho phép một event kích hoạt nhiều job độc lập, mỗi queue buffer và scale riêng. Một queue dùng chung sẽ khiến mỗi message chỉ được một worker xử lý."
+      },
+      {
+        "type": "single",
+        "q": "Hàng nghìn sensor IoT gửi dữ liệu liên tục. Một ứng dụng cần phân tích mỗi giây, một ứng dụng khác tổng hợp mỗi giờ, và cần đọc lại dữ liệu của vài giờ trước khi có lỗi. Dịch vụ nào phù hợp nhất để ingest?",
+        "options": [
+          "Amazon SQS Standard",
+          "Amazon SNS",
+          "Amazon MQ",
+          "Amazon Kinesis Data Streams"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Kinesis Data Streams giữ dữ liệu trong rolling window để nhiều consumer đọc độc lập và replay. Với SQS, message được một consumer xử lý rồi xóa nên không đọc lại hay chia sẻ được."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng web nhận yêu cầu xử lý ảnh từ người dùng và muốn tách web tier khỏi worker tier để hai bên scale độc lập, worker scale theo số việc tồn đọng. Mỗi việc chỉ cần một worker xử lý. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon SQS",
+          "Amazon Kinesis Data Streams",
+          "Amazon SNS",
+          "Amazon Kinesis Data Firehose"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Worker pool, decoupling, asynchronous là từ khóa mặc định của SQS; ASG có thể scale theo độ dài queue. Kinesis dành cho ingest dữ liệu quy mô lớn với nhiều consumer."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về khả năng lưu giữ dữ liệu của SQS và Kinesis Data Streams?",
+        "options": [
+          "SQS giữ message tối đa 24 giờ; Kinesis giữ tối đa 14 ngày",
+          "Cả hai đều giữ dữ liệu sau khi consumer đọc để replay",
+          "SQS giữ message mặc định 4 ngày, tối đa 14 ngày; Kinesis có rolling window mặc định 24 giờ, tối đa 365 ngày",
+          "Kinesis xóa record ngay khi consumer đầu tiên đọc xong"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "SQS retention mặc định 4 ngày, tối đa 14 ngày và message bị xóa sau khi xử lý. Kinesis có rolling window 24 h mặc định, tối đa 365 ngày, dữ liệu vẫn nằm trong window để đọc lại."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng cần chuyển các file video khoảng 500 MB từ thành phần upload sang thành phần xử lý theo kiểu bất đồng bộ. Cách nào đúng?",
+        "options": [
+          "Gửi nguyên file trong SQS message",
+          "Chia file thành nhiều SNS message 256 KB",
+          "Ghi file thành nhiều record 1 MB vào Kinesis Data Streams",
+          "Lưu file vào S3 rồi gửi đường dẫn object qua SQS"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Payload lớn không đẩy qua SQS/SNS; lưu S3 rồi gửi link trong message. Chia nhỏ file vào SNS hay Kinesis vừa phức tạp vừa sai mục đích sử dụng."
+      }
+    ],
+    "EventBridge": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn chạy một Lambda function dọn dẹp tài nguyên vào 02:00 mỗi đêm mà không muốn quản lý server nào. Giải pháp nào đơn giản nhất?",
+        "options": [
+          "Cài cron job trên một EC2 instance nhỏ để gọi Lambda",
+          "Tạo CloudWatch alarm với ngưỡng thời gian để trigger Lambda",
+          "Tạo EventBridge schedule rule với cron expression, target là Lambda",
+          "Dùng CloudTrail trail để kích hoạt Lambda theo giờ"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "EventBridge schedule rule (cron/rate) là \"serverless cron\" thay cho cron trên EC2. CloudWatch alarm phản ứng theo metric, không phải theo lịch."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn một EC2 instance quan trọng tự động được start lại ngay khi có ai đó stop nó. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "EventBridge rule với event pattern khớp EC2 Instance State-change Notification, state = stopped, target là Lambda start lại instance",
+          "CloudWatch alarm trên metric CPUUtilization bằng 0 gửi thông báo SNS cho admin",
+          "CloudTrail ghi lại API StopInstances rồi admin start thủ công",
+          "Auto Scaling group với min = 1 dùng cho instance có sẵn"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Event pattern rule cho phép phản ứng gần real-time với thay đổi trạng thái và gọi Lambda để self-healing. CloudTrail chỉ ghi lại API call, không tự hành động."
+      },
+      {
+        "type": "single",
+        "q": "Một EventBridge schedule rule dùng cron expression `50 8 * * ? *`. Rule sẽ chạy khi nào?",
+        "options": [
+          "08:50 theo giờ địa phương của region mỗi ngày",
+          "08:50 UTC mỗi ngày",
+          "Mỗi 50 phút, bắt đầu từ 8 giờ sáng",
+          "08:50 UTC mỗi thứ Hai"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Cron của EventBridge có 6 trường (minutes, hours, day-of-month, month, day-of-week, year) và tính theo UTC. Vì vậy cần quy đổi giờ địa phương sang UTC khi đặt lịch."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn nhận event từ một ứng dụng SaaS đối tác và từ ứng dụng custom của mình, tách chúng ra các event bus riêng để định tuyến tới Lambda. Dịch vụ nào đáp ứng?",
+        "options": [
+          "CloudWatch Events với default event bus",
+          "Amazon SNS với nhiều topic",
+          "CloudWatch Logs subscription filter",
+          "Amazon EventBridge với custom và partner event bus"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "EventBridge là superset của CloudWatch Events: nhận event từ SaaS partner, ứng dụng custom và cho tạo thêm event bus. CloudWatch Events chỉ có một bus ngầm định."
+      },
+      {
+        "type": "single",
+        "q": "Một EventBridge rule được cấu hình với ba target. Khi có event khớp rule, điều gì xảy ra?",
+        "options": [
+          "Event được gửi tới target đầu tiên; các target sau chỉ nhận nếu target trước lỗi",
+          "Event được gửi lần lượt theo thứ tự cấu hình",
+          "Cả ba target nhận event song song, không đảm bảo thứ tự",
+          "Rule chỉ cho phép một target nên cấu hình bị lỗi"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Khi rule khớp, event được chuyển tới một hoặc nhiều target; nhiều target nhận song song và không có thứ tự. Không có cơ chế failover tuần tự giữa các target."
+      }
+    ],
+    "Glue": [
+      {
+        "type": "single",
+        "q": "Một công ty cần chạy các job ETL ad hoc để biến đổi dữ liệu từ RDS và S3 rồi nạp lại vào S3. Yêu cầu: serverless, không quản lý cluster, chi phí hiệu quả. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "AWS Glue",
+          "AWS Data Pipeline",
+          "Amazon EMR cluster chạy liên tục",
+          "Amazon Kinesis Data Analytics"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Glue là ETL serverless, lấy compute từ warm pool do AWS quản lý và chỉ tính phí phần dùng. Data Pipeline tạo EMR cluster trong account của bạn nên không phải serverless."
+      },
+      {
+        "type": "single",
+        "q": "Một đội phân tích có hàng nghìn file trên S3 với cấu trúc chưa rõ và muốn truy vấn bằng Amazon Athena. Cách nào nhanh nhất để có schema phục vụ truy vấn?",
+        "options": [
+          "Tạo Kinesis Data Firehose để chuyển đổi file sang Parquet",
+          "Dùng S3 Inventory để liệt kê object và tự viết DDL",
+          "Dùng Redshift COPY để nạp toàn bộ dữ liệu trước",
+          "Chạy Glue crawler để xác định schema và tạo metadata trong Glue Data Catalog"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Glue crawler kết nối nguồn, xác định schema và ghi metadata vào Data Catalog mà Athena, Redshift Spectrum, EMR dùng chung. S3 Inventory chỉ liệt kê object, không suy ra schema."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về AWS Glue Data Catalog?",
+        "options": [
+          "Mỗi bucket S3 có một data catalog riêng",
+          "Mỗi account có một data catalog duy nhất cho mỗi region",
+          "Data catalog lưu bản sao toàn bộ dữ liệu nguồn",
+          "Data catalog chỉ được dùng bởi Glue job, không dịch vụ nào khác truy cập"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Có một Glue Data Catalog cho mỗi region của mỗi account, chứa metadata bền vững chứ không chứa dữ liệu. Athena, Redshift Spectrum, EMR và Lake Formation đều dùng catalog này."
+      },
+      {
+        "type": "single",
+        "q": "Điểm khác biệt chính giữa AWS Glue và AWS Data Pipeline theo khóa học là gì?",
+        "options": [
+          "Glue chỉ hỗ trợ dữ liệu streaming, Data Pipeline chỉ hỗ trợ batch",
+          "Data Pipeline có Data Catalog, Glue thì không",
+          "Glue dùng compute serverless do AWS quản lý, còn Data Pipeline tạo EMR cluster trong account của bạn",
+          "Glue chạy trên EC2 instance bạn tự quản lý"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Glue lấy tài nguyên từ warm resource pool của AWS và trả tiền theo dùng; Data Pipeline chạy task bằng EMR cluster trong account. Data Catalog là tính năng của Glue, không phải Data Pipeline."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần chạy job ETL hàng đêm biến đổi dữ liệu trên S3 và RDS, đồng thời chạy lại job mỗi khi có sự kiện cụ thể, không quản lý server. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Kinesis Data Firehose với Lambda transformation",
+          "Glue job được kích hoạt bởi EventBridge (schedule hoặc event)",
+          "Kinesis Data Analytics chạy SQL liên tục",
+          "Cron job trên EC2 chạy script Python"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Glue job có thể chạy thủ công, theo lịch hoặc theo event qua EventBridge. Firehose chỉ biến đổi nhẹ rồi deliver dữ liệu streaming, còn KDA dành cho xử lý real-time."
+      }
+    ],
+    "Kinesis Data Analytics": [
+      {
+        "type": "single",
+        "q": "Một công ty game muốn xây leaderboard real-time: tính điểm từ luồng sự kiện trong Kinesis Data Streams bằng truy vấn SQL phức tạp và bổ sung tên người chơi lưu trong một file CSV trên S3. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Kinesis Data Firehose với Lambda transformation ghi vào S3",
+          "Glue job theo lịch mỗi 5 phút",
+          "Kinesis Data Analytics với S3 reference data",
+          "Athena truy vấn dữ liệu trên S3"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "KDA chạy SQL liên tục trên stream real-time và dùng reference table từ S3 để làm giàu dữ liệu. Firehose là near real-time và Lambda chỉ hợp biến đổi đơn giản."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng Kinesis Data Analytics phải đưa kết quả tới consumer downstream mà vẫn giữ được tính real-time end-to-end. Nên chọn output nào?",
+        "options": [
+          "Kinesis Data Firehose ghi vào S3",
+          "Kinesis Data Firehose ghi vào Redshift",
+          "Kinesis Data Firehose ghi vào OpenSearch",
+          "Kinesis Data Streams"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Output ra Kinesis Data Streams hoặc Lambda giữ được real-time. Mọi đích đi qua Firehose đều trở thành near real-time do cơ chế buffer."
+      },
+      {
+        "type": "multi",
+        "q": "Kinesis Data Analytics có thể đọc dữ liệu streaming input từ nguồn nào? (Chọn 2)",
+        "options": [
+          "Kinesis Data Streams",
+          "Amazon SQS",
+          "Amazon S3 (làm nguồn streaming chính)",
+          "Kinesis Data Firehose",
+          "Amazon DynamoDB"
+        ],
+        "answer": [
+          0,
+          3
+        ],
+        "explain": "Source của KDA là Kinesis Data Streams hoặc Kinesis Firehose. S3 chỉ dùng làm reference data để làm giàu, không phải nguồn streaming."
+      },
+      {
+        "type": "single",
+        "q": "Trong một ứng dụng Kinesis Data Analytics, reference table dùng để làm gì?",
+        "options": [
+          "Lưu các lỗi phát sinh khi chạy SQL",
+          "Ánh xạ dữ liệu tĩnh trên S3 để làm giàu dữ liệu stream trong truy vấn SQL",
+          "Lưu bản sao dữ liệu nguồn để replay",
+          "Map kết quả ra Kinesis stream bên ngoài"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Reference table ánh xạ dữ liệu S3 (CSV/JSON) để SQL kết hợp với input stream, ví dụ bổ sung tên người chơi. Lỗi SQL nằm ở in-application error stream."
+      },
+      {
+        "type": "single",
+        "q": "Đội security cần metric real-time từ luồng log để phát hiện bất thường, đòi hỏi phép tổng hợp và biến đổi phức tạp bằng SQL. Một kỹ sư đề xuất Firehose + Lambda transformation. Lựa chọn nào phù hợp hơn?",
+        "options": [
+          "Kinesis Data Analytics, vì cho phép SQL phức tạp và xử lý real-time",
+          "Giữ Firehose + Lambda, vì đây là real-time",
+          "AWS Glue job chạy mỗi giờ",
+          "Amazon SQS với long polling"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "KDA xử lý real-time và hỗ trợ SQL phức tạp; real-time metrics cho security & incident response là use case trong bài. Firehose là near real-time và Lambda trong Firehose chỉ hợp biến đổi đơn giản."
+      }
+    ],
+    "Kinesis Data Firehose": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn đưa log ứng dụng streaming vào S3 để phân tích sau, chấp nhận độ trễ khoảng một phút, và muốn ít vận hành nhất (không quản lý shard hay consumer). Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Kinesis Data Streams kèm consumer trên EC2 ghi vào S3",
+          "Kinesis Data Firehose",
+          "Amazon SQS kèm worker ghi vào S3",
+          "Amazon MQ"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Firehose là fully managed, serverless, tự scale và giao dữ liệu tới S3 mà không cần viết code. KDS + consumer tự viết cũng làm được nhưng phải quản lý shard và consumer."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng yêu cầu dữ liệu clickstream xuất hiện trong OpenSearch gần như tức thời (dưới 1 giây). Một kỹ sư đề xuất dùng Kinesis Data Firehose. Giải pháp nào đúng hơn?",
+        "options": [
+          "Firehose với buffer 1 MB",
+          "Firehose với Lambda transformation",
+          "Ghi trực tiếp vào S3 rồi để OpenSearch đọc",
+          "Kinesis Data Streams với Lambda consumer ghi vào OpenSearch"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Firehose là near real-time (khoảng 60 s) nên không đáp ứng yêu cầu real-time. Kinesis Data Streams (~200 ms) kết hợp Lambda tự giao tới đích giữ được real-time."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, Kinesis Data Firehose giao dữ liệu tới đích theo cơ chế buffer nào?",
+        "options": [
+          "Khi đủ 1 MB hoặc sau 60 giây, tùy điều kiện nào tới trước",
+          "Ngay lập tức từng record (~200 ms)",
+          "Khi đủ 5 MB hoặc sau 15 phút",
+          "Chỉ khi consumer gọi API để lấy dữ liệu"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Firehose nhận dữ liệu real-time nhưng giao theo buffer 1 MB hoặc 60 s, nên là near real-time. ~200 ms là mức real-time của Kinesis Data Streams."
+      },
+      {
+        "type": "single",
+        "q": "Khi Kinesis Data Firehose giao dữ liệu vào Amazon Redshift, cơ chế thực tế là gì?",
+        "options": [
+          "Firehose ghi trực tiếp từng record vào bảng Redshift qua JDBC",
+          "Firehose gọi Glue job để nạp dữ liệu",
+          "Firehose ghi vào S3 trung gian rồi chạy lệnh Redshift COPY",
+          "Firehose dùng DMS để replicate vào Redshift"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Redshift là ngoại lệ trong danh sách đích: Firehose ghi vào S3 trung gian rồi chạy COPY, toàn bộ do Firehose lo end-to-end."
+      },
+      {
+        "type": "multi",
+        "q": "Những đích nào Kinesis Data Firehose có thể giao dữ liệu trực tiếp? (Chọn 2)",
+        "options": [
+          "Amazon DynamoDB",
+          "Amazon S3",
+          "Amazon RDS",
+          "Amazon SQS",
+          "Splunk"
+        ],
+        "answer": [
+          1,
+          4
+        ],
+        "explain": "Đích của Firehose gồm S3, Redshift, OpenSearch/Elasticsearch, Splunk và HTTP endpoint. Firehose không giao trực tiếp vào DynamoDB, RDS hay SQS."
+      }
+    ],
+    "Kinesis Data Streams": [
+      {
+        "type": "single",
+        "q": "Một trang thương mại điện tử thu thập clickstream từ hàng triệu phiên người dùng. Nhiều ứng dụng (dashboard real-time, hệ thống gợi ý, phát hiện gian lận) cần đọc cùng dữ liệu độc lập và có thể đọc lại trong 24 giờ. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon SQS FIFO",
+          "Amazon SNS",
+          "Amazon Kinesis Data Streams",
+          "Amazon Kinesis Data Firehose"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "KDS ingest dữ liệu quy mô lớn, giữ trong rolling window để nhiều consumer đọc độc lập ở tốc độ khác nhau và replay. Firehose chỉ giao dữ liệu tới đích, không cho nhiều consumer đọc lại."
+      },
+      {
+        "type": "single",
+        "q": "Producer ghi vào một Kinesis data stream đang bị throttle vì vượt throughput ghi. Cách khắc phục phù hợp nhất là gì?",
+        "options": [
+          "Tăng số shard của stream",
+          "Tăng retention lên 365 ngày",
+          "Thêm consumer Lambda",
+          "Chuyển stream sang SQS FIFO"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Mỗi shard chỉ nhận 1 MB/s (1.000 record/s); throughput scale tuyến tính theo số shard. Tăng retention hay thêm consumer không tăng khả năng ghi."
+      },
+      {
+        "type": "single",
+        "q": "Mỗi shard của Kinesis Data Streams (provisioned) cung cấp throughput bao nhiêu?",
+        "options": [
+          "2 MB/s ingest và 1 MB/s consume",
+          "1 MB/s ingest và 1 MB/s consume",
+          "10 MB/s ingest và 20 MB/s consume",
+          "1 MB/s ingest (1.000 record/s) và 2 MB/s consume"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Mỗi shard: 1 MB/s và 1.000 record/s cho ghi, 2 MB/s cho đọc. Phương án đầu đảo ngược hai con số, là lỗi nhầm phổ biến."
+      },
+      {
+        "type": "single",
+        "q": "Thời gian lưu giữ dữ liệu (rolling window) của Kinesis Data Streams là bao nhiêu?",
+        "options": [
+          "Mặc định 4 ngày, tối đa 14 ngày",
+          "Mặc định 24 giờ, tối đa 365 ngày (thêm phí)",
+          "Mặc định 7 ngày, tối đa 90 ngày",
+          "Không lưu; record bị xóa ngay khi được đọc"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "KDS giữ dữ liệu mặc định 24 giờ, có thể tăng tới 365 ngày với chi phí cao hơn. 4 ngày/14 ngày là retention của SQS."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng Kinesis Data Streams và muốn lưu toàn bộ dữ liệu lâu dài sau rolling window để phân tích bằng Athena, với ít vận hành nhất. Nên làm gì?",
+        "options": [
+          "Tăng retention lên 365 ngày và query trực tiếp stream bằng Athena",
+          "Viết consumer trên EC2 ghi từng record vào EBS",
+          "Gắn Kinesis Data Firehose làm consumer của stream và giao dữ liệu vào S3",
+          "Dùng SQS dead-letter queue để giữ record cũ"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Firehose có thể đọc từ Kinesis data stream và giao dữ liệu vào S3 để tồn tại sau window, rồi phân tích bằng Athena/EMR/Redshift. Athena không truy vấn trực tiếp Kinesis stream."
+      }
+    ],
+    "Kinesis Video Streams": [
+      {
+        "type": "single",
+        "q": "Một công ty an ninh muốn phân tích live video từ camera để nhận diện khuôn mặt lạ và gửi cảnh báo, không muốn đặt phần cứng xử lý video tại chỗ. Kiến trúc nào phù hợp nhất?",
+        "options": [
+          "Kinesis Video Streams + Rekognition Video, kết quả vào Kinesis Data Stream → Lambda → SNS",
+          "Camera upload clip lên S3, Lambda gọi Rekognition Image theo S3 event",
+          "Kinesis Data Firehose nhận video và giao tới OpenSearch",
+          "Camera gửi frame qua SQS cho worker EC2 chạy model tự viết"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "KVS ingest video live và tích hợp Rekognition Video để nhận diện khuôn mặt; kết quả ra Kinesis Data Stream để Lambda xử lý và SNS cảnh báo. Phương án S3 + upload clip không phân tích được luồng live."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư muốn mở trực tiếp các file video gốc mà Kinesis Video Streams đã ingest để xử lý bằng công cụ của mình. Nhận định nào đúng?",
+        "options": [
+          "Video được lưu dạng file gốc trong S3 bucket của account",
+          "Video nằm trên EBS volume gắn với stream",
+          "Video được lưu trên EFS file system dùng chung",
+          "Dữ liệu được index và lưu có cấu trúc bên trong KVS, chỉ truy cập qua API của KVS"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "KVS không lưu dữ liệu ở định dạng gốc mà index bên trong dịch vụ; mọi truy cập phải qua API của KVS. Đáp án nói truy cập trực tiếp trên S3/EBS/EFS là bẫy."
+      },
+      {
+        "type": "single",
+        "q": "Đề bài nhắc tới camera IP phát luồng qua RTSP và thư viện GStreamer cần đưa vào AWS để phân tích. Dịch vụ nào được gợi ý?",
+        "options": [
+          "Amazon Kinesis Data Streams",
+          "Amazon Kinesis Video Streams",
+          "AWS Elemental MediaConvert",
+          "Amazon Kinesis Data Firehose"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Từ khóa RTSP và GStreamer gắn với Kinesis Video Streams. Kinesis Data Streams xử lý data record, không phải luồng media."
+      },
+      {
+        "type": "single",
+        "q": "Ngoài video, Kinesis Video Streams có thể ingest loại dữ liệu nào?",
+        "options": [
+          "Bản ghi giao dịch database dạng CDC",
+          "File log dạng văn bản từ CloudWatch Logs",
+          "Dữ liệu time-serialized như audio, ảnh nhiệt (thermal), depth, radar",
+          "Object bất kỳ từ S3 bucket"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "KVS nhận cả dữ liệu không phải video nhưng có tính chuỗi thời gian: audio, thermal, depth, radar. Log văn bản thuộc về Kinesis Data Streams/Firehose."
+      },
+      {
+        "type": "single",
+        "q": "Trong kiến trúc nhận diện khuôn mặt với Kinesis Video Streams và Rekognition Video, Rekognition ghi kết quả phân tích (detected/matched faces) vào đâu để Lambda xử lý từng record?",
+        "options": [
+          "Một S3 bucket",
+          "Một SQS queue",
+          "Một DynamoDB table",
+          "Một Kinesis Data Stream"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Rekognition Video ghi kết quả vào Kinesis Data Stream, Lambda được invoke từ các record đó và dùng SNS để gửi thông báo khi gặp người lạ."
+      }
+    ],
+    "Lab - Serverless App Pet-Cuddle-o-Tron": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng serverless cần: chờ một khoảng thời gian do người dùng chọn (có thể vài ngày), sau đó tùy lựa chọn mà gửi email, SMS hoặc cả hai song song. Thành phần điều phối nào phù hợp nhất?",
+        "options": [
+          "Một Lambda function dùng sleep rồi gửi thông báo",
+          "Step Functions Standard state machine dùng Wait, Choice và Parallel state",
+          "SQS delay queue với delay bằng thời gian chờ",
+          "Chuỗi Lambda gọi lẫn nhau, mỗi function chờ 15 phút"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Step Functions Standard có thể chờ tới 1 năm bằng Wait state mà không tốn compute, có Choice để rẽ nhánh và Parallel để chạy song song. Lambda bị giới hạn 15 phút và SQS delay tối đa 15 phút."
+      },
+      {
+        "type": "single",
+        "q": "Một front-end tĩnh host trên S3 static website dùng JavaScript gọi API Gateway ở một domain khác. Trình duyệt chặn request vì lỗi cross-origin. Cần làm gì?",
+        "options": [
+          "Bật Lambda proxy integration trên method",
+          "Đổi endpoint type từ Regional sang Edge-optimized",
+          "Tắt Block Public Access trên bucket",
+          "Bật CORS trên resource của API Gateway"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Front-end tĩnh gọi API qua JavaScript từ domain khác nên cần CORS trên resource API Gateway. Endpoint type hay Block Public Access không liên quan tới chính sách cross-origin của trình duyệt."
+      },
+      {
+        "type": "single",
+        "q": "Trong một state machine Step Functions, nhánh gửi SMS cần được triển khai với ít code và chi phí nhất. Cách nào phù hợp?",
+        "options": [
+          "Dùng service integration trực tiếp để state machine publish vào SNS",
+          "Tạo Lambda function gọi SNS Publish rồi để state machine invoke Lambda",
+          "Tạo Lambda function gọi SES để gửi SMS",
+          "Đưa message vào SQS để một EC2 worker gửi SMS"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "State machine gọi SNS trực tiếp qua service integration, không cần Lambda làm \"keo dán\", nên ít code và chi phí hơn. SES là dịch vụ email, không gửi SMS."
+      },
+      {
+        "type": "single",
+        "q": "Thời gian chạy tối đa của các loại workflow Step Functions theo khóa học là bao nhiêu?",
+        "options": [
+          "Standard tối đa 15 phút, Express tối đa 1 năm",
+          "Cả hai đều tối đa 24 giờ",
+          "Standard tối đa 1 năm, Express tối đa 5 phút",
+          "Standard tối đa 90 ngày, Express tối đa 1 giờ"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Standard workflow chạy tối đa 1 năm, phù hợp quy trình có chờ dài; Express tối đa 5 phút cho workload tần suất cao. 15 phút là timeout của Lambda."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào đúng về kiến trúc ứng dụng Pet-Cuddle-o-Tron? (Chọn 2)",
+        "options": [
+          "State machine dùng kiểu Express vì cần chờ hàng ngày",
+          "Email được gửi qua SES, còn SMS được gửi qua SNS",
+          "Front-end chạy trên một EC2 web server sau ALB",
+          "API Gateway được phép invoke Lambda nhờ resource policy của Lambda function",
+          "Lambda function gửi SMS thông qua SES"
+        ],
+        "answer": [
+          1,
+          3
+        ],
+        "explain": "Email ứng dụng đi qua SES, SMS/push đi qua SNS; API Gateway gọi được Lambda nhờ resource policy được console tự thêm. Workflow chờ lâu cần Standard, không phải Express."
+      }
+    ],
+    "Lambda": [
+      {
+        "type": "single",
+        "q": "Một công ty cần xử lý mỗi video được upload lên S3; mỗi lần xử lý mất khoảng 40 phút. Họ muốn giải pháp event-driven, không quản lý server. Compute nào phù hợp nhất?",
+        "options": [
+          "Lambda function với memory 10,240 MB",
+          "Lambda function với timeout cấu hình 60 phút",
+          "ECS task trên Fargate được kích hoạt theo sự kiện upload",
+          "Lambda function với provisioned concurrency"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Lambda có timeout tối đa 900 giây (15 phút), tăng memory hay provisioned concurrency không thay đổi giới hạn này. Job dài hơn nên chạy trên compute khác như ECS/Fargate, Batch hoặc ghép bằng Step Functions."
+      },
+      {
+        "type": "single",
+        "q": "Một Lambda function được gắn vào private subnet để truy cập Aurora. Function cũng cần gọi một API bên ngoài trên Internet nhưng các request bị timeout. Giải pháp nào đúng?",
+        "options": [
+          "Gán Elastic IP trực tiếp cho Lambda function",
+          "Tạo gateway VPC endpoint cho API bên ngoài",
+          "Chuyển Lambda về chế độ public mặc định",
+          "Thêm NAT Gateway ở public subnet và route 0.0.0.0/0 từ private subnet tới NAT Gateway"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Lambda trong VPC tuân theo luật mạng của VPC và mặc định không ra Internet; cần NAT Gateway + Internet Gateway. Chuyển về public mode sẽ mất khả năng truy cập Aurora trong private subnet."
+      },
+      {
+        "type": "single",
+        "q": "Một Lambda function được invoke nhưng log group `/aws/lambda/<tên function>` trong CloudWatch Logs hoàn toàn trống. Nguyên nhân khả dĩ nhất là gì?",
+        "options": [
+          "Function đang ở chế độ public networking",
+          "Execution role thiếu quyền ghi CloudWatch Logs",
+          "Resource policy của function không cho phép CloudWatch invoke",
+          "Function chưa bật X-Ray tracing"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Muốn ghi log, execution role phải có quyền CloudWatch Logs (vd. AWSLambdaBasicExecutionRole). Resource policy kiểm soát ai được gọi function, không liên quan tới việc ghi log."
+      },
+      {
+        "type": "single",
+        "q": "Một Lambda function đọc dữ liệu từ Kinesis Data Stream qua event source mapping và gặp lỗi access denied khi đọc stream. Cần sửa ở đâu?",
+        "options": [
+          "Thêm quyền đọc Kinesis vào execution role của function",
+          "Thêm resource policy cho phép kinesis.amazonaws.com invoke function",
+          "Thêm stream policy cho phép Lambda service ghi vào stream",
+          "Tăng batch size của event source mapping"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Event source mapping đọc nguồn bằng quyền của execution role, nên role phải có quyền Kinesis dù code không gọi trực tiếp. Resource policy chỉ cần cho kiểu async, khi dịch vụ đẩy event tới Lambda."
+      },
+      {
+        "type": "multi",
+        "q": "Một API dùng Lambda gặp latency cao do cold start trong các đợt tải cao đã biết trước. Những biện pháp nào giúp giảm vấn đề này? (Chọn 2)",
+        "options": [
+          "Bật provisioned concurrency trước các đợt tải cao",
+          "Tăng timeout của function lên 15 phút",
+          "Gắn function vào VPC để có ENI riêng",
+          "Khởi tạo database connection bên ngoài function handler để tái sử dụng trong cùng execution context",
+          "Trỏ ứng dụng vào $LATEST thay vì alias"
+        ],
+        "answer": [
+          0,
+          3
+        ],
+        "explain": "Provisioned concurrency giữ ấm sẵn execution context; khai báo connection ngoài handler giúp warm start tái sử dụng. Timeout, VPC hay $LATEST không giảm cold start."
+      }
+    ],
+    "SNS": [
+      {
+        "type": "single",
+        "q": "Đội vận hành muốn nhận email mỗi khi một CloudWatch alarm đổi trạng thái hoặc Auto Scaling group có scaling event. Giải pháp nào đơn giản nhất?",
+        "options": [
+          "Tạo SQS queue và để admin poll message",
+          "Ghi log vào CloudWatch Logs rồi tạo metric filter",
+          "Tạo SNS topic có email subscription và cấu hình alarm/ASG publish vào topic",
+          "Dùng Kinesis Data Streams để thu thập event"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "CloudWatch alarm, ASG, CloudFormation đều publish thông báo vào SNS, và SNS push tới email subscriber. SQS là pull nên admin phải tự poll."
+      },
+      {
+        "type": "single",
+        "q": "Một dịch vụ đơn hàng publish mọi sự kiện vào một SNS topic. Dịch vụ vận chuyển quốc tế chỉ muốn nhận các đơn có thuộc tính `type = international`. Cách nào ít công sức nhất?",
+        "options": [
+          "Gắn subscription filter policy cho subscriber của dịch vụ vận chuyển quốc tế",
+          "Tạo một SNS topic riêng cho mỗi loại đơn hàng",
+          "Để dịch vụ vận chuyển nhận tất cả rồi tự lọc trong code",
+          "Thay SNS bằng Kinesis Data Streams và đọc theo shard"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Subscription filter policy cho phép subscriber chỉ nhận message liên quan mà không cần tạo nhiều topic. Tự lọc trong code vẫn làm được nhưng tốn tài nguyên và công xử lý."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trong account B cần publish message vào SNS topic thuộc account A. Cấu hình nào cho phép điều này?",
+        "options": [
+          "Tạo VPC peering giữa hai account",
+          "Gắn IAM role của account A trực tiếp vào ứng dụng ở account B mà không cần trust",
+          "Bật server-side encryption cho topic",
+          "Thêm topic policy (resource policy) trên topic cho phép principal của account B"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Topic policy là resource policy giống bucket policy, quy định identity nào (kể cả cross-account) được truy cập topic. SNS là public service nên VPC peering không liên quan."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về Amazon SNS?",
+        "options": [
+          "SNS chạy trong VPC của khách hàng và cần NAT Gateway để gửi message ra ngoài",
+          "SNS là public AWS service, regionally resilient, đẩy (push) message tới subscriber",
+          "SNS lưu message tới 14 ngày để subscriber poll sau",
+          "SNS phù hợp để truyền file nhị phân dung lượng lớn"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "SNS là public service, replicate trong region, push message tới subscriber và có delivery retries. Lưu message để poll là đặc điểm của SQS; message SNS tối đa 256 KB nên không dành cho file lớn."
+      },
+      {
+        "type": "multi",
+        "q": "Loại endpoint nào có thể subscribe vào một SNS topic? (Chọn 2)",
+        "options": [
+          "EBS volume",
+          "Amazon MQ broker queue",
+          "SQS queue",
+          "Kinesis Video Stream",
+          "Lambda function"
+        ],
+        "answer": [
+          2,
+          4
+        ],
+        "explain": "Subscriber của SNS gồm HTTP/HTTPS, email, SQS queue, Lambda function, SMS và mobile push. Amazon MQ không có tích hợp native kiểu này với SNS."
+      }
+    ],
+    "SQS Dead Letter Queues": [
+      {
+        "type": "single",
+        "q": "Một vài message bị lỗi định dạng trong SQS queue khiến consumer xử lý thất bại; chúng liên tục xuất hiện lại sau visibility timeout và chiếm tài nguyên worker. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Tăng visibility timeout lên 12 giờ",
+          "Cấu hình dead-letter queue với redrive policy và maxReceiveCount phù hợp",
+          "Chuyển queue sang delay queue 15 phút",
+          "Bật long polling với WaitTimeSeconds = 20"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Redrive policy chuyển message sang DLQ khi ReceiveCount vượt maxReceiveCount, chặn vòng lặp vô hạn và cô lập message lỗi. Tăng visibility timeout chỉ làm chậm vòng lặp chứ không loại bỏ nó."
+      },
+      {
+        "type": "single",
+        "q": "Message trong source queue được chuyển sang dead-letter queue khi nào?",
+        "options": [
+          "Ngay khi consumer xử lý thất bại lần đầu",
+          "Khi message hết retention period của source queue",
+          "Khi visibility timeout được đặt bằng 0",
+          "Khi ReceiveCount vượt maxReceiveCount và message vẫn chưa bị xóa"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Mỗi lần nhận, ReceiveCount tăng 1; khi vượt maxReceiveCount trong redrive policy mà message chưa bị xóa thì nó được chuyển sang DLQ. Message hết retention sẽ bị xóa, không chuyển sang DLQ."
+      },
+      {
+        "type": "single",
+        "q": "Source queue có retention 4 ngày và DLQ cũng có retention 4 ngày. Đội vận hành thấy nhiều message biến mất khỏi DLQ trước khi kịp phân tích. Nguyên nhân và cách khắc phục là gì?",
+        "options": [
+          "Enqueue timestamp được giữ nguyên khi chuyển sang DLQ; cần đặt retention của DLQ dài hơn source queue",
+          "DLQ tự xóa message sau khi alarm kích hoạt; cần tắt alarm",
+          "maxReceiveCount quá cao; cần giảm xuống 1",
+          "DLQ phải là FIFO queue để giữ message lâu hơn"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Khi chuyển sang DLQ, enqueue timestamp không reset, nên thời gian đã ở source queue bị tính vào retention của DLQ. Vì vậy retention DLQ nên dài hơn source queue (tối đa 14 ngày)."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về dead-letter queue trong SQS?",
+        "options": [
+          "Mỗi source queue bắt buộc phải có một DLQ riêng",
+          "Standard queue có thể dùng FIFO queue làm DLQ",
+          "Một DLQ có thể phục vụ nhiều source queue, nhưng phải cùng loại (FIFO hoặc Standard) với source",
+          "Redrive policy được cấu hình trên DLQ để chỉ định source queue"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Một DLQ phục vụ được nhiều source queue, và loại DLQ phải khớp với source (FIFO dùng FIFO, Standard dùng Standard). Redrive policy cấu hình trên source queue."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn được cảnh báo ngay khi có message xử lý thất bại bị chuyển vào dead-letter queue. Cách nào phù hợp nhất?",
+        "options": [
+          "Bật CloudTrail để ghi lại API DeleteMessage",
+          "Tạo CloudWatch alarm theo số message trong DLQ và gửi thông báo qua SNS",
+          "Tạo AWS Config rule kiểm tra cấu hình queue",
+          "Bật X-Ray tracing cho consumer"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Một lợi ích của DLQ là đặt CloudWatch alarm theo độ dài DLQ để biết sớm có message lỗi. CloudTrail chỉ ghi API call, không theo dõi số message trong queue."
+      }
+    ],
+    "SQS Delay Queues": [
+      {
+        "type": "single",
+        "q": "Một hệ thống đặt hàng muốn mọi đơn hàng mới chỉ được xử lý sau 10 phút kể từ khi vào queue, để khách có thời gian hủy. Giải pháp đơn giản nhất là gì?",
+        "options": [
+          "Đặt visibility timeout của queue là 10 phút",
+          "Bật long polling với WaitTimeSeconds = 600",
+          "Cấu hình queue làm delay queue với DelaySeconds = 600",
+          "Cấu hình redrive policy với maxReceiveCount = 10"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Delay queue làm message mới vô hình trong DelaySeconds (tối đa 15 phút) trước khi consumer thấy được. Visibility timeout chỉ ẩn message sau khi đã được nhận, phục vụ retry."
+      },
+      {
+        "type": "single",
+        "q": "Một worker nhận message từ SQS rồi bị crash trước khi xử lý xong. Cơ chế nào đảm bảo message xuất hiện lại để worker khác xử lý?",
+        "options": [
+          "Visibility timeout",
+          "Delay queue",
+          "Message timer",
+          "Long polling"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Message chỉ bị ẩn trong visibility timeout sau khi nhận; không bị DeleteMessage thì hết timeout nó hiện lại để xử lý lại. Delay queue/message timer trì hoãn message ngay khi được thêm vào, không phục vụ retry."
+      },
+      {
+        "type": "single",
+        "q": "Giá trị tối đa của DelaySeconds (delay queue) và của visibility timeout trong SQS lần lượt là bao nhiêu?",
+        "options": [
+          "15 phút và 15 phút",
+          "12 giờ và 15 phút",
+          "20 giây và 12 giờ",
+          "15 phút và 12 giờ"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Delay queue/message timer có khoảng 0–15 phút; visibility timeout có khoảng 0 s–12 h (mặc định 30 s). 20 giây là giới hạn của long polling."
+      },
+      {
+        "type": "single",
+        "q": "Một đội dùng SQS FIFO queue và muốn đặt thời gian trì hoãn khác nhau cho từng message bằng message timer. Nhận định nào đúng?",
+        "options": [
+          "Message timer hoạt động bình thường trên FIFO queue",
+          "Message timer không được hỗ trợ trên FIFO queue; FIFO chỉ dùng delay ở mức queue",
+          "Phải bật content-based deduplication thì message timer mới hoạt động",
+          "Message timer trên FIFO cho phép delay tới 12 giờ"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Per-message delay (message timer) không chạy trên FIFO; FIFO chỉ hỗ trợ delay ở mức queue. Nếu cần delay riêng từng message thì dùng Standard queue."
+      },
+      {
+        "type": "single",
+        "q": "Một quy trình cần chờ 2 giờ sau khi khách đăng ký rồi mới gửi email chào mừng, không muốn quản lý server. Giải pháp nào phù hợp?",
+        "options": [
+          "SQS delay queue với DelaySeconds = 7200",
+          "SQS message timer 2 giờ",
+          "Step Functions với Wait state 2 giờ rồi gọi task gửi email",
+          "Đặt visibility timeout 2 giờ cho message"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Delay queue và message timer tối đa 15 phút nên không đáp ứng 2 giờ; chờ dài nên dùng Step Functions Wait state (hoặc lập lịch EventBridge). Visibility timeout không phải cơ chế trì hoãn có chủ đích."
+      }
+    ],
+    "SQS Standard vs FIFO": [
+      {
+        "type": "single",
+        "q": "Một hệ thống xử lý lệnh chứng khoán cần các lệnh của cùng khách hàng được xử lý đúng thứ tự gửi và không bao giờ bị xử lý trùng. Lưu lượng khoảng 200 message/giây. Loại queue nào phù hợp?",
+        "options": [
+          "SQS Standard queue",
+          "SQS FIFO queue",
+          "SNS topic với nhiều SQS Standard queue",
+          "SQS Standard queue với delay queue"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "FIFO giữ thứ tự nghiêm ngặt và exactly-once processing, 200 msg/s nằm trong giới hạn 300 TPS. Standard chỉ best-effort ordering và at-least-once nên có thể trùng hoặc lệch thứ tự."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng thu thập sự kiện cần xử lý hàng chục nghìn message mỗi giây qua queue, thứ tự không quan trọng và consumer đã được viết idempotent. Lựa chọn nào phù hợp nhất?",
+        "options": [
+          "SQS FIFO queue không batching",
+          "SQS FIFO queue với batching",
+          "Amazon MQ single-instance broker",
+          "SQS Standard queue"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Standard queue có throughput gần như không giới hạn; consumer idempotent xử lý được trường hợp trùng do at-least-once. FIFO chuẩn chỉ đạt 300 TPS hoặc 3.000 msg/s với batching."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty đang dùng SQS Standard queue và muốn chuyển sang FIFO để giữ thứ tự. Cách làm đúng là gì?",
+        "options": [
+          "Tạo queue mới loại FIFO có tên kết thúc bằng hậu tố .fifo và chuyển producer/consumer sang",
+          "Đổi thuộc tính QueueType của queue hiện có sang FIFO",
+          "Bật content-based deduplication trên queue Standard hiện có",
+          "Đổi tên queue hiện có, thêm hậu tố .fifo"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Không thể chuyển loại queue tại chỗ; phải tạo queue FIFO mới có tên bắt buộc kết thúc bằng .fifo. Đáp án \"đổi setting\" là bẫy được nhắc trong đề."
+      },
+      {
+        "type": "single",
+        "q": "Throughput chuẩn của SQS FIFO queue theo khóa học là bao nhiêu?",
+        "options": [
+          "Gần như không giới hạn",
+          "1.000 TPS, 10.000 message/s với batching",
+          "300 TPS, 3.000 message/s với batching",
+          "100 TPS, 1.000 message/s với batching"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "FIFO đạt 300 transaction/giây tới SQS API; mỗi batch tối đa 10 message nên được 3.000 message/s. Throughput gần như không giới hạn là của Standard."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào đúng về SQS Standard queue? (Chọn 2)",
+        "options": [
+          "Đảm bảo exactly-once processing",
+          "Có thể giao một message nhiều hơn một lần (at-least-once)",
+          "Tên queue bắt buộc có hậu tố .fifo",
+          "Throughput giới hạn 300 TPS",
+          "Thứ tự message chỉ là best-effort"
+        ],
+        "answer": [
+          1,
+          4
+        ],
+        "explain": "Standard là at-least-once (có thể trùng) với best-effort ordering và throughput gần như không giới hạn. Exactly-once, hậu tố .fifo và 300 TPS là đặc điểm của FIFO."
+      }
+    ],
+    "SQS": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng poll SQS liên tục để giữ độ trễ thấp, nhưng phần lớn ReceiveMessage trả về rỗng và hóa đơn SQS tăng cao. Cách nào giảm chi phí hiệu quả nhất?",
+        "options": [
+          "Chuyển queue sang FIFO",
+          "Giảm visibility timeout xuống 0",
+          "Tăng retention lên 14 ngày",
+          "Bật long polling bằng cách đặt WaitTimeSeconds tối đa 20 giây"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "SQS tính phí theo request, kể cả request rỗng; long polling cho request chờ tới khi có message hoặc hết WaitTimeSeconds (tối đa 20 s), giảm số request. Đổi sang FIFO không giảm số lần poll."
+      },
+      {
+        "type": "single",
+        "q": "Consumer cần khoảng 2 phút để xử lý mỗi message, nhưng queue dùng visibility timeout mặc định. Đội vận hành thấy nhiều message bị xử lý hai lần. Nguyên nhân và cách khắc phục là gì?",
+        "options": [
+          "Queue là Standard; phải chuyển sang FIFO",
+          "Visibility timeout mặc định 30 giây ngắn hơn thời gian xử lý; tăng visibility timeout hoặc dùng ChangeMessageVisibility",
+          "Long polling chưa bật; đặt WaitTimeSeconds = 20",
+          "Retention quá ngắn; tăng lên 14 ngày"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Message hiện lại sau 30 s trong khi consumer đầu tiên vẫn đang xử lý, nên worker khác nhận lại. Cần tăng visibility timeout vượt thời gian xử lý (tối đa 12 h)."
+      },
+      {
+        "type": "single",
+        "q": "Một worker tier chạy EC2 trong Auto Scaling group xử lý job từ SQS. Công ty muốn số instance tăng khi backlog lớn và giảm (thậm chí về 0) khi không có việc. Nên scale theo metric nào?",
+        "options": [
+          "ApproximateNumberOfMessagesVisible của queue",
+          "CPUUtilization của web tier",
+          "NetworkIn của worker",
+          "Số lần gọi API SendMessage trong CloudTrail"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Worker pool nên scale theo độ dài queue (ApproximateNumberOfMessagesVisible), giúp scale out khi backlog dài và scale in về 0 khi rảnh. CPU của web tier không phản ánh lượng việc tồn đọng."
+      },
+      {
+        "type": "single",
+        "q": "Thông số nào đúng về SQS theo khóa học?",
+        "options": [
+          "Retention mặc định 14 ngày, tối đa 365 ngày",
+          "Visibility timeout mặc định 12 giờ",
+          "Retention mặc định 4 ngày, tối đa 14 ngày; visibility timeout mặc định 30 giây, tối đa 12 giờ",
+          "Message size tối đa 1 MB, retention tối đa 24 giờ"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "SQS giữ message mặc định 4 ngày, tối đa 14 ngày; visibility timeout mặc định 30 s, khoảng 0 s–12 h. 24 giờ/365 ngày là rolling window của Kinesis."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng ở account B cần gửi message vào SQS queue thuộc account A. Cơ chế nào bắt buộc phải dùng?",
+        "options": [
+          "Chỉ cần identity policy trong account B",
+          "Queue policy (resource policy) trên queue cho phép principal của account B",
+          "VPC endpoint policy trong account A",
+          "SNS topic policy trong account A"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Truy cập cross-account vào queue chỉ làm được bằng queue policy, giống bucket policy của S3. Identity policy ở account B không đủ vì account A phải cho phép trên chính resource."
+      }
+    ],
+    "Serverless Architecture": [
+      {
+        "type": "single",
+        "q": "Một startup muốn xây web app có chi phí gần bằng 0 khi không có người dùng, tự scale theo nhu cầu và không quản lý server. Kiến trúc nào phù hợp nhất?",
+        "options": [
+          "EC2 Auto Scaling group sau ALB, RDS Multi-AZ",
+          "ECS trên EC2 với cluster chạy 24/7",
+          "Elastic Beanstalk với một EC2 instance nhỏ",
+          "S3 static website + API Gateway + Lambda + DynamoDB"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Bộ S3 + API Gateway + Lambda + DynamoDB hoàn toàn dựa trên tiêu thụ, không có compute chạy thường trực. Các lựa chọn có EC2/ASG chạy 24/7 thường không phải đáp án khi đề nhấn mạnh serverless."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng video có hàng triệu người dùng đăng nhập bằng Google cần upload trực tiếp lên S3 từ trình duyệt. Cách xác thực và cấp quyền nào phù hợp?",
+        "options": [
+          "Tạo IAM user cho mỗi người dùng",
+          "Dùng Cognito đổi identity token của Google lấy temporary AWS credentials",
+          "Cho phép public write trên bucket",
+          "Dùng access key của một IAM user chung nhúng trong JavaScript"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "AWS không dùng trực tiếp danh tính bên thứ ba; Cognito đổi token Google lấy temporary AWS credentials. IAM user không scale vì giới hạn 5.000 user mỗi account."
+      },
+      {
+        "type": "single",
+        "q": "Theo bài học, giới hạn nào khiến việc tạo IAM user cho người dùng cuối của ứng dụng web-scale là không khả thi?",
+        "options": [
+          "Tối đa 100 IAM user mỗi account",
+          "Tối đa 10 IAM group cho mỗi user",
+          "Tối đa 5.000 IAM user mỗi account",
+          "Tối đa 1.000 IAM role mỗi account"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Mỗi account giới hạn 5.000 IAM user, nên ứng dụng web-scale dùng third-party IdP + Cognito thay vì IAM user."
+      },
+      {
+        "type": "single",
+        "q": "Trong một ứng dụng serverless, mỗi khi người dùng upload video gốc lên S3 cần tự động khởi tạo các job transcode. Cơ chế kích hoạt nào phù hợp nhất?",
+        "options": [
+          "S3 event notification invoke Lambda function tạo job",
+          "Một EC2 instance poll bucket mỗi phút",
+          "Cron job trên EC2 quét bucket hàng đêm",
+          "CloudTrail data event được admin xem thủ công"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Upload file kích hoạt xử lý → S3 event → Lambda, đúng tinh thần event-driven: không có compute chạy khi không có sự kiện. Poll bằng EC2 vẫn chạy được nhưng tốn chi phí thường trực."
+      },
+      {
+        "type": "single",
+        "q": "Đặc điểm nào mô tả đúng function trong kiến trúc serverless?",
+        "options": [
+          "Stateful, giữ dữ liệu phiên trên bộ nhớ local giữa các lần chạy",
+          "Stateless và ephemeral, chỉ chạy khi có event và giả định môi trường sạch mỗi lần",
+          "Chạy liên tục để tránh cold start, tính phí theo giờ",
+          "Mỗi function chứa toàn bộ ứng dụng monolith"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Function serverless nhỏ, stateless, ephemeral, event-driven; mỗi lần chạy lấy dữ liệu cần thiết, xử lý rồi lưu kết quả bền vững. Không được trông vào dữ liệu còn sót trong môi trường."
+      }
+    ],
+    "Step Functions": [
+      {
+        "type": "single",
+        "q": "Một quy trình xử lý đơn hàng gồm nhiều bước: kiểm tra tồn kho, rẽ nhánh theo loại sản phẩm, chờ nhân viên phê duyệt, rồi đặt vận chuyển; tổng thời gian có thể kéo dài nhiều ngày. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Xâu chuỗi nhiều Lambda function gọi lẫn nhau",
+          "Một Lambda function với timeout 15 phút",
+          "Step Functions Standard workflow",
+          "SQS delay queue giữa các bước"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Workflow dài, nhiều bước, có rẽ nhánh, chờ và giữ trạng thái → Step Functions Standard (tối đa 1 năm). Xâu chuỗi Lambda rất rối khi scale và phải tự chuyển trạng thái."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần điều phối workflow ngắn (dưới 1 phút) cho hàng trăm nghìn event IoT mỗi giờ để biến đổi dữ liệu. Loại workflow Step Functions nào phù hợp?",
+        "options": [
+          "Express workflow",
+          "Standard workflow",
+          "Standard workflow với Wait state",
+          "Express workflow chạy tối đa 1 năm"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Express (tối đa 5 phút) dành cho xử lý event khối lượng lớn như IoT streaming, transform dữ liệu, mobile backend. Standard dành cho workflow chạy dài; Express không chạy được tới 1 năm."
+      },
+      {
+        "type": "single",
+        "q": "Một đơn hàng chứa danh sách nhiều item và cần chạy cùng một chuỗi hành động cho từng item. Loại state nào trong Step Functions phù hợp?",
+        "options": [
+          "Parallel",
+          "Choice",
+          "Task",
+          "Map"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Map nhận một danh sách và chạy cùng tập hành động cho từng phần tử. Parallel tạo các nhánh khác nhau chạy song song, không lặp theo danh sách."
+      },
+      {
+        "type": "single",
+        "q": "State machine của Step Functions được định nghĩa bằng gì và lấy quyền gọi các dịch vụ AWS khác như thế nào?",
+        "options": [
+          "Định nghĩa bằng YAML của CloudFormation; dùng access key lưu trong state",
+          "Định nghĩa bằng Amazon States Language (dựa trên JSON); assume một IAM role khi chạy",
+          "Định nghĩa bằng Python; dùng execution role của Lambda gọi nó",
+          "Định nghĩa bằng ASL; dùng resource policy của từng dịch vụ đích"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "State machine được định nghĩa bằng ASL (JSON) và assume IAM role khi chạy để có quyền gọi Lambda, SNS, DynamoDB... Không lưu credentials trong state."
+      },
+      {
+        "type": "multi",
+        "q": "Dịch vụ nào có thể trực tiếp khởi chạy một execution của Step Functions state machine theo bài học? (Chọn 2)",
+        "options": [
+          "Amazon API Gateway",
+          "Route 53 health check",
+          "AWS Direct Connect",
+          "Amazon EventBridge",
+          "Amazon EBS snapshot"
+        ],
+        "answer": [
+          0,
+          3
+        ],
+        "explain": "State machine có thể được khởi chạy từ API Gateway, EventBridge, Lambda, IoT Rules hoặc thủ công. Route 53 health check, Direct Connect và EBS snapshot không phải nguồn khởi chạy."
+      }
+    ]
+  }
+}

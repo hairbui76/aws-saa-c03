@@ -1,0 +1,443 @@
+{
+  "chapter": "16 Advanced VPC Networking",
+  "lessons": {
+    "Compare - Gateway vs Interface Endpoints": [
+      {
+        "type": "single",
+        "q": "EC2 instance trong private subnet của một VPC không có Internet cần đọc object từ S3 và gửi message vào SQS cùng region, không đi qua Internet. Giải pháp nào đáp ứng với chi phí thấp nhất?",
+        "options": [
+          "Một NAT Gateway trong public subnet",
+          "Interface endpoint cho cả S3 và SQS",
+          "Gateway endpoint cho S3 và interface endpoint cho SQS",
+          "Gateway endpoint cho cả S3 và SQS"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Gateway endpoint chỉ hỗ trợ S3/DynamoDB và miễn phí, nên dùng cho S3; SQS cần interface endpoint. Gateway endpoint không có cho SQS, còn NAT Gateway vẫn đi ra Internet."
+      },
+      {
+        "type": "single",
+        "q": "Server on-premises kết nối vào VPC qua Direct Connect cần truy cập S3 một cách riêng tư thông qua VPC. Loại endpoint nào phù hợp?",
+        "options": [
+          "Interface endpoint cho S3",
+          "Gateway endpoint cho S3",
+          "Gateway endpoint cho S3 kết hợp endpoint policy",
+          "Egress-Only Internet Gateway"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Interface endpoint chỉ là một private IP nên truy cập được từ on-prem qua VPN/Direct Connect và từ VPC peer. Gateway endpoint chỉ dùng được từ bên trong VPC chứa nó."
+      },
+      {
+        "type": "single",
+        "q": "Một kiến trúc sư thiết kế VPC 3 AZ dùng cả gateway endpoint (S3) và interface endpoint (SNS), yêu cầu chịu được lỗi một AZ. Phát biểu nào đúng?",
+        "options": [
+          "Cần tạo một gateway endpoint trong mỗi AZ",
+          "Một interface endpoint là đủ HA cho mọi AZ",
+          "Cả hai loại đều cần NAT Gateway dự phòng ở mỗi AZ",
+          "Gateway endpoint HA mặc định; interface endpoint cần một endpoint trong một subnet ở mỗi AZ"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Gateway endpoint không nằm trong subnet/AZ nào và HA mặc định như IGW; interface endpoint là ENI trong một subnet (một AZ) nên cần mỗi AZ một cái. Hai đáp án \"gateway mỗi AZ\" và \"một interface đủ HA\" là bẫy quen thuộc."
+      },
+      {
+        "type": "single",
+        "q": "Đặc điểm nào CHỈ có ở interface endpoint mà gateway endpoint không có?",
+        "options": [
+          "Endpoint policy",
+          "Gắn được Security Group",
+          "High availability mặc định trên mọi AZ",
+          "Route tới prefix list trong route table"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Interface endpoint là ENI nên gắn được Security Group; gateway endpoint không phải network interface nên không có SG. Endpoint policy có ở cả hai loại."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào đúng về VPC endpoint? (Chọn 2)",
+        "options": [
+          "Gateway endpoint dẫn traffic bằng prefix list trong route table",
+          "Gateway endpoint truy cập được từ VPC peer",
+          "Interface endpoint cung cấp đường ra Internet cho instance private",
+          "Interface endpoint dùng DNS phân giải ra private IP của ENI endpoint",
+          "Gateway endpoint hỗ trợ SNS và SQS"
+        ],
+        "answer": [
+          0,
+          3
+        ],
+        "explain": "Gateway = route table/prefix list; Interface = DNS/ENI. Không loại endpoint nào cấp đường ra Internet, và gateway endpoint chỉ cho S3/DynamoDB, chỉ dùng được trong VPC."
+      }
+    ],
+    "Egress-Only Internet Gateway": [
+      {
+        "type": "single",
+        "q": "EC2 instance trong một VPC chỉ dùng địa chỉ IPv6 cần tải bản cập nhật phần mềm từ Internet, nhưng không được để Internet khởi tạo kết nối vào. Giải pháp nào phù hợp?",
+        "options": [
+          "NAT Gateway trong public subnet",
+          "Egress-Only Internet Gateway với route ::/0",
+          "Internet Gateway với route ::/0",
+          "Gateway VPC endpoint"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "EIGW chỉ cho IPv6 khởi tạo từ trong ra và nhận response, chặn kết nối khởi tạo từ ngoài vào. NAT Gateway dành cho IPv4, còn IGW thường cho phép cả inbound."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư đã tạo Egress-Only Internet Gateway và gắn vào VPC, nhưng instance IPv6 vẫn không ra được Internet. Bước nào còn thiếu?",
+        "options": [
+          "Gắn Elastic IP cho EIGW",
+          "Đặt EIGW vào một public subnet",
+          "Tạo thêm một EIGW ở mỗi AZ",
+          "Thêm route ::/0 với target là EIGW trong route table của subnet"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Tạo và gắn gateway thôi chưa đủ; VPC router cần route ::/0 → eigw-id thì mới đẩy traffic tới EIGW. EIGW không nằm trong subnet và không dùng Elastic IP."
+      },
+      {
+        "type": "single",
+        "q": "VPC dùng 3 AZ. Cần làm gì để Egress-Only Internet Gateway có high availability?",
+        "options": [
+          "Không cần làm gì thêm: EIGW gắn vào VPC đã HA trên mọi AZ và tự scale",
+          "Tạo một EIGW trong public subnet của mỗi AZ",
+          "Tạo hai EIGW và dùng Route 53 failover",
+          "Đặt EIGW sau một Network Load Balancer"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "EIGW có kiến trúc giống Internet Gateway: gắn vào VPC, HA mặc định trên mọi AZ và tự scale. Mô hình \"một cái mỗi AZ\" là của NAT Gateway."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng khi so sánh Internet Gateway, Egress-Only Internet Gateway và NAT Gateway?",
+        "options": [
+          "EIGW hỗ trợ cả IPv4 và IPv6 outbound-only",
+          "NAT Gateway là cách chuẩn cho IPv6 outbound-only",
+          "EIGW chỉ dành cho IPv6 outbound-only; NAT Gateway dành cho IPv4 outbound-only",
+          "Internet Gateway chỉ cho phép kết nối khởi tạo từ trong ra"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "EIGW chỉ IPv6, NAT Gateway chỉ IPv4, cả hai đều chỉ cho kết nối khởi tạo từ trong ra. Internet Gateway thường cho traffic hai chiều."
+      },
+      {
+        "type": "single",
+        "q": "Instance trong private subnet của VPC dual-stack cần ra Internet bằng cả IPv4 và IPv6, nhưng không cho Internet khởi tạo kết nối vào. Cấu hình route nào đúng?",
+        "options": [
+          "0.0.0.0/0 và ::/0 đều trỏ tới Internet Gateway",
+          "0.0.0.0/0 trỏ tới NAT Gateway và ::/0 trỏ tới Egress-Only Internet Gateway",
+          "0.0.0.0/0 và ::/0 đều trỏ tới NAT Gateway",
+          "0.0.0.0/0 trỏ tới Egress-Only Internet Gateway và ::/0 trỏ tới NAT Gateway"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "IPv4 outbound-only dùng NAT Gateway (0.0.0.0/0), IPv6 outbound-only dùng EIGW (::/0). Trỏ về IGW thường sẽ cho phép kết nối IPv6 từ ngoài vào."
+      }
+    ],
+    "Gateway VPC Endpoints": [
+      {
+        "type": "single",
+        "q": "Một VPC trong ngành bị quản lý chặt không có Internet Gateway hay NAT. Instance cần tải bản cập nhật từ đúng một S3 bucket cùng region, chi phí thấp nhất và không truy cập được bucket nào khác. Giải pháp nào phù hợp?",
+        "options": [
+          "Gateway endpoint cho S3 kèm endpoint policy chỉ cho phép bucket đó",
+          "Interface endpoint cho S3 kèm Security Group",
+          "NAT Gateway kèm NACL chặn mọi đích trừ S3",
+          "Gateway endpoint cho S3 ở mỗi AZ"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Gateway endpoint cho phép VPC private truy cập S3 không cần IGW/NAT, miễn phí; endpoint policy giới hạn endpoint chỉ truy cập bucket chỉ định. Interface endpoint cũng chạy được nhưng tốn phí theo giờ và GB."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn S3 bucket chỉ chấp nhận request đi qua gateway endpoint của VPC sản xuất, từ chối mọi nguồn khác. Cấu hình nào đúng?",
+        "options": [
+          "Endpoint policy trên gateway endpoint chỉ cho phép bucket đó",
+          "Security Group trên gateway endpoint",
+          "Bucket policy với điều kiện aws:SourceVpce bằng ID của endpoint",
+          "NACL trên subnet chứa instance"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Bucket policy với aws:SourceVpce quyết định bucket chấp nhận request từ đâu. Endpoint policy chỉ kiểm soát endpoint được dùng truy cập cái gì, không ngăn nguồn khác truy cập bucket."
+      },
+      {
+        "type": "single",
+        "q": "Khi gắn một gateway endpoint cho S3 vào route table của subnet, điều gì xảy ra?",
+        "options": [
+          "Một ENI có private IP được tạo trong mỗi subnet",
+          "Một Route 53 private hosted zone ghi đè tên DNS của S3",
+          "Một route 0.0.0.0/0 trỏ tới endpoint được thêm",
+          "AWS tự thêm route với destination là prefix list của S3 và target là endpoint"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Gateway endpoint hoạt động bằng routing: AWS thêm route prefix list → vpce và bạn không sửa được route này. ENI và Private DNS là cơ chế của interface endpoint."
+      },
+      {
+        "type": "single",
+        "q": "Instance ở us-east-1 dùng gateway endpoint cho S3 tải được object từ bucket cùng region, nhưng không truy cập được bucket ở ap-southeast-2. Nguyên nhân là gì?",
+        "options": [
+          "Endpoint policy mặc định chặn bucket ở region khác",
+          "Gateway endpoint chỉ truy cập được dịch vụ trong cùng region",
+          "Cần bật Private DNS trên gateway endpoint",
+          "Security Group của endpoint chặn traffic cross-region"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Gateway endpoint chỉ phục vụ dịch vụ cùng region. Gateway endpoint không có Private DNS hay Security Group."
+      },
+      {
+        "type": "multi",
+        "q": "Những giới hạn nào đúng với gateway VPC endpoint? (Chọn 2)",
+        "options": [
+          "Phải tạo một endpoint ở mỗi AZ để có HA",
+          "Không truy cập được từ on-premises qua VPN/Direct Connect hay từ VPC peer",
+          "Ứng dụng phải sửa endpoint URL để dùng endpoint",
+          "Chỉ hỗ trợ SNS và SQS",
+          "Không gắn được Security Group"
+        ],
+        "answer": [
+          1,
+          4
+        ],
+        "explain": "Gateway endpoint là gateway logic của VPC nên chỉ dùng được từ trong VPC đó, và không phải network interface nên không có SG. Nó HA mặc định, ứng dụng không cần sửa và chỉ hỗ trợ S3/DynamoDB."
+      }
+    ],
+    "Interface VPC Endpoints": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng chạy trong private subnet ở 3 AZ gọi SNS qua interface endpoint. Yêu cầu: vẫn hoạt động khi một AZ gặp sự cố. Thiết kế nào đúng?",
+        "options": [
+          "Một interface endpoint trong một subnet là đủ vì endpoint HA mặc định",
+          "Thêm NAT Gateway dự phòng cho interface endpoint",
+          "Đặt interface endpoint trong một subnet ở mỗi AZ",
+          "Chuyển sang gateway endpoint cho SNS"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Interface endpoint là ENI trong một subnet nên chỉ thuộc một AZ; muốn HA phải có endpoint ở mỗi AZ VPC dùng. SNS không có gateway endpoint."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng cũ không thể sửa cấu hình, luôn gọi tên DNS mặc định `sns.us-east-1.amazonaws.com`. Ứng dụng chạy trong private subnet và phải đi qua interface endpoint. Cần làm gì?",
+        "options": [
+          "Bật Private DNS cho interface endpoint",
+          "Dùng tên endpoint-specific regional trong ứng dụng",
+          "Thêm route prefix list của SNS vào route table",
+          "Gắn Elastic IP cho interface endpoint"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Private DNS gắn một Route 53 private hosted zone do AWS quản lý, ghi đè tên mặc định để resolve ra private IP của endpoint, nên ứng dụng không cần sửa. Dùng tên endpoint-specific đòi hỏi sửa cấu hình ứng dụng."
+      },
+      {
+        "type": "single",
+        "q": "Một nhà cung cấp SaaS muốn đưa dịch vụ của mình vào VPC private của khách hàng trong ngành bị quản lý, không cần IGW, NAT hay VPC peering. Công nghệ nào phù hợp?",
+        "options": [
+          "VPC peering cross-account",
+          "Transit Gateway",
+          "Gateway VPC endpoint",
+          "AWS PrivateLink (interface endpoint)"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "PrivateLink \"inject\" dịch vụ của AWS hoặc bên thứ ba vào VPC dưới dạng ENI trong subnet của khách hàng. Peering và Transit Gateway mở kết nối mạng rộng hơn và cần thêm hạ tầng."
+      },
+      {
+        "type": "single",
+        "q": "Interface endpoint dẫn traffic tới dịch vụ AWS bằng cơ chế nào?",
+        "options": [
+          "Route table với prefix list do AWS quản lý",
+          "DNS phân giải tên dịch vụ ra private IP của ENI endpoint trong subnet",
+          "Static NAT qua Internet Gateway",
+          "BGP route quảng bá qua Virtual Private Gateway"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Interface endpoint dùng DNS: tên regional/zonal hoặc Private DNS resolve ra private IP của ENI. Prefix list trong route table là cơ chế của gateway endpoint."
+      },
+      {
+        "type": "single",
+        "q": "Theo khóa học, interface endpoint có giới hạn protocol nào?",
+        "options": [
+          "Chỉ UDP, hỗ trợ cả IPv4 và IPv6",
+          "TCP và UDP, chỉ IPv6",
+          "Chỉ TCP và chỉ IPv4",
+          "Mọi protocol IP, chỉ IPv4"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Khóa học nói interface endpoint chỉ hỗ trợ TCP và chỉ IPv4 (Adrian nhấn mạnh ý IPv4). Hiện nay đã có IPv6/dual-stack cho nhiều dịch vụ, nhưng đề theo khóa học thì chọn TCP + IPv4."
+      }
+    ],
+    "VPC Flow Logs": [
+      {
+        "type": "single",
+        "q": "Đội bảo mật cần kiểm tra nội dung (payload) của các packet đi tới một EC2 instance để phát hiện mã độc. Giải pháp nào phù hợp?",
+        "options": [
+          "Bật VPC Flow Logs ở mức ENI và gửi tới CloudWatch Logs",
+          "Bật VPC Flow Logs ở mức VPC với filter ALL",
+          "Bật CloudTrail data events cho VPC",
+          "Dùng packet sniffer trên instance hoặc VPC Traffic Mirroring"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Flow Logs chỉ ghi metadata (IP, port, protocol, ACCEPT/REJECT), không ghi payload. Xem nội dung packet cần packet sniffer hoặc Traffic Mirroring."
+      },
+      {
+        "type": "single",
+        "q": "Đội data muốn lưu VPC Flow Logs lâu dài và phân tích bằng truy vấn kiểu SQL, chỉ trả tiền theo lượng dữ liệu đọc. Đích và công cụ nào phù hợp nhất?",
+        "options": [
+          "CloudWatch Logs và CloudWatch metric filter",
+          "S3 và Amazon Athena",
+          "Kinesis Data Streams và Lambda",
+          "DynamoDB và DynamoDB Streams"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Flow Logs gửi tới S3 rồi truy vấn bằng Athena (schema-on-read, trả tiền theo dữ liệu đọc). CloudWatch Logs phù hợp khi cần tích hợp, stream, alarm hơn là phân tích SQL."
+      },
+      {
+        "type": "single",
+        "q": "Flow Logs của một instance cho thấy cùng một luồng ping: dòng inbound ACCEPT, nhưng dòng response outbound REJECT. Nguyên nhân khả dĩ nhất là gì?",
+        "options": [
+          "NACL của subnet cho phép inbound ICMP nhưng chặn outbound",
+          "Security Group của instance chặn response outbound",
+          "Instance không có public IP",
+          "Flow Logs bị trễ nên ghi sai action"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "NACL là stateless nên request và response được đánh giá riêng, có thể thấy ACCEPT rồi REJECT. Security Group là stateful: request được phép thì response tự động được phép."
+      },
+      {
+        "type": "multi",
+        "q": "Loại traffic nào KHÔNG được ghi lại trong VPC Flow Logs? (Chọn 2)",
+        "options": [
+          "Truy cập Instance Metadata Service tại 169.254.169.254",
+          "Kết nối SSH từ Internet tới EC2 instance",
+          "Traffic giữa hai EC2 instance ở hai subnet khác nhau",
+          "Truy vấn tới Amazon DNS server của VPC",
+          "Kết nối từ app server tới RDS instance"
+        ],
+        "answer": [
+          0,
+          3
+        ],
+        "explain": "Flow Logs loại trừ traffic tới metadata 169.254.169.254, Time Sync, DHCP, Amazon DNS server và kích hoạt license Windows. Traffic thông thường giữa các ENI đều được ghi."
+      },
+      {
+        "type": "single",
+        "q": "Trong một VPC Flow Log record, trường protocol có giá trị 6. Đây là protocol nào?",
+        "options": [
+          "ICMP",
+          "UDP",
+          "TCP",
+          "GRE"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Số protocol IP: ICMP = 1, TCP = 6, UDP = 17. Ghi nhớ ba số này giúp loại đáp án khi đọc record."
+      }
+    ],
+    "VPC Peering": [
+      {
+        "type": "single",
+        "q": "Công ty có peering VPC A ↔ VPC B và VPC B ↔ VPC C. Instance trong VPC A không kết nối được tới VPC C. Cách khắc phục đúng là gì?",
+        "options": [
+          "Thêm route ở VPC A trỏ CIDR của C tới peering A-B để đi qua B",
+          "Tạo thêm peering trực tiếp A ↔ C và thêm route ở cả hai phía",
+          "Bật DNS resolution trên peering A-B",
+          "Mở Security Group của VPC B cho CIDR của A và C"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "VPC peering không transitive: không thể route xuyên qua VPC B. Cần peering trực tiếp A-C (hoặc Transit Gateway khi số VPC lớn). Route qua B là bẫy thường gặp."
+      },
+      {
+        "type": "single",
+        "q": "Hai VPC thuộc hai account khác nhau đều dùng CIDR 10.0.0.0/16. Công ty muốn kết nối chúng bằng VPC peering. Điều gì xảy ra?",
+        "options": [
+          "Peering tạo được, chỉ cần thêm route cụ thể hơn",
+          "Peering tạo được nếu cùng region",
+          "Peering tạo được nhưng phải dùng NAT trên mỗi phía",
+          "Không tạo được peering vì CIDR chồng lấn; cần đổi dải IP hoặc dùng giải pháp khác"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "VPC peering yêu cầu CIDR hai bên không được chồng lấn. Đây là lý do nên thiết kế dải IP không trùng nhau ngay từ đầu."
+      },
+      {
+        "type": "single",
+        "q": "Peering connection giữa VPC A và VPC B đã ở trạng thái active nhưng instance A vẫn không ping được instance B. Cần làm gì?",
+        "options": [
+          "Thêm route CIDR bên kia → pcx ở route table cả hai VPC và mở SG/NACL cho traffic từ VPC bên kia",
+          "Chỉ cần thêm route ở VPC A vì A là requester",
+          "Gắn Internet Gateway vào cả hai VPC",
+          "Tạo lại peering với VPC B là requester"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Ngoài tạo peering còn phải thêm route ở cả hai phía (destination = CIDR bên kia, target = pcx) và mở Security Group/NACL. Chỉ thêm route một phía thì response không quay về được."
+      },
+      {
+        "type": "single",
+        "q": "VPC A ở us-east-1 peering với VPC B ở eu-west-1. Kỹ sư muốn Security Group của instance B cho phép traffic từ các instance của VPC A. Cách nào đúng?",
+        "options": [
+          "Tham chiếu Security Group ID của VPC A trong inbound rule",
+          "Tham chiếu ID của peering connection trong inbound rule",
+          "Dùng CIDR của VPC A trong inbound rule",
+          "Tham chiếu prefix list của VPC A"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Tham chiếu SG ID của VPC peer chỉ được khi cùng region và có peering trực tiếp; cross-region phải dùng IP hoặc CIDR."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn kết nối full mesh 5 VPC bằng VPC peering. Cần bao nhiêu peering connection?",
+        "options": [
+          "5",
+          "10",
+          "20",
+          "4"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Full mesh n VPC cần n(n-1)/2 peering: 5×4/2 = 10. Khi số VPC lớn hoặc cần hub-and-spoke/transitive thì nên dùng Transit Gateway."
+      }
+    ]
+  }
+}
