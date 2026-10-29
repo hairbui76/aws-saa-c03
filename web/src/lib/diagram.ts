@@ -463,6 +463,33 @@ export function buildModel(d: Diagram): Model {
   return { box: d.box, items, steps };
 }
 
+/** Fingerprint of the step sequence; narration written for one sequence is ignored if steps change. */
+export function stepSig(model: Model) {
+  let h = 2166136261;
+  for (const c of model.steps.map((s) => s.caption).join('\u0001')) {
+    h ^= c.charCodeAt(0);
+    h = Math.imul(h, 16777619);
+  }
+  return `${model.steps.length}-${(h >>> 0).toString(36)}`;
+}
+
+/** What appears in a step, as text, for writing narration. */
+export function stepContents(model: Model, step: number) {
+  const byId = new Map(model.items.map((i) => [i.id, i]));
+  const label = (id?: string) => (id ? (byId.get(id)?.texts[0]?.text || '').split('\n')[0].trim() : '');
+  return model.items
+    .filter((i) => i.step === step)
+    .map((i) => {
+      const t = i.texts.map((x) => oneLine(x.text || '')).join(' / ');
+      if (i.kind === 'arrow') {
+        const ends = [label(i.el.from), label(i.el.to)].filter(Boolean).join(' → ');
+        return `mũi tên ${ends}${t ? ` (${t})` : ''}`;
+      }
+      return t ? `${i.kind === 'zone' ? 'vùng' : i.kind === 'node' ? 'khối' : 'chữ'}: ${t}` : '';
+    })
+    .filter(Boolean);
+}
+
 export function stepDurationMs(model: Model, step: number) {
   const n = model.items.filter((i) => i.step === step).length;
   const read = (model.steps[step]?.caption.length || 0) * 45;

@@ -1,0 +1,14 @@
+{
+ "KMS": {
+  "sig": "7-1mciu3l",
+  "steps": [
+   "Sơ đồ này nói về envelope encryption trong KMS. Nhớ hai điều: KMS key không bao giờ rời KMS, và chỉ mã hóa trực tiếp được tối đa 4 KB, nên dữ liệu lớn phải dùng Data Encryption Key.",
+   "Đầu tiên, ứng dụng hoặc dịch vụ như S3 gọi API GenerateDataKey, chỉ định KMS key. KMS key là một container logic gồm key ID, key policy và backing key material, nằm yên trong KMS và trong region.",
+   "KMS trả về hai bản của cùng một DEK: bản plaintext để dùng ngay, và bản ciphertext đã được mã hóa bằng KMS key. Lưu ý KMS không lưu, cũng không theo dõi DEK này.",
+   "Bây giờ chính bạn hoặc dịch vụ dùng plaintext DEK để mã hóa dữ liệu lớn hơn 4 KB, chứ KMS không làm việc này. Với S3, mỗi object có một DEK riêng.",
+   "Mã hóa xong thì xóa ngay plaintext DEK khỏi bộ nhớ, để không có khóa dạng rõ nào còn nằm lại cạnh dữ liệu.",
+   "Bản ciphertext DEK được lưu kèm ngay cạnh dữ liệu đã mã hóa. Nó an toàn vì chỉ KMS mới giải mã được nó.",
+   "Khi cần giải mã, gửi ciphertext DEK cho KMS Decrypt, không cần chỉ KeyId vì thông tin key nằm sẵn trong ciphertext. KMS kiểm tra quyền, trả lại plaintext DEK để giải mã dữ liệu, rồi lại xóa nó đi."
+  ]
+ }
+}

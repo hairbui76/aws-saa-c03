@@ -40,7 +40,7 @@ function Header() {
         <button className="pill search-pill" onClick={openSearch} title="Tìm bài (Ctrl K)">
           <Search size={16} /> <span>Tìm bài…</span> <kbd>Ctrl K</kbd>
         </button>
-        <span className="pill" title="Số bài đã hoàn thành">
+        <span className="pill progress-pill" title="Số bài đã hoàn thành">
           <BookOpenCheck size={16} /> {done}/{total}
         </span>
         <button className={`pill ${s.apiKey ? 'ok' : ''}`} onClick={openSettings} title="Anthropic API key">

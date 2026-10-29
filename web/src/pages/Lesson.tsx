@@ -80,6 +80,20 @@ export default function LessonPage() {
         <nav className="crumbs">
           <Link to="/">Bài học</Link> / <Link to={`/c/${lesson.chapterId}`}>Chương {lesson.chapterId} {lesson.chapterTitle}</Link>
         </nav>
+        {chapter && (
+          <details className="mobile-lessons" key={lesson.id}>
+            <summary>
+              📚 Bài {chapter.lessons.findIndex((l) => l.id === lesson.id) + 1}/{chapter.lessons.length} trong chương
+            </summary>
+            <ol>
+              {chapter.lessons.map((l) => (
+                <li key={l.id} className={`${l.id === lesson.id ? 'cur' : ''} ${isDone(p.lessons[l.id]) ? 'done' : ''}`}>
+                  <Link to={`/l/${l.id}`}>{l.title}</Link>
+                </li>
+              ))}
+            </ol>
+          </details>
+        )}
         <h1 className="lesson-title">{lesson.title}</h1>
         {lesson.aliases.length > 0 && (
           <div className="aliases">

@@ -6,6 +6,7 @@
 //   public/content/cheat-sheet.json
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -13,7 +14,17 @@ const WEB = path.resolve(here, '..');
 const DATA = path.resolve(WEB, '../data');
 const VIDEOS = path.resolve(WEB, '../videos');
 const QUIZZES = path.resolve(WEB, 'quizzes');
+const NARRATION = path.resolve(WEB, 'narration');
+const AUDIO = path.resolve(WEB, 'public/audio');
 const OUT = path.resolve(WEB, 'public/content');
+
+// must match VOICE / RATE / clip_name() in scripts/tts.py
+const TTS_VOICE = 'vi-VN-HoaiMyNeural';
+const TTS_RATE = '+6%';
+const clipName = (text) => crypto.createHash('sha1').update(`${TTS_VOICE}|${TTS_RATE}|${text}`).digest('hex').slice(0, 16) + '.mp3';
+const audioFiles = new Set(fs.existsSync(AUDIO) ? fs.readdirSync(AUDIO) : []);
+let narrated = 0;
+let voiced = 0;
 
 const slugify = (s) =>
   s
@@ -308,9 +319,27 @@ flatOrder.forEach(({ ch, l }, i) => {
   // drop the TL;DR blockquote from the body; the page renders it as a card
   const body = transformMarkdown(rest.replace(/^>\s*\*\*TL;DR:\*\*[\s\S]*?(?=\r?\n(?!>)|$)/m, '').trim(), used);
   const diagrams = {};
+  let narration = {};
+  try {
+    narration = JSON.parse(fs.readFileSync(path.join(NARRATION, `${l.id}.json`), 'utf8'));
+  } catch {
+    /* not generated yet */
+  }
   for (const name of used) {
     const d = loadDiagram(name);
     if (d) {
+      const n = narration[name];
+      if (n) {
+        d.narr = {
+          sig: n.sig,
+          steps: n.steps.map((t) => {
+            const a = clipName(t);
+            if (audioFiles.has(a)) voiced++;
+            return { t, a: audioFiles.has(a) ? a : null };
+          }),
+        };
+        narrated++;
+      }
       diagrams[name] = d;
       diagramCount++;
       if (!thumbs[ch.id]) thumbs[ch.id] = d;
@@ -357,6 +386,7 @@ const lessonTotal = flatOrder.length;
 const withQuiz = flatOrder.filter(({ l }) => quizByLesson.has(l.name.toLowerCase())).length;
 console.log(
   `content: ${chapters.length} chapters, ${lessonTotal} lessons, ${diagramCount} diagrams, ` +
-    `${quizCount} quiz questions (${withQuiz}/${lessonTotal} lessons), ${videoByNum.size} local videos`
+    `${quizCount} quiz questions (${withQuiz}/${lessonTotal} lessons), ${narrated} narrated diagrams (${voiced} voice clips), ` +
+    `${videoByNum.size} local videos`
 );
 if (unresolved.size) console.log(`  unresolved wikilinks (rendered bold): ${[...unresolved].slice(0, 15).join(', ')}${unresolved.size > 15 ? '…' : ''}`);

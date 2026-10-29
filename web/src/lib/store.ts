@@ -101,6 +101,10 @@ export const settings = createStore<Settings>('saa.settings.v1', {
   effort: 'medium',
 });
 
+// ---------- diagram viewer preferences ----------
+export type ViewPrefs = { fontScale: number; voice: boolean; tab: 'static' | 'video' };
+export const viewPrefs = createStore<ViewPrefs>('saa.view.v1', { fontScale: 1.25, voice: true, tab: 'video' });
+
 // ---------- export / import ----------
 type ExportFile = { app: 'saa-c03-sketchbook'; version: 1; exportedAt: string; progress: Progress };
 

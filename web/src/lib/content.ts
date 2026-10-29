@@ -38,7 +38,8 @@ export type DiagramEl = {
   sa?: 1;
   ea?: 1;
 };
-export type Diagram = { box: [number, number, number, number]; els: DiagramEl[] };
+export type Narration = { sig: string; steps: { t: string; a: string | null }[] };
+export type Diagram = { box: [number, number, number, number]; els: DiagramEl[]; narr?: Narration };
 
 export type Lecture = { num: string; title: string; video: string | null };
 export type Lesson = {
