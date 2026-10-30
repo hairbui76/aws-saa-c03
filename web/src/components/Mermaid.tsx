@@ -38,8 +38,8 @@ function withFont(code: string, scale: number) {
   return `%%{init: ${JSON.stringify(init)}}%%\n${code}`;
 }
 
-// Mermaid shrinks a wide diagram to the column width, which makes its text tiny. Show it at a fixed
-// fraction of its natural size instead (wide ones scroll sideways); fullscreen fits it to the screen.
+// Small diagrams show at a fixed fraction of their natural size (not blown up to the column);
+// wider ones are fitted to the column by CSS max-width. Zoom / fullscreen give the detail.
 const DISPLAY = 0.85;
 function sizeSvg(svg: string) {
   const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
@@ -61,16 +61,6 @@ export default function Mermaid({ code }: { code: string }) {
   const api = useRef<ViewportApi | null>(null);
   const wrap = useRef<HTMLElement>(null);
   const [full, toggleFull] = useFullscreen(wrap);
-  const stage = useRef<HTMLDivElement>(null);
-  const [overflow, setOverflow] = useState(false);
-  useEffect(() => {
-    const el = stage.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setOverflow(el.scrollWidth > el.clientWidth + 4));
-    ro.observe(el);
-    if (el.firstElementChild) ro.observe(el.firstElementChild);
-    return () => ro.disconnect();
-  }, [svg]);
 
   useEffect(() => {
     let alive = true;
@@ -88,10 +78,9 @@ export default function Mermaid({ code }: { code: string }) {
     <figure ref={wrap} className={`mm-player ${full ? 'is-full' : ''}`}>
       <div className="mm-bar">
         <span className="player-title">Sơ đồ</span>
-        {overflow && !full && <span className="mm-hint">↔ cuộn ngang để xem hết, hoặc bấm toàn màn hình</span>}
         <DiagramTools api={api} scale={scale} full={full} onFull={toggleFull} />
       </div>
-      <div className="mm-stage" ref={stage}>
+      <div className="mm-stage">
         {svg ? (
           <Viewport apiRef={api} onScale={setScale} resetKey={svg.length}>
             <div className="mm-svg" dangerouslySetInnerHTML={{ __html: svg }} />

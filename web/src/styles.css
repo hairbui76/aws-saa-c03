@@ -641,10 +641,10 @@ button.pill:hover {
 /* ---------- lesson ---------- */
 .lesson-layout {
   display: grid;
-  grid-template-columns: 250px minmax(0, 880px) 200px;
+  grid-template-columns: 196px minmax(0, 1000px) 156px;
   justify-content: center;
-  gap: 30px;
-  padding: 24px 20px 40px;
+  gap: 22px;
+  padding: 24px 16px 40px;
 }
 .lesson-side,
 .lesson-toc {
@@ -653,17 +653,17 @@ button.pill:hover {
   align-self: start;
   max-height: calc(100vh - 100px);
   overflow: auto;
-  font-size: 13.5px;
+  font-size: 12.5px;
 }
 .side-chapter {
   display: flex;
   align-items: center;
   gap: 8px;
   font-family: var(--hand);
-  font-size: 18px;
+  font-size: 16px;
   color: var(--ink);
   text-decoration: none;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .lesson-side ol {
   list-style: none;
@@ -672,13 +672,13 @@ button.pill:hover {
 }
 .lesson-side li a {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   align-items: flex-start;
-  padding: 5px 8px;
+  padding: 4px 6px;
   border-radius: 8px;
   color: var(--ink-2);
   text-decoration: none;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 .lesson-side li a svg {
   flex-shrink: 0;
@@ -701,7 +701,7 @@ button.pill:hover {
   flex-direction: column;
   gap: 2px;
   border-left: 2px dashed var(--line);
-  padding-left: 14px;
+  padding-left: 10px;
 }
 .lesson-toc a {
   color: var(--ink-2);
@@ -1643,7 +1643,7 @@ button.pill:hover {
 /* ---------- responsive ---------- */
 @media (max-width: 1280px) {
   .lesson-layout {
-    grid-template-columns: 230px minmax(0, 1fr);
+    grid-template-columns: 190px minmax(0, 1fr);
   }
   .lesson-toc {
     display: none;
@@ -2146,7 +2146,6 @@ button.pill:hover {
   margin: 0 0 0 auto;
 }
 .mm-stage {
-  overflow-x: auto;
   padding: 12px;
   background-color: #fdfcf8;
   background-image: radial-gradient(#e6e1d6 1px, transparent 1.2px);
@@ -2156,17 +2155,10 @@ button.pill:hover {
   display: flex;
   justify-content: center;
 }
-.mm-player .vp {
-  width: max-content;
-  min-width: 100%;
-  touch-action: pan-x pan-y;
-}
-.mm-player .vp.zoomed {
-  touch-action: none;
-}
 .mm-svg svg {
   display: block;
-  flex-shrink: 0;
+  max-width: 100%;
+  height: auto;
 }
 .mm-player:fullscreen {
   display: flex;
@@ -2206,27 +2198,4 @@ button.pill:hover {
   .mm-bar .player-title {
     display: inline;
   }
-}
-.mm-hint {
-  font-size: 12.5px;
-  color: var(--blue);
-  background: var(--blue-softer);
-  border-radius: 6px;
-  padding: 1px 8px;
-}
-.mm-stage {
-  scrollbar-width: auto;
-  scrollbar-color: #868e96 #f1f3f5;
-}
-.mm-stage::-webkit-scrollbar {
-  height: 12px;
-}
-.mm-stage::-webkit-scrollbar-track {
-  background: #f1f3f5;
-  border-top: 1.5px solid var(--line);
-}
-.mm-stage::-webkit-scrollbar-thumb {
-  background: #868e96;
-  border: 3px solid #f1f3f5;
-  border-radius: 8px;
 }
