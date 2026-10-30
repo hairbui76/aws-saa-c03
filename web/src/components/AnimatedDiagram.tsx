@@ -4,8 +4,6 @@ import {
   ChevronRight,
   Clapperboard,
   Image as ImageIcon,
-  Maximize2,
-  Minimize2,
   Pause,
   Play,
   RotateCcw,
@@ -15,12 +13,10 @@ import {
 import type { Diagram, DiagramEl } from '../lib/content';
 import { buildModel, stepDurationMs, stepSig, type Item, type Model } from '../lib/diagram';
 import { viewPrefs } from '../lib/store';
-import Viewport, { ZoomButtons, type ViewportApi } from './Viewport';
+import Viewport, { DiagramTools, useFullscreen, type ViewportApi } from './Viewport';
 
 type Phase = 'poster' | 'playing' | 'paused' | 'ended';
 const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
-const FONT_MIN = 0.8;
-const FONT_MAX = 1.9;
 
 // width of the widest line in the hand font, measured once per text/size
 const measureCache = new Map<string, number>();
@@ -265,11 +261,11 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
   const [cur, setCur] = useState(last);
   const [runKey, setRunKey] = useState(0);
   const [speed, setSpeed] = useState(1);
-  const [full, setFull] = useState(false);
   const [stepMs, setStepMs] = useState<number | null>(null);
   const [scale, setScale] = useState(1);
   const vpApi = useRef<ViewportApi | null>(null);
   const wrap = useRef<HTMLElement>(null);
+  const [full, toggleFull] = useFullscreen(wrap);
   const audio = useRef<HTMLAudioElement | null>(null);
   const stepStart = useRef(0);
 
@@ -362,12 +358,6 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
     if (tab === 'static') setPhase((p) => (p === 'playing' ? 'paused' : p));
   }, [tab]);
 
-  useEffect(() => {
-    const onFs = () => setFull(document.fullscreenElement === wrap.current);
-    document.addEventListener('fullscreenchange', onFs);
-    return () => document.removeEventListener('fullscreenchange', onFs);
-  }, []);
-
   const toggle = () => {
     if (phase === 'playing') setPhase('paused');
     else if (phase === 'paused') {
@@ -385,8 +375,6 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
   };
   const back = () => seek(phase === 'ended' ? last : cur - 1);
   const forward = () => seek(phase === 'poster' ? 0 : cur + 1);
-  const setFont = (d: number) =>
-    viewPrefs.update((p) => ({ ...p, fontScale: Math.round(Math.min(FONT_MAX, Math.max(FONT_MIN, p.fontScale + d)) * 100) / 100 }));
   const switchTab = (t: 'static' | 'video') => {
     setTab(t);
     viewPrefs.update((p) => ({ ...p, tab: t }));
@@ -407,26 +395,7 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
   const showBadge = phase !== 'poster' && phase !== 'ended';
   const dur = stepMs && stepMs > 0 ? stepMs : narr ? Math.max(stepDurationMs(model, cur), (narrText?.length || 0) * 70) / speed : stepDurationMs(model, cur) / speed;
 
-  const tools = (
-    <div className="vp-tools">
-      <button className="vp-btn" onClick={() => setFont(-0.15)} disabled={prefs.fontScale <= FONT_MIN} title="Chữ nhỏ hơn">
-        <span className="vp-a small">A</span>−
-      </button>
-      <button className="vp-btn" onClick={() => setFont(0.15)} disabled={prefs.fontScale >= FONT_MAX} title="Chữ to hơn">
-        <span className="vp-a">A</span>+
-      </button>
-      <span className="vp-sep" />
-      <ZoomButtons api={vpApi} scale={scale} />
-      <span className="vp-sep" />
-      <button
-        className="vp-btn"
-        title={full ? 'Thoát toàn màn hình' : 'Toàn màn hình'}
-        onClick={() => (full ? document.exitFullscreen() : wrap.current?.requestFullscreen())}
-      >
-        {full ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
-      </button>
-    </div>
-  );
+  const tools = <DiagramTools api={vpApi} scale={scale} full={full} onFull={toggleFull} />;
 
   return (
     <figure

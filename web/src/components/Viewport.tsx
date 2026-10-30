@@ -1,5 +1,54 @@
-import { useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from 'react';
-import { Maximize, Minus, Plus } from 'lucide-react';
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref, type RefObject } from 'react';
+import { Maximize, Maximize2, Minimize2, Minus, Plus } from 'lucide-react';
+import { viewPrefs } from '../lib/store';
+
+export const FONT_MIN = 0.8;
+export const FONT_MAX = 1.9;
+
+/** Tracks whether `el` is the fullscreen element. */
+export function useFullscreen(el: RefObject<HTMLElement | null>) {
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    const onFs = () => setFull(!!el.current && document.fullscreenElement === el.current);
+    document.addEventListener('fullscreenchange', onFs);
+    return () => document.removeEventListener('fullscreenchange', onFs);
+  }, [el]);
+  const toggle = () => (full ? document.exitFullscreen() : el.current?.requestFullscreen());
+  return [full, toggle] as const;
+}
+
+/** Shared toolbar for every diagram: font size (A−/A+), zoom, fullscreen. */
+export function DiagramTools({
+  api,
+  scale,
+  full,
+  onFull,
+}: {
+  api: { current: ViewportApi | null };
+  scale: number;
+  full: boolean;
+  onFull: () => void;
+}) {
+  const { fontScale } = viewPrefs.use();
+  const setFont = (d: number) =>
+    viewPrefs.update((p) => ({ ...p, fontScale: Math.round(Math.min(FONT_MAX, Math.max(FONT_MIN, p.fontScale + d)) * 100) / 100 }));
+  return (
+    <div className="vp-tools">
+      <button className="vp-btn" onClick={() => setFont(-0.15)} disabled={fontScale <= FONT_MIN} title="Chữ nhỏ hơn">
+        <span className="vp-a small">A</span>−
+      </button>
+      <button className="vp-btn" onClick={() => setFont(0.15)} disabled={fontScale >= FONT_MAX} title="Chữ to hơn">
+        <span className="vp-a">A</span>+
+      </button>
+      <span className="vp-sep" />
+      <ZoomButtons api={api} scale={scale} />
+      <span className="vp-sep" />
+      <button className="vp-btn" title={full ? 'Thoát toàn màn hình' : 'Toàn màn hình'} onClick={onFull}>
+        {full ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+      </button>
+    </div>
+  );
+}
 
 export const ZOOM_MIN = 1;
 export const ZOOM_MAX = 6;

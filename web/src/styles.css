@@ -2121,3 +2121,112 @@ button.pill:hover {
 .step-badge.off {
   visibility: hidden;
 }
+
+/* ---------- mermaid diagrams: same frame + toolbar as the animated ones ---------- */
+.mm-player {
+  margin: 16px 0 22px;
+  border: 2px solid var(--ink);
+  border-radius: 14px 10px 15px 11px;
+  background: #fff;
+  box-shadow: 2px 2px 0 var(--ink);
+  overflow: hidden;
+}
+.mm-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 2px dashed var(--line);
+}
+.mm-bar .player-title {
+  margin-left: 0;
+}
+.mm-bar .vp-tools {
+  margin: 0 0 0 auto;
+}
+.mm-stage {
+  overflow-x: auto;
+  padding: 12px;
+  background-color: #fdfcf8;
+  background-image: radial-gradient(#e6e1d6 1px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+.mm-svg {
+  display: flex;
+  justify-content: center;
+}
+.mm-player .vp {
+  width: max-content;
+  min-width: 100%;
+  touch-action: pan-x pan-y;
+}
+.mm-player .vp.zoomed {
+  touch-action: none;
+}
+.mm-svg svg {
+  display: block;
+  flex-shrink: 0;
+}
+.mm-player:fullscreen {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.mm-player:fullscreen .mm-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+.mm-player:fullscreen .vp {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+}
+.mm-player:fullscreen .vp-inner,
+.mm-player:fullscreen .mm-svg {
+  width: 100%;
+  height: 100%;
+}
+.mm-player:fullscreen .mm-svg svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+}
+@media (max-width: 640px) {
+  .mm-stage {
+    padding: 6px;
+  }
+  .mm-bar .player-title {
+    display: inline;
+  }
+}
+.mm-hint {
+  font-size: 12.5px;
+  color: var(--blue);
+  background: var(--blue-softer);
+  border-radius: 6px;
+  padding: 1px 8px;
+}
+.mm-stage {
+  scrollbar-width: auto;
+  scrollbar-color: #868e96 #f1f3f5;
+}
+.mm-stage::-webkit-scrollbar {
+  height: 12px;
+}
+.mm-stage::-webkit-scrollbar-track {
+  background: #f1f3f5;
+  border-top: 1.5px solid var(--line);
+}
+.mm-stage::-webkit-scrollbar-thumb {
+  background: #868e96;
+  border: 3px solid #f1f3f5;
+  border-radius: 8px;
+}
