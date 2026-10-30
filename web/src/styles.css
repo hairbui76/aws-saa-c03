@@ -2104,3 +2104,20 @@ button.pill:hover {
     font-size: 16px;
   }
 }
+
+/* caption box keeps the height of the longest caption (see AnimatedDiagram) */
+.cap-stack {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.cap-stack > span {
+  grid-area: 1 / 1;
+  visibility: hidden;
+}
+.cap-stack > span.on {
+  visibility: visible;
+}
+.step-badge.off {
+  visibility: hidden;
+}

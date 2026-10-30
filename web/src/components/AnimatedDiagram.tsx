@@ -376,17 +376,19 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
     viewPrefs.update((p) => ({ ...p, tab: t }));
   };
 
-  const step = model.steps[phase === 'poster' ? 0 : cur];
   const narrText = narr?.[cur]?.t;
   const total = Math.round(
     (narr ? narr.reduce((n, s) => n + s.t.length * 70, 0) : model.steps.reduce((n, _, i) => n + stepDurationMs(model, i), 0)) / 1000
   );
-  const caption =
-    phase === 'poster'
-      ? `${model.steps.length} bước · khoảng ${Math.max(1, Math.round(total / 60))} phút${narr ? ' · có thuyết minh' : ''}`
-      : phase === 'ended'
-        ? 'Hết. Bấm ↺ để xem lại, hoặc dùng ◀ ▶ để đi từng bước.'
-        : narrText || step?.caption || '';
+  // Every caption this player can show, stacked in one grid cell: the box is always as tall as the
+  // longest one, so stepping through the video never makes the layout jump.
+  const captions = [
+    ...model.steps.map((s, i) => narr?.[i]?.t || s.caption || ''),
+    `${model.steps.length} bước · khoảng ${Math.max(1, Math.round(total / 60))} phút${narr ? ' · có thuyết minh' : ''}`,
+    'Hết. Bấm ↺ để xem lại, hoặc dùng ◀ ▶ để đi từng bước.',
+  ];
+  const captionIdx = phase === 'poster' ? model.steps.length : phase === 'ended' ? model.steps.length + 1 : cur;
+  const showBadge = phase !== 'poster' && phase !== 'ended';
   const dur = stepMs && stepMs > 0 ? stepMs : narr ? Math.max(stepDurationMs(model, cur), (narrText?.length || 0) * 70) / speed : stepDurationMs(model, cur) / speed;
 
   const tools = (
@@ -458,8 +460,16 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
             )}
           </div>
           <div className="player-caption" aria-live="polite">
-            {phase !== 'poster' && phase !== 'ended' && <span className="step-badge">{cur + 1}</span>}
-            <span>{caption}</span>
+            <span className={`step-badge ${showBadge ? '' : 'off'}`} aria-hidden={!showBadge}>
+              {cur + 1}
+            </span>
+            <div className="cap-stack">
+              {captions.map((c, i) => (
+                <span key={i} className={i === captionIdx ? 'on' : ''} aria-hidden={i !== captionIdx}>
+                  {c}
+                </span>
+              ))}
+            </div>
           </div>
           <div className="player-bar">
             <button className="icon-btn" onClick={toggle} title={phase === 'playing' ? 'Tạm dừng (Space)' : 'Phát (Space)'}>
