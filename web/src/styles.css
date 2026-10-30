@@ -694,7 +694,11 @@ button.pill:hover {
 .lesson-side li.cur a {
   background: var(--yellow-soft);
   font-weight: 600;
-  outline: 2px solid var(--ink);
+  /* inset, so the scrolling sidebar can't clip it */
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.lesson-side {
+  padding: 2px 4px 8px 2px;
 }
 .lesson-toc {
   display: flex;
