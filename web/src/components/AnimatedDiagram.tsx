@@ -276,11 +276,15 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
   const voiceOn = prefs.voice && !!narr;
   const clipFor = (i: number) => (narr?.[i]?.a ? `${import.meta.env.BASE_URL}audio/${narr[i].a}` : null);
 
+  // true while the viewer is stepping by hand: the current segment shows as complete
+  // and Play restarts that step (with its voice) from the beginning
+  const [manual, setManual] = useState(false);
   const go = useCallback(
     (step: number, next: Phase) => {
       setCur(Math.max(0, Math.min(last, step)));
       setRunKey((k) => k + 1);
       setPhase(next);
+      setManual(next === 'paused');
     },
     [last]
   );
@@ -366,9 +370,21 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
 
   const toggle = () => {
     if (phase === 'playing') setPhase('paused');
-    else if (phase === 'paused') setPhase('playing');
-    else go(0, 'playing');
+    else if (phase === 'paused') {
+      if (manual) go(cur, 'playing');
+      else setPhase('playing');
+    } else go(0, 'playing');
   };
+  // manual stepping: past the last step means "finished" (full timeline, flowing arrows)
+  const seek = (step: number) => {
+    if (step > last) {
+      setCur(last);
+      setPhase('ended');
+      setManual(false);
+    } else go(step, 'paused');
+  };
+  const back = () => seek(phase === 'ended' ? last : cur - 1);
+  const forward = () => seek(phase === 'poster' ? 0 : cur + 1);
   const setFont = (d: number) =>
     viewPrefs.update((p) => ({ ...p, fontScale: Math.round(Math.min(FONT_MAX, Math.max(FONT_MIN, p.fontScale + d)) * 100) / 100 }));
   const switchTab = (t: 'static' | 'video') => {
@@ -420,8 +436,8 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
       onKeyDown={(e) => {
         if (tab !== 'video') return;
         if (e.key === ' ') (e.preventDefault(), toggle());
-        if (e.key === 'ArrowRight') go(cur + 1, 'paused');
-        if (e.key === 'ArrowLeft') go(cur - 1, 'paused');
+        if (e.key === 'ArrowRight') forward();
+        if (e.key === 'ArrowLeft') back();
       }}
     >
       <div className="player-tabs" role="tablist">
@@ -475,10 +491,15 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
             <button className="icon-btn" onClick={toggle} title={phase === 'playing' ? 'Tạm dừng (Space)' : 'Phát (Space)'}>
               {phase === 'playing' ? <Pause size={18} /> : <Play size={18} />}
             </button>
-            <button className="icon-btn" onClick={() => go(cur - 1, 'paused')} title="Bước trước (←)" disabled={phase === 'poster'}>
+            <button
+              className="icon-btn"
+              onClick={back}
+              title="Bước trước (←)"
+              disabled={phase === 'poster' || (cur === 0 && phase !== 'ended')}
+            >
               <ChevronLeft size={18} />
             </button>
-            <button className="icon-btn" onClick={() => go(phase === 'poster' ? 0 : cur + 1, 'paused')} title="Bước sau (→)">
+            <button className="icon-btn" onClick={forward} title="Bước sau (→)" disabled={phase === 'ended'}>
               <ChevronRight size={18} />
             </button>
             <button className="icon-btn" onClick={() => go(0, 'playing')} title="Xem lại từ đầu">
@@ -488,12 +509,12 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
               {model.steps.map((s, i) => (
                 <button
                   key={i}
-                  className={`seg ${phase !== 'poster' && (i < cur || phase === 'ended') ? 'done' : ''} ${
-                    (phase === 'playing' || phase === 'paused') && i === cur ? 'now' : ''
-                  }`}
+                  className={`seg ${
+                    phase !== 'poster' && (i < cur || phase === 'ended' || (manual && i === cur)) ? 'done' : ''
+                  } ${(phase === 'playing' || phase === 'paused') && i === cur && !manual ? 'now' : ''}`}
                   style={{ '--dur': `${i === cur ? dur : stepDurationMs(model, i)}ms` } as CSSProperties}
                   title={narr?.[i]?.t || s.caption || `Bước ${i + 1}`}
-                  onClick={() => go(i, 'paused')}
+                  onClick={() => seek(i)}
                 >
                   <i key={i === cur ? `${runKey}-${stepMs ?? 0}` : undefined} className={phase === 'paused' ? 'paused' : ''} />
                 </button>
