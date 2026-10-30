@@ -1045,27 +1045,42 @@ button.pill:hover {
 .player-name {
   display: none;
 }
+/* fullscreen: the stage takes all space left by the tab row / caption / controls,
+   and the diagram scales to fit it (the svg keeps its aspect ratio via viewBox) */
 .player:fullscreen {
   display: flex;
   flex-direction: column;
-  border-radius: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
   border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: #fdfcf8;
 }
 .player:fullscreen .player-stage {
   flex: 1;
-  display: grid;
-  place-items: center;
+  min-height: 0;
+  display: flex;
+  padding: 8px;
+}
+.player:fullscreen .vp {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+.player:fullscreen .vp-inner {
+  width: 100%;
+  height: 100%;
 }
 .player:fullscreen .dg-svg {
-  max-height: calc(100vh - 140px);
+  width: 100%;
+  height: 100%;
+  max-height: none;
 }
-.player:fullscreen .player-name {
-  display: block;
-  position: absolute;
-  top: 12px;
-  left: 18px;
-  font-family: var(--hand);
-  font-size: 20px;
+.player:fullscreen .player-caption {
+  font-size: 1.3rem;
+  min-height: 0;
 }
 
 /* diagram drawing animation */
