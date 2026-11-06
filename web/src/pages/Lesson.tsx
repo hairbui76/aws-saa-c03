@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Circle, CircleDot, MessageCircle, MonitorPlay } from 'lucide-react';
+import { CheckCircle2, Circle, CircleDot, MessageCircle, MonitorPlay, Route as RouteIcon, StickyNote } from 'lucide-react';
 import { slug, useJson, type Chapter, type Lesson } from '../lib/content';
-import { isDone, markVisited, progress, setDone } from '../lib/store';
+import { chats, isDone, markVisited, marks, notes, progress, setDone } from '../lib/store';
+import { fmtDate, stageStatus, usePlan } from '../lib/roadmap';
 import { Sketch } from '../components/Sketch';
 import Sections, { splitSections } from '../components/Sections';
 import Quiz from '../components/Quiz';
 import ChatPanel from '../components/ChatPanel';
+import LessonNotes from '../components/LessonNotes';
+import LessonMarks from '../components/LessonMarks';
 import { useUi } from '../App';
 
 // The course videos are only served by the local dev/preview server (see vite.config.ts).
@@ -33,10 +36,16 @@ export default function LessonPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
   const videos = useVideosAvailable(lesson?.lectures.find((l) => l.video)?.video);
+  const mainRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (lesson) markVisited(lesson.id);
   }, [lesson]);
+
+  // ?chat=1 (from the notes page): open the saved conversation
+  useEffect(() => {
+    if (lesson && params.get('chat')) setChatOpen(true);
+  }, [lesson, params]);
 
   useEffect(() => {
     const h = params.get('h');
@@ -69,6 +78,7 @@ export default function LessonPage() {
                 <Link to={`/l/${l.id}`}>
                   <Icon size={15} className={isDone(s) ? 'ok' : ''} />
                   <span>{l.title}</span>
+                  <NoteMark id={l.id} />
                 </Link>
               </li>
             );
@@ -76,9 +86,10 @@ export default function LessonPage() {
         </ol>
       </aside>
 
-      <main className="lesson-main">
+      <main className="lesson-main" ref={mainRef}>
         <nav className="crumbs">
           <Link to="/">Bài học</Link> / <Link to={`/c/${lesson.chapterId}`}>Chương {lesson.chapterId} {lesson.chapterTitle}</Link>
+          <StageBadge lessonId={lesson.id} />
         </nav>
         {chapter && (
           <details className="mobile-lessons" key={lesson.id}>
@@ -114,6 +125,9 @@ export default function LessonPage() {
         )}
 
         <Sections body={lesson.body} diagrams={lesson.diagrams} seed={lesson.id} />
+
+        <LessonNotes key={`n${lesson.id}`} lessonId={lesson.id} />
+        <LessonMarks key={`m${lesson.id}`} lessonId={lesson.id} scope={mainRef} focusId={params.get('hl')} />
 
         {lesson.lectures.length > 0 && (
           <Sketch className="card section" seed={`lec${lesson.id}`} fill="#fff">
@@ -175,17 +189,17 @@ export default function LessonPage() {
             {s.title}
           </a>
         ))}
+        <a href="#notes" onClick={(e) => (e.preventDefault(), document.getElementById('notes')?.scrollIntoView({ behavior: 'smooth' }))}>
+          🗒️ Ghi chú
+        </a>
         <a href="#quiz" onClick={(e) => (e.preventDefault(), document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' }))}>
           📝 Quiz
         </a>
       </nav>
 
-      {!chatOpen && (
-        <button className="ask-fab" onClick={() => setChatOpen(true)}>
-          <MessageCircle size={20} /> Hỏi Claude
-        </button>
-      )}
+      {!chatOpen && <AskFab lessonId={lesson.id} onOpen={() => setChatOpen(true)} />}
       <ChatPanel
+        key={lesson.id}
         lesson={lesson}
         open={chatOpen}
         onClose={() => setChatOpen(false)}
@@ -194,6 +208,41 @@ export default function LessonPage() {
         onOpenSettings={openSettings}
       />
     </div>
+  );
+}
+
+/** "Hỏi Claude" button; shows how many questions this lesson's saved conversation has. */
+function AskFab({ lessonId, onOpen }: { lessonId: string; onOpen: () => void }) {
+  const n = chats.use().items[lessonId]?.msgs.filter((m) => m.role === 'user').length ?? 0;
+  return (
+    <button className="ask-fab" onClick={onOpen} title={n ? `Mở lại ${n} câu đã hỏi` : undefined}>
+      <MessageCircle size={20} /> Hỏi Claude
+      {n > 0 && <span className="ask-count">{n}</span>}
+    </button>
+  );
+}
+
+/** Small marker in the lesson list for lessons that have a note. */
+function NoteMark({ id }: { id: string }) {
+  // both hooks always run (no short-circuit), so the hook order never changes
+  const hasNote = !!notes.use().notes[id];
+  const hasMarks = !!marks.use().items[id]?.length;
+  const has = hasNote || hasMarks;
+  return has ? <StickyNote size={12} className="note-mark" aria-label="Có ghi chú" /> : null;
+}
+
+/** "Giai đoạn 2/8 · hạn 23/11" when this lesson belongs to the uploaded roadmap. */
+function StageBadge({ lessonId }: { lessonId: string }) {
+  const { plan } = usePlan();
+  const p = progress.use();
+  const stage = plan?.stages.find((s) => s.lessons.some((l) => l.id === lessonId));
+  if (!plan || !stage) return null;
+  const st = stageStatus(stage, p);
+  return (
+    <Link to="/roadmap" className={`stage-badge ${st.overdue ? 'late' : ''}`} title={stage.title}>
+      <RouteIcon size={13} /> Giai đoạn {stage.index + 1}/{plan.stages.length}
+      {stage.due && ` · hạn ${fmtDate(stage.due)}`}
+    </Link>
   );
 }
 

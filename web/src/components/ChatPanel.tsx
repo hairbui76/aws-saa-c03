@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { KeyRound, Send, Square, Trash2, X } from 'lucide-react';
+import { Check, KeyRound, NotebookPen, Send, Square, Trash2, X } from 'lucide-react';
 import type { Lesson } from '../lib/content';
-import type { ChatMsg } from '../lib/claude';
-import { MODELS, settings } from '../lib/store';
+import { appendNote, CHAT_WIDTH, chats, cleanChat, MODELS, saveChat, settings, viewPrefs, type ChatMsg } from '../lib/store';
 import Markdown from './Markdown';
 
 const SUGGEST = [
@@ -12,9 +11,70 @@ const SUGGEST = [
   'Giải thích bài này như cho người mới bắt đầu',
 ];
 
-// per-lesson chat history survives navigation within the session
-const histories = new Map<string, ChatMsg[]>();
+const fmtTime = (t: number) =>
+  new Date(t).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
 
+/** Answer + the question it replies to, as a block for the lesson note. */
+function asNote(question: string, answer: string) {
+  const q = question
+    .split('\n')
+    .map((l) => `> ${l}`)
+    .join('\n');
+  return `**Hỏi Claude:**\n${q}\n\n${answer.trim()}\n`;
+}
+
+const MIN_W = 320;
+const maxW = () => Math.max(MIN_W, window.innerWidth - 60);
+const clampW = (w: number) => Math.round(Math.min(maxW(), Math.max(MIN_W, w)));
+
+/** Drag handle on the panel's left edge. The width is remembered; double-click resets it. */
+function ResizeHandle({ width, onLive }: { width: number; onLive: (w: number | null) => void }) {
+  const drag = useRef<{ id: number; w: number } | null>(null);
+  const commit = (w: number) => viewPrefs.update((p) => ({ ...p, chatWidth: clampW(w) }));
+  return (
+    <div
+      className="chat-resize"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Kéo để đổi độ rộng khung chat"
+      aria-valuenow={width}
+      aria-valuemin={MIN_W}
+      tabIndex={0}
+      title="Kéo để đổi độ rộng · nhấp đúp để về mặc định"
+      onPointerDown={(e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        drag.current = { id: e.pointerId, w: width };
+        document.body.classList.add('resizing-chat');
+      }}
+      onPointerMove={(e) => {
+        if (drag.current?.id !== e.pointerId) return;
+        drag.current.w = clampW(window.innerWidth - e.clientX);
+        onLive(drag.current.w);
+      }}
+      onPointerUp={(e) => {
+        if (drag.current?.id !== e.pointerId) return;
+        commit(drag.current.w);
+        drag.current = null;
+        onLive(null);
+        document.body.classList.remove('resizing-chat');
+      }}
+      onPointerCancel={() => {
+        drag.current = null;
+        onLive(null);
+        document.body.classList.remove('resizing-chat');
+      }}
+      onDoubleClick={() => commit(CHAT_WIDTH)}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowLeft') (e.preventDefault(), commit(width + 40));
+        if (e.key === 'ArrowRight') (e.preventDefault(), commit(width - 40));
+      }}
+    />
+  );
+}
+
+/** One conversation per lesson, saved in this browser (mounted with key = lesson id). */
 export default function ChatPanel({
   lesson,
   open,
@@ -31,21 +91,42 @@ export default function ChatPanel({
   onOpenSettings: () => void;
 }) {
   const s = settings.use();
-  const [msgs, setMsgs] = useState<ChatMsg[]>(() => histories.get(lesson.id) || []);
+  const savedAt = chats.use().items[lesson.id]?.at;
+  const { chatWidth } = viewPrefs.use();
+  const [liveW, setLiveW] = useState<number | null>(null);
+  // a remembered width may not fit a smaller window: shrink it when the window is resized
+  const [, onWinResize] = useState(0);
+  useEffect(() => {
+    const on = () => onWinResize((n) => n + 1);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  const width = liveW ?? clampW(chatWidth);
+  const [msgs, setMsgs] = useState<ChatMsg[]>(() => cleanChat(chats.get().items[lesson.id]?.msgs ?? []));
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [noted, setNoted] = useState<number | null>(null);
   const abort = useRef<AbortController | null>(null);
   const list = useRef<HTMLDivElement>(null);
+  const latest = useRef(msgs);
+  latest.current = msgs;
 
   useEffect(() => {
-    setMsgs(histories.get(lesson.id) || []);
-    setError('');
-  }, [lesson.id]);
-  useEffect(() => {
-    histories.set(lesson.id, msgs);
     list.current?.scrollTo({ top: list.current.scrollHeight });
-  }, [msgs, lesson.id]);
+  }, [msgs, open]);
+  // save once an answer has finished streaming (not on every token)
+  useEffect(() => {
+    if (!busy) saveChat(lesson.id, msgs);
+  }, [busy, msgs, lesson.id]);
+  // leaving the lesson mid-answer: stop it and keep what arrived
+  useEffect(
+    () => () => {
+      abort.current?.abort();
+      saveChat(lesson.id, latest.current);
+    },
+    [lesson.id]
+  );
 
   const send = async (text: string) => {
     const q = text.trim();
@@ -97,13 +178,26 @@ export default function ChatPanel({
   const model = MODELS.find((m) => m.id === s.model)?.label || s.model;
 
   return (
-    <aside className={`chat ${open ? 'open' : ''}`} aria-hidden={!open}>
+    <aside
+      className={`chat ${open ? 'open' : ''} ${liveW ? 'resizing' : ''}`}
+      aria-hidden={!open}
+      style={{ width: `min(${width}px, 100vw)` }}
+    >
+      <ResizeHandle width={width} onLive={setLiveW} />
       <header className="chat-head">
         <div>
           <b>Hỏi Claude</b>
           <span className="muted small">về “{lesson.title}” · {model}</span>
+          {savedAt && msgs.length > 0 && (
+            <span className="muted small">Đã lưu trên máy này · {fmtTime(savedAt)}</span>
+          )}
         </div>
-        <button className="icon-btn" title="Xóa hội thoại" onClick={() => setMsgs([])} disabled={busy || !msgs.length}>
+        <button
+          className="icon-btn"
+          title="Xóa hội thoại của bài này"
+          onClick={() => confirm('Xóa toàn bộ hội thoại với Claude của bài này?') && setMsgs([])}
+          disabled={busy || !msgs.length}
+        >
           <Trash2 size={16} />
         </button>
         <button className="icon-btn" title="Đóng" onClick={onClose}>
@@ -141,6 +235,18 @@ export default function ChatPanel({
                   m.content ? <Markdown>{m.content}</Markdown> : <span className="typing">Claude đang nghĩ…</span>
                 ) : (
                   <p>{m.content}</p>
+                )}
+                {m.role === 'assistant' && m.content && !(busy && i === msgs.length - 1) && (
+                  <button
+                    className="link-btn bubble-act"
+                    onClick={() => {
+                      appendNote(lesson.id, asNote(msgs[i - 1]?.content ?? '', m.content));
+                      setNoted(i);
+                    }}
+                  >
+                    {noted === i ? <Check size={13} /> : <NotebookPen size={13} />}
+                    {noted === i ? 'Đã lưu vào ghi chú' : 'Lưu vào ghi chú'}
+                  </button>
                 )}
               </div>
             ))}

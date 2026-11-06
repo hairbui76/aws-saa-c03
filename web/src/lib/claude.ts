@@ -1,8 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { Lesson } from './content';
-import type { Settings } from './store';
+import type { ChatMsg, Settings } from './store';
 
-export type ChatMsg = { role: 'user' | 'assistant'; content: string };
+export type { ChatMsg };
 
 const TUTOR = `Bạn là trợ giảng ôn thi AWS Certified Solutions Architect – Associate (SAA-C03) trong một web học tập.
 Người học đang đọc một bài học; nội dung bài nằm trong thẻ <lesson>. Trả lời bằng tiếng Việt, giữ thuật ngữ và tên dịch vụ AWS bằng tiếng Anh.

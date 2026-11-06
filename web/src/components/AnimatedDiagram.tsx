@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
   Clapperboard,
+  Eye,
+  EyeOff,
   Image as ImageIcon,
+  PenLine,
   Pause,
   Play,
   RotateCcw,
@@ -14,6 +17,7 @@ import type { Diagram, DiagramEl } from '../lib/content';
 import { buildModel, stepDurationMs, stepSig, type Item, type Model } from '../lib/diagram';
 import { viewPrefs } from '../lib/store';
 import Viewport, { DiagramTools, useFullscreen, type ViewportApi } from './Viewport';
+import { InkBar, InkLayer, PEN_COLORS, useInk, type InkTool } from './DiagramInk';
 
 type Phase = 'poster' | 'playing' | 'paused' | 'ended';
 const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
@@ -198,6 +202,7 @@ export function DiagramSvg({
   runKey,
   fontScale = 1.25,
   className,
+  children,
 }: {
   model: Model;
   cur: number;
@@ -205,6 +210,8 @@ export function DiagramSvg({
   runKey: number;
   fontScale?: number;
   className?: string;
+  /** drawn on top, in the diagram's coordinates (the ink layer) */
+  children?: ReactNode;
 }) {
   const [bx, by, bw, bh] = model.box;
   useFontsReady();
@@ -238,6 +245,7 @@ export function DiagramSvg({
           slow={phase === 'ended'}
         />
       )}
+      {children}
     </svg>
   );
 }
@@ -256,7 +264,16 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
     [diagram, model]
   );
   const last = model.steps.length - 1;
-  const [tab, setTab] = useState<'static' | 'video'>(prefs.tab);
+  const [tab, setTab] = useState<'static' | 'video'>('static');
+  // drawing on the static diagram: null = not drawing
+  const inkApi = useInk(name);
+  const [tool, setTool] = useState<InkTool | null>(null);
+  const lastTool = useRef<InkTool>({ kind: 'pen', color: PEN_COLORS[0].c });
+  const [inkHidden, setInkHidden] = useState(false);
+  const pickTool = (t: InkTool) => {
+    lastTool.current = t;
+    setTool(t);
+  };
   const [phase, setPhase] = useState<Phase>('poster');
   const [cur, setCur] = useState(last);
   const [runKey, setRunKey] = useState(0);
@@ -375,10 +392,6 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
   };
   const back = () => seek(phase === 'ended' ? last : cur - 1);
   const forward = () => seek(phase === 'poster' ? 0 : cur + 1);
-  const switchTab = (t: 'static' | 'video') => {
-    setTab(t);
-    viewPrefs.update((p) => ({ ...p, tab: t }));
-  };
 
   const narrText = narr?.[cur]?.t;
   const total = Math.round(
@@ -400,32 +413,70 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
   return (
     <figure
       ref={wrap}
-      className={`player ${tab} ${phase} ${full ? 'is-full' : ''}`}
+      className={`player ${tab} ${phase} ${full ? 'is-full' : ''} ${tool ? 'inking' : ''}`}
       tabIndex={0}
       onKeyDown={(e) => {
-        if (tab !== 'video') return;
+        if (tab === 'static') {
+          if (tool && e.key === 'Escape') setTool(null);
+          if (tool && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') (e.preventDefault(), inkApi.undo());
+          return;
+        }
         if (e.key === ' ') (e.preventDefault(), toggle());
         if (e.key === 'ArrowRight') forward();
         if (e.key === 'ArrowLeft') back();
       }}
     >
       <div className="player-tabs" role="tablist">
-        <button role="tab" aria-selected={tab === 'static'} className={tab === 'static' ? 'on' : ''} onClick={() => switchTab('static')}>
+        <button role="tab" aria-selected={tab === 'static'} className={tab === 'static' ? 'on' : ''} onClick={() => setTab('static')}>
           <ImageIcon size={16} /> Hình tĩnh
         </button>
-        <button role="tab" aria-selected={tab === 'video'} className={tab === 'video' ? 'on' : ''} onClick={() => switchTab('video')}>
+        <button
+          role="tab"
+          aria-selected={tab === 'video'}
+          className={tab === 'video' ? 'on' : ''}
+          onClick={() => (setTab('video'), setTool(null))}
+        >
           <Clapperboard size={16} /> Video{narr ? ' thuyết minh' : ''}
         </button>
         <span className="player-title">{name}</span>
+        {tab === 'static' && (
+          <div className="vp-tools ink-tools">
+            <button
+              className={`vp-btn ink-toggle ${tool ? 'on' : ''}`}
+              onClick={() => (tool ? setTool(null) : (setTool(lastTool.current), setInkHidden(false)))}
+              title={tool ? 'Thôi vẽ (Esc)' : 'Vẽ, khoanh, ghi chú tay lên sơ đồ'}
+            >
+              <PenLine size={15} /> <span className="hide-sm">Vẽ</span>
+              {inkApi.strokes.length > 0 && <span className="ink-count">{inkApi.strokes.length}</span>}
+            </button>
+            {!tool && inkApi.strokes.length > 0 && (
+              <button className="vp-btn" onClick={() => setInkHidden(!inkHidden)} title={inkHidden ? 'Hiện nét vẽ' : 'Ẩn nét vẽ'}>
+                {inkHidden ? <EyeOff size={15} /> : <Eye size={15} />}
+              </button>
+            )}
+          </div>
+        )}
         {tools}
       </div>
 
       {tab === 'static' ? (
-        <div className="player-stage">
-          <Viewport resetKey={tab} apiRef={vpApi} onScale={setScale}>
-            <DiagramSvg model={model} cur={last} phase="static" runKey={0} fontScale={prefs.fontScale} />
-          </Viewport>
-        </div>
+        <>
+          {tool && (
+            <InkBar
+              tool={tool}
+              setTool={pickTool}
+              inkApi={inkApi}
+              onDone={() => setTool(null)}
+            />
+          )}
+          <div className="player-stage">
+            <Viewport resetKey={tab} apiRef={vpApi} onScale={setScale}>
+              <DiagramSvg model={model} cur={last} phase="static" runKey={0} fontScale={prefs.fontScale}>
+                <InkLayer box={model.box} inkApi={inkApi} tool={tool} hidden={inkHidden && !tool} />
+              </DiagramSvg>
+            </Viewport>
+          </div>
+        </>
       ) : (
         <>
           <div className="player-stage">

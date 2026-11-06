@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Download, Eye, EyeOff, Trash2, Upload, X } from 'lucide-react';
-import { exportProgress, importProgress, MODELS, progress, resetProgress, settings } from '../lib/store';
+import { exportProgress, importProgress, MODELS, notes, progress, resetProgress, settings } from '../lib/store';
 import { Sketch } from './Sketch';
 
 export default function SettingsDialog({ onClose }: { onClose: () => void }) {
@@ -12,6 +12,7 @@ export default function SettingsDialog({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<'merge' | 'replace'>('merge');
   const file = useRef<HTMLInputElement>(null);
   const count = Object.keys(p.lessons).length;
+  const nCount = Object.keys(notes.use().notes).length;
 
   const saveKey = () => {
     settings.update((v) => ({ ...v, apiKey: key.trim() }));
@@ -81,7 +82,8 @@ export default function SettingsDialog({ onClose }: { onClose: () => void }) {
         <section>
           <h3>📦 Tiến độ học</h3>
           <p className="muted small">
-            Tiến độ ({count} bài đã mở) lưu trên máy này. Export ra file để chuyển sang thiết bị khác rồi Import ở đó.
+            Tiến độ ({count} bài đã mở), ghi chú ({nCount} bài), đoạn tô, nét vẽ, hội thoại với Claude và lộ trình
+            lưu trên máy này. Export ra file để chuyển sang thiết bị khác rồi Import ở đó.
           </p>
           <div className="row wrap">
             <button className="btn" onClick={exportProgress}>
@@ -105,7 +107,7 @@ export default function SettingsDialog({ onClose }: { onClose: () => void }) {
                 if (!f) return;
                 try {
                   const n = await importProgress(f, mode);
-                  setMsg(`Đã import tiến độ của ${n} bài (${mode === 'merge' ? 'gộp' : 'thay thế'}).`);
+                  setMsg(`Đã import tiến độ của ${n} bài cùng ghi chú và lộ trình (${mode === 'merge' ? 'gộp' : 'thay thế'}).`);
                 } catch (err) {
                   setMsg(`Import lỗi: ${(err as Error).message}`);
                 }
@@ -115,7 +117,7 @@ export default function SettingsDialog({ onClose }: { onClose: () => void }) {
           <button
             className="link-btn danger"
             onClick={() => {
-              if (confirm('Xóa toàn bộ tiến độ học trên máy này? Nên Export trước.')) {
+              if (confirm('Xóa toàn bộ tiến độ học trên máy này? Ghi chú và lộ trình được giữ lại. Nên Export trước.')) {
                 resetProgress();
                 setMsg('Đã xóa tiến độ.');
               }

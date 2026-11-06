@@ -9,6 +9,8 @@ import Home from './pages/Home';
 import ChapterPage from './pages/Chapter';
 import LessonPage from './pages/Lesson';
 import CheatSheetPage from './pages/CheatSheet';
+import NotesPage from './pages/Notes';
+import RoadmapPage from './pages/Roadmap';
 
 type Ui = { openSettings: () => void; openSearch: () => void };
 const UiContext = createContext<Ui>({ openSettings: () => {}, openSearch: () => {} });
@@ -34,6 +36,8 @@ function Header() {
         <NavLink to="/" end>
           Bài học
         </NavLink>
+        <NavLink to="/roadmap">Lộ trình</NavLink>
+        <NavLink to="/notes">Ghi chú</NavLink>
         <NavLink to="/cheat-sheet">Cheat Sheet</NavLink>
       </nav>
       <div className="topbar-right">
@@ -85,6 +89,8 @@ export default function App() {
           <Route path="/c/:id" element={<ChapterPage />} />
           <Route path="/l/:id" element={<LessonPage />} />
           <Route path="/cheat-sheet" element={<CheatSheetPage />} />
+          <Route path="/roadmap" element={<RoadmapPage />} />
+          <Route path="/notes" element={<NotesPage />} />
           <Route path="*" element={<Home />} />
         </Routes>
         <footer className="footer">

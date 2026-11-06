@@ -102,11 +102,121 @@ export const settings = createStore<Settings>('saa.settings.v1', {
 });
 
 // ---------- diagram viewer preferences ----------
-export type ViewPrefs = { fontScale: number; voice: boolean; tab: 'static' | 'video' };
-export const viewPrefs = createStore<ViewPrefs>('saa.view.v1', { fontScale: 1.25, voice: true, tab: 'video' });
+// (every diagram opens on the static tab; the chosen tab is not remembered)
+export type ViewPrefs = { fontScale: number; voice: boolean; chatWidth: number };
+export const CHAT_WIDTH = 440;
+export const viewPrefs = createStore<ViewPrefs>('saa.view.v1', { fontScale: 1.25, voice: true, chatWidth: CHAT_WIDTH });
+
+// ---------- personal notes, one per lesson ----------
+export type Note = { text: string; at: number };
+export type Notes = { notes: Record<string, Note> };
+export const notes = createStore<Notes>('saa.notes.v1', { notes: {} });
+
+export function saveNote(id: string, text: string) {
+  notes.update((n) => {
+    const next = { ...n.notes };
+    if (text.trim()) next[id] = { text, at: Date.now() };
+    else delete next[id];
+    return { notes: next };
+  });
+}
+
+export function appendNote(id: string, text: string) {
+  const cur = notes.get().notes[id]?.text ?? '';
+  saveNote(id, cur.trim() ? `${cur.replace(/\s+$/, '')}\n\n${text}` : text);
+}
+
+// ---------- highlights in lesson text (anchored by the quoted text and a little context) ----------
+export const MARK_COLORS = ['yellow', 'green', 'pink', 'blue'] as const;
+export type MarkColor = (typeof MARK_COLORS)[number];
+export type Mark = { id: string; quote: string; prefix: string; suffix: string; color: MarkColor; note?: string; at: number };
+export const marks = createStore<{ items: Record<string, Mark[]> }>('saa.marks.v1', { items: {} });
+
+const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+
+export function addMark(lessonId: string, m: Omit<Mark, 'id' | 'at'>) {
+  const mark: Mark = { ...m, id: newId(), at: Date.now() };
+  marks.update((s) => ({ items: { ...s.items, [lessonId]: [...(s.items[lessonId] ?? []), mark] } }));
+  return mark;
+}
+
+export function updateMark(lessonId: string, id: string, patch: Partial<Pick<Mark, 'color' | 'note'>>) {
+  marks.update((s) => ({
+    items: { ...s.items, [lessonId]: (s.items[lessonId] ?? []).map((m) => (m.id === id ? { ...m, ...patch, at: Date.now() } : m)) },
+  }));
+}
+
+export function removeMark(lessonId: string, id: string) {
+  marks.update((s) => {
+    const rest = (s.items[lessonId] ?? []).filter((m) => m.id !== id);
+    const items = { ...s.items };
+    if (rest.length) items[lessonId] = rest;
+    else delete items[lessonId];
+    return { items };
+  });
+}
+
+// ---------- freehand drawing on diagrams, in the diagram's own coordinates ----------
+/** c: colour, w: width, o: opacity (highlighter), p: flat [x0, y0, x1, y1, …] */
+export type Stroke = { c: string; w: number; o?: number; p: number[] };
+export const ink = createStore<{ items: Record<string, Stroke[]> }>('saa.ink.v1', { items: {} });
+
+export function setInk(key: string, strokes: Stroke[]) {
+  ink.update((s) => {
+    const items = { ...s.items };
+    if (strokes.length) items[key] = strokes;
+    else delete items[key];
+    return { items };
+  });
+}
+
+// ---------- "Hỏi Claude" conversations, one per lesson ----------
+export type ChatMsg = { role: 'user' | 'assistant'; content: string };
+export type ChatThread = { msgs: ChatMsg[]; at: number };
+export const chats = createStore<{ items: Record<string, ChatThread> }>('saa.chat.v1', { items: {} });
+// localStorage is ~5 MB per site: keep the latest messages of the most recent conversations
+const CHAT_MAX_MSGS = 40;
+const CHAT_MAX_THREADS = 60;
+
+/** Usable history: no empty bubbles, and it ends with an answer (a question left unanswered is dropped). */
+export function cleanChat(msgs: ChatMsg[]) {
+  const out = msgs.filter((m) => m.content.trim());
+  while (out.length && out[out.length - 1].role === 'user') out.pop();
+  return out;
+}
+
+export function saveChat(lessonId: string, msgs: ChatMsg[]) {
+  const kept = cleanChat(msgs).slice(-CHAT_MAX_MSGS);
+  // the API wants the conversation to start with a question
+  while (kept.length && kept[0].role !== 'user') kept.shift();
+  const cur = chats.get().items[lessonId];
+  if (cur ? JSON.stringify(cur.msgs) === JSON.stringify(kept) : !kept.length) return;
+  chats.update((s) => {
+    const items = { ...s.items };
+    if (kept.length) items[lessonId] = { msgs: kept, at: Date.now() };
+    else delete items[lessonId];
+    const ids = Object.keys(items).sort((a, b) => items[b].at - items[a].at);
+    for (const id of ids.slice(CHAT_MAX_THREADS)) delete items[id];
+    return { items };
+  });
+}
+
+// ---------- learning roadmap (the uploaded config file, kept as-is) ----------
+export type StoredRoadmap = { config: unknown; fileName: string; loadedAt: number } | null;
+export const roadmap = createStore<{ current: StoredRoadmap }>('saa.roadmap.v1', { current: null });
 
 // ---------- export / import ----------
-type ExportFile = { app: 'saa-c03-sketchbook'; version: 1; exportedAt: string; progress: Progress };
+type ExportFile = {
+  app: 'saa-c03-sketchbook';
+  version: 1;
+  exportedAt: string;
+  progress: Progress;
+  notes?: Record<string, Note>;
+  marks?: Record<string, Mark[]>;
+  ink?: Record<string, Stroke[]>;
+  chats?: Record<string, ChatThread>;
+  roadmap?: StoredRoadmap;
+};
 
 export function exportProgress() {
   const data: ExportFile = {
@@ -114,6 +224,11 @@ export function exportProgress() {
     version: 1,
     exportedAt: new Date().toISOString(),
     progress: progress.get(),
+    notes: notes.get().notes,
+    marks: marks.get().items,
+    ink: ink.get().items,
+    chats: chats.get().items,
+    roadmap: roadmap.get().current,
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -123,11 +238,47 @@ export function exportProgress() {
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
+const obj = <T,>(v: T | undefined): T => (v && typeof v === 'object' ? v : ({} as T));
+
+/**
+ * Notes, highlights, drawings and chats from an import. Replace takes the file's; merge keeps the newer note
+ * and chat, the union of highlights (newer edit wins) and local drawings where both have one. Also takes the roadmap.
+ */
+function importExtras(data: ExportFile, mode: 'merge' | 'replace') {
+  const inNotes = obj(data.notes);
+  const inMarks = obj(data.marks);
+  const inInk = obj(data.ink);
+  const inChats = obj(data.chats);
+  if (mode === 'replace') {
+    notes.set({ notes: inNotes });
+    marks.set({ items: inMarks });
+    ink.set({ items: inInk });
+    chats.set({ items: inChats });
+  } else {
+    const mc = { ...chats.get().items };
+    for (const [id, t] of Object.entries(inChats)) if (!mc[id] || mc[id].at < t.at) mc[id] = t;
+    chats.set({ items: mc });
+    const merged = { ...notes.get().notes };
+    for (const [id, n] of Object.entries(inNotes)) if (!merged[id] || merged[id].at < n.at) merged[id] = n;
+    notes.set({ notes: merged });
+    const mm = { ...marks.get().items };
+    for (const [id, list] of Object.entries(inMarks)) {
+      const byId = new Map((mm[id] ?? []).map((m) => [m.id, m]));
+      for (const m of list) if (!byId.has(m.id) || byId.get(m.id)!.at < m.at) byId.set(m.id, m);
+      mm[id] = [...byId.values()];
+    }
+    marks.set({ items: mm });
+    ink.set({ items: { ...inInk, ...ink.get().items } });
+  }
+  if (data.roadmap && (mode === 'replace' || !roadmap.get().current)) roadmap.set({ current: data.roadmap });
+}
+
 /** Merge an exported file into local progress: keeps the best of both for each lesson. */
 export async function importProgress(file: File, mode: 'merge' | 'replace'): Promise<number> {
   const data = JSON.parse(await file.text()) as ExportFile;
   if (data?.app !== 'saa-c03-sketchbook' || !data.progress?.lessons) throw new Error('File không đúng định dạng tiến độ.');
   const incoming = data.progress;
+  importExtras(data, mode);
   if (mode === 'replace') {
     progress.set({ lessons: incoming.lessons, last: incoming.last });
     return Object.keys(incoming.lessons).length;

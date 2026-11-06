@@ -2203,3 +2203,793 @@ button.pill:hover {
     display: inline;
   }
 }
+
+/* ---------- notes ---------- */
+.notes-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #c25a00;
+}
+.notes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.notes-seg {
+  display: inline-flex;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.notes-seg button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--hand);
+  font-size: 16px;
+  color: var(--ink);
+  padding: 3px 12px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.notes-seg button + button {
+  border-left: 2px solid var(--ink);
+}
+.notes-seg button.on {
+  background: var(--yellow-soft);
+}
+.notes-seg button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.notes-input {
+  display: block;
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 10px 12px;
+  border: 2px dashed #e8a54b;
+  border-radius: 10px;
+  background: #fff;
+  outline: none;
+}
+.notes-input:focus {
+  border-style: solid;
+  border-color: #e67700;
+}
+.notes-view {
+  min-height: 60px;
+  padding: 4px 2px;
+  cursor: text;
+}
+.notes-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.link-btn.danger-inline {
+  color: var(--red);
+}
+.lesson-side li a svg.note-mark {
+  margin-left: auto;
+  color: #e67700;
+}
+.stage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+  padding: 0 8px;
+  font-size: 12.5px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink-2) !important;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.stage-badge.late,
+.late-text {
+  color: var(--red) !important;
+}
+.stage-badge.late {
+  border-color: var(--red);
+}
+
+/* notes page */
+.notes-page,
+.roadmap-page {
+  max-width: 980px;
+}
+.notes-page .section-head,
+.roadmap-page .section-head {
+  margin-top: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.notes-page h1,
+.roadmap-page h1 {
+  margin: 0;
+}
+.empty-card {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.empty-card p {
+  margin: 4px 0 0;
+}
+.notes-tools {
+  margin-bottom: 8px;
+}
+.notes-search {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 40px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  background: #fff;
+}
+.notes-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  font: inherit;
+  background: transparent;
+}
+.notes-group h2 {
+  margin: 26px 0 4px;
+}
+.note-card {
+  margin: 12px 0;
+}
+.note-title {
+  font-size: 1.3rem;
+  color: var(--ink);
+}
+.note-card .prose {
+  margin-top: 6px;
+}
+.icon-btn.sm {
+  width: 28px;
+  height: 28px;
+}
+.toast.bad {
+  background: var(--red-soft);
+  border-color: var(--red);
+}
+.toast ul {
+  margin: 6px 0 0;
+  padding-left: 1.2em;
+}
+
+/* ---------- roadmap ---------- */
+.roadmap-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+.roadmap-strip.empty {
+  padding: 12px 16px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: 14px;
+}
+.roadmap-strip.empty span {
+  flex: 1;
+  min-width: 200px;
+}
+.roadmap-strip.empty:hover {
+  border-color: var(--ink);
+  background: #fff;
+}
+.roadmap-strip-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 200px;
+}
+.roadmap-strip-body b {
+  font-size: 1.3rem;
+  line-height: 1.2;
+}
+.plan-summary {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+.plan-summary-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 240px;
+}
+.exam-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4px 14px;
+  border-left: 2px dashed var(--line);
+  border-right: 2px dashed var(--line);
+}
+.stages {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0;
+}
+.stage-card {
+  margin: 10px 0;
+  padding: 12px 18px;
+}
+.stage-card summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  list-style: none;
+}
+.stage-card summary::-webkit-details-marker {
+  display: none;
+}
+.stages .done .path-num {
+  background: var(--green-soft);
+}
+.stages .cur .path-num {
+  background: var(--yellow-soft);
+}
+.stages .late .path-num {
+  background: var(--red-soft);
+}
+.stage-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.stage-body b {
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+.stage-due {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+}
+.stage-lessons {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 8px 0 0 48px;
+  border-top: 2px dashed #e9ecef;
+  columns: 2 280px;
+  column-gap: 18px;
+}
+.stage-lessons li {
+  break-inside: avoid;
+}
+.stage-lessons a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.3;
+}
+.stage-lessons a:hover {
+  background: #f1f3f5;
+}
+.stage-lessons svg {
+  flex-shrink: 0;
+  color: #adb5bd;
+}
+.stage-lessons .done svg {
+  color: var(--green);
+}
+.stage-lessons .ch-chip {
+  min-width: 28px;
+  height: 20px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.stage-lessons .stars {
+  font-size: 13px;
+  margin-left: auto;
+}
+.warn-list {
+  margin: 0 0 16px;
+}
+.roadmap-actions {
+  margin: 4px 0 26px;
+}
+.roadmap-setup {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 20px;
+  margin-top: 8px;
+}
+.roadmap-setup h3 {
+  margin: 0 0 6px;
+}
+.template-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.template-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 2px dashed #e9ecef;
+}
+.template-list li > div {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.template-list .btn {
+  font-size: 16px;
+  padding: 0.35rem 0.8rem;
+  flex-shrink: 0;
+}
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 10px 0;
+  padding: 26px 16px;
+  border: 2.5px dashed var(--line);
+  border-radius: 14px;
+  background: #fafafa;
+  cursor: pointer;
+  text-align: center;
+}
+.dropzone b {
+  font-size: 1.2rem;
+}
+.dropzone:hover,
+.dropzone.over {
+  border-color: var(--blue);
+  background: var(--blue-softer);
+}
+.format-help {
+  margin-top: 26px;
+}
+.format-help summary {
+  cursor: pointer;
+  font-size: 1.3rem;
+}
+.format-help .chip b {
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .roadmap-setup {
+    grid-template-columns: 1fr;
+  }
+  .stage-card summary {
+    flex-wrap: wrap;
+  }
+  .stage-due {
+    align-items: flex-start;
+    text-align: left;
+    padding-left: 48px;
+  }
+  .stage-lessons {
+    padding-left: 0;
+  }
+  .exam-count {
+    border: 0;
+    padding: 0;
+  }
+  .template-list li {
+    flex-wrap: wrap;
+  }
+  .stage-badge {
+    margin: 4px 0 0;
+  }
+}
+
+/* ---------- highlights in lesson text (CSS Custom Highlight API) ---------- */
+::highlight(hl-yellow) {
+  background-color: rgba(255, 212, 59, 0.55);
+}
+::highlight(hl-green) {
+  background-color: rgba(105, 219, 124, 0.45);
+}
+::highlight(hl-pink) {
+  background-color: rgba(250, 162, 193, 0.55);
+}
+::highlight(hl-blue) {
+  background-color: rgba(116, 192, 252, 0.45);
+}
+::highlight(hl-note) {
+  text-decoration: underline dotted #e67700;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+::highlight(hl-focus) {
+  background-color: rgba(250, 82, 82, 0.4);
+}
+.on-mark {
+  cursor: pointer;
+}
+.swatch {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+}
+i.swatch {
+  width: 12px;
+  height: 12px;
+  border-width: 1.5px;
+  margin-top: 4px;
+  cursor: inherit;
+}
+.swatch.yellow {
+  background: #ffd43b;
+}
+.swatch.green {
+  background: #8ce99a;
+}
+.swatch.pink {
+  background: #faa2c1;
+}
+.swatch.blue {
+  background: #74c0fc;
+}
+.swatch.on {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ink);
+}
+.mark-bar {
+  position: absolute;
+  z-index: 60;
+  transform: translate(-50%, calc(-100% - 10px));
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 12px 9px 13px 10px;
+  box-shadow: 3px 3px 0 var(--ink);
+  white-space: nowrap;
+}
+button.swatch:hover {
+  transform: scale(1.15);
+}
+.mark-sep {
+  width: 2px;
+  height: 20px;
+  background: var(--line);
+}
+.mark-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--hand);
+  font-size: 16px;
+  color: var(--ink);
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+.mark-act:hover {
+  background: var(--yellow-soft);
+}
+.mark-pop {
+  position: absolute;
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fffdf0;
+  border: 2px solid var(--ink);
+  border-radius: 12px 10px 13px 9px;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.mark-pop .row {
+  gap: 8px;
+}
+.mark-quote {
+  margin: 0;
+  padding: 4px 10px;
+  max-height: 4.8em;
+  overflow: hidden;
+  font-size: 13.5px;
+  line-height: 1.6;
+  border-left: 4px solid #ffd43b;
+  background: #fff;
+  border-radius: 0 8px 8px 0;
+}
+.mark-quote.green {
+  border-color: #69db7c;
+}
+.mark-quote.pink {
+  border-color: #f783ac;
+}
+.mark-quote.blue {
+  border-color: #4dabf7;
+}
+.mark-pop textarea {
+  font: inherit;
+  font-size: 14px;
+  padding: 6px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  resize: vertical;
+  outline: none;
+  background: #fff;
+}
+.marks-list {
+  margin-top: 14px;
+}
+.marks-list > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.marks-list ul,
+ul.marks-list {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0 0;
+}
+.marks-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  border-top: 1.5px dashed #f1d8b0;
+  padding: 4px 0;
+}
+.mark-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  color: var(--ink);
+  text-decoration: none;
+  cursor: pointer;
+}
+.mark-item:hover:not(:disabled) {
+  background: #fff3d6;
+}
+.mark-item:disabled {
+  cursor: default;
+}
+.mark-item > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mark-item-q {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--ink-2);
+}
+.mark-item-n {
+  font-family: var(--hand);
+  font-size: 17px;
+  color: #c25a00;
+  white-space: pre-wrap;
+}
+
+/* ---------- drawing on diagrams ---------- */
+.ink-tools {
+  margin-right: 0;
+}
+.ink-toggle {
+  gap: 4px;
+  align-items: center;
+}
+.ink-toggle.on {
+  background: var(--yellow-soft);
+}
+.ink-count {
+  font-family: var(--body);
+  font-size: 11px;
+  line-height: 16px;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #e03131;
+  color: #fff;
+}
+.ink-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #fffdf0;
+  border-bottom: 2px dashed var(--line);
+}
+.ink-pen {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 9px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.ink-pen:hover:not(:disabled) {
+  background: #fff;
+  border-color: var(--line);
+}
+.ink-pen.on {
+  background: #fff;
+  border-color: var(--ink);
+}
+.ink-pen:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.ink-hint {
+  margin-left: 8px;
+}
+.ink-done {
+  margin-left: auto;
+  font-size: 16px;
+  padding: 0.2rem 0.8rem;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.player.inking .vp,
+.player.inking .vp.zoomed {
+  touch-action: none;
+  cursor: crosshair;
+}
+.ink-surface {
+  cursor: crosshair;
+}
+.ink-surface.eraser {
+  cursor: cell;
+}
+.ink-hl {
+  mix-blend-mode: multiply;
+}
+@media (max-width: 640px) {
+  .ink-hint {
+    display: none;
+  }
+}
+.player.inking .vp-hint {
+  display: none;
+}
+
+/* ---------- saved Claude conversations ---------- */
+.chat-head > div > .muted + .muted {
+  font-size: 11.5px;
+}
+.bubble-act {
+  margin-top: 4px;
+  font-size: 12.5px;
+}
+.ask-count {
+  font-family: var(--body);
+  font-size: 12px;
+  line-height: 20px;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fff;
+  text-align: center;
+}
+.chat-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1.5px dashed #f1d8b0;
+}
+.chat-line svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--blue);
+}
+
+/* ---------- resizable chat panel ---------- */
+.chat-resize {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -7px;
+  width: 12px;
+  z-index: 2;
+  cursor: ew-resize;
+  touch-action: none;
+}
+.chat-resize::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 6px;
+  height: 46px;
+  transform: translateY(-50%);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.chat-resize:hover::after,
+.chat-resize:focus-visible::after,
+.chat.resizing .chat-resize::after {
+  opacity: 1;
+}
+.chat-resize:focus-visible {
+  outline: none;
+}
+.chat.resizing {
+  transition: none;
+}
+body.resizing-chat {
+  cursor: ew-resize;
+  user-select: none;
+  -webkit-user-select: none;
+}
+@media (max-width: 640px) {
+  .chat-resize {
+    display: none;
+  }
+  /* phones: always full width, whatever was set on a bigger screen */
+  .chat {
+    width: 100vw !important;
+  }
+}

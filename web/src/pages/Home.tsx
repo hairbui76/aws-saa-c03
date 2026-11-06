@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play, Search } from 'lucide-react';
+import { ArrowRight, Play, Route as RouteIcon, Search } from 'lucide-react';
 import { useIndex, useJson, type Diagram } from '../lib/content';
 import { isDone, progress } from '../lib/store';
 import { Sketch, SketchBar } from '../components/Sketch';
 import { StaticDiagram } from '../components/AnimatedDiagram';
 import { useUi } from '../App';
+import { currentStage, fmtDate, stageStatus, usePlan } from '../lib/roadmap';
 
 const ACCENTS = ['#a5d8ff', '#ffc9c9', '#b2f2bb', '#ffec99', '#d0bfff', '#ffd8a8', '#96f2d7', '#eebefa'];
 
@@ -62,6 +63,8 @@ export default function Home() {
         </Sketch>
       </section>
 
+      <RoadmapStrip />
+
       <div className="section-head">
         <h2>Các chương</h2>
         <span className="muted small">{data.chapters.length} chương · theo thứ tự khóa học</span>
@@ -115,5 +118,50 @@ export default function Home() {
         </Link>
       </div>
     </div>
+  );
+}
+
+/** The uploaded roadmap at a glance, or an invitation to make one. */
+function RoadmapStrip() {
+  const { plan } = usePlan();
+  const p = progress.use();
+  if (!plan)
+    return (
+      <Link to="/roadmap" className="roadmap-strip empty">
+        <RouteIcon size={18} />
+        <span>
+          <b>Tự đặt lộ trình học:</b> tải file mẫu (8 tuần, 12 tuần…), sửa ngày và thứ tự bài rồi tải lên để theo dõi hạn
+          từng giai đoạn.
+        </span>
+        <ArrowRight size={16} />
+      </Link>
+    );
+  const cur = currentStage(plan, p);
+  const st = cur && stageStatus(cur, p);
+  const next = cur?.lessons.find((l) => !isDone(p.lessons[l.id]));
+  return (
+    <Sketch className="card roadmap-strip" seed="rm-strip" fill="#fffdf0">
+      <RouteIcon size={20} />
+      <div className="roadmap-strip-body">
+        <span className="muted small">
+          {plan.name} · giai đoạn {cur ? cur.index + 1 : plan.stages.length}/{plan.stages.length}
+        </span>
+        <b className="hand">{cur ? cur.title : '🎉 Đã xong lộ trình'}</b>
+        {st && (
+          <span className={`small ${st.overdue ? 'late-text' : 'muted'}`}>
+            {st.done}/{st.total} bài
+            {cur!.due && ` · hạn ${fmtDate(cur!.due)}${st.overdue ? ` (trễ ${-st.daysLeft!} ngày)` : st.daysLeft ? ` (còn ${st.daysLeft} ngày)` : ' (hôm nay)'}`}
+          </span>
+        )}
+      </div>
+      {next && (
+        <Link className="btn primary" to={`/l/${next.id}`}>
+          <Play size={16} /> {next.title}
+        </Link>
+      )}
+      <Link className="btn" to="/roadmap">
+        Xem lộ trình
+      </Link>
+    </Sketch>
   );
 }
