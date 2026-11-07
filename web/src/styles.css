@@ -2993,3 +2993,44 @@ body.resizing-chat {
     width: 100vw !important;
   }
 }
+
+/* ---------- practice-test questions inside the end-of-lesson quiz ---------- */
+.quiz-dots {
+  flex-wrap: wrap;
+  row-gap: 5px;
+}
+.quiz-src {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #c25a00;
+  background: #fff4e6;
+  border: 1.5px solid #ffc078;
+  border-radius: 999px;
+  padding: 0 10px;
+}
+.quiz-review .quiz-src {
+  margin: 0 4px 0 0;
+}
+.quiz-q.exam {
+  white-space: pre-line;
+  font-weight: 500;
+  line-height: 1.6;
+}
+.quiz-doubt {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff4e6;
+  border: 1.5px solid #ffa94d;
+  font-size: 14px;
+}
+.quiz-doubt svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #e8590c;
+}

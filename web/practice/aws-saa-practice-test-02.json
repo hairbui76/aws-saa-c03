@@ -1,0 +1,395 @@
+{
+  "source": "aws-saa-practice-test-02",
+  "items": [
+    {
+      "no": 1,
+      "lessons": ["efs", "lab-architecture-evolution"],
+      "explain": "EFS là shared file system NFS mount đồng thời lên mọi instance Linux trong ASG, nên instance mới vừa launch đã thấy ngay bản manual mới nhất mà không cần đồng bộ, và ứng dụng vẫn đọc file như bình thường nên không phải sửa code. Đưa manual lên S3 (Standard hay Standard-IA) rồi cấu hình instance tải về vẫn là cơ chế sao chép, instance mới vẫn có thể cũ và phải thêm logic tải/đồng bộ. Instance store thì ephemeral, riêng từng host, mất khi stop/terminate và không chia sẻ được. Từ khóa: 'all instances have up-to-date' + 'no code modifications' + Auto Scaling → shared file system EFS.",
+      "doubt": null
+    },
+    {
+      "no": 2,
+      "lessons": ["s3-events", "lambda"],
+      "explain": "S3 Event Notification cho sự kiện object created gọi thẳng Lambda: chạy ngay khi file lên, xử lý vài giây, tự scale từ vài file mỗi giờ tới hàng trăm upload đồng thời và chỉ trả tiền khi chạy. CloudTrail + AppSync không phải cơ chế xử lý file và AppSync là GraphQL API. Kinesis Data Streams không 'deliver file vào S3' và là chi phí thường trực vô ích ở đây. EC2 chạy cron mỗi phút vừa trễ hơn yêu cầu 5 giây vừa tốn tiền khi rảnh. Từ khóa: upload S3 thất thường + xử lý nhanh + cost-effective → S3 event → Lambda.",
+      "doubt": null
+    },
+    {
+      "no": 3,
+      "lessons": ["asg-scaling-policies", "sqs"],
+      "explain": "Processing tier kéo việc từ SQS, nên thước đo tải đúng nhất là độ dài queue (ApproximateNumberOfMessages); target tracking theo backlog giúp ASG tự scale out khi queue dồn lên và scale in khi rảnh, phù hợp đỉnh tải không đoán trước. Scheduled scaling chỉ hợp khi giờ cao điểm biết trước, trong khi đề nói thời điểm 'variable and unpredictable'. ElastiCache trước DynamoDB và CloudFront cho web tier không giải quyết nút cổ chai CPU ở processing tier. Từ khóa: SQS queue fills up + unpredictable → scale worker theo độ dài queue.",
+      "doubt": null
+    },
+    {
+      "no": 4,
+      "lessons": ["aurora-serverless"],
+      "explain": "Môi trường dev chỉ dùng khoảng 8 giờ/ngày và test chỉ 2 giờ/ngày, nên Aurora Serverless v2 PostgreSQL là rẻ nhất: capacity tự co giãn theo ACU và giảm về mức tối thiểu (có thể pause) khi không ai dùng, chỉ trả cho phần dùng. Aurora global database là tính năng DR/đọc toàn cầu, đắt và không liên quan. Aurora provisioned cluster hay RDS instance Single-AZ/Multi-AZ đều chạy và tính tiền 24/7 dù môi trường bỏ không phần lớn thời gian. Từ khóa: dev/test, dùng vài giờ mỗi ngày, cost-effective → Aurora Serverless.",
+      "doubt": null
+    },
+    {
+      "no": 5,
+      "lessons": ["transfer-family", "lambda", "datasync"],
+      "explain": "AWS Transfer Family có SFTP connector để đẩy file từ S3 tới một SFTP server bên ngoài; dùng Lambda có VPC access để kích hoạt việc chuyển qua đường VPN có sẵn, phần giao thức SFTP do dịch vụ managed lo nên ít vận hành nhất. EC2 cài SFTP client với scheduled task vừa phải quản lý server vừa không chuyển 'ngay khi upload'. Lambda tự viết code SFTP chạy được nhưng phải tự lo thư viện, retry và credential, nhiều công sức hơn dịch vụ managed. DataSync qua agent trên EC2 chạy theo lịch và phải duy trì agent. Từ khóa: S3 → SFTP server bên ngoài + least management overhead → Transfer Family.",
+      "doubt": null
+    },
+    {
+      "no": 6,
+      "lessons": ["datasync"],
+      "explain": "DataSync hỗ trợ HDFS làm nguồn và S3 làm đích, mọi dữ liệu truyền qua agent đều được mã hóa TLS in transit, nên tự nó đã đáp ứng 'encrypted network connection' mà không cần thêm hạ tầng. Thêm Global Accelerator chỉ tăng chi phí và không phải cách DataSync dùng. Application Migration Service dùng để rehost server/VM chứ không chuyển dữ liệu HDFS sang data lake, còn Direct Connect hay Site-to-Site VPN đều là chi phí thêm không cần thiết. Từ khóa: HDFS/NAS → S3 online + encrypted + cost-effective → DataSync.",
+      "doubt": null
+    },
+    {
+      "no": 7,
+      "lessons": ["s3-lifecycle-configuration", "s3-storage-classes", "cloudfront-architecture"],
+      "explain": "Lưu ảnh trên S3 sau CloudFront rồi dùng Lifecycle rule chuyển sang Glacier Flexible Retrieval sau 30 ngày khớp đúng kiểu truy cập: 30 ngày đầu truy cập nhiều ở Standard, sau đó hiếm khi đọc và chỉ giữ cho audit nên xuống lớp lưu trữ rẻ. EFS và EBS gp3 đắt hơn S3 nhiều cho kho ảnh lớn dần, và không có tiering tự động theo tuổi như lifecycle. Để mọi object ở Glacier Deep Archive ngay từ đầu thì ảnh mới không truy cập được tức thì (restore mất hàng giờ). Từ khóa: 'frequently first 30 days, rarely after' → S3 Lifecycle transition.",
+      "doubt": null
+    },
+    {
+      "no": 8,
+      "lessons": ["rds-multi-az", "databases-on-ec2"],
+      "explain": "RDS for SQL Server Multi-AZ giữ một standby đồng bộ ở AZ khác và tự failover, cho HA trong region với vận hành tối thiểu vì AWS quản lý replication và failover. Chỉ bật automated snapshot là backup, không phải HA: khôi phục cần tạo instance mới và mất thời gian. Aurora không chạy engine SQL Server (chỉ MySQL/PostgreSQL). Tự cài SQL Server trên hai EC2 và đồng bộ bằng script là nhiều vận hành nhất. Từ khóa: SQL Server + highly available within a Region + least operational overhead → RDS Multi-AZ.",
+      "doubt": null
+    },
+    {
+      "no": 9,
+      "lessons": ["egress-only-internet-gateway", "nat-gateway"],
+      "explain": "External API hỗ trợ IPv6, nên mỗi client VPC có thể dùng egress-only internet gateway (route ::/0) để có kết nối IPv6 chỉ chiều outbound, miễn phí theo giờ, rồi xóa toàn bộ NAT gateway. Route traffic sang shared services VPC không có tác dụng vì VPC đó không có internet và peering không transitive. Transit Gateway cũng phải có NAT ở đâu đó để ra internet, nên không xóa hết NAT được. Đặt client vào public subnet với IPv6 thì instance lộ ra internet theo cả hai chiều, vi phạm 'only outbound access'. Từ khóa: IPv6 + outbound only → egress-only internet gateway.",
+      "doubt": null
+    },
+    {
+      "no": 10,
+      "lessons": ["kinesis-data-streams", "compare-sqs-vs-sns-vs-kinesis"],
+      "explain": "Kinesis Data Streams ingest hàng triệu record nhỏ mỗi phút, giữ dữ liệu trong rolling window để nhiều consumer đọc song song và replay từ bất kỳ điểm nào trong khoảng retention; enhanced fan-out cho mỗi consumer throughput riêng (ở on-demand mode thì không phải tự chia shard). Step Functions không phải dịch vụ ingest stream. SQS FIFO xóa message sau khi xử lý nên không replay được và throughput hạn chế. Amazon MQ là broker phải chọn size, không scale liền mạch tới quy mô này và không có replay theo thời điểm. Từ khóa: ingest telemetry + multiple consumers + replay → Kinesis Data Streams.",
+      "doubt": null
+    },
+    {
+      "no": 11,
+      "lessons": ["asg-scaling-policies", "auto-scaling-groups", "sqs"],
+      "explain": "Cần scale cả hai tầng, mỗi tầng theo thước đo riêng: frontend sau ALB scale theo lưu lượng request/network, backend đọc từ SQS scale theo backlog của queue. Gấp đôi số instance cố định là đoán mò, không co giãn và DLQ chỉ chứa message lỗi chứ không phải chỗ 'giữ request khi quá tải'. Chỉ đưa frontend vào ASG thì backend vẫn nghẽn. ElastiCache không đặt 'trước ALB' được và không cache request ghi bán hàng. Từ khóa: frontend + backend loosely coupled qua SQS → hai ASG, backend scale theo queue backlog.",
+      "doubt": null
+    },
+    {
+      "no": 12,
+      "lessons": ["security-groups", "lambda"],
+      "explain": "Đặt Lambda trong VPC, gắn security group cho function và cho DB security group chỉ nhận traffic từ SG của Lambda là cách hẹp và an toàn nhất, vì rule tham chiếu SG chỉ cho đúng các ENI của Lambda. Mở DB SG cho 0.0.0.0/0 là quá rộng dù đã có NACL. Bật public access cho DB và mở theo dải IP public của Lambda làm database lộ ra internet. Lambda không có 'default VPC' để peer, và peering cũng không bỏ được security group. Từ khóa: MOST secure + Lambda ↔ RDS trong VPC → SG tham chiếu SG.",
+      "doubt": null
+    },
+    {
+      "no": 13,
+      "lessons": ["auto-scaling-groups", "ec2-purchase-options", "launch-templates"],
+      "explain": "Ứng dụng stateless và chịu lỗi tốt nên hợp với scale out: tạo AMI, đưa vào launch template, ASG dùng Spot sau một ALB tự thêm/bớt instance theo tải, Spot rẻ tới ~90% và mất instance cũng không sao. Thêm đúng một instance On-Demand thứ hai (qua ALB hay Route 53 weighted) không scale tự động và Route 53 không cân bằng tải theo tình trạng thực. Lambda đổi instance type là scale up, phải stop instance gây downtime và vẫn có trần. Từ khóa: stateless + resilient + scale seamlessly + cost-effective → ASG + Spot + ALB.",
+      "doubt": null
+    },
+    {
+      "no": 14,
+      "lessons": ["nat-gateway", "vpc-routing-and-internet-gateway"],
+      "explain": "Cần ba bước: đặt NAT gateway trong public subnet (nơi có route tới IGW), gắn Elastic IP cho NAT gateway để có địa chỉ public ra internet, và thêm route 0.0.0.0/0 trong route table của private subnet trỏ tới NAT gateway. Như vậy instance private đi ra internet để tải update nhưng internet không khởi tạo kết nối vào được. NAT gateway đặt trong private subnet không có đường ra IGW. Route 0.0.0.0/0 của public subnet phải trỏ IGW chứ không trỏ NAT. IGW không gắn Elastic IP. Từ khóa: private subnet + outbound internet + not accessible from internet → NAT gateway.",
+      "doubt": null
+    },
+    {
+      "no": 15,
+      "lessons": ["global-accelerator"],
+      "explain": "Global Accelerator cấp 2 anycast IP, đưa người chơi vào AWS backbone ở edge gần nhất rồi tới endpoint group trong region tốt nhất, hỗ trợ cả UDP nên giảm latency và packet loss. Transit gateway peering và VPC peering mesh là kết nối giữa các VPC, không phục vụ người dùng cuối từ internet và không có 'bật UDP'. CloudFront là CDN cho HTTP/HTTPS, không hỗ trợ UDP. Từ khóa: UDP + multi-Region + giảm latency/packet loss cho user → Global Accelerator.",
+      "doubt": null
+    },
+    {
+      "no": 16,
+      "lessons": ["fsx-for-lustre"],
+      "explain": "FSx for Lustre là file system song song cho HPC trên Linux, latency dưới mili giây với SSD, hàng trăm instance đọc ghi đồng thời; liên kết với S3 để import dữ liệu thô và export kết quả. Lustre với HDD không đạt sub-millisecond, và Gateway Load Balancer không phải cách truy cập file system. FSx for Windows dùng SMB, HDD, không hợp Linux HPC. FSx for NetApp ONTAP với tiering policy All đẩy dữ liệu xuống capacity pool, mất hiệu năng. Từ khóa: HPC, hundreds of Linux instances, sub-millisecond, S3 → FSx for Lustre SSD.",
+      "doubt": null
+    },
+    {
+      "no": 17,
+      "lessons": ["efs"],
+      "explain": "Ứng dụng Linux đang dùng shared file system và không được sửa, nên EFS (NFS) mount trên các instance trong ASG là thay thế trực tiếp; mount target ở nhiều AZ cho HA, dung lượng tự tăng, và tài liệu ghi một lần đọc thỉnh thoảng hợp với lớp Standard-IA để giảm chi phí. Một EC2 làm NFS server là single point of failure và phải tự vận hành. S3 không mount như file system chuẩn mà không đổi ứng dụng. Transfer Family SFTP buộc ứng dụng đổi sang giao thức SFTP. Từ khóa: Linux + shared file system + no app change + highly available → EFS (+ IA cho dữ liệu ít truy cập).",
+      "doubt": null
+    },
+    {
+      "no": 18,
+      "lessons": ["database-models", "dynamodb-architecture"],
+      "explain": "Dữ liệu là tài liệu (document) thường lớn hơn 1 MB, tải cao trong giờ giao dịch và rất thấp ngoài giờ, nên DocumentDB serverless (document database, tự co giãn capacity) vừa giữ hiệu năng giờ cao điểm vừa không trả cho capacity thừa. DynamoDB giới hạn item 400 KB nên không chứa trực tiếp tài liệu > 1 MB. MongoDB tự dựng trên EC2 tốn vận hành và khó co giãn tầng dữ liệu. RDS MySQL trên Reserved Instances là capacity cố định trả trước, đúng vấn đề đang muốn bỏ. Từ khóa: document > 1 MB + tải biến động theo giờ → document DB serverless.",
+      "doubt": null
+    },
+    {
+      "no": 19,
+      "lessons": ["ssl-offload-and-session-stickiness", "aurora", "compare-alb-vs-nlb"],
+      "explain": "Tầng ứng dụng là stateful, nên cần ALB với sticky sessions để mỗi user luôn về cùng instance, giữ trải nghiệm nhất quán khi ASG thêm instance. Ở tầng DB, Aurora Auto Scaling chỉ thêm/bớt Aurora Replicas để scale đọc; cluster chỉ có một writer nên không có 'auto scaling cho writer'. NLB không có thuật toán least outstanding requests (đó là của ALB) và là layer 4, không hợp làm stickiness theo cookie ứng dụng. Từ khóa: stateful app + consistent user experience → sticky sessions trên ALB; scale đọc Aurora → replicas.",
+      "doubt": null
+    },
+    {
+      "no": 20,
+      "lessons": ["ecs", "iam-identity-policies", "iam-users-and-arns"],
+      "explain": "Theo least privilege, policy nên liệt kê đúng ARN của từng bucket cần dùng, rồi gắn vào task role của ECS task để chỉ container đó nhận quyền. Gắn vào instance role của container instance thì mọi task trên host đều có quyền, rộng hơn cần thiết (và Fargate không có instance role). ARN wildcard dễ khớp cả bucket ngoài nhóm. Điều kiện theo tag bucket không phải cách chuẩn để giới hạn bucket trong S3 policy và dễ cấp nhầm nếu ai đó gắn tag. Từ khóa: ECS + least privilege → task role + resource ARN cụ thể.",
+      "doubt": null
+    },
+    {
+      "no": 21,
+      "lessons": ["eventbridge", "sns"],
+      "explain": "EventBridge event bus vừa route message giữa microservice bằng rule lọc theo nội dung, vừa có tính năng archive tích hợp lưu event theo thời gian giữ cấu hình (30 ngày) và replay được, nên gần như không phải viết code. SNS + filter policy route được, nhưng SQS chỉ giữ message tối đa 14 ngày và không phải kho archive, còn lưu vào S3 phải tự viết phần ghi. API Gateway + Lambda tự route bằng query parameter và tự archive là nhiều công nhất. Từ khóa: messaging giữa microservices + archive + least development effort → EventBridge archive.",
+      "doubt": null
+    },
+    {
+      "no": 22,
+      "lessons": ["s3-object-lock", "s3-versioning-and-mfa-delete"],
+      "explain": "Object Lock yêu cầu bật versioning; compliance mode với retention 1 năm đảm bảo không ai, kể cả root user, xóa hay ghi đè object version trong 1 năm, trong khi vẫn đọc bình thường. Lambda chuyển dữ liệu sang Deep Archive sau 1 năm chỉ là chuyển lớp lưu trữ, không chống xóa. Transfer Acceleration chỉ tăng tốc upload. Versioning + lifecycle sang Glacier vẫn cho phép người có quyền xóa version. Từ khóa: 'prevent any user from deleting or overwriting' + 1 year → Object Lock compliance mode.",
+      "doubt": null
+    },
+    {
+      "no": 23,
+      "lessons": ["kms", "s3-encryption", "s3-storage-classes"],
+      "explain": "Công ty phải giữ quyền kiểm soát key material: tạo KMS key không có key material rồi import key material của công ty (BYOK) giúp dùng KMS mà vẫn sở hữu, có thể xóa hoặc hết hạn key material bất kỳ lúc nào. Lưu dữ liệu archive trong S3 Glacier storage class với SSE-C thì AWS không bao giờ lưu key, mỗi request phải gửi key của công ty, và Glacier là lớp rẻ cho petabyte dữ liệu backup/archive. KMS key do AWS sinh key material không đáp ứng yêu cầu. Standard-IA đắt hơn Glacier cho kho lưu trữ lâu dài. Snowball chỉ là thiết bị vận chuyển, không phải nơi lưu backup lâu dài. Từ khóa: 'retain control over the encryption key material' → imported key material hoặc SSE-C.",
+      "doubt": null
+    },
+    {
+      "no": 24,
+      "lessons": ["aws-control-tower", "aws-organizations", "iam-roles"],
+      "explain": "IAM Identity Center (tên cũ AWS SSO) bật ở management account của Organization là điểm đăng nhập tập trung cho mọi account, kết nối được với external IdP làm identity source, và quản lý user/group ở đó. Permission set định nghĩa quyền theo nhiệm vụ, gán cho user/group trên từng account; Identity Center tự tạo role tạm thời trong account, đúng least privilege. Tạo IAM user/group riêng trong từng account hay cấu hình SAML IdP trong IAM của từng account là phân tán, không tập trung và khó quản trị. Gán IAM user vào role bằng inline policy cũng là quản lý thủ công từng account. Từ khóa: multi-account + centralized identity + external IdP → IAM Identity Center + permission sets.",
+      "doubt": null
+    },
+    {
+      "no": 25,
+      "lessons": ["dax"],
+      "explain": "Báo cáo hằng ngày đọc nặng vào DynamoDB làm chậm website; DAX là cache in-memory tích hợp DynamoDB, gánh phần đọc lặp lại với latency microsecond và chỉ cần đổi client SDK, nên thay đổi kiến trúc ít nhất. Chuyển sang RDS MySQL hay ElastiCache Memcached là thay hẳn database, quá nhiều thay đổi, và Memcached không phải database bền vững. DynamoDB Streams chỉ ghi lại thay đổi item, không tăng hiệu năng đọc. Từ khóa: DynamoDB + đọc nặng + minimal changes → DAX.",
+      "doubt": null
+    },
+    {
+      "no": 26,
+      "lessons": ["ec2-purchase-options", "ec2-instance-types"],
+      "explain": "Amazon EMR instance fleet cho phép khai báo nhiều instance type và tách On-Demand/Spot theo node type; khi chỉ định nhiều subnet ở nhiều AZ, EMR tự chọn AZ có đủ instance type và purchasing option phù hợp lúc launch cluster. Instance group chỉ có một instance type cho mỗi group và chỉ launch vào một subnet, không tự chọn AZ. Một subnet duy nhất nghĩa là chỉ một AZ, EMR không có tùy chọn 'kiểm tra AZ' ở đó. Từ khóa: chỉ launch ở AZ có capacity + On-Demand core và Spot task → instance fleet + nhiều subnet.",
+      "doubt": null
+    },
+    {
+      "no": 27,
+      "lessons": ["glue"],
+      "explain": "AWS Lake Formation dựng trên Glue Data Catalog và cung cấp phân quyền fine-grained tới mức cột/hàng (ví dụ cột PII) cho từng IAM role, quản lý tập trung nên hiệu quả vận hành nhất. Tự viết hai IAM policy hay hai role theo PII/non-PII chỉ làm được ở mức object S3, không lọc được cột trong cùng một bảng và khó duy trì. Tạo view riêng trong Glue phải tự duy trì nhiều view và vẫn cần phân quyền bên dưới. Từ khóa: Glue Catalog + fine-grained access cho PII → Lake Formation.",
+      "doubt": null
+    },
+    {
+      "no": 28,
+      "lessons": ["direct-connect", "redshift"],
+      "explain": "Data transfer out là phần tính tiền: đặt visualization tool cùng region với data warehouse thì 50 MB kết quả query chỉ đi trong AWS, chỉ 500 KB hình ảnh đi ra về công ty, và đi qua Direct Connect có giá data transfer out thấp hơn internet. Đặt tool on-premises thì mỗi query kéo 50 MB ra khỏi AWS, dù qua DX vẫn tốn hơn nhiều. Truy cập tool qua internet thì phí egress mỗi GB cao hơn DX. Từ khóa: tối ưu chi phí truyền dữ liệu + Direct Connect → xử lý gần dữ liệu, chỉ gửi kết quả nhỏ qua DX.",
+      "doubt": null
+    },
+    {
+      "no": 29,
+      "lessons": ["rds-multi-az"],
+      "explain": "Multi-AZ DB instance tạo standby đồng bộ ở AZ khác và tự failover khi AZ hay instance chính lỗi, đúng cách nâng availability cho RDS MySQL đang chạy một AZ. RDS không có 'multi-Region DB instance deployment'; cross-Region là read replica, phục vụ DR chứ không phải chế độ triển khai. Đặt SQS queue trước DB (cùng hay khác region) đòi đổi ứng dụng và không làm DB sẵn sàng hơn. Từ khóa: RDS + improve availability → Multi-AZ.",
+      "doubt": null
+    },
+    {
+      "no": 30,
+      "lessons": ["compare-alb-vs-nlb", "auto-scaling-groups", "elastic-load-balancer"],
+      "explain": "Internet-facing ALB nhận HTTP từ internet và chuyển vào các instance trong ASG nằm ở private subnet không có route ra internet, nên ứng dụng vẫn public, tự scale, mà instance không có internet access. Đặt instance ở public subnet với IGW là cho chúng internet access, trái yêu cầu. NLB là layer 4, chạy được nhưng với HTTP thì ALB (layer 7) là lựa chọn chuẩn trong đề. Từ khóa: HTTP + instance không có internet + vẫn public + scale → internet-facing ALB + private subnet + ASG.",
+      "doubt": null
+    },
+    {
+      "no": 31,
+      "lessons": ["kms", "cloudhsm"],
+      "explain": "KMS multi-Region keys là các key có cùng key material và key ID dùng được ở nhiều region, AWS quản lý hoàn toàn, còn quyền truy cập kiểm soát bằng tag + ABAC condition key, nên ít vận hành nhất. Import key material nghĩa là công ty phải tự sinh và quản lý key, trái 'does not want to manage its own keys', và key thường vẫn chỉ trong một region. CloudHSM là HSM khách hàng tự quản lý key và cluster, đồng bộ hay share key qua CMU giữa region đều nặng vận hành. Từ khóa: keys usable in multiple Regions + không tự quản lý key → KMS multi-Region keys.",
+      "doubt": null
+    },
+    {
+      "no": 32,
+      "lessons": ["gateway-vpc-endpoints", "s3-security"],
+      "explain": "Gateway VPC endpoint cho S3 thêm prefix list vào route table, đưa traffic từ EC2 tới S3 đi trong mạng AWS bằng private IP, không cần public IP hay NAT; bucket policy với điều kiện aws:SourceVpce chỉ cho phép truy cập qua endpoint đó. NAT gateway vẫn dùng địa chỉ public để tới endpoint public của S3. Instance profile hay IAM user chỉ giải quyết xác thực, không đổi đường đi mạng, và IAM user với access key còn là bad practice. Từ khóa: EC2 ↔ S3 không dùng public IP → gateway endpoint.",
+      "doubt": null
+    },
+    {
+      "no": 33,
+      "lessons": ["s3-security"],
+      "explain": "Bucket policy là resource policy, có thể khai báo principal là account khác, nên là cách chuẩn cấp cho Account B quyền truy cập bucket ở Account A (bên B còn cấp quyền tương ứng cho identity của mình). Transfer Acceleration chỉ tăng tốc upload qua edge, không cấp quyền. Cross-Region replication sao chép dữ liệu sang bucket khác chứ không chia sẻ bucket trung tâm. CloudFront signed URL dành cho người xem nội dung, không phải cấp quyền account. Từ khóa: cross-account access tới S3 bucket → bucket policy.",
+      "doubt": null
+    },
+    {
+      "no": 34,
+      "lessons": ["asg-scaling-policies"],
+      "explain": "Database không có dấu hiệu quá tải, còn ASG đang dùng scheduled scaling nên chỉ có đủ instance vào khung giờ định trước; khi tải tăng ngẫu nhiên ngoài lịch, tầng EC2 thiếu capacity và đơn hàng phản hồi chậm. Chuyển sang target tracking giúp ASG scale theo tải thực mà không đổi thiết kế hay hạ tầng. ElastiCache Memcached hỗ trợ đọc, không giúp workload ghi nhiều và phải sửa code. Chuyển sang DynamoDB là đổi thiết kế. Dedicated Hosts trong cluster placement group đắt và không giải quyết vấn đề capacity. Từ khóa: 'randomly' + scheduled scaling + DB khỏe → đổi sang dynamic (target tracking) scaling.",
+      "doubt": null
+    },
+    {
+      "no": 35,
+      "lessons": ["sqs", "auto-scaling-groups", "rds-multi-az"],
+      "explain": "ALB phân phối web traffic, ASG tự scale tầng nhận và xử lý đơn, SQS giữ đơn chưa xử lý để không mất khi tải tăng đột biến (decouple), và RDS Multi-AZ lưu đơn đã xử lý với HA; đủ cả co giãn lẫn không mất đơn. Gateway Load Balancer dành cho security appliance, không 'lưu' đơn hàng. Redshift là data warehouse OLAP, không phải nơi lưu giao dịch đơn hàng. NAT gateway chỉ cho outbound, không quản lý web traffic vào. Từ khóa: không mất đơn khi tải tăng → queue (SQS) giữa các tầng + ASG.",
+      "doubt": null
+    },
+    {
+      "no": 36,
+      "lessons": ["horizontal-vs-vertical-scaling"],
+      "explain": "Nhiều node rảnh hơn 5 giờ nghĩa là cluster đang dư capacity cố định; EMR managed scaling tự thêm/bớt node theo workload thực, nên bỏ được phần chi phí cho node rảnh mà vẫn đủ sức khi cần. Lambda giới hạn 15 phút, không chạy được job analytics 13 giờ kiểu này. Đổi sang memory-optimized không có cơ sở vì vấn đề là node rảnh chứ không phải thiếu RAM. Thêm core node càng làm lãng phí tăng. Từ khóa: node idle + cost-effective → co giãn tự động (EMR managed scaling).",
+      "doubt": null
+    },
+    {
+      "no": 37,
+      "lessons": ["asg-scaling-policies"],
+      "explain": "Lượng truy cập tăng theo lịch biết trước (sáng thứ Hai tới tối thứ Tư), nên scheduled scaling action là phù hợp: tăng capacity trước khi đợt tải tới và giảm sau đó. Target tracking, simple và step scaling đều là dynamic scaling phản ứng sau khi metric thay đổi, nên dễ trễ lúc tải tăng vọt và không gắn với lịch phát hành. Từ khóa: tải theo lịch cố định, biết trước → scheduled scaling.",
+      "doubt": null
+    },
+    {
+      "no": 38,
+      "lessons": ["transit-gateway", "vpc-peering"],
+      "explain": "Transit Gateway là hub regional nối hàng nghìn VPC với routing transitive qua TGW route table, thay cho full mesh. VPC peering không transitive, số kết nối tăng theo n² và có giới hạn peering mỗi VPC, không khả thi với hơn 1.000 VPC. VPN mesh giữa các VPC cũng phức tạp tương tự. Direct Connect gateway với public VIF dùng để kết nối on-premises, không phải VPC với VPC. Từ khóa: rất nhiều VPC cần nói chuyện với nhau → Transit Gateway.",
+      "doubt": null
+    },
+    {
+      "no": 39,
+      "lessons": ["transfer-family"],
+      "explain": "Transfer Family SFTP server là dịch vụ managed, ghi thẳng vào S3 bucket nên dữ liệu có ngay để xử lý thay vì chờ script mỗi giờ; service-managed users giữ được cách xác thực bằng SSH public key hiện có, client chỉ đổi endpoint. Chạy script mỗi 15 phút vẫn là EC2 tự quản lý, không phải managed service. DataSync agent buộc client cài phần mềm mới và đổi quy trình. SFTP connector dùng để AWS gửi file ra SFTP server bên ngoài, ngược chiều yêu cầu. Từ khóa: client SFTP + SSH key + managed + S3 → Transfer Family SFTP server.",
+      "doubt": null
+    },
+    {
+      "no": 40,
+      "lessons": ["vpc-peering", "ssl-and-tls", "nacl"],
+      "explain": "VPC peering cùng route table cho hai VPC nói chuyện bằng private IP, giữ traffic riêng tư trong mạng AWS; cấu hình MySQL dùng SSL certificate để mã hóa kết nối in transit, đủ cả 'secure' lẫn 'private'. Cho public IP của instance ứng dụng trong ACL nghĩa là đi qua internet, không private. NACL không tham chiếu security group ID được (chỉ CIDR). RDS Proxy chỉ dùng cho RDS/Aurora, không cho MySQL tự cài trên EC2. Từ khóa: hai VPC + private + secure → VPC peering + TLS.",
+      "doubt": null
+    },
+    {
+      "no": 41,
+      "lessons": ["macie", "eventbridge", "sns"],
+      "explain": "Macie tự động phát hiện PII trong S3 và đẩy finding sang EventBridge; rule lọc nhóm finding SensitiveData rồi gửi tới SNS topic để email cho security team. GuardDuty phát hiện mối đe dọa (hành vi bất thường) chứ không quét nội dung tìm PII. SQS là hàng đợi pull, không 'notify' con người như SNS, nên phương án Macie + SQS vẫn không thông báo được cho team. Từ khóa: detect PII in S3 → Macie; notify team → SNS.",
+      "doubt": null
+    },
+    {
+      "no": 42,
+      "lessons": ["gateway-vpc-endpoints", "nat-gateway"],
+      "explain": "Gateway VPC endpoint cho S3 miễn phí, thêm route tới S3 prefix list trong route table của private subnet, nên traffic S3 không đi qua NAT gateway và không bị tính phí xử lý dữ liệu của NAT; traffic internet khác vẫn qua NAT như cũ. Thêm NAT gateway chỉ tăng chi phí. Route ra internet gateway biến subnet thành public, trái yêu cầu. Lambda làm trung gian thêm chi phí và độ phức tạp, dữ liệu vẫn phải đi qua đó. Từ khóa: giảm chi phí NAT khi truy cập S3 từ private subnet → gateway endpoint.",
+      "doubt": null
+    },
+    {
+      "no": 43,
+      "lessons": ["dynamodb-operations-and-performance"],
+      "explain": "Traffic không đoán trước được thì on-demand capacity mode là phù hợp: tự đáp ứng ngay mà không phải dự báo, trả theo request. Table class Standard hợp với dữ liệu được đọc ghi thường xuyên; Standard-IA giảm giá lưu trữ nhưng tăng giá mỗi request, chỉ lợi khi dữ liệu lớn mà ít truy cập. Provisioned + auto scaling phản ứng chậm với tải đột biến và vẫn trả cho capacity dự phòng. Từ khóa: unpredictable traffic + DynamoDB → on-demand; throughput thường xuyên → Standard class.",
+      "doubt": null
+    },
+    {
+      "no": 44,
+      "lessons": ["ec2-instance-roles"],
+      "explain": "Best practice là gán IAM role cho EC2 qua instance profile: ứng dụng nhận temporary credential tự rotate qua metadata, không phải lưu key. MFA và versioning trên bucket là bảo vệ dữ liệu, không cấp quyền truy cập. Dùng access key dài hạn trên instance dễ lộ và phải tự rotate. Access key của root user là điều tuyệt đối không nên làm. Từ khóa: ứng dụng trên EC2 truy cập S3 + best practice → IAM role.",
+      "doubt": null
+    },
+    {
+      "no": 45,
+      "lessons": ["sqs-standard-vs-fifo", "lambda"],
+      "explain": "SQS FIFO bảo đảm đúng thứ tự và exactly-once processing, là managed service HA và decouple các thành phần; Lambda đọc từ FIFO queue vẫn giữ thứ tự theo message group. SQS standard chỉ best-effort ordering. SNS standard topic không bảo đảm thứ tự. Kinesis giữ thứ tự theo shard nhưng consumer trên Spot Instances có thể bị thu hồi bất kỳ lúc nào, kém HA. Từ khóa: 'exact message ordering' + loosely coupled → SQS FIFO.",
+      "doubt": null
+    },
+    {
+      "no": 46,
+      "lessons": ["ec2-instance-roles", "cloudformation-basics"],
+      "explain": "CloudFormation tự động hóa việc dựng hạ tầng ở nhiều region; khai báo IAM role + policy và resource instance profile tham chiếu role trong template giúp EC2 nhận temporary credential, không có secret nào được lưu ở đâu cả, nên an toàn nhất. Lưu access key trong file S3, trong UserData, hay viết script lấy key gắn lên instance đều là long-term credential nằm rải rác, dễ lộ (UserData đọc được qua metadata). Từ khóa: EC2 truy cập S3 + MOST securely → instance profile/role, không dùng access key.",
+      "doubt": null
+    },
+    {
+      "no": 47,
+      "lessons": ["sqs", "ecs-launch-types-ec2-vs-fargate", "amazon-mq"],
+      "explain": "SQS standard queue có throughput gần như không giới hạn và fully managed; container chạy trên ECS với Fargate không phải quản lý server, hợp với ứng dụng container loosely coupled. Amazon MQ là broker chạy trên instance có kích thước cố định nên throughput bị giới hạn, chủ yếu để migrate ứng dụng dùng giao thức chuẩn (JMS, AMQP). Kubernetes tự chạy trên EC2 Reserved Instances không phải fully managed. Từ khóa: unlimited throughput queue + fully managed + containers → SQS + Fargate.",
+      "doubt": null
+    },
+    {
+      "no": 48,
+      "lessons": ["gateway-load-balancer", "vpc-flow-logs"],
+      "explain": "Gateway Load Balancer đưa toàn bộ traffic vào/ra đi inline qua các virtual appliance (đóng gói GENEVE) và scale chúng, đúng mô hình deep packet inspection bằng appliance bên thứ ba. VPC Flow Logs chỉ ghi metadata luồng (IP, port, ACCEPT/REJECT), không có nội dung packet. WAF lọc HTTP ở layer 7, không đưa packet cho appliance. CloudTrail ghi API call, không phải network traffic. Từ khóa: virtual appliance + inspect all packets → Gateway Load Balancer.",
+      "doubt": null
+    },
+    {
+      "no": 49,
+      "lessons": ["secrets-manager"],
+      "explain": "Secrets Manager lưu credential của database và tự động rotate theo lịch (ví dụ 90 ngày) bằng Lambda rotation tích hợp sẵn với RDS; ứng dụng chỉ cần sửa để đọc credential từ Secrets Manager thay vì hardcode. Các cách tự sinh mật khẩu bằng Lambda, ECS task hay cron trên EC2 rồi SSH file JSON lên instance đều không đổi mật khẩu trong database, thêm việc vận hành và không hợp với ASG (instance mới không nhận file). Từ khóa: automatically rotate database password → Secrets Manager.",
+      "doubt": null
+    },
+    {
+      "no": 50,
+      "lessons": ["cloudtrail", "eventbridge", "sns"],
+      "explain": "Thêm hay xóa IAM user là API call CreateUser/DeleteUser được CloudTrail ghi dưới dạng management event; EventBridge rule khớp hai API này rồi gửi tới SNS topic có subscription email. Inspector quét lỗ hổng EC2/container, Macie tìm dữ liệu nhạy cảm trong S3, GuardDuty phát hiện hành vi bất thường; không cái nào phát sự kiện cho mỗi lần tạo/xóa user. Từ khóa: thông báo khi có API call cụ thể → CloudTrail + EventBridge + SNS.",
+      "doubt": null
+    },
+    {
+      "no": 51,
+      "lessons": ["ebs-volume-types"],
+      "explain": "Đọc file log lớn tuần tự với throughput tới 500 MBps là đúng hồ sơ st1 (Throughput Optimized HDD): throughput tối đa 500 MiB/s, giá rẻ hơn SSD nhiều, và vẫn là block storage nên giữ nguyên kiến trúc như SAN. io1 và gp3 là SSD đắt hơn, tối ưu cho IOPS chứ không cần ở workload tuần tự. sc1 (Cold HDD) chỉ đạt tối đa 250 MiB/s, không đủ 500 MBps. Từ khóa: sequential + throughput lớn + cost-effective → st1.",
+      "doubt": null
+    },
+    {
+      "no": 52,
+      "lessons": ["s3-performance-optimization"],
+      "explain": "S3 Transfer Acceleration cho phép người dùng toàn cầu upload vào edge location gần nhất rồi đi qua AWS backbone tới bucket, nhưng chỉ có tác dụng khi upload qua accelerate endpoint (bucket.s3-accelerate.amazonaws.com). Bật tính năng mà vẫn dùng endpoint S3 thường thì không tăng tốc. CloudFront chủ yếu tối ưu tải xuống, và storage class không ảnh hưởng tốc độ upload. Từ khóa: tăng tốc upload toàn cầu vào một bucket → Transfer Acceleration + accelerate endpoint.",
+      "doubt": null
+    },
+    {
+      "no": 53,
+      "lessons": ["ec2-purchase-options", "reserved-instances-and-savings-plans"],
+      "explain": "Không cam kết dài hạn nên loại Reserved Instances (1 hoặc 3 năm, kể cả partial upfront hay kết hợp với On-Demand). Kết hợp On-Demand cho phần nền với Spot cho phần scale thêm trong ASG giảm chi phí mạnh mà không cam kết, và web app sau ASG chịu được việc Spot bị thu hồi. Dedicated Instances còn đắt hơn On-Demand. Từ khóa: optimize cost + no long-term commitment → On-Demand + Spot.",
+      "doubt": null
+    },
+    {
+      "no": 54,
+      "lessons": ["ecs-launch-types-ec2-vs-fargate", "eventbridge", "lambda"],
+      "explain": "Job chạy hơn 1 giờ, stateful và không được gián đoạn: đóng gói thành container chạy Fargate task trên ECS, kích hoạt theo lịch bằng EventBridge Scheduler, không giới hạn thời gian chạy và không phải quản lý server. Lambda bị giới hạn 15 phút nên không chạy nổi job 1 giờ. Spot Instances có thể bị thu hồi với cảnh báo 2 phút, trái yêu cầu không gián đoạn. DataSync là dịch vụ chuyển dữ liệu, không chạy job phân tích. Từ khóa: long-running + scheduled + cannot be interrupted → ECS Fargate + EventBridge.",
+      "doubt": null
+    },
+    {
+      "no": 55,
+      "lessons": ["aws-organizations", "reserved-instances-and-savings-plans"],
+      "explain": "Tách tenant sang account riêng theo Well-Architected: tạo account mới làm management account, bật AWS Organizations, mời account hiện có tham gia, rồi tạo các account mới ngay trong Organizations console để chúng thuộc tổ chức. Với consolidated billing, discount của Savings Plan được chia sẻ giữa các account trong tổ chức khi bật discount sharing trong billing preferences của management account. Account mua Savings Plan (member) không bật sharing cho cả tổ chức được, việc đó thuộc management account. AWS RAM không chia sẻ Savings Plan. Từ khóa: chia sẻ RI/Savings Plan nhiều account → Organizations + discount sharing ở management account.",
+      "doubt": null
+    },
+    {
+      "no": 56,
+      "lessons": ["aurora-global-database", "dms", "rpo-and-rto"],
+      "explain": "Dùng DMS chuyển PostgreSQL trên EC2 sang Aurora PostgreSQL rồi bật Aurora Global Database: replication tầng storage sang region phụ thường dưới 1 giây, có thể đặt rds.global_db_rpo để giới hạn RPO, và promote region phụ trong vài phút, đạt RTO/RPO dưới 5 phút; Aurora cũng giảm latency truy vấn. AWS Backup khôi phục từ backup sang region khác thì RTO/RPO tính bằng giờ. RDS cross-Region read replica phải promote thủ công, khó đảm bảo RTO dưới 5 phút. Elastic Disaster Recovery chỉ sao chép EC2, không giải quyết latency và vẫn tự quản DB. Từ khóa: multi-Region + RPO/RTO vài phút + PostgreSQL → Aurora Global Database.",
+      "doubt": null
+    },
+    {
+      "no": 57,
+      "lessons": ["lambda", "eventbridge"],
+      "explain": "Script chạy 20 giây mỗi 30 phút rất hợp với Lambda: chỉ trả tiền cho khoảng 20 giây mỗi lần chạy, và EventBridge Scheduler kích hoạt theo lịch. EC2 On-Demand hay Spot chạy cron phải trả tiền cả lúc rảnh (và Spot có thể bị thu hồi). Provisioned concurrency tính phí liên tục, còn API Gateway là để gọi qua HTTP, không phải để chạy theo lịch. Từ khóa: tác vụ ngắn theo lịch + cost-effective → Lambda + EventBridge schedule.",
+      "doubt": null
+    },
+    {
+      "no": 58,
+      "lessons": ["rds-read-replicas"],
+      "explain": "Read replica tạo bản sao chỉ đọc (async) để chuyển truy vấn đọc khỏi primary, giải đúng vấn đề nhiều read query bị chậm; standby của Multi-AZ instance không phục vụ đọc. DAX chỉ dùng cho DynamoDB. Performance Insights chỉ giúp chẩn đoán, storage autoscaling không tăng năng lực đọc. Data Firehose là dịch vụ deliver stream, không nằm giữa ứng dụng và RDS để 'tăng concurrency'. Từ khóa: RDS + read latency cao → read replica.",
+      "doubt": null
+    },
+    {
+      "no": 59,
+      "lessons": ["rds-proxy"],
+      "explain": "Tải không đoán trước qua API Gateway tới Lambda có thể mở rất nhiều kết nối DB; RDS Proxy gom connection pool, giữ số kết nối tới RDS ổn định nên hiệu năng database dự đoán được bất kể số kết nối từ compute. DynamoDB + DAX không phải relational database. Read replica chỉ scale đọc, không giải quyết vấn đề số kết nối và ghi. ElastiCache chỉ cache đọc, Lambda vẫn mở kết nối trực tiếp cho ghi. Từ khóa: Lambda + relational DB + 'regardless of the number of connections' → RDS Proxy.",
+      "doubt": null
+    },
+    {
+      "no": 60,
+      "lessons": ["elasticache", "dax"],
+      "explain": "Dữ liệu lịch sử chỉ đọc với custom view/query rất hợp để cache kết quả trong ElastiCache (Redis OSS), managed nên ít vận hành, và không phải đổi cấu trúc database. Chuyển sang DynamoDB là đổi cả cấu trúc dữ liệu. Tự cài Memcached trên EC2 thì tự lo vá, scale, HA. DAX chỉ dùng được với DynamoDB, không đặt trên RDS được. Từ khóa: read-heavy trên RDS + minimize management overhead → ElastiCache.",
+      "doubt": null
+    },
+    {
+      "no": 61,
+      "lessons": ["compare-alb-vs-nlb", "direct-connect"],
+      "explain": "NLB cung cấp static IP (một IP cố định mỗi AZ, có thể dùng Elastic IP) để người dùng thêm vào allow list, và target group kiểu IP có thể trỏ tới cả server trên AWS lẫn server on-premises qua Direct Connect. ALB không có IP tĩnh. API Gateway không có IP cố định và định tuyến theo header không phải yêu cầu ở đây. Route 53 Resolver là DNS resolution cho hybrid, không phân phối traffic website. Từ khóa: fixed IP address + targets on-prem và AWS → NLB với IP target.",
+      "doubt": null
+    },
+    {
+      "no": 62,
+      "lessons": ["kinesis-data-analytics", "kinesis-data-streams"],
+      "explain": "Amazon Managed Service for Apache Flink (tên mới của Kinesis Data Analytics) đọc trực tiếp stream hiện có, phát hiện bất thường real-time, serverless và fully managed; kết quả ghi sang stream Kinesis thứ hai để ứng dụng đọc như trước, không phải sửa code. ECS trên EC2 hay ASG EC2 đều phải tự quản lý server, không serverless. Firehose → S3 → Redshift Spectrum là xử lý theo lô near real-time, thêm độ trễ và nhiều thành phần. Từ khóa: real-time anomaly detection trên Kinesis stream + serverless → Managed Flink/KDA.",
+      "doubt": null
+    },
+    {
+      "no": 63,
+      "lessons": ["s3-static-website-hosting", "cloudfront-architecture"],
+      "explain": "Website chỉ có nội dung tĩnh nên chuyển sang S3 (không cần EC2 và ALB) và đặt CloudFront phía trước để cache tại edge, giảm request tới origin và chi phí khi traffic tăng. Amplify cũng host được site tĩnh, nhưng thêm ALB hay EC2 để 'cache' là giữ lại đúng phần tốn kém và không hợp lý. ElastiCache không cache cho S3 bucket, nó là cache in-memory cho ứng dụng. Từ khóa: static content + minimize cost → S3 + CloudFront.",
+      "doubt": null
+    },
+    {
+      "no": 64,
+      "lessons": ["rds-security", "rds-backups-and-restore"],
+      "explain": "Encryption at rest của Aurora chỉ bật được lúc tạo cluster, không bật trên cluster đang chạy. Cách ít vận hành nhất là tạo snapshot của cluster hiện có rồi restore sang cluster mới có bật encryption bằng KMS key; toàn bộ dữ liệu được mã hóa mà không phải tự di chuyển dữ liệu. Tạo cluster mới mã hóa rồi tự migrate dữ liệu tốn nhiều công hơn. 'SSE' là khái niệm của S3, không phải tùy chọn của Aurora. Từ khóa: encrypt RDS/Aurora đang không mã hóa → snapshot + restore vào cluster mã hóa.",
+      "doubt": null
+    },
+    {
+      "no": 65,
+      "lessons": ["directory-service"],
+      "explain": "Cần một AD domain riêng trên AWS nên dùng AWS Managed Microsoft AD và join các instance Windows vào đó. One-way outgoing forest trust từ AWS Managed AD tới on-premises AD nghĩa là domain AWS tin domain on-prem: user on-prem truy cập được instance trên AWS, nhưng user của AD trên AWS không xác thực được vào tài nguyên on-prem. Two-way trust thì cho phép cả chiều ngược lại, trái yêu cầu. AD Connector chỉ là proxy tới AD on-prem, không phải domain riêng trên AWS. Từ khóa: AD riêng trên AWS + chỉ user on-prem truy cập AWS → Managed AD + one-way trust.",
+      "doubt": null
+    }
+  ]
+}

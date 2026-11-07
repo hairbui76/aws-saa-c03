@@ -2,7 +2,7 @@
 //   public/content/index.json        chapters, lesson list, search index
 //   public/content/thumbs.json       one small diagram per chapter for the home cards
 //   public/content/c/<chapter>.json  chapter (MOC) page
-//   public/content/l/<lesson>.json   lesson body, diagrams, quiz, prev/next
+//   public/content/l/<lesson>.json   lesson body, diagrams, quiz (own questions + practice-test ones), prev/next
 //   public/content/cheat-sheet.json
 import fs from 'node:fs';
 import path from 'node:path';
@@ -77,6 +77,8 @@ for (const dir of chapterDirs) {
   const abs = path.join(DATA, dir);
   const files = fs.readdirSync(abs).filter((f) => f.endsWith('.md'));
   const mocFile = files.find((f) => f.startsWith('_MOC'));
+  // a chapter is a folder with a map of content; others (e.g. "99 Banks", the practice tests) are data only
+  if (!mocFile) continue;
   const chapter = { id: num, num, title, dir, mocFile, lessons: [] };
   for (const f of files) {
     if (f === mocFile) continue;
@@ -230,6 +232,56 @@ if (fs.existsSync(QUIZZES)) {
   }
 }
 
+// ---------- practice tests ----------
+// ../data/99 Banks/<test>.json holds the questions as published (English, answer letters);
+// practice/<test>.json maps each question to 1-3 lessons and adds a Vietnamese explanation.
+const BANKS = path.resolve(DATA, '99 Banks');
+const PRACTICE = path.resolve(WEB, 'practice');
+const practiceByLesson = new Map(); // lesson id -> questions
+let practiceCount = 0;
+if (fs.existsSync(BANKS)) {
+  const LETTERS = 'ABCDEF';
+  const tests = fs.readdirSync(BANKS).filter((f) => f.endsWith('.json')).sort();
+  tests.forEach((f, t) => {
+    const name = f.replace(/\.json$/, '');
+    const mapFile = path.join(PRACTICE, f);
+    if (!fs.existsSync(mapFile)) {
+      console.warn(`! practice test ${name} has no practice/${f} mapping yet, skipped`);
+      return;
+    }
+    const bank = JSON.parse(fs.readFileSync(path.join(BANKS, f), 'utf8'));
+    const map = new Map(JSON.parse(fs.readFileSync(mapFile, 'utf8')).items.map((it) => [it.no, it]));
+    const testNum = (name.match(/(\d+)$/) || [, String(t + 1)])[1].replace(/^0+(?=\d)/, '');
+    for (const q of bank) {
+      const m = map.get(q.no);
+      if (!m) {
+        console.warn(`! ${name} #${q.no} is not mapped to a lesson`);
+        continue;
+      }
+      const keys = Object.keys(q.options).sort();
+      const question = {
+        src: `Đề ${testNum} · câu ${q.no}`,
+        type: q.answer.length > 1 ? 'multi' : 'single',
+        q: q.question.trim(),
+        options: keys.map((k) => q.options[k].trim()),
+        answer: q.answer.map((a) => keys.indexOf(a)).filter((i) => i >= 0),
+        explain: m.explain,
+        ...(m.doubt ? { doubt: m.doubt } : {}),
+      };
+      if (question.answer.length !== q.answer.length || keys.some((k) => !LETTERS.includes(k)))
+        console.warn(`! ${name} #${q.no}: answer letters do not match the options`);
+      practiceCount++;
+      m.lessons.forEach((id, rank) => {
+        if (!practiceByLesson.has(id)) practiceByLesson.set(id, []);
+        practiceByLesson.get(id).push({ rank, question });
+      });
+    }
+  });
+  // questions whose main topic is this lesson first, then the ones that only touch it
+  for (const [id, list] of practiceByLesson)
+    practiceByLesson.set(id, list.sort((a, b) => a.rank - b.rank).map((x) => x.question));
+}
+
 // ---------- pass 2: build output ----------
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'l'), { recursive: true });
@@ -303,7 +355,7 @@ for (const ch of chapters) {
       id: l.id,
       title: l.name,
       summary: summaries.get(l.name.toLowerCase()) || '',
-      quiz: (quizByLesson.get(l.name.toLowerCase()) || []).length,
+      quiz: (quizByLesson.get(l.name.toLowerCase()) || []).length + (practiceByLesson.get(l.id) || []).length,
     })),
   };
   index.chapters.push(chEntry);
@@ -349,7 +401,8 @@ flatOrder.forEach(({ ch, l }, i) => {
     const num = String(s).slice(0, 4);
     return { num, title: String(s).slice(5), video: videoByNum.get(num) || null };
   });
-  const quiz = quizByLesson.get(l.name.toLowerCase()) || [];
+  // end-of-lesson test: the lesson's own questions first, then the practice-test questions on it
+  const quiz = [...(quizByLesson.get(l.name.toLowerCase()) || []), ...(practiceByLesson.get(l.id) || [])];
   quizCount += quiz.length;
   const prev = flatOrder[i - 1];
   const next = flatOrder[i + 1];
@@ -389,4 +442,12 @@ console.log(
     `${quizCount} quiz questions (${withQuiz}/${lessonTotal} lessons), ${narrated} narrated diagrams (${voiced} voice clips), ` +
     `${videoByNum.size} local videos`
 );
+{
+  const known = new Set(flatOrder.map(({ l }) => l.id));
+  const orphan = [...practiceByLesson.keys()].filter((id) => !known.has(id));
+  console.log(
+    `  practice: ${practiceCount} questions in ${[...practiceByLesson.keys()].filter((id) => known.has(id)).length}/${lessonTotal} lessons` +
+      (orphan.length ? ` (! unknown lesson ids: ${orphan.join(', ')})` : '')
+  );
+}
 if (unresolved.size) console.log(`  unresolved wikilinks (rendered bold): ${[...unresolved].slice(0, 15).join(', ')}${unresolved.size > 15 ? '…' : ''}`);

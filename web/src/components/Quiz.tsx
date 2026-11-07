@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Check, MessageCircleQuestion, RotateCcw, X } from 'lucide-react';
+import { AlertTriangle, Check, MessageCircleQuestion, RotateCcw, X } from 'lucide-react';
 import type { Question } from '../lib/content';
 import { PASS_RATIO, progress, recordQuiz } from '../lib/store';
 import { Sketch, Stars } from './Sketch';
 
-const LETTERS = 'ABCDE';
+const LETTERS = 'ABCDEF';
 
 function shuffle<T>(arr: T[], seed: number) {
   const a = arr.slice();
@@ -79,9 +79,11 @@ export default function Quiz({
 
   const askAbout = (s: Shown) =>
     onAsk(
-      `Giải thích giúp tôi câu quiz này:\n\n${s.q.q}\n${s.order.map((o, d) => `${LETTERS[d]}. ${s.q.options[o]}`).join('\n')}\n\nĐáp án đúng: ${s.order
+      `Giải thích giúp tôi câu quiz này${s.q.src ? ` (${s.q.src}, từ bộ đề luyện thi)` : ''}:\n\n${s.q.q}\n${s.order
+        .map((o, d) => `${LETTERS[d]}. ${s.q.options[o]}`)
+        .join('\n')}\n\nĐáp án ${s.q.src ? 'trong bộ đề' : 'đúng'}: ${s.order
         .map((o, d) => (s.q.answer.includes(o) ? LETTERS[d] : ''))
-        .join('')}. Vì sao các phương án còn lại sai, và trong đề thật cần nhận ra từ khóa nào?`
+        .join('')}.${s.q.doubt ? ` (Có ý kiến cho rằng đáp án này chưa đúng: ${s.q.doubt})` : ''} Vì sao các phương án còn lại sai, và trong đề thật cần nhận ra từ khóa nào?`
     );
 
   if (finished) {
@@ -106,7 +108,9 @@ export default function Quiz({
           {shown.map((s, i) => (
             <li key={i} className={results[i] ? 'ok' : 'bad'}>
               {results[i] ? <Check size={16} /> : <X size={16} />}
-              <span>{s.q.q}</span>
+              <span className="clamp2">
+                {s.q.src && <b className="quiz-src">{s.q.src}</b>} {s.q.q}
+              </span>
               {!results[i] && (
                 <button className="link-btn" onClick={() => askAbout(s)}>
                   <MessageCircleQuestion size={14} /> Hỏi Claude
@@ -139,7 +143,12 @@ export default function Quiz({
           </span>
         )}
       </div>
-      <p className="quiz-q">{cur.q.q}</p>
+      {cur.q.src && (
+        <span className="quiz-src" title="Câu từ bộ đề luyện thi, giữ nguyên tiếng Anh như đề thật">
+          🎯 {cur.q.src}
+        </span>
+      )}
+      <p className={`quiz-q ${cur.q.src ? 'exam' : ''}`}>{cur.q.q}</p>
       {need > 1 && <p className="muted small">Chọn {need} đáp án</p>}
       <div className="quiz-options">
         {cur.order.map((orig, d) => {
@@ -156,6 +165,14 @@ export default function Quiz({
       {checked && (
         <div className={`quiz-explain ${isRight ? 'ok' : 'bad'}`}>
           <b>{isRight ? '✔ Chính xác!' : '✘ Chưa đúng.'}</b> {cur.q.explain}
+          {cur.q.doubt && (
+            <p className="quiz-doubt">
+              <AlertTriangle size={15} />
+              <span>
+                <b>Đáp án trong bộ đề có thể chưa đúng:</b> {cur.q.doubt}
+              </span>
+            </p>
+          )}
           <button className="link-btn" onClick={() => askAbout(cur)}>
             <MessageCircleQuestion size={14} /> Hỏi Claude thêm về câu này
           </button>

@@ -12,6 +12,10 @@ export type Question = {
   options: string[];
   answer: number[];
   explain: string;
+  /** set on questions from the practice tests (../data/99 Banks), e.g. "Đề 2 · câu 14"; they stay in English */
+  src?: string;
+  /** why the practice test's answer key may be wrong */
+  doubt?: string;
 };
 
 export type DiagramEl = {
