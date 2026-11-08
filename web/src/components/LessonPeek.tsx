@@ -52,7 +52,8 @@ export default function LessonPeek() {
 
   return (
     <div className="modal-backdrop peek-backdrop" onMouseDown={(e) => e.target === e.currentTarget && peek.close()}>
-      <Sketch className="modal peek" seed={`peek${cur.id}`} fill="#fff" role="dialog" aria-modal="true" aria-label="Xem nhanh bài học">
+      {/* a plain CSS frame: the sketched one would sit under the scrolling body and get covered */}
+      <div className="modal peek" role="dialog" aria-modal="true" aria-label="Xem nhanh bài học">
         <header className="peek-head">
           {stack.length > 1 && (
             <button className="icon-btn" onClick={peek.back} title="Quay lại bài trước trong cửa sổ này (Esc)">
@@ -89,7 +90,7 @@ export default function LessonPeek() {
             </InPeek.Provider>
           )}
         </div>
-      </Sketch>
+      </div>
     </div>
   );
 }

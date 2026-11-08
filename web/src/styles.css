@@ -3812,6 +3812,10 @@ body.resizing-chat {
   flex-direction: column;
   overflow: hidden;
   padding: 0;
+  background: var(--card);
+  border: 2.5px solid var(--border-ink);
+  border-radius: 16px 12px 17px 13px;
+  box-shadow: 5px 5px 0 var(--shadow-ink);
 }
 .peek-head {
   display: flex;
@@ -3857,7 +3861,9 @@ body.resizing-chat {
   }
   .modal.peek {
     height: 100%;
+    border: 0;
     border-radius: 0;
+    box-shadow: none;
   }
   .peek-head {
     flex-wrap: wrap;
