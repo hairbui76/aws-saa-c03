@@ -21,7 +21,10 @@
   --body: 'Be Vietnam Pro', system-ui, sans-serif;
   --wobble: 10px 14px 9px 13px / 13px 9px 14px 10px;
   --wobble-2: 14px 9px 13px 10px / 9px 14px 10px 13px;
-  --shadow: 3px 3px 0 var(--ink);
+  --shadow: 3px 3px 0 var(--shadow-ink);
+  /* offset 'sketch' shadows: ink on paper, a grey in dark mode so they don't glow */
+  --shadow-ink: #1e1e1e;
+  --border-ink: #1e1e1e;
   /* surfaces and tints (light values = the original hard-coded colours) */
   --bg-2: #f8f9fa;
   --hover: #f1f3f5;
@@ -74,6 +77,8 @@
   --green-softer: #1c2a20;
   --yellow-softer: #2b2716;
   --diagram-filter: invert(0.9) hue-rotate(180deg);
+  --shadow-ink: #4a4d53;
+  --border-ink: #8b8f96;
   color-scheme: dark;
 }
 
@@ -192,14 +197,14 @@ code,
   flex: 1;
   height: 10px;
   min-width: 60px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 8px 6px 9px 5px;
   background: var(--card);
   overflow: hidden;
 }
 .sk-bar-fill {
   height: 100%;
-  border-right: 2px solid var(--ink);
+  border-right: 2px solid var(--border-ink);
   transition: width 0.5s;
 }
 .sk-bar-fill[style*='width: 0%'] {
@@ -238,7 +243,7 @@ code,
   height: 26px;
   font-family: var(--hand);
   font-size: 17px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 8px 10px 7px 11px;
   background: var(--yellow-soft);
   color: var(--ink);
@@ -264,7 +269,7 @@ code,
   line-height: 1.2;
   padding: 0.45rem 1.05rem;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: var(--wobble);
   box-shadow: var(--shadow);
   text-decoration: none;
@@ -272,11 +277,11 @@ code,
 }
 .btn:hover:not(:disabled) {
   transform: translate(-1px, -1px);
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--shadow-ink);
 }
 .btn:active:not(:disabled) {
   transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--ink);
+  box-shadow: 1px 1px 0 var(--shadow-ink);
 }
 .btn.primary {
   background: var(--blue-soft);
@@ -292,7 +297,7 @@ code,
   height: 34px;
   padding: 0;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: var(--wobble-2);
   flex-shrink: 0;
 }
@@ -309,7 +314,7 @@ code,
   min-width: 42px;
   height: 30px;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 8px;
 }
 .link-btn {
@@ -337,7 +342,7 @@ code,
   font-family: var(--hand);
   font-size: 17px;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: var(--wobble);
   white-space: nowrap;
 }
@@ -394,11 +399,11 @@ button.pill:hover {
   font-family: var(--hand);
   font-size: 22px;
   background: var(--yellow-soft);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 12px 9px 13px 8px;
   padding: 0 8px;
   transform: rotate(-3deg);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 2px 2px 0 var(--shadow-ink);
 }
 .brand-text {
   display: flex;
@@ -583,10 +588,10 @@ button.pill:hover {
   font-family: var(--hand);
   font-size: 18px;
   padding: 2px 12px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: var(--wobble);
   background: var(--blue-soft);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 2px 2px 0 var(--shadow-ink);
 }
 .chapter-card.cheat {
   justify-content: center;
@@ -612,7 +617,7 @@ button.pill:hover {
   line-height: 1;
   padding: 10px 18px;
   background: var(--yellow-soft);
-  border: 2.5px solid var(--ink);
+  border: 2.5px solid var(--border-ink);
   border-radius: 18px 12px 20px 10px;
   transform: rotate(-2deg);
   box-shadow: var(--shadow);
@@ -653,7 +658,7 @@ button.pill:hover {
   place-items: center;
   width: 34px;
   height: 34px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 50%;
   background: var(--card);
   font-family: var(--hand);
@@ -747,7 +752,7 @@ button.pill:hover {
   background: var(--yellow-soft);
   font-weight: 600;
   /* inset, so the scrolling sidebar can't clip it */
-  box-shadow: inset 0 0 0 2px var(--ink);
+  box-shadow: inset 0 0 0 2px var(--border-ink);
 }
 .lesson-side {
   padding: 2px 4px 8px 2px;
@@ -828,7 +833,7 @@ button.pill:hover {
 .lectures video {
   width: 100%;
   margin-top: 8px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 10px;
   background: #000;
 }
@@ -890,7 +895,7 @@ button.pill:hover {
 .table-wrap {
   overflow-x: auto;
   margin: 1em 0;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 12px 9px 13px 10px;
   background: var(--card);
 }
@@ -912,7 +917,7 @@ button.pill:hover {
 }
 .prose th {
   background: var(--yellow-soft);
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 2px solid var(--border-ink);
   font-weight: 600;
 }
 .prose tr:last-child td {
@@ -930,7 +935,7 @@ button.pill:hover {
   overflow-x: auto;
   font-size: 13px;
   line-height: 1.5;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
 }
 .code-block code {
   background: none;
@@ -960,7 +965,7 @@ button.pill:hover {
 /* ---------- diagram player ---------- */
 .player {
   margin: 18px 0 26px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 14px 10px 15px 11px;
   background: var(--card);
   box-shadow: var(--shadow);
@@ -1004,9 +1009,9 @@ button.pill:hover {
   font-size: 24px;
   padding: 12px 24px 12px 18px;
   background: var(--yellow-soft);
-  border: 2.5px solid var(--ink);
+  border: 2.5px solid var(--border-ink);
   border-radius: 18px 12px 20px 14px;
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--shadow-ink);
   cursor: pointer;
   transition: transform 0.1s;
 }
@@ -1049,7 +1054,7 @@ button.pill:hover {
   align-items: center;
   gap: 6px;
   padding: 7px 10px;
-  border-top: 2px solid var(--ink);
+  border-top: 2px solid var(--border-ink);
   background: var(--card);
 }
 .player-bar .icon-btn {
@@ -1066,7 +1071,7 @@ button.pill:hover {
   flex: 1;
   height: 11px;
   padding: 0;
-  border: 1.5px solid var(--ink);
+  border: 1.5px solid var(--border-ink);
   border-radius: 6px 4px 7px 5px;
   background: var(--card);
   position: relative;
@@ -1247,7 +1252,7 @@ button.pill:hover {
 .quiz-dots i {
   width: 13px;
   height: 13px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 50%;
   background: var(--card);
 }
@@ -1285,7 +1290,7 @@ button.pill:hover {
   color: var(--ink);
   padding: 10px 14px;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: var(--wobble);
   cursor: pointer;
   transition: transform 0.08s, box-shadow 0.08s, background 0.15s;
@@ -1293,7 +1298,7 @@ button.pill:hover {
 .opt:hover:not(:disabled) {
   background: var(--bg-2);
   transform: translate(-1px, -1px);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 2px 2px 0 var(--shadow-ink);
 }
 .opt.sel {
   background: var(--blue-soft);
@@ -1319,7 +1324,7 @@ button.pill:hover {
   place-items: center;
   width: 28px;
   height: 28px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 50%;
   font-family: var(--hand);
   font-size: 17px;
@@ -1401,9 +1406,9 @@ button.pill:hover {
   font-size: 20px;
   padding: 10px 18px;
   background: var(--yellow-soft);
-  border: 2.5px solid var(--ink);
+  border: 2.5px solid var(--border-ink);
   border-radius: 16px 12px 18px 11px;
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--shadow-ink);
   cursor: pointer;
   color: var(--ink);
 }
@@ -1420,7 +1425,7 @@ button.pill:hover {
   display: flex;
   flex-direction: column;
   background: var(--card);
-  border-left: 2.5px solid var(--ink);
+  border-left: 2.5px solid var(--border-ink);
   box-shadow: -8px 0 0 rgba(30, 30, 30, 0.06);
   transform: translateX(105%);
   transition: transform 0.25s ease;
@@ -1433,7 +1438,7 @@ button.pill:hover {
   align-items: center;
   gap: 8px;
   padding: 12px 14px;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 2px solid var(--border-ink);
   background: var(--yellow-soft);
 }
 .chat-head > div {
@@ -1482,7 +1487,7 @@ button.pill:hover {
   font-size: 14px;
   padding: 8px 12px;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: var(--wobble);
   cursor: pointer;
   color: var(--ink);
@@ -1493,7 +1498,7 @@ button.pill:hover {
 .bubble {
   max-width: 92%;
   padding: 9px 13px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: var(--wobble);
   font-size: 14.5px;
   overflow-wrap: anywhere;
@@ -1542,7 +1547,7 @@ button.pill:hover {
   gap: 8px;
   align-items: flex-end;
   padding: 10px;
-  border-top: 2px solid var(--ink);
+  border-top: 2px solid var(--border-ink);
 }
 .chat-input textarea {
   flex: 1;
@@ -1550,7 +1555,7 @@ button.pill:hover {
   font: inherit;
   font-size: 14.5px;
   padding: 8px 10px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 10px;
   outline: none;
 }
@@ -1617,7 +1622,7 @@ button.pill:hover {
   font-weight: 400;
   font-size: 14.5px;
   padding: 7px 10px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 9px;
   background: var(--card);
   min-width: 0;
@@ -1675,7 +1680,7 @@ button.pill:hover {
 }
 .palette-list li.sel {
   background: var(--yellow-soft);
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--border-ink);
 }
 
 /* cheat sheet */
@@ -1689,7 +1694,7 @@ button.pill:hover {
   font-family: var(--hand);
   font-size: 17px;
   padding: 2px 12px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: var(--wobble);
   background: var(--card);
   color: var(--ink);
@@ -1792,7 +1797,7 @@ button.pill:hover {
   align-items: flex-end;
   gap: 6px;
   padding: 8px 10px 0;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 2px solid var(--border-ink);
   background: var(--card);
 }
 .player-tabs [role='tab'] {
@@ -1803,7 +1808,7 @@ button.pill:hover {
   font-size: 17px;
   color: var(--ink);
   padding: 5px 14px 6px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-bottom: 0;
   border-radius: 11px 13px 0 0;
   background: var(--hover);
@@ -1860,7 +1865,7 @@ button.pill:hover {
   gap: 2px;
   padding: 3px;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 10px 8px 11px 9px;
 }
 .player-title + .vp-tools {
@@ -1933,7 +1938,7 @@ button.pill:hover {
 .mobile-lessons {
   display: none;
   margin: 4px 0 12px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: var(--wobble);
   background: var(--card);
 }
@@ -2060,7 +2065,7 @@ button.pill:hover {
   }
   .player {
     margin: 12px 0 18px;
-    box-shadow: 2px 2px 0 var(--ink);
+    box-shadow: 2px 2px 0 var(--shadow-ink);
   }
   .player-stage {
     padding: 4px;
@@ -2184,10 +2189,10 @@ button.pill:hover {
 /* ---------- mermaid diagrams: same frame + toolbar as the animated ones ---------- */
 .mm-player {
   margin: 16px 0 22px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 14px 10px 15px 11px;
   background: var(--card);
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 2px 2px 0 var(--shadow-ink);
   overflow: hidden;
 }
 .mm-bar {
@@ -2277,7 +2282,7 @@ button.pill:hover {
 }
 .notes-seg {
   display: inline-flex;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 10px;
   overflow: hidden;
   background: var(--card);
@@ -2295,7 +2300,7 @@ button.pill:hover {
   cursor: pointer;
 }
 .notes-seg button + button {
-  border-left: 2px solid var(--ink);
+  border-left: 2px solid var(--border-ink);
 }
 .notes-seg button.on {
   background: var(--yellow-soft);
@@ -2398,7 +2403,7 @@ button.pill:hover {
   gap: 8px;
   padding: 0 12px;
   height: 40px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 10px;
   background: var(--card);
 }
@@ -2457,7 +2462,7 @@ button.pill:hover {
   min-width: 200px;
 }
 .roadmap-strip.empty:hover {
-  border-color: var(--ink);
+  border-color: var(--border-ink);
   background: var(--card);
 }
 .roadmap-strip-body {
@@ -2706,7 +2711,7 @@ button.pill:hover {
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 50%;
   padding: 0;
   cursor: pointer;
@@ -2731,7 +2736,7 @@ i.swatch {
   background: #74c0fc;
 }
 .swatch.on {
-  box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--ink);
+  box-shadow: 0 0 0 2px var(--card), 0 0 0 4px var(--border-ink);
 }
 .mark-bar {
   position: absolute;
@@ -2742,9 +2747,9 @@ i.swatch {
   gap: 6px;
   padding: 5px 8px;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 12px 9px 13px 10px;
-  box-shadow: 3px 3px 0 var(--ink);
+  box-shadow: 3px 3px 0 var(--shadow-ink);
   white-space: nowrap;
 }
 button.swatch:hover {
@@ -2779,9 +2784,9 @@ button.swatch:hover {
   gap: 8px;
   padding: 10px 12px;
   background: var(--note-bg);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 12px 10px 13px 9px;
-  box-shadow: 4px 4px 0 var(--ink);
+  box-shadow: 4px 4px 0 var(--shadow-ink);
 }
 .mark-pop .row {
   gap: 8px;
@@ -2810,7 +2815,7 @@ button.swatch:hover {
   font: inherit;
   font-size: 14px;
   padding: 6px 8px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 8px;
   resize: vertical;
   outline: none;
@@ -2927,7 +2932,7 @@ ul.marks-list {
 }
 .ink-pen.on {
   background: var(--card);
-  border-color: var(--ink);
+  border-color: var(--border-ink);
 }
 .ink-pen:disabled {
   opacity: 0.3;
@@ -2940,7 +2945,7 @@ ul.marks-list {
   margin-left: auto;
   font-size: 16px;
   padding: 0.2rem 0.8rem;
-  box-shadow: 2px 2px 0 var(--ink);
+  box-shadow: 2px 2px 0 var(--shadow-ink);
 }
 .player.inking .vp,
 .player.inking .vp.zoomed {
@@ -2981,7 +2986,7 @@ ul.marks-list {
   padding: 0 6px;
   border-radius: 10px;
   background: var(--ink);
-  color: #fff;
+  color: var(--paper);
   text-align: center;
 }
 .chat-line {
@@ -3017,7 +3022,7 @@ ul.marks-list {
   width: 6px;
   height: 46px;
   transform: translateY(-50%);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 4px;
   background: var(--card);
   opacity: 0;
@@ -3187,7 +3192,7 @@ body.resizing-chat {
   font: inherit;
   font-size: 14px;
   padding: 6px 8px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 8px;
   background: var(--card);
   max-width: 100%;
@@ -3223,7 +3228,7 @@ body.resizing-chat {
   text-align: center;
   font-family: var(--hand);
   font-size: 1.3rem;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 10px 7px 11px 8px;
   padding: 0 6px;
 }
@@ -3266,7 +3271,7 @@ body.resizing-chat {
   font-family: var(--hand);
   font-size: 1.25rem;
   padding: 0 10px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 9px;
   background: var(--card);
   font-variant-numeric: tabular-nums;
@@ -3332,7 +3337,7 @@ body.resizing-chat {
   position: sticky;
   top: 70px;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--border-ink);
   border-radius: 12px 9px 13px 10px;
   padding: 12px;
 }
@@ -3368,7 +3373,7 @@ body.resizing-chat {
   border-color: var(--red);
 }
 .pr-dot.now {
-  outline: 2.5px solid var(--ink);
+  outline: 2.5px solid var(--border-ink);
   outline-offset: 1px;
   font-weight: 700;
 }

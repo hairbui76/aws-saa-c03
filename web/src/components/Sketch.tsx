@@ -13,7 +13,7 @@ function hash(s: string) {
 const THEMED: Record<string, string> = {
   '#fff': 'var(--card)',
   '#ffffff': 'var(--card)',
-  '#1e1e1e': 'var(--ink)',
+  '#1e1e1e': 'var(--border-ink)',
   '#ebfbee': 'var(--green-softer)',
   '#fff5f5': 'var(--red-softer)',
   '#e7f5ff': 'var(--blue-softer)',
