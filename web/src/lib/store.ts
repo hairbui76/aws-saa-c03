@@ -284,6 +284,19 @@ export function submitSession(answerOf: (key: string) => number[] | undefined): 
   return attempt;
 }
 
+// ---------- bookmarked lessons ----------
+export type Bookmark = { at: number };
+export const bookmarks = createStore<{ items: Record<string, Bookmark> }>('saa.bookmarks.v1', { items: {} });
+
+export function toggleBookmark(lessonId: string) {
+  bookmarks.update(({ items }) => {
+    const next = { ...items };
+    if (next[lessonId]) delete next[lessonId];
+    else next[lessonId] = { at: Date.now() };
+    return { items: next };
+  });
+}
+
 // ---------- export / import ----------
 type ExportFile = {
   app: 'saa-c03-sketchbook';
@@ -291,6 +304,7 @@ type ExportFile = {
   exportedAt: string;
   progress: Progress;
   notes?: Record<string, Note>;
+  bookmarks?: Record<string, Bookmark>;
   marks?: Record<string, Mark[]>;
   ink?: Record<string, Stroke[]>;
   chats?: Record<string, ChatThread>;
@@ -305,6 +319,7 @@ export function exportProgress() {
     exportedAt: new Date().toISOString(),
     progress: progress.get(),
     notes: notes.get().notes,
+    bookmarks: bookmarks.get().items,
     marks: marks.get().items,
     ink: ink.get().items,
     chats: chats.get().items,
@@ -332,6 +347,7 @@ function importExtras(data: ExportFile, mode: 'merge' | 'replace') {
   const inChats = obj(data.chats);
   if (mode === 'replace') {
     notes.set({ notes: inNotes });
+    bookmarks.set({ items: obj(data.bookmarks) });
     marks.set({ items: inMarks });
     ink.set({ items: inInk });
     chats.set({ items: inChats });
@@ -342,6 +358,7 @@ function importExtras(data: ExportFile, mode: 'merge' | 'replace') {
     const merged = { ...notes.get().notes };
     for (const [id, n] of Object.entries(inNotes)) if (!merged[id] || merged[id].at < n.at) merged[id] = n;
     notes.set({ notes: merged });
+    bookmarks.set({ items: { ...obj(data.bookmarks), ...bookmarks.get().items } });
     const mm = { ...marks.get().items };
     for (const [id, list] of Object.entries(inMarks)) {
       const byId = new Map((mm[id] ?? []).map((m) => [m.id, m]));

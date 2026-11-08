@@ -3637,3 +3637,123 @@ body.resizing-chat {
 .theme-btn svg {
   display: block;
 }
+
+/* ---------- bookmarked lessons ---------- */
+.lesson-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.lesson-title-row .lesson-title {
+  margin-bottom: 10px;
+}
+.bookmark-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 4px 12px;
+  font-family: var(--hand);
+  font-size: 17px;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--border-ink);
+  border-radius: var(--wobble);
+  box-shadow: 2px 2px 0 var(--shadow-ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bookmark-btn:hover {
+  background: var(--hover);
+}
+.bookmark-btn.on {
+  background: var(--orange-soft);
+  border-color: #fd7e14;
+  color: var(--orange-ink);
+}
+.bookmark-mark {
+  flex-shrink: 0;
+  color: #f76707;
+}
+.lesson-side li a svg.bookmark-mark {
+  color: #f76707;
+  margin-top: 3px;
+}
+.lesson-side li a .exam-mark + svg.bookmark-mark,
+.lesson-side li a svg.bookmark-mark + svg.note-mark {
+  margin-left: 4px;
+}
+.lesson-side li a > span + svg.bookmark-mark {
+  margin-left: auto;
+}
+.mobile-lessons .bookmark-mark {
+  vertical-align: -1px;
+}
+.saved .section-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.saved .section-head h2 svg {
+  color: #f76707;
+}
+.saved-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.saved-list li {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  background: var(--card);
+  border: 2px solid var(--border-ink);
+  border-radius: 12px 9px 13px 10px;
+  box-shadow: 2px 2px 0 var(--shadow-ink);
+}
+.saved-list li.done {
+  background: var(--green-softer);
+}
+.saved-list a {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--ink);
+  text-decoration: none;
+}
+.saved-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.saved-x {
+  align-self: center;
+  margin-right: 8px;
+  width: 28px;
+  height: 28px;
+  border-width: 1.5px;
+}
+@media (max-width: 640px) {
+  .lesson-title-row {
+    flex-wrap: wrap;
+    gap: 0 12px;
+  }
+  .bookmark-btn {
+    margin: 0 0 10px;
+  }
+}
+.saved .section-head {
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+.saved .section-head h2 {
+  white-space: nowrap;
+}

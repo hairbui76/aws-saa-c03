@@ -11,6 +11,7 @@ import ChatPanel from '../components/ChatPanel';
 import LessonNotes from '../components/LessonNotes';
 import LessonMarks from '../components/LessonMarks';
 import ExamMark from '../components/ExamMark';
+import { BookmarkButton, BookmarkMark } from '../components/Bookmark';
 import { useUi } from '../App';
 
 // The course videos are only served by the local dev/preview server (see vite.config.ts).
@@ -81,6 +82,7 @@ export default function LessonPage() {
                   <Icon size={15} className={isDone(s) ? 'ok' : ''} />
                   <span>{l.title}</span>
                   <ExamMark n={l.pq} main={l.pm} />
+                  <BookmarkMark id={l.id} />
                   <NoteMark id={l.id} />
                 </Link>
               </li>
@@ -103,14 +105,17 @@ export default function LessonPage() {
               {chapter.lessons.map((l) => (
                 <li key={l.id} className={`${l.id === lesson.id ? 'cur' : ''} ${isDone(p.lessons[l.id]) ? 'done' : ''}`}>
                   <Link to={`/l/${l.id}`}>
-                    {l.title} <ExamMark n={l.pq} main={l.pm} />
+                    {l.title} <ExamMark n={l.pq} main={l.pm} /> <BookmarkMark id={l.id} />
                   </Link>
                 </li>
               ))}
             </ol>
           </details>
         )}
-        <h1 className="lesson-title">{lesson.title}</h1>
+        <div className="lesson-title-row">
+          <h1 className="lesson-title">{lesson.title}</h1>
+          <BookmarkButton lessonId={lesson.id} />
+        </div>
         {examCount > 0 && (
           <button
             className="exam-jump"

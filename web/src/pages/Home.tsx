@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play, Route as RouteIcon, Search, Target } from 'lucide-react';
-import { useIndex, useJson, type Diagram } from '../lib/content';
-import { isDone, progress } from '../lib/store';
+import { ArrowRight, Bookmark, Play, Route as RouteIcon, Search, Target, X } from 'lucide-react';
+import { useIndex, useJson, type Diagram, type Index } from '../lib/content';
+import { bookmarks, isDone, progress, toggleBookmark } from '../lib/store';
 import { Sketch, SketchBar } from '../components/Sketch';
 import { StaticDiagram } from '../components/AnimatedDiagram';
 import { useUi } from '../App';
@@ -64,6 +64,7 @@ export default function Home() {
       </section>
 
       <RoadmapStrip />
+      <SavedLessons index={data} />
 
       <div className="section-head">
         <h2>Các chương</h2>
@@ -127,6 +128,44 @@ export default function Home() {
         </Link>
       </div>
     </div>
+  );
+}
+
+/** Bookmarked lessons, newest first; hidden until there is one. */
+function SavedLessons({ index }: { index: Index }) {
+  const { items } = bookmarks.use();
+  const p = progress.use();
+  const lessons = new Map(index.chapters.flatMap((c) => c.lessons.map((l) => [l.id, { ...l, ch: c }] as const)));
+  const saved = Object.entries(items)
+    .filter(([id]) => lessons.has(id))
+    .sort((a, b) => b[1].at - a[1].at)
+    .map(([id]) => lessons.get(id)!);
+  if (!saved.length) return null;
+  return (
+    <section className="saved">
+      <div className="section-head">
+        <h2>
+          <Bookmark size={22} /> Bài đã lưu
+        </h2>
+        <span className="muted small">{saved.length} bài · bấm “Lưu bài” (phím B) trong bài để thêm/bỏ</span>
+      </div>
+      <ul className="saved-list">
+        {saved.map((l) => (
+          <li key={l.id} className={isDone(p.lessons[l.id]) ? 'done' : ''}>
+            <Link to={`/l/${l.id}`}>
+              <span className="ch-num">{l.ch.num}</span>
+              <span className="saved-main">
+                <b>{l.title}</b>
+                <span className="muted small clamp2">{l.summary || l.ch.title}</span>
+              </span>
+            </Link>
+            <button className="icon-btn saved-x" title="Bỏ lưu" onClick={() => toggleBookmark(l.id)}>
+              <X size={15} />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
