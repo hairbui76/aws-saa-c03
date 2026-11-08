@@ -10,6 +10,7 @@ npm run build    # bản tĩnh trong dist/ (deploy lên host tĩnh nào cũng đ
 
 - `scripts/build-content.mjs`: đọc `../data` (note, MOC, sơ đồ Excalidraw) và `quizzes/*.json`, ghi JSON vào `public/content/`. Sửa note thì chạy lại `npm run dev` hoặc `npm run content`.
 - `quizzes/<chương>.json`: câu hỏi cuối bài. Key là tên file note (không có `.md`).
+- `abbreviations.json`: từ viết tắt → tên đầy đủ. Lúc build, lần đầu một từ viết tắt xuất hiện trong bài (TL;DR trước rồi tới nội dung) được viết thành `VPC (Virtual Private Cloud)`, các lần sau giữ nguyên. Bỏ qua tiêu đề, code, link, chỗ đã có ngoặc giải thích ngay sau hoặc đã viết tên đầy đủ trước đó. Thêm/sửa từ thì sửa file này.
 - Luyện đề thi thử: đề gốc nằm ở `../data/99 Banks/<đề>.json` (tiếng Anh, đáp án dạng chữ cái). `practice/<đề>.json` gắn từng câu (`no`) vào 1–3 bài (`lessons`, bài chính đứng đầu), kèm giải thích tiếng Việt (`explain`) và `doubt` khi đáp án trong bộ đề có thể sai. Thêm đề mới thì thêm cả file mapping cùng tên; đề chưa có mapping sẽ bị bỏ qua khi build. Các câu này được nối vào sau quiz của bài trong phần "Kiểm tra cuối bài" (giữ tiếng Anh, có nhãn "Đề X · câu Y").
 - `src/lib/diagram.ts`: chuyển sơ đồ Excalidraw thành animation từng bước (zone → mũi tên ①②③ hoặc theo độ sâu đồ thị → hàng của bảng → ghi chú ⚠).
 - Thuyết minh giọng AI cho video sơ đồ (chạy trên máy rồi commit kết quả, CI không chạy):

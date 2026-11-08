@@ -854,6 +854,9 @@ button.pill:hover {
   padding: 7px 11px;
   text-align: left;
   vertical-align: top;
+  /* wrap between words only: a column is never narrower than its longest word, the wrap scrolls instead */
+  overflow-wrap: normal;
+  word-break: normal;
 }
 .prose th {
   background: var(--yellow-soft);
@@ -3033,4 +3036,25 @@ body.resizing-chat {
   flex-shrink: 0;
   margin-top: 3px;
   color: #e8590c;
+}
+
+/* ---------- tables on phones: readable columns, the wrap scrolls sideways ---------- */
+@media (max-width: 640px) {
+  .prose th,
+  .prose td {
+    min-width: 9em;
+    padding: 6px 9px;
+  }
+  .prose th:first-child,
+  .prose td:first-child {
+    min-width: 0;
+  }
+  .table-wrap {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+}
+/* safety net: if a label still comes out wider than its box, let it spill rather than lose text */
+.mm-svg foreignObject {
+  overflow: visible;
 }

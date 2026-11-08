@@ -153,6 +153,55 @@ function transformMarkdown(md, usedDiagrams) {
   );
 }
 
+// ---------- acronyms: spell out the first use in each lesson ----------
+const ABBR = Object.fromEntries(
+  Object.entries(JSON.parse(fs.readFileSync(path.resolve(WEB, 'abbreviations.json'), 'utf8'))).filter(([k]) => !k.startsWith('_'))
+);
+let abbrExpanded = 0;
+// inline code, links, raw HTML, bare URLs and Obsidian block ids are left as they are
+const PROTECTED = /(`[^`\n]*`|\[[^\]\n]*\]\([^)\n]*\)|<[^>\n]+>|https?:\/\/[^\s)]+|\^[a-z0-9]{6,})/;
+const ACRONYM = /(?<![\p{L}\p{N}_\-/.$])([A-Z][A-Z0-9]*[A-Z0-9])(s?)(?![\p{L}\p{N}_\-/])/gu;
+
+/**
+ * `seen` is shared across the pieces of one lesson (TL;DR, then body) so only the first use is
+ * expanded. A use already followed by "(…)", or one whose full form is written on the same line
+ * or earlier in the lesson, counts as explained and is left alone.
+ */
+function expandAbbr(md, seen, before = { text: '' }) {
+  return mapOutsideCode(md, (text) =>
+    text
+      .split('\n')
+      .map((line) => {
+        if (/^\s*#{1,6}\s/.test(line)) {
+          before.text += line.toLowerCase() + '\n';
+          return line;
+        }
+        const lineLower = line.toLowerCase();
+        const out = line
+          .split(PROTECTED)
+          .map((part, i) =>
+            i % 2
+              ? part
+              : part.replace(ACRONYM, (m, tok, s, off, whole) => {
+                  const full = ABBR[tok];
+                  if (!full || seen.has(tok)) return m;
+                  seen.add(tok);
+                  const f = full.toLowerCase();
+                  const explained =
+                    /^\**\s*\(/.test(whole.slice(off + m.length)) || lineLower.includes(f) || before.text.includes(f);
+                  if (explained) return m;
+                  abbrExpanded++;
+                  return `${m} (${full})`;
+                })
+          )
+          .join('');
+        before.text += lineLower + '\n';
+        return out;
+      })
+      .join('\n')
+  );
+}
+
 // ---------- diagrams ----------
 function loadDiagram(name) {
   const file = diagramFiles.get(name);
@@ -367,9 +416,16 @@ for (const ch of chapters) {
 flatOrder.forEach(({ ch, l }, i) => {
   const used = new Set();
   const { title, rest } = splitTitle(l.body, l.name);
-  const tldr = extractTldr(rest);
+  // acronyms are spelled out at their first use: TL;DR card first, then the body
+  const seenAbbr = new Set();
+  const abbrCtx = { text: title.toLowerCase() + '\n' };
+  const tldr = expandAbbr(extractTldr(rest), seenAbbr, abbrCtx);
   // drop the TL;DR blockquote from the body; the page renders it as a card
-  const body = transformMarkdown(rest.replace(/^>\s*\*\*TL;DR:\*\*[\s\S]*?(?=\r?\n(?!>)|$)/m, '').trim(), used);
+  const body = expandAbbr(
+    transformMarkdown(rest.replace(/^>\s*\*\*TL;DR:\*\*[\s\S]*?(?=\r?\n(?!>)|$)/m, '').trim(), used),
+    seenAbbr,
+    abbrCtx
+  );
   const diagrams = {};
   let narration = {};
   try {
@@ -429,7 +485,7 @@ flatOrder.forEach(({ ch, l }, i) => {
   const src = fs.readFileSync(path.join(DATA, 'Exam Cheat Sheet.md'), 'utf8');
   const { body } = parseFrontmatter(src);
   const { title, rest } = splitTitle(body, 'Exam Cheat Sheet');
-  write('cheat-sheet.json', { title, body: transformMarkdown(rest, new Set()) });
+  write('cheat-sheet.json', { title, body: expandAbbr(transformMarkdown(rest, new Set()), new Set()) });
 }
 
 write('index.json', index);
@@ -437,6 +493,7 @@ write('thumbs.json', thumbs);
 
 const lessonTotal = flatOrder.length;
 const withQuiz = flatOrder.filter(({ l }) => quizByLesson.has(l.name.toLowerCase())).length;
+console.log(`  acronyms: spelled out ${abbrExpanded} first uses`);
 console.log(
   `content: ${chapters.length} chapters, ${lessonTotal} lessons, ${diagramCount} diagrams, ` +
     `${quizCount} quiz questions (${withQuiz}/${lessonTotal} lessons), ${narrated} narrated diagrams (${voiced} voice clips), ` +
