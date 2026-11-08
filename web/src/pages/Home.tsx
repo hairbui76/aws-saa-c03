@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play, Route as RouteIcon, Search } from 'lucide-react';
+import { ArrowRight, Play, Route as RouteIcon, Search, Target } from 'lucide-react';
 import { useIndex, useJson, type Diagram } from '../lib/content';
 import { isDone, progress } from '../lib/store';
 import { Sketch, SketchBar } from '../components/Sketch';
@@ -84,11 +84,20 @@ export default function Home() {
                     <b className="hand chapter-title">
                       <span className="ch-num">{c.num}</span> {c.title}
                     </b>
-                    <span className="badge" style={{ background: accent }}>
+                    <span className="badge" style={{ background: accent, color: '#1e1e1e' }}>
                       {c.lessons.length} bài
                     </span>
                   </div>
                   <p className="muted clamp2">{c.description}</p>
+                  {c.lessons.some((l) => l.pq) && (
+                    <span
+                      className="exam-mark ch"
+                      title="Số bài trong chương có câu hỏi từ bộ đề luyện thi (đánh dấu 🎯 ở danh sách bài)"
+                    >
+                      <Target size={13} strokeWidth={2.4} /> {c.lessons.filter((l) => l.pq).length}/{c.lessons.length} bài có trong đề
+                      luyện thi
+                    </span>
+                  )}
                   <div className="row between small">
                     <SketchBar value={d / c.lessons.length} color="#228be6" />
                     <span className="muted nowrap">

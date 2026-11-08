@@ -103,9 +103,15 @@ export const settings = createStore<Settings>('saa.settings.v1', {
 
 // ---------- diagram viewer preferences ----------
 // (every diagram opens on the static tab; the chosen tab is not remembered)
-export type ViewPrefs = { fontScale: number; voice: boolean; chatWidth: number };
+export type Theme = 'system' | 'light' | 'dark';
+export type ViewPrefs = { fontScale: number; voice: boolean; chatWidth: number; theme: Theme };
 export const CHAT_WIDTH = 440;
-export const viewPrefs = createStore<ViewPrefs>('saa.view.v1', { fontScale: 1.25, voice: true, chatWidth: CHAT_WIDTH });
+export const viewPrefs = createStore<ViewPrefs>('saa.view.v1', {
+  fontScale: 1.25,
+  voice: true,
+  chatWidth: CHAT_WIDTH,
+  theme: 'system',
+});
 
 // ---------- personal notes, one per lesson ----------
 export type Note = { text: string; at: number };
@@ -205,6 +211,79 @@ export function saveChat(lessonId: string, msgs: ChatMsg[]) {
 export type StoredRoadmap = { config: unknown; fileName: string; loadedAt: number } | null;
 export const roadmap = createStore<{ current: StoredRoadmap }>('saa.roadmap.v1', { current: null });
 
+// ---------- practice tests (#/practice) ----------
+/** A run in progress. Questions are referenced by key ("<test>#<no>"); answers hold option indexes. */
+export type PracticeSession = {
+  id: number; // start time, also the attempt id once submitted
+  title: string;
+  mode: 'exam' | 'study';
+  keys: string[];
+  answers: (number[] | null)[];
+  checked: boolean[]; // study mode: answer revealed
+  flags: boolean[];
+  idx: number;
+  deadline: number | null; // exam mode: submit automatically at this time
+};
+export type PracticeAttempt = {
+  id: number;
+  title: string;
+  mode: 'exam' | 'study';
+  keys: string[];
+  answers: (number[] | null)[];
+  flags: boolean[];
+  correct: boolean[];
+  score: number;
+  total: number;
+  at: number; // submitted
+  ms: number; // time taken
+};
+/** Latest result per question, for "ôn câu sai" and the per-test counters. */
+export type PracticeLast = Record<string, { ok: boolean; at: number }>;
+export type PracticeState = { session: PracticeSession | null; attempts: PracticeAttempt[]; last: PracticeLast };
+export const PRACTICE_PASS = 0.72; // the real exam passes at 720 of 1000 (scaled); used as a rough mark
+export const PRACTICE_MAX_ATTEMPTS = 60;
+export const practice = createStore<PracticeState>('saa.practice.v1', { session: null, attempts: [], last: {} });
+
+export const isRightAnswer = (picked: number[] | null | undefined, answer: number[]) =>
+  !!picked && picked.length === answer.length && answer.every((a) => picked.includes(a));
+
+export function updateSession(patch: Partial<PracticeSession>) {
+  practice.update((s) => (s.session ? { ...s, session: { ...s.session, ...patch } } : s));
+}
+
+/** Grade the running session, store it as an attempt and remember each question's latest result. */
+export function submitSession(answerOf: (key: string) => number[] | undefined): PracticeAttempt | null {
+  const s = practice.get().session;
+  if (!s) return null;
+  const now = Date.now();
+  const correct = s.keys.map((k, i) => {
+    const ans = answerOf(k);
+    return !!ans && isRightAnswer(s.answers[i], ans);
+  });
+  const attempt: PracticeAttempt = {
+    id: s.id,
+    title: s.title,
+    mode: s.mode,
+    keys: s.keys,
+    answers: s.answers,
+    flags: s.flags,
+    correct,
+    score: correct.filter(Boolean).length,
+    total: s.keys.length,
+    at: now,
+    ms: Math.max(0, Math.min(now, s.deadline ?? now) - s.id),
+  };
+  practice.update((st) => {
+    const last = { ...st.last };
+    // unanswered questions don't count as tried
+    s.keys.forEach((k, i) => {
+      if (s.answers[i]) last[k] = { ok: correct[i], at: now };
+    });
+    return { session: null, attempts: [attempt, ...st.attempts].slice(0, PRACTICE_MAX_ATTEMPTS), last };
+  });
+  return attempt;
+}
+
 // ---------- export / import ----------
 type ExportFile = {
   app: 'saa-c03-sketchbook';
@@ -216,6 +295,7 @@ type ExportFile = {
   ink?: Record<string, Stroke[]>;
   chats?: Record<string, ChatThread>;
   roadmap?: StoredRoadmap;
+  practice?: Pick<PracticeState, 'attempts' | 'last'>;
 };
 
 export function exportProgress() {
@@ -229,6 +309,7 @@ export function exportProgress() {
     ink: ink.get().items,
     chats: chats.get().items,
     roadmap: roadmap.get().current,
+    practice: { attempts: practice.get().attempts, last: practice.get().last },
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -271,6 +352,19 @@ function importExtras(data: ExportFile, mode: 'merge' | 'replace') {
     ink.set({ items: { ...inInk, ...ink.get().items } });
   }
   if (data.roadmap && (mode === 'replace' || !roadmap.get().current)) roadmap.set({ current: data.roadmap });
+  const inPr = data.practice;
+  if (inPr && Array.isArray(inPr.attempts)) {
+    if (mode === 'replace') practice.update((s) => ({ ...s, attempts: inPr.attempts, last: obj(inPr.last) }));
+    else
+      practice.update((s) => {
+        const byId = new Map(s.attempts.map((a) => [a.id, a]));
+        for (const a of inPr.attempts) if (!byId.has(a.id)) byId.set(a.id, a);
+        const last = { ...s.last };
+        for (const [k, v] of Object.entries(obj(inPr.last))) if (!last[k] || last[k].at < v.at) last[k] = v;
+        const attempts = [...byId.values()].sort((a, b) => b.at - a.at).slice(0, PRACTICE_MAX_ATTEMPTS);
+        return { ...s, attempts, last };
+      });
+  }
 }
 
 /** Merge an exported file into local progress: keeps the best of both for each lesson. */

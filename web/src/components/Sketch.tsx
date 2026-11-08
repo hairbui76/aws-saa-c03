@@ -9,6 +9,21 @@ function hash(s: string) {
   return Math.abs(h) || 1;
 }
 
+// Fills and strokes are passed as the light-theme colours; known ones follow the theme tokens (styles.css).
+const THEMED: Record<string, string> = {
+  '#fff': 'var(--card)',
+  '#ffffff': 'var(--card)',
+  '#1e1e1e': 'var(--ink)',
+  '#ebfbee': 'var(--green-softer)',
+  '#fff5f5': 'var(--red-softer)',
+  '#e7f5ff': 'var(--blue-softer)',
+  '#fff9db': 'var(--yellow-softer)',
+  '#fffdf0': 'var(--note-bg)',
+  '#1971c2': 'var(--blue)',
+  '#e67700': 'var(--orange-ink)',
+};
+const themed = (c?: string) => (c ? (THEMED[c.toLowerCase()] ?? c) : undefined);
+
 /** A box whose border is drawn by rough.js, so cards look hand-sketched like Excalidraw. */
 export function Sketch({
   children,
@@ -50,7 +65,12 @@ export function Sketch({
     <div ref={ref} className={`sk ${className}`} {...rest}>
       <svg className="sk-border" width={size[0]} height={size[1]} aria-hidden>
         {paths.map((p, i) => (
-          <path key={i} d={p.d} stroke={p.stroke} strokeWidth={p.strokeWidth} fill={p.fill || 'none'} />
+          <path
+            key={i}
+            d={p.d}
+            strokeWidth={p.strokeWidth}
+            style={{ stroke: themed(p.stroke) ?? 'none', fill: themed(p.fill) ?? 'none' }}
+          />
         ))}
       </svg>
       {children}

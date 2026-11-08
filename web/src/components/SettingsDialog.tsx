@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import { Download, Eye, EyeOff, Trash2, Upload, X } from 'lucide-react';
-import { exportProgress, importProgress, MODELS, notes, progress, resetProgress, settings } from '../lib/store';
+import { exportProgress, importProgress, MODELS, notes, progress, resetProgress, settings, viewPrefs } from '../lib/store';
+import { THEMES } from '../lib/theme';
 import { Sketch } from './Sketch';
 
 export default function SettingsDialog({ onClose }: { onClose: () => void }) {
   const s = settings.use();
+  const { theme } = viewPrefs.use();
   const p = progress.use();
   const [key, setKey] = useState(s.apiKey);
   const [show, setShow] = useState(false);
@@ -28,6 +30,23 @@ export default function SettingsDialog({ onClose }: { onClose: () => void }) {
             <X size={18} />
           </button>
         </header>
+
+        <section>
+          <h3>🎨 Giao diện</h3>
+          <div className="notes-seg" role="radiogroup" aria-label="Giao diện">
+            {THEMES.map((t) => (
+              <button
+                key={t.id}
+                role="radio"
+                aria-checked={theme === t.id}
+                className={theme === t.id ? 'on' : ''}
+                onClick={() => viewPrefs.update((v) => ({ ...v, theme: t.id }))}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </section>
 
         <section>
           <h3>🤖 Hỏi Claude</h3>

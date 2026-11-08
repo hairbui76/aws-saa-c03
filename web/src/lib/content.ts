@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 
-export type LessonRef = { id: string; title: string; summary: string; quiz: number };
+export type LessonRef = {
+  id: string;
+  title: string;
+  summary: string;
+  quiz: number;
+  /** questions from the practice tests on this lesson; pm = those whose main topic it is */
+  pq?: number;
+  pm?: number;
+};
 export type ChapterSummary = { id: string; num: string; title: string; description: string; lessons: LessonRef[] };
 export type Chapter = ChapterSummary & { body: string };
 export type SearchItem = { id: string; t: string; a: string; c: string; d: string };

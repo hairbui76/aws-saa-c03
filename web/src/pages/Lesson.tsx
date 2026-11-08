@@ -10,6 +10,7 @@ import Quiz from '../components/Quiz';
 import ChatPanel from '../components/ChatPanel';
 import LessonNotes from '../components/LessonNotes';
 import LessonMarks from '../components/LessonMarks';
+import ExamMark from '../components/ExamMark';
 import { useUi } from '../App';
 
 // The course videos are only served by the local dev/preview server (see vite.config.ts).
@@ -57,6 +58,7 @@ export default function LessonPage() {
   if (error) return <div className="page">Không tìm thấy bài học.</div>;
   if (!lesson) return <div className="page loading">Đang tải…</div>;
   const lp = p.lessons[lesson.id];
+  const examCount = lesson.quiz.filter((q) => q.src).length;
 
   const ask = (prompt: string) => {
     setPending(prompt);
@@ -78,6 +80,7 @@ export default function LessonPage() {
                 <Link to={`/l/${l.id}`}>
                   <Icon size={15} className={isDone(s) ? 'ok' : ''} />
                   <span>{l.title}</span>
+                  <ExamMark n={l.pq} main={l.pm} />
                   <NoteMark id={l.id} />
                 </Link>
               </li>
@@ -99,13 +102,24 @@ export default function LessonPage() {
             <ol>
               {chapter.lessons.map((l) => (
                 <li key={l.id} className={`${l.id === lesson.id ? 'cur' : ''} ${isDone(p.lessons[l.id]) ? 'done' : ''}`}>
-                  <Link to={`/l/${l.id}`}>{l.title}</Link>
+                  <Link to={`/l/${l.id}`}>
+                    {l.title} <ExamMark n={l.pq} main={l.pm} />
+                  </Link>
                 </li>
               ))}
             </ol>
           </details>
         )}
         <h1 className="lesson-title">{lesson.title}</h1>
+        {examCount > 0 && (
+          <button
+            className="exam-jump"
+            onClick={() => document.getElementById('quiz')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            <ExamMark n={examCount} main={chapter?.lessons.find((l) => l.id === lesson.id)?.pm} label />
+            <span className="muted small">→ làm ở phần Kiểm tra cuối bài</span>
+          </button>
+        )}
         {lesson.aliases.length > 0 && (
           <div className="aliases">
             {lesson.aliases.slice(0, 8).map((a) => (

@@ -4,6 +4,7 @@
 //   public/content/c/<chapter>.json  chapter (MOC) page
 //   public/content/l/<lesson>.json   lesson body, diagrams, quiz (own questions + practice-test ones), prev/next
 //   public/content/cheat-sheet.json
+//   public/content/practice.json     every practice test whole, for the #/practice page
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -287,7 +288,10 @@ if (fs.existsSync(QUIZZES)) {
 const BANKS = path.resolve(DATA, '99 Banks');
 const PRACTICE = path.resolve(WEB, 'practice');
 const practiceByLesson = new Map(); // lesson id -> questions
+const practiceMain = new Map(); // lesson id -> how many of them have it as their main lesson
 let practiceCount = 0;
+// the practice-test page gets every test whole: public/content/practice.json
+const practiceAll = { tests: [], questions: [] };
 if (fs.existsSync(BANKS)) {
   const LETTERS = 'ABCDEF';
   const tests = fs.readdirSync(BANKS).filter((f) => f.endsWith('.json')).sort();
@@ -301,6 +305,7 @@ if (fs.existsSync(BANKS)) {
     const bank = JSON.parse(fs.readFileSync(path.join(BANKS, f), 'utf8'));
     const map = new Map(JSON.parse(fs.readFileSync(mapFile, 'utf8')).items.map((it) => [it.no, it]));
     const testNum = (name.match(/(\d+)$/) || [, String(t + 1)])[1].replace(/^0+(?=\d)/, '');
+    practiceAll.tests.push({ num: testNum, title: `Đề ${testNum}`, count: bank.length });
     for (const q of bank) {
       const m = map.get(q.no);
       if (!m) {
@@ -320,9 +325,11 @@ if (fs.existsSync(BANKS)) {
       if (question.answer.length !== q.answer.length || keys.some((k) => !LETTERS.includes(k)))
         console.warn(`! ${name} #${q.no}: answer letters do not match the options`);
       practiceCount++;
+      practiceAll.questions.push({ k: `${testNum}#${q.no}`, t: testNum, no: q.no, ...question, lessons: m.lessons });
       m.lessons.forEach((id, rank) => {
         if (!practiceByLesson.has(id)) practiceByLesson.set(id, []);
         practiceByLesson.get(id).push({ rank, question });
+        if (rank === 0) practiceMain.set(id, (practiceMain.get(id) || 0) + 1);
       });
     }
   });
@@ -405,6 +412,8 @@ for (const ch of chapters) {
       title: l.name,
       summary: summaries.get(l.name.toLowerCase()) || '',
       quiz: (quizByLesson.get(l.name.toLowerCase()) || []).length + (practiceByLesson.get(l.id) || []).length,
+      // practice-test questions on this lesson (pm: those whose main topic it is); the UI marks these lessons
+      ...(practiceByLesson.has(l.id) ? { pq: practiceByLesson.get(l.id).length, pm: practiceMain.get(l.id) || 0 } : {}),
     })),
   };
   index.chapters.push(chEntry);
@@ -489,6 +498,7 @@ flatOrder.forEach(({ ch, l }, i) => {
 }
 
 write('index.json', index);
+if (practiceAll.questions.length) write('practice.json', practiceAll);
 write('thumbs.json', thumbs);
 
 const lessonTotal = flatOrder.length;

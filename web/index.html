@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect x='6' y='10' width='52' height='44' rx='10' fill='%23ffec99' stroke='%231e1e1e' stroke-width='4'/><path d='M18 40 Q32 18 46 40' fill='none' stroke='%231e1e1e' stroke-width='4' stroke-linecap='round'/></svg>" />
     <title>SAA-C03 Sketchbook</title>
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      // apply the saved theme before the first paint (no light flash in dark mode); src/lib/theme.ts keeps it in sync
+      try {
+        var t = (JSON.parse(localStorage.getItem('saa.view.v1') || '{}').theme) || 'system';
+        if (t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

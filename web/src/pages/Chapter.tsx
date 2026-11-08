@@ -4,6 +4,7 @@ import { useJson, useIndex, type Chapter } from '../lib/content';
 import { isDone, progress } from '../lib/store';
 import { Sketch, SketchBar, Stars } from '../components/Sketch';
 import Sections from '../components/Sections';
+import ExamMark from '../components/ExamMark';
 
 export default function ChapterPage() {
   const { id } = useParams();
@@ -51,6 +52,7 @@ export default function ChapterPage() {
                     {l.summary && <span className="muted small">{l.summary}</span>}
                   </div>
                   <div className="path-status">
+                    <ExamMark n={l.pq} main={l.pm} />
                     {lp?.quiz ? <Stars score={lp.quiz.best} total={lp.quiz.total} /> : null}
                     <Icon size={20} />
                   </div>

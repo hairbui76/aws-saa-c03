@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { HashRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import { BookOpenCheck, KeyRound, Search, Settings2 } from 'lucide-react';
+import { BookOpenCheck, KeyRound, Monitor, Moon, Search, Settings2, Sun } from 'lucide-react';
 import { useIndex } from './lib/content';
-import { isDone, progress, settings } from './lib/store';
+import { isDone, progress, settings, viewPrefs } from './lib/store';
+import { nextTheme, THEMES, useThemeSync } from './lib/theme';
 import SettingsDialog from './components/SettingsDialog';
 import SearchPalette from './components/SearchPalette';
 import Home from './pages/Home';
@@ -11,6 +12,7 @@ import LessonPage from './pages/Lesson';
 import CheatSheetPage from './pages/CheatSheet';
 import NotesPage from './pages/Notes';
 import RoadmapPage from './pages/Roadmap';
+import PracticePage, { PracticeResult, PracticeRun } from './pages/Practice';
 
 type Ui = { openSettings: () => void; openSearch: () => void };
 const UiContext = createContext<Ui>({ openSettings: () => {}, openSearch: () => {} });
@@ -36,6 +38,7 @@ function Header() {
         <NavLink to="/" end>
           Bài học
         </NavLink>
+        <NavLink to="/practice">Luyện đề</NavLink>
         <NavLink to="/roadmap">Lộ trình</NavLink>
         <NavLink to="/notes">Ghi chú</NavLink>
         <NavLink to="/cheat-sheet">Cheat Sheet</NavLink>
@@ -50,11 +53,29 @@ function Header() {
         <button className={`pill ${s.apiKey ? 'ok' : ''}`} onClick={openSettings} title="Anthropic API key">
           <KeyRound size={16} /> <span className="hide-sm">{s.apiKey ? 'Claude ✓' : 'Thêm key'}</span>
         </button>
+        <ThemeButton />
         <button className="pill icon" onClick={openSettings} title="Cài đặt, export/import tiến độ">
           <Settings2 size={16} />
         </button>
       </div>
     </header>
+  );
+}
+
+function ThemeButton() {
+  const { theme } = viewPrefs.use();
+  const Icon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor;
+  const label = THEMES.find((t) => t.id === theme)!.label;
+  const next = THEMES.find((t) => t.id === nextTheme(theme))!.label;
+  return (
+    <button
+      className="pill icon theme-btn"
+      onClick={() => viewPrefs.update((v) => ({ ...v, theme: nextTheme(v.theme) }))}
+      title={`Giao diện: ${label} · bấm để chuyển sang ${next}`}
+      aria-label={`Giao diện: ${label}`}
+    >
+      <Icon size={16} />
+    </button>
   );
 }
 
@@ -67,6 +88,7 @@ function ScrollTop() {
 }
 
 export default function App() {
+  useThemeSync();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   useEffect(() => {
@@ -91,6 +113,9 @@ export default function App() {
           <Route path="/cheat-sheet" element={<CheatSheetPage />} />
           <Route path="/roadmap" element={<RoadmapPage />} />
           <Route path="/notes" element={<NotesPage />} />
+          <Route path="/practice" element={<PracticePage />} />
+          <Route path="/practice/run" element={<PracticeRun />} />
+          <Route path="/practice/r/:id" element={<PracticeResult />} />
           <Route path="*" element={<Home />} />
         </Routes>
         <footer className="footer">
