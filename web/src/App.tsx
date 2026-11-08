@@ -6,6 +6,7 @@ import { isDone, progress, settings, viewPrefs } from './lib/store';
 import { nextTheme, THEMES, useThemeSync } from './lib/theme';
 import SettingsDialog from './components/SettingsDialog';
 import SearchPalette from './components/SearchPalette';
+import LessonPeek from './components/LessonPeek';
 import Home from './pages/Home';
 import ChapterPage from './pages/Chapter';
 import LessonPage from './pages/Lesson';
@@ -123,6 +124,7 @@ export default function App() {
         </footer>
         {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
         {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
+        <LessonPeek />
       </UiContext.Provider>
     </HashRouter>
   );

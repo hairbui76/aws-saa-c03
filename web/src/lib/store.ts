@@ -252,7 +252,10 @@ export function updateSession(patch: Partial<PracticeSession>) {
 }
 
 /** Grade the running session, store it as an attempt and remember each question's latest result. */
-export function submitSession(answerOf: (key: string) => number[] | undefined): PracticeAttempt | null {
+export function submitSession(
+  answerOf: (key: string) => number[] | undefined,
+  resultKeyOf: (key: string) => string = (k) => k
+): PracticeAttempt | null {
   const s = practice.get().session;
   if (!s) return null;
   const now = Date.now();
@@ -277,7 +280,7 @@ export function submitSession(answerOf: (key: string) => number[] | undefined): 
     const last = { ...st.last };
     // unanswered questions don't count as tried
     s.keys.forEach((k, i) => {
-      if (s.answers[i]) last[k] = { ok: correct[i], at: now };
+      if (s.answers[i]) last[resultKeyOf(k)] = { ok: correct[i], at: now };
     });
     return { session: null, attempts: [attempt, ...st.attempts].slice(0, PRACTICE_MAX_ATTEMPTS), last };
   });

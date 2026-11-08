@@ -1,0 +1,824 @@
+[
+  {
+    "no": 1,
+    "question": "You have launched 5 EC2 instances of the same size into a cluster placement group. You attempt to launch 5 more and get an error. What options could explain this, or resolve this ? (choose all that apply)",
+    "options": {
+      "A": "Cluster Placement groups are limited to 7 Instances, launch 2 maximum",
+      "B": "Use the same type and size of instances",
+      "C": "Change the max_occupancy setting to 10",
+      "D": "Terminate the instances, relaunch 10 into the same placement group",
+      "E": "Use a different AZ from the original instances"
+    },
+    "answer": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "no": 2,
+    "question": "In what scenario would you suggest a Site-to-Site VPN is used rather than a Direct Connect",
+    "options": {
+      "A": "Provisioning Timeframe Priority",
+      "B": "Speed Priority",
+      "C": "Latency Priority",
+      "D": "BGP Capable Hardware"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 3,
+    "question": "You need to configure private networking connectivity between a single on-premises location and AWS. You have been told that low latency and high speeds are a requirement and that the solution needs to be up and running within 4 days. Your on-premises location is in a semi rural location. What solution should you suggest",
+    "options": {
+      "A": "Direct Connect",
+      "B": "Transit Gateway",
+      "C": "Snowmobile",
+      "D": "VPN + Direct Connect"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 4,
+    "question": "You manage the infrastructure for a team of developers, the QA environment is automated and constantly provisions, tests and terminates application environments. The app environment consists of an EC2 instance which is built automatically and contains no valuable data and a MariaDB RDS SingleAZ instance. You have been asked to make sure that before an environment is terminated, backups are taken which last at least 6 months. What should you suggest?",
+    "options": {
+      "A": "Ensure automatic backups are enabled with a 6-month retention time and terminate the environments after the backup has occured",
+      "B": "Run a manual snapshot of the RDS instance before termination",
+      "C": "Detach the EBS volumes of the RDS instance and leave in place for 6 months",
+      "D": "Hibernate the RDS instances for 6 months rather than terminating them"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 5,
+    "question": "You have been asked to suggest a solution for a managed SQL database which provides 3+ AZ Automatic Resilience. Which option should you suggest ?",
+    "options": {
+      "A": "Use RDS MultiAZ and add read replicas in the 3rd AZ",
+      "B": "Use MultiAZ mode and configure for 2 standby replicas",
+      "C": "Use Aurora with replicas in all AZs",
+      "D": "Use DynamoDB"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 6,
+    "question": "A company has a monolithic application that they are refactoring to run in Docker containers. The engineers want to avoid as much infrastructure management as possible so they can focus on the application itself. Which service would you recommend to satisfy these requirements?",
+    "options": {
+      "A": "Fargate",
+      "B": "Lambda",
+      "C": "EFS",
+      "D": "Lightsail"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 7,
+    "question": "You have modified a cloudformation template used to create a windows EC2 instance, and changed it to launch a Linux instance. You cannot connect to the instance using SSH. You know the template works for a windows instance and have just tested and verified that. What could the potential problem be?",
+    "options": {
+      "A": "Check that UDP/22 is allowed on the instance security group",
+      "B": "Make sure TCP/3389 is enabled on the instance security group",
+      "C": "Make sure TCP/22 is enabled on the instance security group",
+      "D": "Check for any DENY’s on the security group and remove them"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 8,
+    "question": "You have a fleet of EC2 instances, managed by an auto-scaling-group which run a large scale web application. The web servers need to receive a copy of the web root files in a secure way. Which option do you suggest … (choose one)",
+    "options": {
+      "A": "Provide the web root files via instance meta-data",
+      "B": "Create an AMI with AWS credentials baked in, use these to access the files from an S3 bucket",
+      "C": "Create an EC2 instance role, pass in commands via cloud-init to download web root from S3",
+      "D": "Configure the instance with an IAM username and password and use these credentials to download the webroot files."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 9,
+    "question": "Which of the following AWS products and features can be used to allow network connectivity between two VPCs",
+    "options": {
+      "A": "Site-to-Site VPN",
+      "B": "Transit Gateway",
+      "C": "Direct Connect",
+      "D": "VPC Peer",
+      "E": "Gateway Endpoint"
+    },
+    "answer": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "no": 10,
+    "question": "You have a S3 bucket with 100 objects. You have been asked to design a replication solution and choose the built-in Cross Region Replication. You enable the feature, add 50 objects, wait 10 minutes and add a further 75 objects to the bucket & wait 24 hours. How many objects are in the remote bucket?",
+    "options": {
+      "A": "125",
+      "B": "225",
+      "C": "50",
+      "D": "75"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 11,
+    "question": "Which of the following are reasons for using EC2 Enhanced Networking",
+    "options": {
+      "A": "Additional networking features such as multicast",
+      "B": "Lower & consistent latency",
+      "C": "ENI’s in multiple AZs",
+      "D": "Better packet per section (PPS) performance",
+      "E": "Higher, but stable latency levels"
+    },
+    "answer": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "no": 12,
+    "question": "You have been asked to assist with a university enrolment system which uses DynamoDB as a database layer. The system is suffering due to heavy reads in the enrolment period of the university. Load is currently 3-4x the expected amount and 90% of so is read operations checking enrolment status for class signups. What should you suggest to aid in the extra load. The changes should be the least amount of admin overhead possible while being cost effective. The application is serverless, it runs from an S3 bucket and interacts with the DynamoDB endpoints using JS in a browser.",
+    "options": {
+      "A": "Increase RCU",
+      "B": "Add DynamoDB servers",
+      "C": "Use DAX",
+      "D": "Change Database to Aurora Serverless"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 13,
+    "question": "You have been asked to design a data encryption architecture for medical records. The requirements are that data is sent into AWS in a way where it's encrypted in transit. Your business needs to manage the encryption keys such that they arent stored in by AWS and ideally you don't have the overhead of performing encryption or decryption operations. What is a valid option based on these requirements?",
+    "options": {
+      "A": "SSE-C",
+      "B": "Client Side Encryption",
+      "C": "SSE-S3",
+      "D": "SSE-KMS"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 14,
+    "question": "An application running on EC2 improves its performance by using instance store to persist cache data. Which of the following statements best describes this cache data? CHOOSE THREE ANSWERS",
+    "options": {
+      "A": "The cache data will be lost if the EC2 instance is stopped",
+      "B": "The cache data will be lost if the EC2 instance is terminated",
+      "C": "The cache data will be lost if the EC2 instance suffers from a hardware failure",
+      "D": "The cache data will be lost if the EC2 instance is rebooted",
+      "E": "The cache data will be removed periodically as physical disks are reallocated between customers"
+    },
+    "answer": [
+      "A",
+      "B",
+      "C"
+    ]
+  },
+  {
+    "no": 15,
+    "question": "Which of the following scenarios is most suitable to be deployed to AWS Lambda? CHOOSE TWO",
+    "options": {
+      "A": "A script that runs every month to trigger maintenance tasks on EC2 instances",
+      "B": "A script that processes a text file when that file is uploaded to an S3 bucket",
+      "C": "A script that continuously transcodes a live video stream from a security camera.",
+      "D": "Running a small relational database"
+    },
+    "answer": [
+      "A",
+      "B"
+    ]
+  },
+  {
+    "no": 16,
+    "question": "Which statements are true of CloudFront (Choose all that apply)",
+    "options": {
+      "A": "CF can improve performance of static HTTP/S content",
+      "B": "CF can improve performance of dynamic HTTP/S content",
+      "C": "CF can improve performance of ONLY static content",
+      "D": "CF can accelerate network performance of non HTTP and HTTPS applications"
+    },
+    "answer": [
+      "A",
+      "B"
+    ]
+  },
+  {
+    "no": 17,
+    "question": "What is an appropriate and cost-effective use for the S3 storage class Standard-Infrequent Access?",
+    "options": {
+      "A": "Objects stored with 99.999999999% (11 9’s) durability that when requested take milliseconds to be retrieved",
+      "B": "Objects stored with 99.999999999% (11 9’s) durability that when requested may take minutes or hours to be retrieved",
+      "C": "Objects stored with 99.5% availability that when requested take milliseconds to be retrieved",
+      "D": "Objects stored with 99.999999999% (11 9’s) durability that are requested as part of a website with many requests for day"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 18,
+    "question": "You have been asked to implement a solution which can manage an application workflow which runs for between 7 and ~45 minutes before terminating. The process consists of individual steps which run for less than 5 minutes each. The processes are written in Python. Which AWS product or Products should you suggest to implement the solution in a cost effective way ? (choose one)",
+    "options": {
+      "A": "Step Functions + lambda",
+      "B": "Lambda",
+      "C": "Fargate",
+      "D": "EC2"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 19,
+    "question": "You are migrating an application into AWS with uses a messaging system to decouple its components (web and worker). Which AWS Service can be used to provide this functionality?",
+    "options": {
+      "A": "Kinesis",
+      "B": "SNS",
+      "C": "SES",
+      "D": "SQS"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 20,
+    "question": "You are migrating a windows file server into AWS so that it can be used by VPC hosted Workspaces (Virtual Desktops). What is the most cost effective and resilient way to host this data in AWS and provide access to it using the SMB protocol.",
+    "options": {
+      "A": "EC2 Instance running Windows Server",
+      "B": "EFS",
+      "C": "FSx",
+      "D": "S3 + Directory Service"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 21,
+    "question": "Due to compliance requirements, you have been instructed that data within a VPC must NOT traverse the public Internet. The system uses EC2, EBS, EFS and a Direct Connect dedicated network connection from your premises. You have been asked to report on the suitability of the architecture.",
+    "options": {
+      "A": "To prevent data transferred to and from EFS traversing the public Internet a VPC endpoint for EFS must be used",
+      "B": "To prevent data transferred to and from EC2 traversing the public Internet an VPC endpoint for EC2 must be used",
+      "C": "To prevent data transferred to and from VPC traversing the public Internet VPC encryption must be used",
+      "D": "By default data within this architecture does not traverse the public Internet."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 22,
+    "question": "You are noticing that within an auto-scaling-group managing the front-end for a busy application with rapidly changing load levels … instances are being started and terminated rapidly. This is causing disruption to the application and excessive costs. What setting could you change to change this behaviour ?",
+    "options": {
+      "A": "Change the desired capacity manually",
+      "B": "Increase the minimum size",
+      "C": "Increase the maximum size",
+      "D": "Decrease the maximum size",
+      "E": "Change the cooldown period"
+    },
+    "answer": [
+      "E"
+    ]
+  },
+  {
+    "no": 23,
+    "question": "You have recently started a new job. Your manager asks you to review the design of a Site-to-Site VPN Solution to ensure it's highly-available. It uses one VGW, 1 VPN connection and 1 CGW. What should you tell your manager? (choose one)",
+    "options": {
+      "A": "The solution is Fully HA",
+      "B": "Another CGW will ensure the solution is fully HA",
+      "C": "Add a VGW and the solution is fully HA",
+      "D": "Add a CGW for full HA",
+      "E": "Another CGW and VPN Connection is needed for Full HA"
+    },
+    "answer": [
+      "E"
+    ]
+  },
+  {
+    "no": 24,
+    "question": "You are receiving large SQS bills every month for a queue which is involved in a worker processing tier. The tier has 5 instances which are static and not scaled using an ASG. There appears to be only low volume running through your SQS queue. What would likely reduce bills? (choose 2)",
+    "options": {
+      "A": "Switch to short-polling",
+      "B": "Switch to long-polling",
+      "C": "Switch to ondemand-polling",
+      "D": "Re-provision the instances using an ASG based on queue length",
+      "E": "Re-provision the instances using an ASG based on queue throughput"
+    },
+    "answer": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "no": 25,
+    "question": "You need configure an EC2 instance so it can only be accessed using SSH from IP 1.3.3.7. Which of the following will implement the desired configuration?",
+    "options": {
+      "A": "Add an SG Inbound 1.3.3.7/32 Protocol -1",
+      "B": "Add an SG Inbound 1.3.3.7/32 TCP 22",
+      "C": "Add an SG Inbound 1.3.3.7/32 UDP 22",
+      "D": "Add an SG Inbound 1.3.3.7/32 TCP 25"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 26,
+    "question": "Your developers are refactoring a legacy application into a series of services. At this stage most of the services are long running processes using chunks of code from the original application. What architecture components would you recommend to make best use of AWS services?",
+    "options": {
+      "A": "Configure the service to Docker containers and deploy with ECS",
+      "B": "Configure the services as Lambda functions and deploy behind an API Gateway",
+      "C": "Package the services into a single deployment and deploy to EC2 instances in an auto scaling group",
+      "D": "Package the services into a single deployment and deploy to EC2 instances behind an API Gateway."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 27,
+    "question": "You have been asked to suggest an AWS product which provides storage which can be mounted on linux instances, supports POSIX type permissions and can be used by multiple instances at the same time. Which option should you suggest?",
+    "options": {
+      "A": "EFS",
+      "B": "FSx",
+      "C": "EBS GP2",
+      "D": "S3"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 28,
+    "question": "You have been asked to design encryption for a health care related data set. The requirement is that data be transferred to S3 in an encrypted way. And when on S3 it must be encrypted. S3 Full administrators must not be able to access the data contents, but must be able to manage that data. Analysis staff must be able to access data, but not adjust encryption in any way. The solution should use the least number of services to meet the objectives and have the least admin overhead. What should you suggest ?",
+    "options": {
+      "A": "Client Side Encryption",
+      "B": "SSE-C",
+      "C": "SSE-S3",
+      "D": "SSE-KMS",
+      "E": "CloudHSM"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 29,
+    "question": "You have recently enhanced an application by using an auto-scaling-group and an application load balancer. Users have reported that the application is constantly logging customers out and losing progress. What is a potential fix for this behaviour ?",
+    "options": {
+      "A": "Disable Cross-Zone load balancing",
+      "B": "Enable session stickiness",
+      "C": "Enable SSL Offload",
+      "D": "Enable ELB Health Checks on the ASG"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 30,
+    "question": "You are having problems establishing a Dynamic Site-to-Site VPN between AWS and a client site. Which of the following could be a potential reason?",
+    "options": {
+      "A": "The customer router has a static IP address",
+      "B": "The Customer router cannot use BGP",
+      "C": "The customer router has a static route defined within its configuration",
+      "D": "The router is only capable of IPv4"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 31,
+    "question": "You are launching an application which operates in a controversial area of industry and you are expecting internet based attacks. Your application runs inside a VPC, within an auto-scaling-group and uses an application load balancer. The hostname for the application www.dogsarebetterthancats.com uses an external DNS provider. How can you protect against DDOS attacks with this application?",
+    "options": {
+      "A": "AWS Shield Protects this by default",
+      "B": "AWS WAF Protects this by default",
+      "C": "Purchase Shield Advanced",
+      "D": "Purchase WAF Advanced"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 32,
+    "question": "You have 4 VPC’s and need to configure AWS to allow communications between all 4 VPC. Which of the following options will meet that requirement and do so with as little configuration & ongoing admin overhead as possible (choose one)",
+    "options": {
+      "A": "1 VPC Peering Connection",
+      "B": "6 VPC Peering Connections",
+      "C": "1 Transit Gateway",
+      "D": "4 Transit Gateways",
+      "E": "1 Transit Gateway & 1 VPC Peering Connection"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 33,
+    "question": "You are hosting a blog platform in AWS. The blog platform has been developed to use a MySQL 5.7 using the InnoDB storage. To get the best performance from your architecture, what AWS services would you use?",
+    "options": {
+      "A": "EC2 instances and AWS RDS using Aurora",
+      "B": "Lambda serverless compute and DynamoDB database",
+      "C": "EC2 instances and DynamoDB database",
+      "D": "Docker containers for the blog platform and MySQL 5.7."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 34,
+    "question": "You are the solutions architect in charge of migrating a wordpress hosting business to AWS. They have several clients who consume significant resources. They have asked you to design a multi-instance storage solution for shared data the servers currently use Ubuntu Linux. Which product should you recommend ? (choose one)",
+    "options": {
+      "A": "FSx",
+      "B": "GP2 EBS Volumes attached to multiple instances",
+      "C": "S3",
+      "D": "EFS"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 35,
+    "question": "You have configured S3 so that when a video file is uploaded, an event is generated. You need two processes to run independently when the video is uploaded, generating two different sizes and then adding a water mark. What service or combination of services would allow this process to take place?",
+    "options": {
+      "A": "SQS",
+      "B": "SNS",
+      "C": "SNS + SQS + ASG",
+      "D": "SQS + Lambda"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 36,
+    "question": "You have been alerted to suspect connections being attempted to 100 EC2 instances within an Auto-scaling-group from a group of external IP addresses. There is one range of IP addresses in a /24 network and another single IP address. What is the quickest way to block access to your EC2 instances from these IP addresses.",
+    "options": {
+      "A": "NACL Inbound",
+      "B": "SG Inbound",
+      "C": "WAF",
+      "D": "Shield",
+      "E": "Local Instance OS Firewalls"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 37,
+    "question": "You are attempting to diagnose a networking problem within a VPC. You have an existing EC2 instance deployed in a subnet with a public IP address. This instance can be accessed from the public internet and it can access anything ON the public internet. You launch an additional EC2 instance in the same VPC subnet and cannot access it from the public internet. What could be a possible reason for this?",
+    "options": {
+      "A": "The VPC needs an internet gateway",
+      "B": "The subnet route table has errors",
+      "C": "The instance only has the private IPv4 address configured inside the OS",
+      "D": "The instance has no public IP address allocated",
+      "E": "The instance SG is explicitly denying any incoming IPv4 traffic"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 38,
+    "question": "After deploying an HPC application across multiple EC2 instances you discover performance issues. Upon investigation you determine that network latency is the cause of the issues. What solution do you suggest to attempt to mitigate the performance issues?",
+    "options": {
+      "A": "Place the EC2 instances in a single Cluster Placement Group",
+      "B": "Place the EC2 instances in a single Partition Placement Group",
+      "C": "Place the EC2 instances in a single Spread Placement Group",
+      "D": "Place the EC2 instances in a single Auto Scaling Group."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 39,
+    "question": "A local police force has asked you to help implement a solution for tracking police units. Every unit has a GPS tracker which transmits data every 60 seconds. You need to suggest a solution which can accept the data en-mass from all units in the country and allow multiple applications to read and process data in near realtime for different business and security functions. What should you suggest?",
+    "options": {
+      "A": "SQS",
+      "B": "CloudWatchLogs",
+      "C": "Kinesis",
+      "D": "S3"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 40,
+    "question": "You run an online commerce business which prints images on glass. You would like a long running process (2 weeks) to be initiated whenever an order arrives in a DynamoDB orders table. What AWS products should you use to ensure the most cost-effect solution?",
+    "options": {
+      "A": "DynamoDB Streams, Lambda, Stepfunctions",
+      "B": "DynamoDB Streams & Lambda",
+      "C": "EC2 Instance Polling DynamoDB for orders, then running process",
+      "D": "Fargate"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 41,
+    "question": "An animal charity is launching a new campaign and needs a website. The content of the website will explain to users how the campaign works, and provide links to their existing financial partner who deals with charitable donations. This website will be promoted using social media platforms and many thousands of page impressions are expected per minute. What architecture would you recommend to satisfy the charities requirements while keeping costs as low as possible?",
+    "options": {
+      "A": "Create an S3 bucket and enable static web hosting",
+      "B": "Create an EC2 auto scaling group and place behind a Network Load Balancer",
+      "C": "Create an EC2 auto scaling group and place behind an Application Load Balancer",
+      "D": "Create an EC2 auto scaling group and place behind an API Gateway"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 42,
+    "question": "You have been asked to migrate a system into the cloud in order to reduce the management overheads for your business. The system uses a shared NFS file system for common data used on multiple components of the system. To meet this requirement without major changes to the system what architecture would you recommend?",
+    "options": {
+      "A": "Elastic File System (Amazon EFS)",
+      "B": "Simple Storage Service (S3)",
+      "C": "Amazon Linux",
+      "D": "Elastic Block Store (EBS)"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 43,
+    "question": "A Database solution you are implementing requires high throughput and manages high IO workloads. It uses a collection of volumes ranging in size and requires performance which is independent of size. What volume type should you suggest ? (Choose one)",
+    "options": {
+      "A": "IO1",
+      "B": "GP2",
+      "C": "Instance Store",
+      "D": "ST1"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 44,
+    "question": "You are designing a financial application which requires high IOPS capability on its storage. You have been asked which storage type to suggest. The storage needs to be mountable on an EC2 instances and accessible from one EC2 instance at a time. The data which is being stored is business critical and requires 25,000 IOPS at all times.",
+    "options": {
+      "A": "EBS GP2",
+      "B": "EBS IO1",
+      "C": "EBS SC1",
+      "D": "Instance Store volumes",
+      "E": "EBS ST1"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 45,
+    "question": "You have been asked by the maker of a popular game ‘catcraft’ to implement load balancing for their front end game infrastructure. The game doesn’t use HTTP or HTTPS instead a custom low latency protocol which runs over the top of TCP. The game is expected to be popular and whatever you implement needs to cope with 500,000 requests per second as a starting point and this is expected to scale rapidly. What should you suggested to distribute load over the front end servers",
+    "options": {
+      "A": "Classic Load Balancer",
+      "B": "Application Load Balancer",
+      "C": "Route53 Failover",
+      "D": "Network Load Balancer"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 46,
+    "question": "Which actions are required to make an EC2 instance publicly accessible on the IPv4 internet.. (Choose all that apply)",
+    "options": {
+      "A": "An attached internet gateway",
+      "B": "An attached Nat Gateway",
+      "C": "0.0.0.0/0",
+      "D": "::/0",
+      "E": "Public IP4 Address configured on the instance",
+      "F": "Public IPv4 Configured on the OS"
+    },
+    "answer": [
+      "A",
+      "C",
+      "E"
+    ]
+  },
+  {
+    "no": 47,
+    "question": "An application within an architectre you designed 12 months ago is experiencing performance issues. The application runs on a T3.Large instance and uses a MariaDB RDS Multi-AZ database instance. The application is experiencing issues with database writes... and appears constrained. What is the most cost effective way of fixing this problem with no application changes ? (Choose one)",
+    "options": {
+      "A": "Add RDS RR's",
+      "B": "Access the second replica within the MultiAZ cluster",
+      "C": "Enable the RDS Write-Caching feature",
+      "D": "Adjust the RDS Instance Size and/or storage type"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 48,
+    "question": "You are designing an application which uses lambda as the provider of compute. The application is javascript, it loads from an S3 bucket and runs in the browser of customers. It needs to be able to communicate with AWS services such as DynamoDB and as required cause lambda functions to run. Which AWS Service can act as the middleman in this type of architecture? (Choose one)",
+    "options": {
+      "A": "Internet Gateway",
+      "B": "API Gateway",
+      "C": "Step Functions",
+      "D": "EventBridge"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 49,
+    "question": "You are reviewing an architecture built in a new AWS account. The architecture centers around a Virtual Private Cloud (VPC). Which of the following statements best describes a VPC?",
+    "options": {
+      "A": "A logically isolated network",
+      "B": "An on-premis deployment that links to the cloud",
+      "C": "An AWS account",
+      "D": "A legacy deployment method for EC2 instances"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 50,
+    "question": "You have been asked to create an EC2 instance with network interfaces in two separate subnets. What should your response be?",
+    "options": {
+      "A": "This is always possible",
+      "B": "Possible but ensure the instance is launched with the cross-zone ENI feature",
+      "C": "Always possible, just add more ENI’s at launch time or after launch",
+      "D": "Possible only if subnets are in the same AZ"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 51,
+    "question": "A news organization uploads articles to S3 for internal use. Articles uploaded in the last month will be accessed by staff regularly, with articles older than 3 months are unlikely to be used again but should be archived. Which of the following solutions will keep storage costs as low as possible while meeting requirements?",
+    "options": {
+      "A": "Configure a VPC endpoint to access S3 from internal systems",
+      "B": "Configure an S3 lifecycle policy that will transition objects to the S3 Infrequent Access class after 90 days",
+      "C": "Configure an S3 lifecycle policy that will transition objects to the S3 Glacier storage class after 90 days",
+      "D": "Ask staff to reduce their access to S3 objects, and to request approval for access to objects more than 3 months old."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 52,
+    "question": "A client is launching a cat image sharing website called catagram. It needs a high performance, scalable, resilient and publically accessible location to store images of various sizes. The application needs to be able to provide time limited access to the objects to protect the rights of content owners. Which product should you select.",
+    "options": {
+      "A": "S3 Glacier",
+      "B": "S3",
+      "C": "EC2 + EBS",
+      "D": "DynamoDB"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 53,
+    "question": "You have an on-premises active directory and have connected this network to an AWS VPC using a site-to-site VPN connection. You intend to perform a Workspaces Proof of Concept pilot. What do you need to do before deploying workspaces (choose one).",
+    "options": {
+      "A": "Implement a simple AD DS",
+      "B": "Implement a Microsoft Active Directory DS",
+      "C": "Use AD Connector",
+      "D": "Configure workspaces to point at the on-premises AD DS DNS Servers"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 54,
+    "question": "A legacy linux application is running on 5 virtual servers on-premises and needs to be migrated to AWS. It uses multicast networking and this can’t be changed. How can this be migrated into AWS, are any special accomodations needed ?",
+    "options": {
+      "A": "There is no way to support multicast within AWS",
+      "B": "No changes are required, VPCs support multicast",
+      "C": "VPCs created with the vpc.multicast=1 option can support the application",
+      "D": "Build the servers within an ASG/LT, create an multicast network overlay internally within the OS networking."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 55,
+    "question": "Your business is merging with another company over the coming 12 months. Long term the plan is to create a new AWS account infrastructure and move into this for the new shared entity. Your business has 3000 staff, the other business has 2500. You have been asked to give the 2500 staff access to your AWS account as quickly as possible, while keeping the admin overhead low. What should you suggest?",
+    "options": {
+      "A": "Create 2,500 IAM users from an export of the external businesses identity provider",
+      "B": "Create an IAM Group with long-term credentials and have the users of the external business login using this",
+      "C": "Use an IAM role",
+      "D": "Configure IAM to share IAM users with the external account"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 56,
+    "question": "Assuming you have allocated a keypair when launching a public EC2 instance and have network connectivity .. which of the following ways are valid for logging into a linux EC2 instance",
+    "options": {
+      "A": "Local SSH client using key authentication",
+      "B": "Local SSH client using username and password authentication",
+      "C": "Local SSH Client using access key authentication",
+      "D": "EC2 Instance Connect",
+      "E": "Session Manager"
+    },
+    "answer": [
+      "A",
+      "D"
+    ]
+  },
+  {
+    "no": 57,
+    "question": "An application uses a worker pool architecture consisting of an auto-scaling-group which scales based on the length of an SQS Queue. Permissions to access the queue for work, and to write the output to S3 is provided via an instance role assigned at launch to the EC2 instances. Recently the length of the queue has started to increase as has EC2 costs. Jobs are getting processed, but you are experiencing additional errors. What could be the problem?",
+    "options": {
+      "A": "The role permissions policy is incorrect",
+      "B": "Some instances are being launched without public IPv4 addresses so can’t access the SQS queue",
+      "C": "No dead letter queue",
+      "D": "Wrong EC2 instance type - change to a compute optimized instance"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 58,
+    "question": "A VPC you manage has a collection of 10 EC2 instances running across two AZs in two private subnets, with IPv4 addresses only. You need to make sure the instances have outgoing only access to the internet. What should you do?",
+    "options": {
+      "A": "Deploy an egress-only internet gateway",
+      "B": "Deploy a VPC gateway endpoint",
+      "C": "Deploy a bastion host",
+      "D": "Deploy a NATGateway"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 59,
+    "question": "You have added a rule to a NACL which allows traffic through to a VPC subnet but are finding that its not working as expected. What possible things should you investigate? (Choose all which apply)",
+    "options": {
+      "A": "The NACL needs to be assigned to the EC2 instances not the subnet",
+      "B": "NACL rules are stateless make sure you have a rule for the response traffic",
+      "C": "NACL rules are processed in order, make sure there isn’t one with a higher number which is processed first",
+      "D": "NACL rules are processed in order, make sure there isn’t one with a lower number which is processed first",
+      "E": "Make sure the NACL is assigned to the correct subnet"
+    },
+    "answer": [
+      "B",
+      "D",
+      "E"
+    ]
+  },
+  {
+    "no": 60,
+    "question": "The animals4life business has a head office in Brisbane and a new satellite office in London. Both offices are connected to a VPC in that same region using a Site-to-Site VPN. You have a new requirement to connect the two VPCs so that communication can occur between them, but also that the Brisbane office can use the London VPC and the London office can use the Australian VPC. What should you suggest?",
+    "options": {
+      "A": "1 Peering connection between the Australian and London VPC",
+      "B": "A Site-to-Site VPN connection between the London and Australian VPC",
+      "C": "A gateway endpoint between the London and Australian VPCs",
+      "D": "A transit gateway linking the London and Australian VPCs"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 61,
+    "question": "A member of your clients IT team has suggested that enabling Multi-AZ on a MySQL RDS instance will help improve performance. You have been asked to comment, what should you say?",
+    "options": {
+      "A": "Multi-AZ only helps with availability",
+      "B": "MultiAZ provides read performance improvements",
+      "C": "MultiAZ provides write performance improvements",
+      "D": "MultiAZ provides read and write performance improvements"
+    },
+    "answer": [
+      "A"
+    ]
+  }
+]

@@ -1,0 +1,342 @@
+{
+ "source": "practice_exam_2",
+ "num": "8",
+ "note": "Questions 1-26 repeat practice_exam_1 #36-#61; the build reuses that mapping for them.",
+ "items": [
+  {
+   "no": 27,
+   "lessons": [
+    "efs",
+    "fsx-for-lustre",
+    "storage-fundamentals"
+   ],
+   "explain": "EFS là shared file system chuẩn NFSv4, mount được đồng thời trên nhiều EC2 Linux và hỗ trợ POSIX permissions, đáp ứng đủ cả ba yêu cầu. EBS gp2 là block storage gắn vào một instance (Multi-Attach chỉ có ở io1/io2 và cần file system cluster-aware). S3 là object storage, không mount như file system và không có POSIX permissions. FSx là cả một họ sản phẩm: FSx for Windows dùng SMB cho Windows, FSx for Lustre dành cho HPC chuyên biệt, nên với file share Linux thông thường thì EFS là lựa chọn mặc định. Từ khóa: 'mounted on linux' + 'POSIX' + 'multiple instances' → EFS.",
+   "doubt": null
+  },
+  {
+   "no": 28,
+   "lessons": [
+    "s3-encryption",
+    "kms",
+    "encryption-fundamentals"
+   ],
+   "explain": "SSE-KMS tách vai trò: S3 admin quản lý được object và bucket, nhưng muốn đọc nội dung phải có quyền kms:Decrypt trên KMS key; analyst được cấp quyền decrypt mà không có quyền quản trị key. Dữ liệu tải lên qua HTTPS nên được mã hóa in transit. SSE-S3 do S3 tự quản key nên ai có toàn quyền S3 đều đọc được dữ liệu, không tách vai trò. SSE-C và client-side encryption bắt khách hàng tự quản lý và phân phối key, tăng overhead; CloudHSM thêm một dịch vụ phải vận hành, trái yêu cầu ít dịch vụ nhất. Từ khóa: 'admin không được xem nội dung' + 'least admin overhead' → SSE-KMS (role separation).",
+   "doubt": null
+  },
+  {
+   "no": 29,
+   "lessons": [
+    "ssl-offload-and-session-stickiness",
+    "elastic-load-balancer",
+    "horizontal-vs-vertical-scaling"
+   ],
+   "explain": "Ứng dụng đang lưu session ngay trên instance; khi ALB chuyển request tiếp theo của cùng user sang instance khác thì session mất, user bị logout. Bật session stickiness (cookie AWSALB) giữ user bám vào cùng một instance là cách sửa nhanh; giải pháp lâu dài là đưa session ra ngoài (DynamoDB, ElastiCache) cho instance stateless. Tắt cross-zone load balancing chỉ đổi cách chia tải giữa các AZ, không giữ session. SSL offload chỉ chuyển việc giải mã TLS sang load balancer. ELB health check giúp ASG thay instance hỏng, không liên quan đến mất session. Từ khóa: 'logging customers out' + load balancer → session stickiness.",
+   "doubt": null
+  },
+  {
+   "no": 30,
+   "lessons": [
+    "site-to-site-vpn",
+    "bgp"
+   ],
+   "explain": "Dynamic Site-to-Site VPN dùng BGP để trao đổi route giữa phía AWS (Virtual Private Gateway hoặc Transit Gateway) và Customer Gateway, nên router phía khách không chạy được BGP thì không dựng được VPN dạng dynamic, chỉ còn cách dùng static routing. Customer gateway có static public IP là yêu cầu bình thường chứ không phải nguyên nhân lỗi. Có static route trong cấu hình router không ngăn BGP hoạt động. Router chỉ hỗ trợ IPv4 cũng không sao vì Site-to-Site VPN chạy tốt trên IPv4. Từ khóa: 'Dynamic' VPN → bắt buộc BGP.",
+   "doubt": null
+  },
+  {
+   "no": 31,
+   "lessons": [
+    "shield",
+    "waf",
+    "ddos"
+   ],
+   "explain": "Shield Advanced là gói trả phí chống DDoS nâng cao cho ALB, EC2/Elastic IP, CloudFront, Route 53, Global Accelerator: có Shield Response Team hỗ trợ 24/7, cost protection khi hạ tầng phải scale vì bị tấn công, và bảo vệ L7 khi kết hợp WAF; hợp với ứng dụng dự kiến bị nhắm tấn công. Shield Standard tự động bật miễn phí nhưng chỉ chống các tấn công L3/L4 phổ biến, không đủ cho mục tiêu bị nhắm cụ thể. WAF không tự bảo vệ gì khi chưa tạo Web ACL và gắn vào ALB, và cũng không có sản phẩm nào tên 'WAF Advanced'. Từ khóa: 'expecting internet based attacks' + DDoS → Shield Advanced.",
+   "doubt": null
+  },
+  {
+   "no": 32,
+   "lessons": [
+    "transit-gateway",
+    "vpc-peering"
+   ],
+   "explain": "Một Transit Gateway làm hub: gắn cả 4 VPC vào là chúng định tuyến được với nhau (transitive routing), thêm VPC sau này chỉ cần thêm một attachment. Full mesh bằng VPC peering cần n(n-1)/2 = 6 connection kèm route ở từng VPC, càng nhiều VPC càng khó quản lý. Một peering connection chỉ nối đúng hai VPC và peering không transitive. Bốn Transit Gateway hay Transit Gateway kèm thêm peering đều thừa, tăng cấu hình mà không có lợi ích. Từ khóa: 'communications between all 4 VPC' + 'least admin overhead' → 1 Transit Gateway.",
+   "doubt": null
+  },
+  {
+   "no": 33,
+   "lessons": [
+    "aurora",
+    "rds-architecture",
+    "databases-on-ec2"
+   ],
+   "explain": "Aurora MySQL-compatible tương thích MySQL/InnoDB nên ứng dụng blog chuyển sang gần như không phải sửa code, trong khi cluster volume chia sẻ cho throughput cao hơn MySQL thường và hỗ trợ tới 15 replica để scale đọc; EC2 chạy tầng web. Lambda + DynamoDB hay EC2 + DynamoDB đều đổi sang NoSQL, phải viết lại ứng dụng vốn dựa trên MySQL. Tự chạy MySQL 5.7 trong container nghĩa là tự quản lý database, kém về hiệu năng và độ bền so với Aurora. Lưu ý MySQL 5.7 (và Aurora MySQL v2) đã hết standard support; nay dùng Aurora MySQL v3 tương thích MySQL 8.0. Từ khóa: 'MySQL' + 'InnoDB' + 'best performance' → Aurora.",
+   "doubt": null
+  },
+  {
+   "no": 34,
+   "lessons": [
+    "efs",
+    "lab-architecture-evolution",
+    "fsx-for-windows"
+   ],
+   "explain": "EFS là NFS file system managed, mount đồng thời trên nhiều instance Ubuntu Linux, đúng mẫu WordPress nhiều instance dùng chung thư mục nội dung như trong lab Architecture Evolution. EBS gp2 không attach được vào nhiều instance cùng lúc (Multi-Attach chỉ có ở io1/io2). S3 là object storage, không mount như file system chia sẻ cho WordPress. FSx (thường hiểu là FSx for Windows) phục vụ file share SMB cho Windows, không phải lựa chọn tự nhiên cho Linux. Từ khóa: 'multi-instance storage for shared data' + Linux → EFS.",
+   "doubt": null
+  },
+  {
+   "no": 35,
+   "lessons": [
+    "sns",
+    "sqs",
+    "s3-events"
+   ],
+   "explain": "Đây là mẫu fan-out: S3 event gửi tới một SNS topic, topic đẩy bản sao message vào hai SQS queue riêng, mỗi queue có một nhóm worker trong ASG (scale theo độ dài queue) xử lý độc lập, một bên tạo các kích thước, một bên đóng watermark. Chỉ dùng SQS thì mỗi message chỉ do một consumer xử lý, hai process không cùng nhận được sự kiện. Chỉ dùng SNS thì có fan-out nhưng thiếu chỗ đệm bền và phần compute để xử lý. SQS + Lambda vẫn chỉ là một queue nên không tách được hai luồng độc lập. Từ khóa: 'two processes to run independently' → SNS fan-out + SQS + worker.",
+   "doubt": null
+  },
+  {
+   "no": 36,
+   "lessons": [
+    "nacl",
+    "compare-security-groups-vs-nacl",
+    "security-groups"
+   ],
+   "explain": "NACL có rule DENY tường minh và áp ở biên subnet, nên chỉ cần thêm hai inbound deny rule (dải /24 và IP đơn) với số thứ tự nhỏ hơn rule allow là chặn được cho mọi instance trong subnet, kể cả instance ASG launch sau này. Security Group chỉ có allow, không deny được một IP cụ thể. WAF chỉ gắn vào ALB, CloudFront, API Gateway, không áp trực tiếp lên EC2. Shield chống DDoS, không phải công cụ chặn IP. Sửa firewall trong OS của 100 instance thì chậm và mất khi instance bị thay. Từ khóa: 'block access' từ IP cụ thể + 'quickest' → NACL inbound deny.",
+   "doubt": null
+  },
+  {
+   "no": 37,
+   "lessons": [
+    "ec2-network-interfaces-ips-and-dns",
+    "vpc-routing-and-internet-gateway"
+   ],
+   "explain": "Instance cũ cùng subnet vào/ra Internet được, chứng tỏ VPC đã có Internet Gateway và route table của subnet đúng; khác biệt còn lại là instance mới không được cấp public IPv4 (subnet tắt auto-assign hoặc lúc launch không bật). Không có public IP thì IGW không có gì để static NAT, Internet không tới được instance. Trong AWS, OS luôn chỉ thấy private IPv4, public IP do IGW ánh xạ, nên đó là bình thường chứ không phải lỗi. Security Group không có rule deny tường minh, chỉ có allow. Từ khóa: cùng subnet, instance cũ chạy được → instance mới thiếu public IP.",
+   "doubt": null
+  },
+  {
+   "no": 38,
+   "lessons": [
+    "ec2-placement-groups",
+    "enhanced-networking-and-ebs-optimized"
+   ],
+   "explain": "Cluster placement group đặt các instance sát nhau trong một AZ, cho latency thấp nhất và bandwidth cao nhất giữa các node, đúng nhu cầu HPC. Spread placement group làm ngược lại: tách mỗi instance ra rack riêng để tăng resilience. Partition placement group dành cho hệ phân tán topology-aware như HDFS, Cassandra. Auto Scaling Group chỉ điều chỉnh số lượng instance, không ảnh hưởng vị trí vật lý hay latency giữa chúng. Từ khóa: 'HPC' + 'network latency' → Cluster placement group.",
+   "doubt": null
+  },
+  {
+   "no": 39,
+   "lessons": [
+    "kinesis-data-streams",
+    "compare-sqs-vs-sns-vs-kinesis"
+   ],
+   "explain": "Kinesis Data Streams ingest được dữ liệu khối lượng lớn từ hàng nghìn producer và cho nhiều consumer cùng đọc một stream gần real-time, mỗi ứng dụng xử lý theo mục đích riêng, có thể replay trong rolling window. SQS là queue: mỗi message chỉ do một consumer xử lý rồi bị xóa, không hợp cho nhiều ứng dụng cùng đọc. CloudWatch Logs dùng cho log vận hành, không phải nền tảng streaming cho ứng dụng nghiệp vụ. S3 là object storage, không phục vụ xử lý stream gần real-time. Từ khóa: 'en-mass' + 'multiple applications' + 'near realtime' → Kinesis.",
+   "doubt": null
+  },
+  {
+   "no": 40,
+   "lessons": [
+    "step-functions",
+    "dynamodb-streams-and-triggers",
+    "lambda"
+   ],
+   "explain": "DynamoDB Streams ghi lại mỗi order mới, Lambda được trigger để khởi động một execution Step Functions; Standard workflow chạy được tới 1 năm nên giữ được quy trình 2 tuần, trả tiền theo state transition chứ không tốn compute khi chờ. Chỉ Streams + Lambda không đủ vì Lambda timeout tối đa 15 phút. EC2 liên tục poll bảng tốn chi phí chạy 24/7 và thêm việc quản lý server. Fargate cũng phải trả tiền task chạy suốt thời gian xử lý và không tự phản ứng khi có order mới. Từ khóa: 'long running process (2 weeks)' + order vào DynamoDB → Streams + Lambda + Step Functions.",
+   "doubt": null
+  },
+  {
+   "no": 41,
+   "lessons": [
+    "s3-static-website-hosting",
+    "cloudfront-architecture"
+   ],
+   "explain": "Website chỉ có nội dung tĩnh (giới thiệu chiến dịch và link sang đối tác nhận quyên góp), nên S3 static website hosting là rẻ nhất: không có server, trả theo dung lượng và request, S3 tự scale cho hàng nghìn lượt xem mỗi phút; có thể đặt thêm CloudFront phía trước để cache gần người dùng. Các lựa chọn EC2 Auto Scaling sau NLB, ALB hay API Gateway đều phải trả tiền instance chạy liên tục và vận hành server cho một trang không cần xử lý động. Từ khóa: nội dung tĩnh + 'keeping costs as low as possible' → S3 static website.",
+   "doubt": null
+  },
+  {
+   "no": 42,
+   "lessons": [
+    "efs",
+    "storage-fundamentals"
+   ],
+   "explain": "EFS là NFS file system managed (NFSv4), các thành phần vẫn mount chung như trước nên hệ thống migrate lên mà không phải sửa lớn, đồng thời giảm overhead vì AWS lo vận hành storage. S3 là object storage, phải đổi code sang gọi API thay vì đọc file qua NFS. Amazon Linux chỉ là hệ điều hành, không phải giải pháp storage chia sẻ. EBS là block storage gắn vào một instance trong một AZ, không phải file system dùng chung. Từ khóa: 'shared NFS file system' + 'without major changes' → EFS.",
+   "doubt": null
+  },
+  {
+   "no": 43,
+   "lessons": [
+    "ebs-volume-types",
+    "storage-fundamentals"
+   ],
+   "explain": "io1 (Provisioned IOPS SSD) cho phép chỉ định IOPS độc lập với dung lượng (trong giới hạn tỷ lệ 50 IOPS/GB), phù hợp database IO cao cần hiệu năng ổn định cho mọi volume dù nhỏ hay lớn. gp2 có IOPS tỷ lệ theo kích thước (3 IOPS/GB, volume nhỏ dựa vào burst), nên hiệu năng phụ thuộc dung lượng. Instance store nhanh nhưng ephemeral, không hợp dữ liệu database cần bền. st1 là HDD tối ưu throughput tuần tự, IOPS thấp. Lưu ý gp3 hiện cũng tách IOPS khỏi dung lượng, nhưng không có trong các lựa chọn. Từ khóa: 'performance independent of size' + 'high IO' → io1.",
+   "doubt": null
+  },
+  {
+   "no": 44,
+   "lessons": [
+    "ebs-volume-types",
+    "compare-ebs-vs-instance-store",
+    "instance-store"
+   ],
+   "explain": "io1 provision được IOPS cố định vượt mốc 16.000 (tới 64.000 trên Nitro) và duy trì ổn định, đúng yêu cầu 25.000 IOPS 'at all times' cho dữ liệu business critical gắn vào một instance. gp2 tối đa 16.000 IOPS nên không đủ. sc1 và st1 là HDD, IOPS rất thấp. Instance store tuy IOPS cao nhưng ephemeral, mất dữ liệu khi stop hoặc host lỗi, không hợp với dữ liệu quan trọng. Từ khóa: '25,000 IOPS at all times' + 'business critical' → EBS io1.",
+   "doubt": null
+  },
+  {
+   "no": 45,
+   "lessons": [
+    "compare-alb-vs-nlb",
+    "elastic-load-balancer"
+   ],
+   "explain": "Network Load Balancer hoạt động ở layer 4, phân phối được mọi giao thức chạy trên TCP/UDP mà không cần hiểu nội dung, latency rất thấp và xử lý hàng triệu request mỗi giây, hợp với protocol game tùy biến. Application Load Balancer là layer 7, chỉ hiểu HTTP/HTTPS, không dùng được cho protocol riêng. Classic Load Balancer là thế hệ cũ, hiệu năng và khả năng scale kém hơn, không còn được khuyến nghị. Route 53 failover chỉ chuyển giữa primary và secondary khi lỗi, không phân tải. Từ khóa: 'custom protocol over TCP' + 'low latency' + '500,000 requests per second' → NLB.",
+   "doubt": null
+  },
+  {
+   "no": 46,
+   "lessons": [
+    "vpc-routing-and-internet-gateway",
+    "ec2-network-interfaces-ips-and-dns",
+    "nat-fundamentals"
+   ],
+   "explain": "Để instance truy cập được từ Internet IPv4 cần ba thứ: VPC có Internet Gateway được attach, route table của subnet có default route 0.0.0.0/0 trỏ tới IGW, và instance được cấp public IPv4 (hoặc Elastic IP). NAT Gateway chỉ cho traffic đi ra từ private subnet, không cho Internet kết nối vào. ::/0 là default route của IPv6, không cần cho IPv4. Public IPv4 không bao giờ cấu hình trong OS; OS chỉ thấy private IP, còn IGW làm static NAT giữa public và private IP. Từ khóa: 'publicly accessible' + 'IPv4' → IGW + route 0.0.0.0/0 + public IPv4.",
+   "doubt": null
+  },
+  {
+   "no": 47,
+   "lessons": [
+    "rds-architecture",
+    "rds-read-replicas",
+    "rds-multi-az"
+   ],
+   "explain": "Nút cổ chai nằm ở việc ghi, nên cần tăng tài nguyên cho chính primary: đổi instance class lớn hơn và/hoặc storage type có IOPS cao hơn (scale up), ứng dụng không phải sửa gì vì endpoint giữ nguyên. Read replica chỉ phục vụ đọc, mọi lệnh ghi vẫn vào primary, lại phải sửa app để dùng endpoint riêng. Standby trong Multi-AZ instance chỉ để failover, không truy cập được và không nhận ghi. Không có tính năng nào tên 'RDS Write-Caching'. Từ khóa: 'database writes constrained' + 'no application changes' → scale up instance/storage.",
+   "doubt": null
+  },
+  {
+   "no": 48,
+   "lessons": [
+    "api-gateway",
+    "serverless-architecture",
+    "lambda"
+   ],
+   "explain": "API Gateway là cửa vào managed cho API: ứng dụng JavaScript trong browser gọi HTTPS endpoint, API Gateway chuyển tới Lambda (hoặc tích hợp thẳng DynamoDB và dịch vụ AWS khác), đồng thời lo authorizer, throttling, CORS; đây là mẫu serverless kinh điển S3 + API Gateway + Lambda. Internet Gateway chỉ là thành phần mạng của VPC, không làm trung gian cho API. Step Functions điều phối workflow, không phải endpoint để browser gọi trực tiếp. EventBridge là event bus giữa các dịch vụ, không nhận request HTTP từ người dùng cuối. Từ khóa: app chạy trên browser + gọi Lambda/dịch vụ AWS → API Gateway.",
+   "doubt": null
+  },
+  {
+   "no": 49,
+   "lessons": [
+    "custom-vpc",
+    "default-vpc",
+    "aws-public-vs-private-services"
+   ],
+   "explain": "VPC là một mạng ảo được cô lập logic trong một region của account, nơi bạn tự định CIDR, subnet, routing và firewall. VPC không phải hạ tầng on-premises nối lên cloud; kết nối on-prem là việc của VPN hay Direct Connect. VPC cũng không phải một AWS account, vì một account có thể có nhiều VPC. VPC không phải cách triển khai 'legacy'; cách cũ là EC2-Classic, đã bị khai tử. Từ khóa: 'best describes a VPC' → logically isolated network.",
+   "doubt": null
+  },
+  {
+   "no": 50,
+   "lessons": [
+    "ec2-network-interfaces-ips-and-dns",
+    "vpc-subnets"
+   ],
+   "explain": "Một instance có thể gắn nhiều ENI, mỗi ENI ở một subnet khác nhau, nhưng mọi ENI phải nằm cùng AZ với instance; vì mỗi subnet thuộc đúng một AZ, hai subnet phải cùng AZ. Do đó các phát biểu 'luôn luôn được' hay 'cứ thêm ENI lúc launch hoặc sau khi launch là xong' đều sai khi hai subnet nằm ở hai AZ khác nhau. Không có tính năng 'cross-zone ENI'; cross-zone là khái niệm của load balancer. Từ khóa: ENI ở hai subnet → chỉ được khi cùng AZ.",
+   "doubt": null
+  },
+  {
+   "no": 51,
+   "lessons": [
+    "s3-lifecycle-configuration",
+    "s3-storage-classes"
+   ],
+   "explain": "Lifecycle rule tự động chuyển object sang S3 Glacier sau 90 ngày, giảm mạnh chi phí cho bài cũ cần lưu trữ nhưng gần như không đọc lại, trong khi bài mới vẫn ở Standard cho staff truy cập thường xuyên. Chuyển sang Standard-IA sau 90 ngày rẻ hơn Standard nhưng vẫn đắt hơn Glacier, không đúng tinh thần 'archived'. VPC endpoint chỉ đổi đường mạng, không giảm chi phí lưu trữ. Yêu cầu staff hạn chế truy cập không phải giải pháp kỹ thuật và cũng không giảm phí lưu trữ. Từ khóa: 'older than 3 months' + 'archived' + 'costs as low as possible' → lifecycle sang Glacier sau 90 ngày.",
+   "doubt": null
+  },
+  {
+   "no": 52,
+   "lessons": [
+    "s3-presigned-urls",
+    "s3-basics",
+    "s3-security"
+   ],
+   "explain": "S3 là object storage hiệu năng cao, scale gần như vô hạn, regionally resilient, lưu object tới 5 TB và truy cập được qua Internet; presigned URL cấp quyền truy cập từng object có thời hạn trong khi bucket vẫn private. S3 Glacier là tầng archive, truy xuất chậm, không hợp ảnh được xem thường xuyên. EC2 + EBS phải tự dựng web server, gói trong một AZ và tự lo scale. DynamoDB giới hạn item 400 KB, không phải nơi lưu ảnh. Từ khóa: 'store images' + 'time limited access' → S3 + presigned URL.",
+   "doubt": null
+  },
+  {
+   "no": 53,
+   "lessons": [
+    "directory-service",
+    "site-to-site-vpn"
+   ],
+   "explain": "AD Connector là proxy đặt trong VPC, chuyển tiếp yêu cầu xác thực về AD on-premises qua kết nối VPN có sẵn, nên WorkSpaces dùng được tài khoản hiện có mà không phải dựng directory mới hay đồng bộ dữ liệu, rất hợp cho một pilot. Simple AD là directory độc lập, không dùng được user on-prem. AWS Managed Microsoft AD dựng cả một domain mới (cần trust với on-prem), quá nặng cho POC. WorkSpaces không trỏ thẳng vào DNS của AD on-prem; nó cần một directory đăng ký trong Directory Service. Từ khóa: 'on-premises active directory' + WorkSpaces → AD Connector.",
+   "doubt": null
+  },
+  {
+   "no": 54,
+   "lessons": [
+    "transit-gateway",
+    "custom-vpc"
+   ],
+   "explain": "Câu này phản ánh khuyến nghị cũ: VPC không chuyển gói multicast/broadcast ở mức subnet, nên cách giữ nguyên ứng dụng là dựng các server (trong ASG/Launch Template) rồi tạo overlay network (GRE, VXLAN...) ngay trong OS để đóng gói multicast thành unicast. Nói AWS hoàn toàn không hỗ trợ multicast là sai vì overlay vẫn chạy được. Nói VPC hỗ trợ sẵn, không cần thay đổi gì là sai vì VPC thuần không chuyển multicast. Cũng không có tùy chọn 'vpc.multicast=1' khi tạo VPC. Từ khóa: 'multicast' + 'can't be changed' → overlay network trong OS (hoặc Transit Gateway multicast trên AWS hiện nay).",
+   "doubt": "Từ cuối 2019, AWS Transit Gateway hỗ trợ multicast native (multicast domain, IGMP, gắn subnet của VPC vào domain, source là instance Nitro), nên cách được khuyến nghị hiện nay là dùng Transit Gateway multicast thay vì tự dựng overlay trong OS. Overlay vẫn là lựa chọn hợp lý nhất trong các lựa chọn đề cho, nhưng thông tin đã lỗi thời, và phần 'ASG/LT' không liên quan gì tới multicast."
+  },
+  {
+   "no": 55,
+   "lessons": [
+    "iam-roles",
+    "iam-users-and-arns",
+    "iam-basics"
+   ],
+   "explain": "IAM role cho phép identity bên ngoài (qua identity federation với IdP của công ty kia, hoặc qua account AWS của họ) assume để nhận temporary credentials, nên 2.500 người được truy cập nhanh mà không tạo thêm IAM user nào. Tạo 2.500 IAM user tốn công quản trị, và nếu nhân sự hiện tại cũng là IAM user thì 3.000 + 2.500 vượt giới hạn 5.000 IAM user mỗi account. IAM group không có credentials, không dùng để đăng nhập, còn dùng chung long-term credentials là bad practice. IAM không có tính năng chia sẻ IAM user sang account khác. Từ khóa: user bên ngoài + 'as quickly as possible' + 'admin overhead low' → IAM role (federation).",
+   "doubt": null
+  },
+  {
+   "no": 56,
+   "lessons": [
+    "ec2-instance-connect-and-ssh",
+    "ec2-basics",
+    "bastion-host"
+   ],
+   "explain": "Có key pair và kết nối mạng thì cách chuẩn là SSH từ máy local bằng private key; EC2 Instance Connect cũng đăng nhập được qua console hoặc CLI, dùng IAM để đẩy một public key tạm thời vào instance (Security Group phải cho phép dải IP của dịch vụ). Linux AMI trên EC2 mặc định tắt đăng nhập SSH bằng username/password. Access key là credential để gọi AWS API/CLI, không dùng để SSH vào OS. Session Manager không dùng key pair và còn phụ thuộc SSM Agent cùng quyền IAM cho instance, những điều kiện đề không nêu. Từ khóa: 'allocated a keypair' + 'network connectivity' → SSH bằng key + Instance Connect.",
+   "doubt": "Session Manager cũng là cách hợp lệ để mở shell vào Linux EC2 hiện nay: SSM Agent cài sẵn trên Amazon Linux và Ubuntu AMI, chỉ cần quyền IAM qua instance profile (hoặc Default Host Management Configuration), không cần mở port 22. Đáp án gốc loại nó có lẽ vì đề chỉ nêu key pair và kết nối mạng; trên thực tế nếu đã cấu hình SSM thì Session Manager cũng là câu trả lời đúng."
+  },
+  {
+   "no": 57,
+   "lessons": [
+    "sqs-dead-letter-queues",
+    "sqs",
+    "asg-scaling-policies"
+   ],
+   "explain": "Khi có message lỗi (poison message) không xử lý được, nó quay lại queue sau visibility timeout và bị nhận đi nhận lại mãi: queue dài ra, ASG scale theo độ dài queue nên thêm instance và tăng chi phí, còn lỗi thì lặp lại. Dead letter queue với maxReceiveCount tách các message hỏng sau vài lần thất bại để phân tích riêng. Role sai quyền thì không job nào chạy được, trong khi đề nói job vẫn được xử lý. Thiếu public IPv4 chỉ khiến vài instance không lấy được việc, không sinh lỗi xử lý; vả lại có NAT Gateway hay VPC endpoint thì không cần public IP để gọi SQS. Đổi sang compute optimized không sửa được message lỗi. Từ khóa: queue tăng + chi phí tăng + 'additional errors' → thiếu dead letter queue.",
+   "doubt": null
+  },
+  {
+   "no": 58,
+   "lessons": [
+    "nat-gateway",
+    "egress-only-internet-gateway",
+    "gateway-vpc-endpoints"
+   ],
+   "explain": "NAT Gateway cho instance IPv4 trong private subnet đi ra Internet (outbound-only) mà Internet không khởi tạo kết nối vào được; đặt trong public subnet với Elastic IP, và nên có một NAT Gateway mỗi AZ vì nó chỉ AZ-resilient. Egress-only Internet Gateway cũng outbound-only nhưng chỉ dành cho IPv6, không dùng được cho instance chỉ có IPv4. Gateway VPC endpoint chỉ cho truy cập riêng tới S3/DynamoDB, không ra Internet nói chung. Bastion host là điểm vào SSH để quản trị, không cung cấp outbound cho các instance khác. Từ khóa: 'IPv4 addresses only' + 'outgoing only access' → NAT Gateway.",
+   "doubt": null
+  },
+  {
+   "no": 59,
+   "lessons": [
+    "nacl",
+    "stateful-vs-stateless-firewalls"
+   ],
+   "explain": "NACL stateless nên phải có rule riêng cho traffic trả về (thường là dải ephemeral port ở chiều ngược lại); rule được xét theo số thứ tự từ nhỏ tới lớn và dừng ở rule khớp đầu tiên, nên một rule DENY có số nhỏ hơn sẽ chặn trước rule allow vừa thêm; và NACL chỉ có hiệu lực với subnet được associate, nên phải kiểm tra association. NACL gắn vào subnet chứ không gắn vào instance (thứ gắn vào ENI là Security Group). Rule có số lớn hơn được xét sau nên không thể chặn trước rule vừa thêm. Từ khóa: NACL 'not working' → stateless, rule số nhỏ xét trước, đúng subnet association.",
+   "doubt": null
+  },
+  {
+   "no": 60,
+   "lessons": [
+    "transit-gateway",
+    "vpc-peering",
+    "site-to-site-vpn"
+   ],
+   "explain": "Yêu cầu cần transitive routing: văn phòng Brisbane đi qua VPN tới VPC Úc rồi sang VPC London, và ngược lại. Transit Gateway làm được việc này: VPC và VPN đều là attachment của Transit Gateway, giữa hai region dùng Transit Gateway peering. VPC peering không transitive và không hỗ trợ edge-to-edge routing, nên traffic từ VPN không đi qua peering sang VPC kia được. Dựng VPN giữa hai VPC phải tự chạy appliance trên EC2 và vẫn không giải quyết gọn routing cho các văn phòng. Gateway endpoint chỉ dùng cho S3/DynamoDB, không nối VPC với nhau. Từ khóa: VPC-to-VPC + văn phòng dùng VPC bên kia (transitive) → Transit Gateway.",
+   "doubt": null
+  },
+  {
+   "no": 61,
+   "lessons": [
+    "rds-multi-az",
+    "rds-read-replicas"
+   ],
+   "explain": "Với Multi-AZ dạng instance truyền thống, standby nhận replication đồng bộ chỉ để failover, không phục vụ đọc hay ghi, nên Multi-AZ chỉ nâng availability; ghi thậm chí chậm hơn một chút vì phải chờ commit đồng bộ sang standby. Muốn tăng hiệu năng đọc thì dùng read replica (hoặc cache); muốn tăng hiệu năng ghi thì scale up instance/storage. Vì vậy các ý cho rằng Multi-AZ cải thiện đọc, ghi hay cả hai đều sai với mô hình này. Từ khóa: Multi-AZ → availability, không phải performance.",
+   "doubt": "Đúng với Multi-AZ DB instance (mô hình câu hỏi cũ nhắm tới). Từ 2022 RDS có thêm Multi-AZ DB cluster cho MySQL và PostgreSQL: 1 writer + 2 standby đọc được qua reader endpoint, nên có cải thiện hiệu năng đọc, và AWS còn công bố commit latency ghi nhanh hơn Multi-AZ instance. Với RDS MySQL hiện nay, phát biểu 'Multi-AZ chỉ giúp availability' không còn đúng tuyệt đối."
+  }
+ ]
+}

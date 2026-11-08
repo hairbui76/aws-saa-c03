@@ -1,0 +1,866 @@
+[
+  {
+    "no": 1,
+    "question": "You are designing infrastructure for a bespoke data analysis application. One of the volumes will host a small temporary data base and require high IOPS. What storage should you suggest?",
+    "options": {
+      "A": "Instance Store",
+      "B": "General Purpose SSD",
+      "C": "EBS IO1",
+      "D": "Throughput Optimized HDD"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 2,
+    "question": "You have a fleet of 10 EC2 instances split across two availability zones, provisioned by an auto-scaling-group and using an application load balancer. The instances ALB is using EC2 status checks and all instances are currently passing 2/2 checks - but some are showing application failures and the instances are not being re-provisioned. What could the problem be? (choose one)",
+    "options": {
+      "A": "ELB Health-Checks are not being used by the ASG",
+      "B": "Detailed Monitoring is not enabled",
+      "C": "There is a problem with the security group on the ALB",
+      "D": "Instances are In the wrong AZ"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 3,
+    "question": "You need to configure 100 EC2 instances for monitoring as part of completing a project. You have been asked to gather metrics on memory utilization. What do you need to do assuming all 100 EC2 instances are t3.large size? (choose one)",
+    "options": {
+      "A": "Enable detailed monitoring",
+      "B": "Nothing - t3 use nitro and includes this metric by default",
+      "C": "Install the CWAgent",
+      "D": "Enable t3 Dynamic Memory"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 4,
+    "question": "Backup data is being created and placed into S3 in a central location. Objects are being replicated to a bucket in an AWS region closer to some support staff in another part of the world. Your manager has asked you to see if there is a way to reduce the S3 storage costs within this system. What storage classes will you recommend to your manager?",
+    "options": {
+      "A": "Use S3 Standard-Infrequent Access for the central bucket and S3 One Zone-Infrequent Access for the regional bucket",
+      "B": "Use S3 Standard-Infrequent Access for the central bucket and the regional bucket",
+      "C": "Use S3 Standard for the central bucket and S3 Standard-Infrequent Access for the regional bucket",
+      "D": "Use S3 Standard for the central bucket and S3 Glacier for the regional bucket"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 5,
+    "question": "You are helping to implement a web application with about 15,000 users within AWS. The application runs on android and iOS devices and needs an identity provider to use to access AWS products and services. What solution should you suggest? (Choose one)",
+    "options": {
+      "A": "Use simpleAD within an AWS VPC",
+      "B": "Build the AWS API's into the application. Create an IAM user during the new user signup process",
+      "C": "Use 1 IAM Group for application login",
+      "D": "Use an external IDP such as google, and exchange these credentials to access AWS"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 6,
+    "question": "You have been asked to migrate a large micro service application into AWS which currently uses Docker running on virtual servers. It's been suggested by your client that they can run docker containers on EC2 instances. Which product should you suggest the business uses. They have given you the directive that they care about cost efficacy and low admin overhead equally.",
+    "options": {
+      "A": "EC2 Running docker",
+      "B": "EKS",
+      "C": "ECS EC2",
+      "D": "ECS Fargate",
+      "E": "EMR"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 7,
+    "question": "Which DNS Record type is used to commonly verify domain ownership?",
+    "options": {
+      "A": "MX",
+      "B": "NS",
+      "C": "A",
+      "D": "AAAA",
+      "E": "TXT"
+    },
+    "answer": [
+      "E"
+    ]
+  },
+  {
+    "no": 8,
+    "question": "You are encountering performance issues on a EBS GP2 Volume which you suspect are due to the higher than expected IOPS demands. What two tools could you use to confirm your suspicion and fix the issue (choose two)",
+    "options": {
+      "A": "CloudWatch",
+      "B": "CloudWatch Logs",
+      "C": "EBS IO1",
+      "D": "EBS ST1",
+      "E": "CloudTrail"
+    },
+    "answer": [
+      "A",
+      "C"
+    ]
+  },
+  {
+    "no": 9,
+    "question": "What is true of an eventually consistent read from DynamoDB (Choose all that apply)",
+    "options": {
+      "A": "It uses more RCU than a strongly consistent read",
+      "B": "It uses less RCU than a strongly consistent read",
+      "C": "It takes longer to perform the operation (it waits for consistency)",
+      "D": "You receive consistent data",
+      "E": "You can receive outdated data"
+    },
+    "answer": [
+      "B",
+      "E"
+    ]
+  },
+  {
+    "no": 10,
+    "question": "After significant development effort, a User Data script has been developed to bootstrap EC2 instances. The script patches the OS, downloads and installs applications, and configures services. Over time the script has grown, and it now takes around 10 minutes for an instance to complete the launch process. Which method will decrease launch time for the instance while maintaining security and functionality?",
+    "options": {
+      "A": "Create and use a custom AMI that is patched, and has the required applications downloaded and installed. Simplify the bootstrap script to perform instance specific configuration",
+      "B": "Copy the OS patch files and required application binaries to S3 and adjust the bootstrap script to point to this new location",
+      "C": "Create an additional security group for the instance, and adjust the bootstrap script so that it no longer patches the OS",
+      "D": "Copy the OS patch files and required application binaries to EC2 instance store and adjust the bootstrap script to point to this new location"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 11,
+    "question": "A mobile app enables users to post and share images on a social media platform. The architecture requires users to upload images through the app to a single S3 bucket in us-east-1. Thousands of images being posted every minute, and users expect real time access to a stream of images from other users around the world. Which solution would you recommend for maximum performance.",
+    "options": {
+      "A": "Enable S3 transfer acceleration",
+      "B": "Enable S3 cross-region replication",
+      "C": "Enable S3 static web hosting",
+      "D": "Create an S3 lifecycle policy that removes infrequently access images."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 12,
+    "question": "An EC2 instance has been configured with a script in User Data that runs when the instance is booted. The script makes a call to S3 to copy setup and configuration calls. Upon launching the instance you realize that the script is failing as it doesn't have permission to access the S3 bucket containing the resources it needs. What solution will fix the problem while maintaining the best security practices?",
+    "options": {
+      "A": "Associate an IAM role with the EC2 instance that contains permissions to the S3 bucket",
+      "B": "Associate an IAM role with the S3 bucket that contains the required object",
+      "C": "Update the bootstrap script with credentials to only the required S3 bucket",
+      "D": "Create an S3 Bucket Policy that allows only this EC2 instance access to the required objects within S3."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 13,
+    "question": "You have been asked to implement a configuration allowing access to an S3 bucket in your account to IAM users from an external account. Objects which are uploaded MUST be owned by your account, NOT the external account. Which option meets this requirement ?",
+    "options": {
+      "A": "Use identities policies in your account",
+      "B": "Use identities policies in the external account",
+      "C": "Use a bucket Policy",
+      "D": "Use an IAM role in your account"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 14,
+    "question": "Which DNS record type is generally used to point R53 record sets at AWS logical resources",
+    "options": {
+      "A": "A",
+      "B": "A + ALIAS",
+      "C": "CNAME",
+      "D": "SOA"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 15,
+    "question": "You are configuring a project with 100,000 IOT devices which are sending telemetry into AWS. You need to perform near real time analytics on the data, which product should you use to ingest the data in a highly available and high performance way? (choose one)",
+    "options": {
+      "A": "CloudWatch Logs",
+      "B": "SQS",
+      "C": "Kinesis",
+      "D": "EC2 and an EBS volume"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 16,
+    "question": "You are running a custom application on a small number of EC2 instances and need to configure CloudWatch to log a custom application performance metric. Which two steps would you recommend as part of the solution? The number of instances which run the application might rapidly increase if the application usage grows.",
+    "options": {
+      "A": "Configure IAM roles for the instances",
+      "B": "Install the CWAgent and configure it to capture the custom metric",
+      "C": "Configure the AWS CLI tools on the EC2 instances with IAM user credentials",
+      "D": "Enable detailed monitoring",
+      "E": "Configure a script to export the application metric to instance metadata"
+    },
+    "answer": [
+      "A",
+      "B"
+    ]
+  },
+  {
+    "no": 17,
+    "question": "You are reviewing the configuration of a private VPC. The VPC has no internet gateway and instances have no public IPs associated with them. The VPC has a selection of VPC endpoints including S3, DynamoDB, SQS, SSM, SNS and Kinesis. You need to access one of the EC2 instances from the console UI to perform some diagnostics, what is the quickest way of doing so?",
+    "options": {
+      "A": "Deploy a bastion host",
+      "B": "Use EC2 Connect",
+      "C": "Use an SSH connection with agent forwarding",
+      "D": "Use Session Manager"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 18,
+    "question": "You have an EC2 instance which has been configured badly. You are migrating data off the instance, it uses a volume listed as ephemeral0 which contains critical data which is not replaceable. If you restart this EC2 instance before migrating the data off this volume, will this cause any additional problems ?",
+    "options": {
+      "A": "The data will be lost",
+      "B": "The data will be fine .. But should be copied ASAP",
+      "C": "The data is fine on this type of volume",
+      "D": "Not enough information to determine the safety"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 19,
+    "question": "You have been asked to allow an IPv6 EC2 instance to communicate with the public internet, but not allow any access to the instance from the public internet. In addition, IPv4 internet traffic should be allowed in either direction. What VPC products are required to meet this requirement.",
+    "options": {
+      "A": "IGW",
+      "B": "IGW + Interface Endpoint",
+      "C": "IGW + Nat Gateway",
+      "D": "Egress-Only Internet Gateway",
+      "E": "IGW + Egress-Only Internet Gateway"
+    },
+    "answer": [
+      "E"
+    ]
+  },
+  {
+    "no": 20,
+    "question": "You are designing a VPC private networking architecture for an application. The application needs to be fully highly available across three availability zones. It has 2 tiers, a web tier and a backend tier, Different security and routing configuration is required for the different tiers. How many subnets (minimum) are required for this solution.",
+    "options": {
+      "A": "1",
+      "B": "3",
+      "C": "2",
+      "D": "6"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 21,
+    "question": "You need to store files in S3 .. and they need to be encrypted at rest. You need a solution which matches the FIPS 140-2 Level 3 framework the rest of your organisation works within. Which solution meets this requirement? (Choose one)",
+    "options": {
+      "A": "CLOUDHSM + Client-Side Encryption",
+      "B": "SSE-S3",
+      "C": "SSE-KMS",
+      "D": "SSE-S3 + CLOUDHSM"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 22,
+    "question": "A scientific processing workload you are wanting to perform is only economical if it can be run at around 40% lower than EC2 on-demand rates. The processing run takes between 3 and 4 days and needs to be run once per month. It can tolerate interruption and just rerun any failed components and is not time critical or predictable. The workload can scale to as many instances as are available. Which pricing model offers the most cost-effective solution for this workload?",
+    "options": {
+      "A": "Spot",
+      "B": "On-Demand",
+      "C": "3 year reserved, full upfront",
+      "D": "Scheduled reservation"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 23,
+    "question": "Part of an application you manage uses S3 and CloudFront to distribute cat pictures to a global audience. One of your design staff have updated one of the cat images, the original had an image artifact. Users of your application are still seeing the original image. Which of the following could resolve the issue with the least amount of disruption to your customers ?",
+    "options": {
+      "A": "Disable object versioning on the S3 bucket",
+      "B": "Delete and recreate the CloudFront distribution",
+      "C": "Delete the object and reupload the new version rather than uploading over the existing object",
+      "D": "Invalidate the object on the S3 bucket",
+      "E": "Invalidate the object on the CloudFront Distribution"
+    },
+    "answer": [
+      "E"
+    ]
+  },
+  {
+    "no": 24,
+    "question": "A client has noticed different storage classes available within S3 and has asked about the Glacier and Glacier deep archive classes - they appear to be cheaper. Which of the following options are ideal use cases for the S3 Glacier Storage class (Choose two)",
+    "options": {
+      "A": "Storing user home-folders",
+      "B": "Database volumes mapped to EC2 instances",
+      "C": "Data Archival",
+      "D": "Long Term backup data",
+      "E": "Larger actively used objects"
+    },
+    "answer": [
+      "C",
+      "D"
+    ]
+  },
+  {
+    "no": 25,
+    "question": "AWS provide a registry of open data sets which can be used by customers within their applications. How much does it cost to use these datasets within AWS products?",
+    "options": {
+      "A": "Free",
+      "B": "The open data programme has a cost, once enrolled data is free",
+      "C": "$99 per dataset (future downloads of that set are free except data transfer)",
+      "D": "$99 per month for access to all data sets + data transfer charges"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 26,
+    "question": "A large enterprise is looking to migrate a large amount of data from local storage to S3 as part of a wider migration. The data is around 500TB and is split across 2 data centers equally and they currently have a 100Mbps internet link from each data centre .. with a 100TB a month bandwidth cap on each link. What is the most efficient and economical way to perform this migration as quickly as possible but at a reasonable cost.",
+    "options": {
+      "A": "Order a Snowmobile and get it to stop at each data centre, ingest the data and move on. Once finished, transfer the data into AWS",
+      "B": "Order an AWS direct connect for each data centre and transfer the data",
+      "C": "Upload the data to S3 using `aws s3 cp'",
+      "D": "Order an AWS Snowball device and transfer the data onto it before shipping the device back to AWS",
+      "E": "Order multiple AWS Snowball devices for each data centre … transfer the data and ship back to AWS for transfer into S3"
+    },
+    "answer": [
+      "E"
+    ]
+  },
+  {
+    "no": 27,
+    "question": "A administrator working with you on a project is trying to enable S3 Cross-Region replication between two S3 buckets. She is having issues, what could be a potential reason why CRR can’t be enabled?",
+    "options": {
+      "A": "CRR can only be enabled when creating bucks",
+      "B": "Buckets can only be used for CRR when S3-Standard is used",
+      "C": "One or both of the buckets might not have versioning enabled",
+      "D": "One or both of the buckets isn’t empty"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 28,
+    "question": "A mission critical EBS volume has 20 GiB of data. A 1st EBS snapshot is taken. 6 GiB of changes are made to the drive before a 2nd snapshot is taken. 2 GiB of further changes are made, before a 3rd snapshot is taken. To save costs the first snapshot is deleted. Which statement best describes what can be recovered from the remaining snapshots?",
+    "options": {
+      "A": "A full recovery can be made to either the state of the 2nd or 3rd snapshot",
+      "B": "A full recovery can be made to only the 2nd snapshot",
+      "C": "Only a partial recovery totalling 2 GiB of data can be restored",
+      "D": "Only a partial recovery totalling 8 GiB of data can be restored"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 29,
+    "question": "Which of the following metrics can be obtained by CloudWatch from an EC2 instance WITHOUT needing CWAgent Installed (choose all that apply)",
+    "options": {
+      "A": "Network IN and Out",
+      "B": "Memory Utilization",
+      "C": "CPU Usage",
+      "D": "Disk Reads and Writes"
+    },
+    "answer": [
+      "A",
+      "C",
+      "D"
+    ]
+  },
+  {
+    "no": 30,
+    "question": "You have a single EC2 instance running a small public web application. You use an S3 bucket as a ‘maintenance’ page for when the application is offline or has failed. Currently this process is manual, what AWS product and feature can you use to automated this process.",
+    "options": {
+      "A": "API Gateway",
+      "B": "Application Load Balancer",
+      "C": "Route53",
+      "D": "CloudFront"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 31,
+    "question": "You manage 100's of AWS accounts for your business. One of the accounts is for a development team and you need to restrict what can occur within the account. There are 5 IAM users and the account root user which need to be restricted. What should you suggest? (Choose one)",
+    "options": {
+      "A": "Identity Policies",
+      "B": "SCP",
+      "C": "Resource Policies",
+      "D": "IAM Permissions Boundaries"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 32,
+    "question": "What feature within AWS allows you to control access to an S3 bucket so that everything BUT CloudFront Access is denied ?",
+    "options": {
+      "A": "Bucket ACL",
+      "B": "OAI",
+      "C": "SSE-KMS",
+      "D": "Block Public Access Settings"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 33,
+    "question": "One of your clients is introducing a new system that allows its website users to vote on their favourite celebrity photograph. Their existing website runs well, and is hosted on EC2 m5.8xlarge instances within an auto scaling group. The client expects a large uptake of the new system and is concerned that their existing infrastructure won't cope even though they use CloudFront. What architecture would you recommend for the new system?",
+    "options": {
+      "A": "Develop the new system using Lambda",
+      "B": "Change the EC2 instance size used to m5.16xlarge",
+      "C": "Redevelop the existing site to use Docker containers",
+      "D": "Ensure that IPv6 is enabled on the CloudFront distribution"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 34,
+    "question": "Which of the following statements are true ?",
+    "options": {
+      "A": "EIP’s are per account, per region",
+      "B": "EIPs are per account per AZ",
+      "C": "EIPs never cost",
+      "D": "EIPs have a cost if not associated with anything",
+      "E": "EIPs are static IPv6 addresses"
+    },
+    "answer": [
+      "A",
+      "D"
+    ]
+  },
+  {
+    "no": 35,
+    "question": "Your company has a small development team. In order to reduce costs you decide to turn off EC2 instances out of hours and on the weekends. In what state should you place the EC2 instances in order to not lose its configuration.",
+    "options": {
+      "A": "stopped",
+      "B": "terminated",
+      "C": "frozen",
+      "D": "running"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 36,
+    "question": "Which statement best describes an architecture using an SQS standard queue?",
+    "options": {
+      "A": "System components taking messages from the SQS queue should not require the messages to be in the same order that they were added to the queue, and should be able to handle the same message being delivered twice",
+      "B": "System components taking messages from the SQS queue can rely on the messages being in the same order that they were added to the queue, and should be able to handle the same message being delivered twice",
+      "C": "System components taking messages from the SQS queue can rely on the messages being in the same order that they were added to the queue, and do not need to handle the same message being delivered twice",
+      "D": "System components taking messages from the SQS queue must poll the queue until all messages are stored within memory to ensure that they are processed in order and only once"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 37,
+    "question": "You have launched 5 EC2 instances of the same size into a cluster placement group. You attempt to launch 5 more and get an error. What options could explain this, or resolve this ? (choose all that apply)",
+    "options": {
+      "A": "Cluster Placement groups are limited to 7 Instances, launch 2 maximum",
+      "B": "Use the same type and size of instances",
+      "C": "Change the max_occupancy setting to 10",
+      "D": "Terminate the instances, relaunch 10 into the same placement group",
+      "E": "Use a different AZ from the original instances"
+    },
+    "answer": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "no": 38,
+    "question": "In what scenario would you suggest a Site-to-Site VPN is used rather than a Direct Connect",
+    "options": {
+      "A": "Provisioning Timeframe Priority",
+      "B": "Speed Priority",
+      "C": "Latency Priority",
+      "D": "BGP Capable Hardware"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 39,
+    "question": "You need to configure private networking connectivity between a single on-premises location and AWS. You have been told that low latency and high speeds are a requirement and that the solution needs to be up and running within 4 days. Your on-premises location is in a semi rural location. What solution should you suggest",
+    "options": {
+      "A": "Direct Connect",
+      "B": "Transit Gateway",
+      "C": "Snowmobile",
+      "D": "VPN + Direct Connect"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 40,
+    "question": "You manage the infrastructure for a team of developers, the QA environment is automated and constantly provisions, tests and terminates application environments. The app environment consists of an EC2 instance which is built automatically and contains no valuable data and a MariaDB RDS SingleAZ instance. You have been asked to make sure that before an environment is terminated, backups are taken which last at least 6 months. What should you suggest?",
+    "options": {
+      "A": "Ensure automatic backups are enabled with a 6-month retention time and terminate the environments after the backup has occured",
+      "B": "Run a manual snapshot of the RDS instance before termination",
+      "C": "Detach the EBS volumes of the RDS instance and leave in place for 6 months",
+      "D": "Hibernate the RDS instances for 6 months rather than terminating them"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 41,
+    "question": "You are to suggest a solution for a managed SQL database which provides 3+ AZ Automatic Resilience. Which option should you suggest ?",
+    "options": {
+      "A": "Use RDS MultiAZ and add read replicas in the 3rd AZ",
+      "B": "Use MultiAZ mode and configure for 2 standby replicas",
+      "C": "Use Aurora with replicas in all AZs",
+      "D": "Use DynamoDB"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 42,
+    "question": "A company has a monolithic application that they are refactoring to run in Docker containers. The engineers want to avoid as much infrastructure management as possible so they can focus on the application itself. Which service would you recommend to satisfy these requirements?",
+    "options": {
+      "A": "Fargate",
+      "B": "Lambda",
+      "C": "EFS",
+      "D": "Lightsail"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 43,
+    "question": "You have modified a CloudFormation template used to create a windows EC2 instance, and changed it to launch a Linux instance. You cannot connect to the instance using SSH. You know the template works for a Windows instance and have just tested and verified that. What could the potential problem be?",
+    "options": {
+      "A": "Check that UDP/22 is allowed on the instance security group",
+      "B": "Make sure TCP/3389 is enabled on the instance security group",
+      "C": "Make sure TCP/22 is enabled on the instance security group",
+      "D": "Check for any DENY’s on the security group and remove them"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 44,
+    "question": "You have a fleet of EC2 instances, managed by an auto-scaling-group which run a large scale web application. The web servers need to receive a copy of the web root files in a secure way. Which option do you suggest … (choose one)",
+    "options": {
+      "A": "Provide the web root files via instance meta-data",
+      "B": "Create an AMI with AWS credentials baked in, use these to access the files from an S3 bucket",
+      "C": "Create an EC2 instance role, pass in commands via cloud-init to download web root from S3",
+      "D": "Configure the instance with an IAM username and password and use these credentials to download the webroot files."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 45,
+    "question": "Which of the following AWS products and features can be used to allow network connectivity between two or more VPCs",
+    "options": {
+      "A": "Site-to-Site VPN",
+      "B": "Transit Gateway",
+      "C": "Direct Connect",
+      "D": "VPC Peer",
+      "E": "Gateway Endpoint"
+    },
+    "answer": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "no": 46,
+    "question": "You have a S3 bucket with 100 objects. You have been asked to design a replication solution and choose the built-in Cross Region Replication. You enable the feature, add 50 objects, wait 10 minutes and add a further 75 objects to the bucket. How many objects are in the remote bucket?",
+    "options": {
+      "A": "125",
+      "B": "225",
+      "C": "50",
+      "D": "75"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 47,
+    "question": "A business has its own data center with file storage for applications within its network. The storage is rapidly reaching capacity and management need a quick solution before it runs out completely. What AWS based architecture would you recommend?",
+    "options": {
+      "A": "Configure AWS Storage Gateway to span the on-premise storage into S3",
+      "B": "Quickly migrate on-premise applications into AWS and use EFS to store application data",
+      "C": "Conduct the a AWS Well-Architected Framework tool to audit the current system prior to migration into the cloud. In the mean time purchase more capacity for on-premise storage",
+      "D": "Configure AWS NAT Gateway to span the on-premise storage into the cloud"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 48,
+    "question": "Which of the following are reasons for using EC2 Enhanced Networking",
+    "options": {
+      "A": "Additional networking features such as multicast",
+      "B": "Lower & consistent latency",
+      "C": "ENI’s in multiple AZs",
+      "D": "Better packet per second (PPS) performance",
+      "E": "Higher, but stable latency levels"
+    },
+    "answer": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "no": 49,
+    "question": "You have been asked to assist with a university enrolment system which uses DynamoDB as a database layer. The system is suffering due to heavy reads in the enrolment period of the university. Load is currently 3-4x the expected amount and 90% of it is read operations checking enrolment status for class sign-ups. What should you suggest to aid in the extra load. The changes should be the least amount of admin overhead possible while being cost effective. The application is serverless, it runs from an S3 bucket and interacts with the DynamoDB endpoints using JS in a browser.",
+    "options": {
+      "A": "Increase RCU",
+      "B": "Add DynamoDB servers",
+      "C": "Use DAX",
+      "D": "Change Database to Aurora Serverless"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 50,
+    "question": "You have been asked to design a data encryption architecture for medical records. The requirements are that data is sent into AWS in a way where it's encrypted in transit. Your business needs to manage the encryption keys such that they aren't stored in AWS and ideally you don't have the overhead of performing encryption or decryption operations. What is a valid option based on these requirements?",
+    "options": {
+      "A": "SSE-C",
+      "B": "Client Side Encryption",
+      "C": "SSE-S3",
+      "D": "SSE-KMS"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 51,
+    "question": "You notice that someone has configured CloudFront when they deployed a solution in AWS. Which statement best describes the usual purpose of CloudFront?",
+    "options": {
+      "A": "A content delivery network (CDN)",
+      "B": "A managed web store for selling products",
+      "C": "The API used for controlling AWS",
+      "D": "A console for controlling AWS."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 52,
+    "question": "An application running on EC2 improves its performance by using instance store to persist cache data. Which of the following statements best describes this cache data? CHOOSE THREE ANSWERS",
+    "options": {
+      "A": "The cache data will be lost if the EC2 instance is stopped",
+      "B": "The cache data will be lost if the EC2 instance is terminated",
+      "C": "The cache data will be lost if the EC2 instance suffers from a hardware failure",
+      "D": "The cache data will be lost if the EC2 instance is rebooted",
+      "E": "The cache data will be removed periodically as physical disks are reallocated between customers"
+    },
+    "answer": [
+      "A",
+      "B",
+      "C"
+    ]
+  },
+  {
+    "no": 53,
+    "question": "Which of the following scenarios is most suitable to be deployed to AWS Lambda? CHOOSE TWO",
+    "options": {
+      "A": "A script that runs every month to trigger maintenance tasks on EC2 instances",
+      "B": "A script that processes a text file when that file is uploaded to an S3 bucket",
+      "C": "A script that continuously transcodes a live video stream from a security camera.",
+      "D": "Running a small relational database"
+    },
+    "answer": [
+      "A",
+      "B"
+    ]
+  },
+  {
+    "no": 54,
+    "question": "Which statements are true of CloudFront (Choose all that apply)",
+    "options": {
+      "A": "CF can improve performance of static HTTP/S content",
+      "B": "CF can improve performance of dynamic HTTP/S content",
+      "C": "CF can improve performance of ONLY static content",
+      "D": "CF can accelerate network performance of non HTTP and HTTPS applications"
+    },
+    "answer": [
+      "A",
+      "B"
+    ]
+  },
+  {
+    "no": 55,
+    "question": "What is an appropriate and cost-effective use for the S3 storage class Standard-Infrequent Access?",
+    "options": {
+      "A": "Objects stored with 99.999999999% (11 9’s) durability that when requested take milliseconds to be retrieved",
+      "B": "Objects stored with 99.999999999% (11 9’s) durability that when requested may take minutes or hours to be retrieved",
+      "C": "Objects stored with 99.5% availability that when requested take milliseconds to be retrieved",
+      "D": "Objects stored with 99.999999999% (11 9’s) durability that are requested as part of a website with many requests for day."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 56,
+    "question": "You have been asked to implement a solution which can manage an application workflow which runs for between 7 and ~45 minutes before terminating. The process consists of individual steps which run for less than 5 minutes each. The processes are written in Python. Which AWS product or products should you suggest to implement the solution in a cost effective way ? (choose one)",
+    "options": {
+      "A": "Step Functions + Lambda",
+      "B": "Lambda",
+      "C": "Fargate",
+      "D": "EC2"
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 57,
+    "question": "You are migrating an application into AWS which uses a messaging system to decouple its components (web and worker). Which AWS Service can be used to provide this functionality?",
+    "options": {
+      "A": "Kinesis",
+      "B": "SNS",
+      "C": "SES",
+      "D": "SQS"
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 58,
+    "question": "You are migrating a Windows file server into AWS so that it can be used by VPC hosted Workspaces (Virtual Desktops). What is the most cost effective and resilient way to host this data in AWS and provide access to it using the SMB protocol.",
+    "options": {
+      "A": "EC2 Instance running Windows Server",
+      "B": "EFS",
+      "C": "FSx",
+      "D": "S3 + Directory Service"
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 59,
+    "question": "Due to compliance requirements, you have been instructed that data within a VPC must NOT traverse the public Internet. The system uses EC2, EBS, EFS and a Direct Connect dedicated network connection from your premises. You have been asked to report on the suitability of the architecture.",
+    "options": {
+      "A": "To prevent data transferred to and from EFS traversing the public Internet a VPC endpoint for EFS must be used",
+      "B": "To prevent data transferred to and from EC2 traversing the public Internet an VPC endpoint for EC2 must be used",
+      "C": "To prevent data transferred to and from VPC traversing the public Internet VPC encryption must be used",
+      "D": "By default data within this architecture does not traverse the public Internet."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 60,
+    "question": "You are noticing that within an auto-scaling-group managing the front-end for a busy application with rapidly changing load levels … instances are being started and terminated rapidly. This is causing disruption to the application and excessive costs. What setting could you change to change this behaviour ?",
+    "options": {
+      "A": "Change the desired capacity manually",
+      "B": "Increase the minimum size",
+      "C": "Increase the maximum size",
+      "D": "Decrease the maximum size",
+      "E": "Change the cooldown period"
+    },
+    "answer": [
+      "E"
+    ]
+  },
+  {
+    "no": 61,
+    "question": "You have recently started a new job. Your manager asks you to review the design of a Site-to-Site VPN Solution to ensure it's highly-available. It uses 1 VGW, 1 VPN connection and 1 CGW. What should you tell your manager? (choose one)",
+    "options": {
+      "A": "The solution is Fully HA",
+      "B": "Another CGW will ensure the solution is fully HA",
+      "C": "Add a VGW and the solution is fully HA",
+      "D": "Add a CGW for full HA",
+      "E": "Another CGW and VPN Connection is needed for Full HA"
+    },
+    "answer": [
+      "E"
+    ]
+  },
+  {
+    "no": 62,
+    "question": "You are receiving large SQS bills every month for a queue which is involved in a worker processing tier. The tier has 5 instances which are static and not scaled using an ASG. There appears to be only low volume running through your SQS queue. What would likely reduce bills? (choose 2)",
+    "options": {
+      "A": "Switch to short-polling",
+      "B": "Switch to long-polling",
+      "C": "Switch to ondemand-polling",
+      "D": "Re-provision the instances using an ASG based on queue length",
+      "E": "Re-provision the instances using an ASG based on queue throughput"
+    },
+    "answer": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "no": 63,
+    "question": "You need configure an EC2 instance so it can only be accessed using SSH from IP 1.3.3.7. Which of the following will implement the desired configuration?",
+    "options": {
+      "A": "Add an SG Inbound 1.3.3.7/32 Protocol -1",
+      "B": "Add an SG Inbound 1.3.3.7/32 TCP 22",
+      "C": "Add an SG Inbound 1.3.3.7/32 UDP 22",
+      "D": "Add an SG Inbound 1.3.3.7/32 TCP 25"
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 64,
+    "question": "Your developers are refactoring a legacy application into a series of services. At this stage most of the services are long running processes using chunks of code from the original application. What architecture components would you recommend to make best use of AWS services?",
+    "options": {
+      "A": "Configure the service to Docker containers and deploy with ECS",
+      "B": "Configure the services as Lambda functions and deploy behind an API Gateway",
+      "C": "Package the services into a single deployment and deploy to EC2 instances in an auto scaling group",
+      "D": "Package the services into a single deployment and deploy to EC2 instances behind an API Gateway"
+    },
+    "answer": [
+      "A"
+    ]
+  }
+]

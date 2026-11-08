@@ -292,8 +292,22 @@ const practiceMain = new Map(); // lesson id -> how many of them have it as thei
 let practiceCount = 0;
 // the practice-test page gets every test whole: public/content/practice.json
 const practiceAll = { tests: [], questions: [] };
+// The same question can sit in several tests (sometimes with a typo fixed or options reworded).
+// Such a repeat keeps its place in its own test but points at the first copy (dupOf): it is left
+// out of the lesson quizzes and of the mixed sets, and it reuses the first copy's mapping.
+const normQ = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const qTokens = (q) => new Set(normQ(`${q.question} ${Object.values(q.options).join(' ')}`).split(' '));
+function jaccard(a, b) {
+  let n = 0;
+  for (const t of a) if (b.has(t)) n++;
+  return n / (a.size + b.size - n);
+}
+const DUP_SIMILARITY = 0.88;
+let practiceDups = 0;
 if (fs.existsSync(BANKS)) {
   const LETTERS = 'ABCDEF';
+  const seenQ = []; // { key, tokens, mapping }
+  const usedNums = new Set();
   const tests = fs.readdirSync(BANKS).filter((f) => f.endsWith('.json')).sort();
   tests.forEach((f, t) => {
     const name = f.replace(/\.json$/, '');
@@ -303,11 +317,19 @@ if (fs.existsSync(BANKS)) {
       return;
     }
     const bank = JSON.parse(fs.readFileSync(path.join(BANKS, f), 'utf8'));
-    const map = new Map(JSON.parse(fs.readFileSync(mapFile, 'utf8')).items.map((it) => [it.no, it]));
-    const testNum = (name.match(/(\d+)$/) || [, String(t + 1)])[1].replace(/^0+(?=\d)/, '');
-    practiceAll.tests.push({ num: testNum, title: `Đề ${testNum}`, count: bank.length });
+    const mapping = JSON.parse(fs.readFileSync(mapFile, 'utf8'));
+    const map = new Map(mapping.items.map((it) => [it.no, it]));
+    // test number: "num" in the mapping file, else the digits at the end of the file name
+    const testNum = String(mapping.num ?? (name.match(/(\d+)$/) || [, String(t + 1)])[1]).replace(/^0+(?=\d)/, '');
+    if (usedNums.has(testNum)) console.warn(`! ${name}: test number ${testNum} is already used; set "num" in practice/${f}`);
+    usedNums.add(testNum);
+    const entry = { num: testNum, title: `Đề ${testNum}`, count: bank.length, dups: 0 };
+    practiceAll.tests.push(entry);
     for (const q of bank) {
-      const m = map.get(q.no);
+      const key = `${testNum}#${q.no}`;
+      const tokens = qTokens(q);
+      const first = seenQ.find((s) => jaccard(tokens, s.tokens) >= DUP_SIMILARITY);
+      const m = map.get(q.no) ?? first?.mapping;
       if (!m) {
         console.warn(`! ${name} #${q.no} is not mapped to a lesson`);
         continue;
@@ -325,7 +347,13 @@ if (fs.existsSync(BANKS)) {
       if (question.answer.length !== q.answer.length || keys.some((k) => !LETTERS.includes(k)))
         console.warn(`! ${name} #${q.no}: answer letters do not match the options`);
       practiceCount++;
-      practiceAll.questions.push({ k: `${testNum}#${q.no}`, t: testNum, no: q.no, ...question, lessons: m.lessons });
+      practiceAll.questions.push({ k: key, t: testNum, no: q.no, ...question, lessons: m.lessons, ...(first ? { dupOf: first.key } : {}) });
+      if (first) {
+        practiceDups++;
+        entry.dups++;
+        continue;
+      }
+      seenQ.push({ key, tokens, mapping: m });
       m.lessons.forEach((id, rank) => {
         if (!practiceByLesson.has(id)) practiceByLesson.set(id, []);
         practiceByLesson.get(id).push({ rank, question });
@@ -513,7 +541,8 @@ console.log(
   const known = new Set(flatOrder.map(({ l }) => l.id));
   const orphan = [...practiceByLesson.keys()].filter((id) => !known.has(id));
   console.log(
-    `  practice: ${practiceCount} questions in ${[...practiceByLesson.keys()].filter((id) => known.has(id)).length}/${lessonTotal} lessons` +
+    `  practice: ${practiceCount} questions in ${practiceAll.tests.length} tests (${practiceDups} repeats of an earlier test, kept out of lesson quizzes), ` +
+      `on ${[...practiceByLesson.keys()].filter((id) => known.has(id)).length}/${lessonTotal} lessons` +
       (orphan.length ? ` (! unknown lesson ids: ${orphan.join(', ')})` : '')
   );
 }

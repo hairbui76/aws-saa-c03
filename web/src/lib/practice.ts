@@ -2,9 +2,15 @@ import { useMemo } from 'react';
 import { useIndex, useJson, type Question } from './content';
 import { practice, type PracticeLast, type PracticeSession } from './store';
 
-/** One question of a practice test (public/content/practice.json, built from ../data/99 Banks). */
-export type BankQuestion = Question & { k: string; t: string; no: number; lessons: string[] };
-export type PracticeBank = { tests: { num: string; title: string; count: number }[]; questions: BankQuestion[] };
+/**
+ * One question of a practice test (public/content/practice.json, built from ../data/99 Banks).
+ * dupOf: key of the same question in an earlier test (it then stays out of the mixed sets).
+ */
+export type BankQuestion = Question & { k: string; t: string; no: number; lessons: string[]; dupOf?: string };
+export type PracticeBank = { tests: { num: string; title: string; count: number; dups?: number }[]; questions: BankQuestion[] };
+
+/** Results are kept per question, under the first copy's key for repeated questions. */
+export const resultKey = (q: BankQuestion) => q.dupOf ?? q.k;
 
 export const EXAM_SIZE = 65;
 export const EXAM_MINUTES = 130; // the real SAA-C03: 65 questions in 130 minutes
@@ -50,18 +56,20 @@ export function pickQuestions(
   last: PracticeLast,
   lessons: Map<string, LessonInfo>
 ): { title: string; keys: string[] } {
+  // every question once: repeats of an earlier test only appear inside their own test
   const qs = bank.questions;
+  const uniq = qs.filter((q) => !q.dupOf);
   switch (src.kind) {
     case 'test':
       return { title: `Đề ${src.num}`, keys: qs.filter((q) => q.t === src.num).map((q) => q.k) };
     case 'random':
-      return { title: 'Đề ngẫu nhiên', keys: shuffled(qs).slice(0, EXAM_SIZE).map((q) => q.k) };
+      return { title: 'Đề ngẫu nhiên', keys: shuffled(uniq).slice(0, EXAM_SIZE).map((q) => q.k) };
     case 'wrong': {
-      const wrong = qs.filter((q) => last[q.k] && !last[q.k].ok);
+      const wrong = uniq.filter((q) => last[q.k] && !last[q.k].ok);
       return { title: 'Ôn câu sai', keys: shuffled(wrong).slice(0, EXAM_SIZE).map((q) => q.k) };
     }
     case 'chapter': {
-      const inCh = qs.filter((q) => chapterOf(q, lessons)?.chapterId === src.id);
+      const inCh = uniq.filter((q) => chapterOf(q, lessons)?.chapterId === src.id);
       const ch = lessons.get(inCh[0]?.lessons[0] ?? '');
       return { title: ch ? `Chương ${ch.chapterNum}: ${ch.chapterTitle}` : 'Theo chương', keys: shuffled(inCh).map((q) => q.k) };
     }

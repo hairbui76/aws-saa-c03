@@ -37,6 +37,7 @@ import {
   fmtDuration,
   LETTERS,
   pickQuestions,
+  resultKey,
   startSession,
   usePracticeBank,
   type BankQuestion,
@@ -183,7 +184,7 @@ export default function PracticePage() {
   const perTest = useMemo(() => {
     const out = new Map<string, { tried: number; ok: number }>();
     for (const q of bank?.questions ?? []) {
-      const r = st.last[q.k];
+      const r = st.last[resultKey(q)];
       const c = out.get(q.t) ?? { tried: 0, ok: 0 };
       if (r) {
         c.tried++;
@@ -197,6 +198,7 @@ export default function PracticePage() {
   const chapterCounts = useMemo(() => {
     const out = new Map<string, number>();
     for (const q of bank?.questions ?? []) {
+      if (q.dupOf) continue;
       const c = chapterOf(q, lessons)?.chapterId;
       if (c) out.set(c, (out.get(c) ?? 0) + 1);
     }
@@ -206,9 +208,11 @@ export default function PracticePage() {
   if (data.error) return <div className="page">Không tải được bộ đề.</div>;
   if (!bank) return <div className="page loading">Đang tải bộ đề…</div>;
 
-  const total = bank.questions.length;
-  const tried = Object.keys(st.last).filter((k) => data.byKey.has(k)).length;
-  const okCount = Object.entries(st.last).filter(([k, v]) => v.ok && data.byKey.has(k)).length;
+  // distinct questions: a repeat in a later test counts once, under its first copy
+  const uniqKeys = new Set(bank.questions.filter((q) => !q.dupOf).map((q) => q.k));
+  const total = uniqKeys.size;
+  const tried = Object.keys(st.last).filter((k) => uniqKeys.has(k)).length;
+  const okCount = Object.entries(st.last).filter(([k, v]) => v.ok && uniqKeys.has(k)).length;
   const wrongCount = tried - okCount;
 
   const start = (src: Source) => {
@@ -231,7 +235,7 @@ export default function PracticePage() {
         <div>
           <h1>Luyện đề</h1>
           <p className="muted">
-            {bank.tests.length} đề × {EXAM_SIZE} câu tiếng Anh như đề thật, mỗi câu có giải thích tiếng Việt và link về bài học liên quan.
+            {bank.tests.length} đề ({total} câu khác nhau) tiếng Anh như đề thật, mỗi câu có giải thích tiếng Việt và link về bài học liên quan.
             Đề thật SAA-C03: {EXAM_SIZE} câu trong {EXAM_MINUTES} phút, đậu từ 720/1000 điểm (mốc tham khảo ở đây: {Math.round(PRACTICE_PASS * 100)}%).
           </p>
           <div className="row small wrap">
@@ -271,7 +275,9 @@ export default function PracticePage() {
             <Sketch key={t.num} className="pr-card" seed={`pt${t.num}`} fill="#fff">
               <div className="row between">
                 <b className="hand pr-card-title">{t.title}</b>
-                <span className="muted small">{t.count} câu</span>
+                <span className="muted small" title={t.dups ? `${t.dups} câu giống câu ở đề trước; vẫn giữ trong đề này, nhưng chỉ tính một lần ở đề ngẫu nhiên, ôn câu sai và theo chương` : undefined}>
+                  {t.count} câu{t.dups ? ` · ${t.dups} trùng` : ''}
+                </span>
               </div>
               <SketchBar value={c.tried / t.count} color={c.tried && c.ok / c.tried >= PRACTICE_PASS ? '#40c057' : '#fab005'} />
               <span className="muted small">
@@ -412,7 +418,10 @@ export function PracticeRun() {
   const [now, setNow] = useState(() => Date.now());
 
   const submit = useCallback(() => {
-    const a = submitSession((k) => data.byKey.get(k)?.answer);
+    const a = submitSession(
+      (k) => data.byKey.get(k)?.answer,
+      (k) => data.byKey.get(k)?.dupOf ?? k
+    );
     if (a) navigate(`/practice/r/${a.id}`, { replace: true });
   }, [data.byKey, navigate]);
 

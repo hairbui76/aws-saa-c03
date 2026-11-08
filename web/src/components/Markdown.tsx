@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { Link } from 'react-router-dom';
 import type { Diagram } from '../lib/content';
 import AnimatedDiagram from './AnimatedDiagram';
+import LessonLink from './LessonLink';
 
 const Mermaid = lazy(() => import('./Mermaid'));
 
@@ -20,6 +21,8 @@ export default function Markdown({ children, diagrams }: { children: string; dia
       remarkPlugins={[remarkGfm]}
       components={{
         a({ href, children }) {
+          // other lessons: hover for a preview with "open page" / "quick view in a pop-up"
+          if (href?.startsWith('/l/')) return <LessonLink href={href}>{children}</LessonLink>;
           if (href?.startsWith('/')) return <Link to={href}>{children}</Link>;
           return (
             <a href={href} target="_blank" rel="noreferrer">
