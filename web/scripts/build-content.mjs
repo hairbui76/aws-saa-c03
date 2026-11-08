@@ -361,6 +361,8 @@ if (fs.existsSync(BANKS)) {
       });
     }
   });
+  // tests in number order (files are read by name, and names don't always follow the numbers)
+  practiceAll.tests.sort((x, y) => Number(x.num) - Number(y.num) || x.num.localeCompare(y.num));
   // questions whose main topic is this lesson first, then the ones that only touch it
   for (const [id, list] of practiceByLesson)
     practiceByLesson.set(id, list.sort((a, b) => a.rank - b.rank).map((x) => x.question));

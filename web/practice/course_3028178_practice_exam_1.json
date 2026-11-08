@@ -1,0 +1,622 @@
+{
+ "source": "course_3028178_practice_exam_1",
+ "num": "9",
+ "items": [
+  {
+   "no": 1,
+   "lessons": [
+    "ec2-placement-groups",
+    "enhanced-networking-and-ebs-optimized"
+   ],
+   "explain": "Cluster placement group đặt các instance sát nhau trong một AZ, kết hợp instance type hỗ trợ enhanced networking (ENA/SR-IOV) cho latency thấp nhất và throughput cao nhất giữa các node. Spread placement group trải instance ra phần cứng khác nhau để tăng resilience, đi ngược mục tiêu latency. Partition placement group trải qua hai AZ khiến traffic phải đi cross-AZ nên latency cao hơn. EBS optimization chỉ cấp băng thông riêng cho traffic tới EBS, không tăng tốc traffic giữa các instance. Từ khóa: 'lowest network latency' + 'highest throughput' giữa các node → cluster placement group + enhanced networking.",
+   "doubt": null
+  },
+  {
+   "no": 2,
+   "lessons": [
+    "cloudwatch-agent",
+    "cloudwatch-basics",
+    "ec2-instance-roles"
+   ],
+   "explain": "EC2 mặc định không publish metric memory vì hypervisor không nhìn thấy bên trong OS; cần CloudWatch agent (kèm IAM role có quyền ghi CloudWatch) để đẩy metric memory rồi đặt alarm ở ngưỡng 85%. Detailed monitoring chỉ tăng tần suất lên 1 phút cho các metric sẵn có, không thêm memory. Cron job tự gọi PutMetricData làm được nhưng phải tự viết và bảo trì script trên mọi instance nên overhead cao hơn agent. Metric filter đếm log out-of-memory chỉ báo khi đã crash, không đo được mức utilization 85%. Từ khóa: 'memory utilization' trên EC2 → CloudWatch agent.",
+   "doubt": null
+  },
+  {
+   "no": 3,
+   "lessons": [
+    "gateway-vpc-endpoints",
+    "compare-gateway-vs-interface-endpoints",
+    "nat-gateway"
+   ],
+   "explain": "Gateway VPC endpoint cho S3 miễn phí, gắn vào route table của private subnet bằng prefix list, traffic đi riêng tư trong mạng AWS và không còn tốn phí xử lý dữ liệu của NAT gateway cho hàng TB mỗi đêm. Interface endpoint cho S3 cũng riêng tư nhưng tính phí theo giờ và theo GB nên đắt hơn. NAT instance vẫn đưa traffic ra public internet. Bỏ route NAT và chỉ thêm bucket policy theo VPC CIDR thì instance không còn đường nào tới S3. Từ khóa: S3 cùng region + không qua internet + 'cost minimized' → gateway endpoint.",
+   "doubt": null
+  },
+  {
+   "no": 4,
+   "lessons": [
+    "vpc-peering",
+    "security-groups"
+   ],
+   "explain": "Inter-Region VPC peering hỗ trợ cả cross-account, traffic đi trên backbone AWS bằng private IP và được mã hóa tự động; phải thêm route ở cả hai VPC vì peering không tự lan route, và security group của database cho phép CIDR của VPC analytics. Chỉ thêm route ở một phía thì gói trả về không có đường quay lại. Security group không tham chiếu được SG ID của VPC peer ở region khác, nên cách dùng SG ID không hoạt động. Gán public IP và mở cho Elastic IP của NAT thì traffic đi qua internet, vi phạm yêu cầu. Từ khóa: peering khác region → route hai chiều + rule theo CIDR (không dùng SG reference).",
+   "doubt": null
+  },
+  {
+   "no": 5,
+   "lessons": [
+    "egress-only-internet-gateway",
+    "nacl"
+   ],
+   "explain": "Egress-only internet gateway chỉ dành cho IPv6 và chỉ cho kết nối outbound khởi tạo từ trong VPC; nó stateful nên traffic trả về đi được, còn kết nối inbound từ internet luôn bị chặn bất kể security group cho phép gì. NAT gateway là giải pháp cho IPv4, không phải cách chuẩn cho instance IPv6-only. Internet gateway cho phép inbound IPv6, xóa rule SG không ngăn được người khác thêm lại sau này. NACL deny toàn bộ inbound IPv6 lại chặn luôn gói trả về (NACL stateless) nên việc download hỏng. Từ khóa: IPv6 + chỉ outbound → egress-only internet gateway.",
+   "doubt": null
+  },
+  {
+   "no": 6,
+   "lessons": [
+    "ecs",
+    "iam-roles",
+    "ecs-launch-types-ec2-vs-fargate"
+   ],
+   "explain": "Task role khai báo trong task definition là IAM role mà container của task assume để nhận temporary credentials, cấp đúng s3:GetObject trên bucket. Gateway endpoint chỉ là đường mạng, không cung cấp credential nào. IAM user với access key là long-term credential, không phải temporary và dễ lộ key qua biến môi trường. Fargate không có EC2 instance nào để gắn role, và role trên instance cũng không phải cách cấp quyền theo từng task. Từ khóa: ECS + 'temporary credentials' → task role.",
+   "doubt": null
+  },
+  {
+   "no": 7,
+   "lessons": [
+    "eks",
+    "ecs-launch-types-ec2-vs-fargate",
+    "kubernetes"
+   ],
+   "explain": "EKS giữ nguyên tooling Kubernetes (manifest, Helm), và Fargate profile chạy pod serverless nên không phải quản lý, vá hay scale node nào; overhead thấp nhất và chỉ trả tiền cho pod đang chạy, hợp với site theo mùa. Managed node group vẫn là EC2 bạn phải chọn size và quản lý capacity; self-managed node group còn tốn công hơn. ECS Fargate đòi chuyển manifest sang task definition, vi phạm yêu cầu giữ tooling Kubernetes. Từ khóa: 'existing Kubernetes tooling' + 'least operational overhead' → EKS trên Fargate.",
+   "doubt": null
+  },
+  {
+   "no": 8,
+   "lessons": [
+    "reserved-instances-and-savings-plans",
+    "auto-scaling-groups"
+   ],
+   "explain": "On-Demand Capacity Reservation giữ capacity cho đúng instance type trong đúng một AZ, tạo và hủy lúc nào cũng được, không cam kết thời hạn; launch template của ASG trỏ vào reservation để chắc chắn có đủ 18 instance khi failover. Regional Reserved Instances chỉ giảm giá, không giữ capacity. Zonal Reserved Instances có giữ capacity nhưng cam kết tối thiểu 1 năm, vượt quá 'vài tháng'. Spot không đảm bảo capacity và có thể bị thu hồi bất kỳ lúc nào. Từ khóa: cần chắc chắn capacity trong một AZ + không cam kết dài hạn → On-Demand Capacity Reservation.",
+   "doubt": null
+  },
+  {
+   "no": 9,
+   "lessons": [
+    "reserved-instances-and-savings-plans",
+    "ec2-purchase-options"
+   ],
+   "explain": "Compute Savings Plan cam kết một mức chi theo giờ và tự áp dụng cho mọi instance family, size, region, OS, kể cả khi chuyển sang Graviton m6g và sang Fargate (cũng như Lambda). EC2 Instance Savings Plan gắn với một family (m5) trong một region nên không phủ m6g hay Fargate. Standard Reserved Instances gắn cố định với m5. Convertible Reserved Instances đổi được sang m6g nhưng không bao giờ áp dụng cho Fargate. Từ khóa: đổi instance family + chuyển sang Fargate + một commitment → Compute Savings Plan.",
+   "doubt": null
+  },
+  {
+   "no": 10,
+   "lessons": [
+    "ebs-snapshots",
+    "rpo-and-rto"
+   ],
+   "explain": "Volume tạo từ snapshot được lazy load từ S3 nên block nào đọc lần đầu sẽ chậm; Fast Snapshot Restore (FSR) bật cho từng snapshot trong từng AZ giúp volume tạo ra có full performance ngay từ lúc attach. FSR là thuộc tính của cặp snapshot + AZ, không bật trên volume được nên cách 'bật FSR trên volume để mọi snapshot sau đều hỗ trợ' không tồn tại. Script đọc mọi block (initialization) làm được nhưng mất nhiều thời gian với 2 TiB và thêm overhead. Instance lớn hơn không giải quyết việc lazy load. Từ khóa: chậm ngay sau khi restore snapshot + 'full performance from the moment attached' → Fast Snapshot Restore.",
+   "doubt": null
+  },
+  {
+   "no": 11,
+   "lessons": [
+    "ebs-snapshots",
+    "aws-backup"
+   ],
+   "explain": "EBS Snapshots Archive tier rẻ hơn khoảng 75% so với standard tier, phù hợp snapshot giữ nhiều năm và hiếm khi dùng; restore mất tới 72 giờ, nằm trong mức 3 ngày cho phép, còn snapshot hằng đêm vẫn ở standard tier để dùng ngay. Giữ snapshot hằng tháng ở standard tier suốt 7 năm thì giá lưu cao hơn nhiều so với archive. Không có cách copy snapshot thành object trong S3 bucket của bạn để áp lifecycle sang Deep Archive. Restore ra volume sc1 và giữ 7 năm đắt hơn nhiều so với snapshot archive. Từ khóa: snapshot giữ lâu + chấp nhận restore vài ngày → EBS Snapshots Archive.",
+   "doubt": null
+  },
+  {
+   "no": 12,
+   "lessons": [
+    "horizontal-vs-vertical-scaling",
+    "auto-scaling-groups",
+    "lab-architecture-evolution"
+   ],
+   "explain": "Muốn scale out mà user vẫn giữ session thì instance phải stateless: đưa session ra một database bên ngoài, rồi chạy nhiều instance nhỏ sau ALB và thêm/bớt theo demand. Instance m6g.large nhỏ giúp capacity bám sát tải (ngoài giờ sale chỉ khoảng ¼ peak) nên rẻ hơn dùng nhiều m6g.4xlarge. Đổi size instance cần downtime và luôn có giới hạn trên. Chạy nhiều instance mà vẫn giữ session trong memory thì user mất cart khi request rơi sang instance khác hoặc instance bị scale in. Từ khóa: 'without taking offline' + giữ session → stateless + scale out bằng instance nhỏ.",
+   "doubt": null
+  },
+  {
+   "no": 13,
+   "lessons": [
+    "sqs",
+    "auto-scaling-groups"
+   ],
+   "explain": "Elastic Beanstalk quản lý toàn bộ hạ tầng: web server environment chạy Tomcat sau load balancer, còn worker environment có sẵn SQS queue và daemon lấy message đưa cho ứng dụng; mỗi environment có Auto Scaling group riêng trải nhiều AZ nên hai phần scale độc lập. Chạy thread render trên chính các instance web khiến hai phần không scale độc lập. Lambda chạy tối đa 15 phút, không đủ cho việc render tới 30 phút. Tự dựng hai ASG và viết script làm được nhưng overhead cao khi không có đội hạ tầng. Từ khóa: 'no infrastructure team' + job dài + scale độc lập → Elastic Beanstalk web + worker environment.",
+   "doubt": null
+  },
+  {
+   "no": 14,
+   "lessons": [
+    "global-accelerator",
+    "compare-alb-vs-nlb",
+    "r53-latency-routing"
+   ],
+   "explain": "Global Accelerator cấp 2 anycast static IP, đưa traffic TCP/UDP vào AWS backbone ở edge location gần store nhất rồi chuyển tới endpoint group của region gần và khỏe nhất; danh sách IP được phép chỉ cần hai IP cố định này. CloudFront chỉ xử lý HTTP/HTTPS, không chuyển được giao thức UDP tùy chỉnh. Route 53 latency routing trả IP của NLB nên traffic đi internet công cộng tới tận region, và allow list phải chứa IP của mọi NLB. Đưa Elastic IP của NLB vào allow list thì mỗi khi thêm hay đổi NLB lại phải cập nhật. Từ khóa: UDP + allow list IP cố định + vào mạng AWS gần user → Global Accelerator.",
+   "doubt": null
+  },
+  {
+   "no": 15,
+   "lessons": [
+    "cloudfront-ttl-and-invalidations",
+    "cloudfront-architecture"
+   ],
+   "explain": "Invalidation chỉ cho path của ảnh vừa sửa buộc edge location lấy bản mới từ origin ở request kế tiếp, các object khác vẫn cache bình thường nên cache hit ratio giữ nguyên và không phải đổi code. Bật versioning trên S3 không ảnh hưởng tới bản đã cache ở CloudFront. Đặt Maximum TTL bằng 0 khiến CloudFront hỏi origin ở mọi request, phá cache hit ratio. Đổi tên file theo phiên bản là cách tốt về lâu dài nhưng phải sửa ứng dụng. Từ khóa: thỉnh thoảng sửa vài object + không đổi app → CloudFront invalidation.",
+   "doubt": null
+  },
+  {
+   "no": 16,
+   "lessons": [
+    "acm",
+    "cloudfront-and-ssl"
+   ],
+   "explain": "ACM certificate là tài nguyên regional: CloudFront chỉ dùng cert ở us-east-1, còn ALB dùng cert trong chính region của nó (ap-southeast-2); cert public với DNS validation được ACM tự gia hạn. Một cert ở ap-southeast-2 không gắn được vào CloudFront, và cert ở us-east-1 không gắn được vào ALB ở ap-southeast-2. Cert import từ CA bên ngoài không được ACM tự renew. Từ khóa: CloudFront + ALB ở region khác + 'automatically renewed' → hai cert ACM, một ở us-east-1, một ở region của ALB.",
+   "doubt": null
+  },
+  {
+   "no": 17,
+   "lessons": [
+    "compare-alb-vs-nlb",
+    "ssl-offload-and-session-stickiness"
+   ],
+   "explain": "NLB với TCP listener port 443 chuyển nguyên luồng TCP (TLS pass-through) tới instance, load balancer không giải mã, instance giữ certificate và tự terminate TLS. NLB với TLS listener sẽ terminate TLS ngay tại load balancer. ALB luôn terminate HTTPS ở listener; dùng HTTPS target group chỉ là mã hóa lại (SSL bridging), dữ liệu vẫn được giải mã ở giữa. ALB với HTTP target group là SSL offload, càng sai yêu cầu. Từ khóa: 'no decryption on the load balancer' → NLB TCP listener (pass-through).",
+   "doubt": null
+  },
+  {
+   "no": 18,
+   "lessons": [
+    "elastic-load-balancer",
+    "vpc-subnets",
+    "security-groups"
+   ],
+   "explain": "ALB internet-facing có node trong public subnet nhận HTTPS từ internet rồi chuyển tới web instance trong private subnet bằng private IP, nên instance không cần public IP; internal ALB đứng trước tầng application chỉ có private IP, web tier gọi qua DNS name nên hai tier scale độc lập. Gán public IP cho web instance vi phạm yêu cầu. Dùng ALB internet-facing cho tầng application làm nó có điểm vào từ internet. Cấu hình cứng private IP của app instance trên web instance thì mỗi lần scale phải sửa lại. Từ khóa: tách tier + không public IP + scale độc lập → internet-facing ALB + internal ALB.",
+   "doubt": null
+  },
+  {
+   "no": 19,
+   "lessons": [
+    "asg-scaling-policies",
+    "auto-scaling-groups"
+   ],
+   "explain": "Scheduled action nâng minimum và desired capacity trước 9:00 sáng thứ Sáu giúp instance sẵn sàng trước khi sale bắt đầu, còn target tracking được giữ lại để xử lý tải khó đoán ở các thời điểm khác. Step scaling vẫn chỉ phản ứng sau khi CPU đã tăng nên vẫn trễ vài phút. Thay hẳn target tracking bằng scheduled action thì mất khả năng tự scale khi tải bất ngờ. Lambda + EventBridge làm được việc của scheduled action nhưng phải tự viết code, overhead cao hơn. Từ khóa: spike theo lịch biết trước + tải khác khó đoán → scheduled action + target tracking.",
+   "doubt": null
+  },
+  {
+   "no": 20,
+   "lessons": [
+    "ssl-offload-and-session-stickiness",
+    "horizontal-vs-vertical-scaling",
+    "dynamodb-architecture"
+   ],
+   "explain": "Lưu cart vào DynamoDB và đọc ở mỗi request khiến instance stateless: instance nào mất thì cart vẫn còn, và tắt sticky session để ALB rải tải đều. Vẫn giữ sticky session dù đã có DynamoDB thì tải tiếp tục dồn lệch theo user. Tăng thời gian stickiness không cứu được cart khi instance bị terminate. Đặt min bằng max và kéo dài health check chỉ né scale-in, không chống được lỗi instance mà còn làm phát hiện lỗi chậm hơn. Từ khóa: 'survive any instance loss' + 'spread evenly' → externalize state + bỏ stickiness.",
+   "doubt": null
+  },
+  {
+   "no": 21,
+   "lessons": [
+    "asg-lifecycle-hooks"
+   ],
+   "explain": "Lifecycle hook chỉ chờ trong heartbeat timeout (ở đây 1 giờ) rồi thực hiện default result; script gọi RecordLifecycleActionHeartbeat định kỳ để reset timeout, giữ instance ở Terminating:Wait tới khi copy xong và gọi CompleteLifecycleAction (tối đa 48 giờ hoặc 100 lần heartbeat timeout). Đổi default result sang CONTINUE chỉ quyết định hành động khi hết timeout, instance vẫn bị terminate sau 1 giờ. Gọi CompleteLifecycleAction ngay lúc bắt đầu thì instance bị terminate luôn. Launch hook chạy lúc instance khởi động, không liên quan việc copy log khi terminate. Từ khóa: hook hết timeout giữa chừng → heartbeat + CompleteLifecycleAction.",
+   "doubt": null
+  },
+  {
+   "no": 22,
+   "lessons": [
+    "fsx-for-windows",
+    "directory-service"
+   ],
+   "explain": "FSx for Windows File Server cung cấp share SMB native, join được vào Active Directory self-managed on-premises (qua Direct Connect) để phân quyền theo group; triển khai Multi-AZ có file server standby ở AZ khác và tự failover. Bản Single-AZ không còn hoạt động khi mất AZ. EFS là NFS cho Linux, không có SMB hay phân quyền theo AD. FSx for Lustre dành cho HPC trên Linux, không phải file share Windows. Từ khóa: SMB + AD group + chịu được lỗi AZ → FSx for Windows Multi-AZ.",
+   "doubt": null
+  },
+  {
+   "no": 23,
+   "lessons": [
+    "storage-gateway",
+    "s3-lifecycle-configuration",
+    "s3-storage-classes"
+   ],
+   "explain": "S3 File Gateway trình bày share SMB cho máy Windows, mỗi file ghi vào được lưu thành một object trong S3 bucket nên Lambda đọc trực tiếp được; gateway chỉ cache dữ liệu nóng tại chỗ nên giải quyết chuyện hết dung lượng, và lifecycle rule chuyển object sang Standard-IA sau 90 ngày. Volume Gateway trình bày block qua iSCSI, dữ liệu không thành từng object đọc được trong bucket. DataSync copy theo lịch 12 giờ, file vẫn nằm trên server cũ nên không giải quyết dung lượng. Tape Gateway dành cho backup ra băng ảo, không phải share file. Từ khóa: SMB + mỗi file thành object trong S3 → S3 File Gateway.",
+   "doubt": null
+  },
+  {
+   "no": 24,
+   "lessons": [
+    "transit-gateway",
+    "site-to-site-vpn",
+    "aws-organizations"
+   ],
+   "explain": "Một Transit Gateway làm hub hỗ trợ transitive routing, được share sang các account khác bằng Resource Access Manager, mọi VPC attach vào và VPN on-prem terminate tại một chỗ trên TGW; thêm account chỉ cần attach VPC mới, không sửa VPC cũ. VPC peering không transitive nên mô hình hub VPC không cho các spoke nói chuyện với nhau hay đi tiếp ra on-prem. Full mesh peering cộng VPN cho từng VPC tăng số kết nối theo bình phương và quản lý VPN ở nhiều chỗ. Mỗi account một TGW rồi peer với nhau thêm độ phức tạp không cần thiết. Từ khóa: nhiều VPC/account + on-prem + transitive → một Transit Gateway share qua RAM.",
+   "doubt": null
+  },
+  {
+   "no": 25,
+   "lessons": [
+    "direct-connect",
+    "direct-connect-resilience",
+    "compare-vpn-vs-direct-connect"
+   ],
+   "explain": "Direct Connect là đường vật lý riêng nên bandwidth và latency ổn định, và private VIF tới virtual private gateway là cách đi vào private subnet của VPC. Site-to-Site VPN qua internet tới cùng virtual private gateway làm đường backup rẻ, cho tính redundant khi DX gặp sự cố. Public VIF chỉ để truy cập public service của AWS, không vào được instance trong private subnet. Thêm customer gateway và VPN thứ hai chỉ làm VPN dư thừa, không mang lại bandwidth ổn định. Từ khóa: 'predictable bandwidth' + 'redundant' → DX private VIF + VPN backup.",
+   "doubt": null
+  },
+  {
+   "no": 26,
+   "lessons": [
+    "service-control-policies",
+    "iam-identity-policies",
+    "aws-organizations"
+   ],
+   "explain": "SCP không bao giờ ảnh hưởng tới management account, kể cả khi gắn trực tiếp, nên muốn chặn role trong management account phải dùng explicit deny trong identity policy của chính role đó. Gắn SCP thẳng vào management account cũng không có tác dụng. Config rule chỉ phát hiện rồi xóa sau khi bucket đã được tạo, không chặn trước. Permissions boundary gắn vào user hoặc role chứ không gắn vào cả account. Từ khóa: role trong management account + SCP không có hiệu lực → explicit deny trong IAM policy.",
+   "doubt": null
+  },
+  {
+   "no": 27,
+   "lessons": [
+    "aws-organizations",
+    "directory-service",
+    "iam-roles"
+   ],
+   "explain": "IAM Identity Center dạng organization instance trong management account, kết nối AD on-prem qua AD Connector, cho SSO vào Console và CLI ở mọi account; quyền gán tập trung theo group của directory qua permission set và áp được cho account mới. Tạo SAML IdP và role trong từng account phải cấu hình lại mỗi lần thêm account. Account instance trong từng member account không quản lý tập trung và không cấp quyền truy cập các AWS account. Tạo IAM user cho từng nhân viên vi phạm yêu cầu không dùng IAM user. Từ khóa: SSO nhiều account + AD là nguồn sự thật → IAM Identity Center + AD Connector.",
+   "doubt": null
+  },
+  {
+   "no": 28,
+   "lessons": [
+    "aws-control-tower",
+    "cloudformation-basics"
+   ],
+   "explain": "Proactive control của Control Tower được hiện thực bằng CloudFormation Hooks: kiểm tra resource trong template trước khi CloudFormation tạo và chặn nếu không compliant, chỉ áp cho deploy qua CloudFormation, trạng thái hiển thị trong Control Tower console. Detective control (dựa trên Config rule) chỉ phát hiện sau khi resource đã tạo. Preventive control (dựa trên SCP) chặn mọi API call, kể cả thao tác trực tiếp trên console. Tự viết hook và đăng ký vào từng account thì không hiện trong Control Tower và tốn công. Từ khóa: chặn trước khi tạo + chỉ CloudFormation → proactive control.",
+   "doubt": null
+  },
+  {
+   "no": 29,
+   "lessons": [
+    "s3-security",
+    "iam-groups",
+    "iam-roles"
+   ],
+   "explain": "IAM group không phải principal nên không đặt được trong Principal của bucket policy; cách đúng là tạo role mà thành viên WebstoreDevs được assume, rồi bucket policy cho phép s3:PutObject với Principal là ARN của role. Đặt group ARN vào Principal làm policy không hợp lệ. Gắn identity policy cho group thì cấp được quyền nhưng quyền không nằm trong bucket policy như security yêu cầu. RAM không dùng để share S3 bucket cho một IAM group. Từ khóa: quyền phải nằm ở bucket policy + IAM group → group không làm principal được, dùng role.",
+   "doubt": null
+  },
+  {
+   "no": 30,
+   "lessons": [
+    "cfn-stacksets",
+    "aws-config",
+    "aws-organizations"
+   ],
+   "explain": "StackSet với service-managed permissions dùng tích hợp Organizations: AWS tự tạo các role cần thiết trong member account, deploy tới mọi account của organization ở cả hai region và có thể tự deploy cho account mới; sửa rule chỉ cần update stack set một lần. Self-managed permissions đòi tạo sẵn execution role trong mọi member account. Script assume role vào từng account là thủ công, overhead cao. Nested stack chỉ chạy trong một account và một region, không triển khai sang account khác. Từ khóa: nhiều account + nhiều region + không tạo role thủ công → StackSets service-managed.",
+   "doubt": null
+  },
+  {
+   "no": 31,
+   "lessons": [
+    "textract",
+    "comprehend",
+    "athena"
+   ],
+   "explain": "Textract chỉ xử lý PDF nhiều trang qua API asynchronous; text sau đó đưa vào Comprehend để lấy entities (sản phẩm, người) và sentiment, kết quả lưu S3 để Athena query SQL ad hoc. API synchronous của Textract chỉ xử lý tài liệu một trang. Rekognition đọc đoạn text ngắn trong ảnh/video, không dành cho tài liệu scan nhiều trang. Model SageMaker tự xây cần chuyên môn ML mà team không có. Từ khóa: PDF nhiều trang + entities/sentiment + không có ML expertise → Textract async + Comprehend + Athena.",
+   "doubt": null
+  },
+  {
+   "no": 32,
+   "lessons": [
+    "efs",
+    "site-to-site-vpn"
+   ],
+   "explain": "EFS mount được từ on-prem qua Site-to-Site VPN hoặc Direct Connect, dùng IP của mount target (DNS name của EFS không tự resolve từ on-prem), nên server đọc ghi trực tiếp cùng file mà traffic không qua internet công cộng. VPC peering chỉ nối hai VPC với nhau, không nối được data center. Mở NFS qua internet vừa không an toàn vừa vi phạm yêu cầu, và mount target cũng không có public IP. DataSync tạo bản sao chứ không làm việc 'in place'. Từ khóa: on-prem mount EFS + không qua internet → VPN/DX + IP của mount target.",
+   "doubt": null
+  },
+  {
+   "no": 33,
+   "lessons": [
+    "aws-backup",
+    "rds-backups-and-restore"
+   ],
+   "explain": "AWS Backup quản lý tập trung backup plan cho EBS, RDS, DynamoDB và EFS: lịch hằng ngày, retention 7 năm, copy rule sang vault ở region khác; Vault Lock ở compliance mode làm vault bất biến, không ai kể cả root xóa được recovery point trước khi hết retention. Governance mode vẫn cho user có quyền IAM phù hợp gỡ lock hoặc xóa backup. Lambda tự viết là custom script và IAM deny thì admin full quyền tự gỡ được. Dùng tính năng native của từng dịch vụ thì rời rạc và không có cơ chế chống admin xóa. Từ khóa: nhiều dịch vụ + cross-region + 'nobody may delete' → AWS Backup + Vault Lock compliance mode.",
+   "doubt": null
+  },
+  {
+   "no": 34,
+   "lessons": [
+    "athena",
+    "glue",
+    "redshift"
+   ],
+   "explain": "Athena query SQL trực tiếp trên dữ liệu ở S3 theo định dạng gốc (schema-on-read), Glue crawler tạo bảng trong Data Catalog, và chỉ trả tiền theo lượng dữ liệu quét nên rẻ nhất cho vài query mỗi tháng. Redshift Spectrum cũng query tại chỗ nhưng phải trả tiền cluster provisioned chạy cả tháng. Redshift Serverless nạp qua Data Firehose và OpenSearch Ingestion đều tạo bản sao dữ liệu trong data store khác, vi phạm yêu cầu. Từ khóa: log trên S3 + query ad hoc thỉnh thoảng + không copy → Athena.",
+   "doubt": null
+  },
+  {
+   "no": 35,
+   "lessons": [
+    "dynamodb-operations-and-performance"
+   ],
+   "explain": "On-demand capacity mode tự đáp ứng traffic tăng đột ngột, trả tiền theo request thực tế, không cần dự báo, hợp với flash sale không có lịch cố định. Tăng provisioned WCU gấp 10 lần vĩnh viễn thì trả tiền cho capacity rảnh gần như cả tháng. Burst capacity chỉ tích lũy tối đa khoảng 300 giây capacity chưa dùng, không đủ cho spike kéo dài 20 phút. DAX là cache cho read, write vẫn đi thẳng xuống table nên không giảm throttle cho write. Từ khóa: spike khó đoán + chi phí thấp → DynamoDB on-demand.",
+   "doubt": null
+  },
+  {
+   "no": 36,
+   "lessons": [
+    "glue",
+    "athena",
+    "s3-security"
+   ],
+   "explain": "Lake Formation cấp quyền SELECT cross-account trên bảng trong Glue Data Catalog với column-level permission (loại trừ hai cột), partner truy cập qua resource link trong account của họ; dữ liệu vẫn ở bucket gốc và quyền được thực thi cho mọi engine tích hợp Lake Formation. Bucket policy chỉ hoạt động ở mức object, không ẩn được cột. Export kết quả view sang bucket của partner tạo ra bản sao dữ liệu. Access Point cũng chỉ ở mức object và workgroup của Athena không có tính năng ẩn cột. Từ khóa: cross-account + ẩn cột + mọi query engine → Lake Formation column-level permission.",
+   "doubt": null
+  },
+  {
+   "no": 37,
+   "lessons": [
+    "dynamodb-architecture",
+    "rpo-and-rto"
+   ],
+   "explain": "DynamoDB point-in-time recovery cho phép restore tới bất kỳ giây nào trong tối đa 35 ngày gần nhất, restore luôn ra table mới rồi chuyển ứng dụng sang, đáp ứng yêu cầu 30 ngày với overhead thấp. Backup on-demand hằng ngày chỉ cho độ chi tiết theo ngày, không tới từng giây. Global table replicate luôn cả dữ liệu sai sang replica nên không cứu được. DynamoDB Streams chỉ giữ dữ liệu 24 giờ, không đủ cho lỗi phát hiện sau 3 tuần. Từ khóa: restore 'any chosen second' trong 30 ngày → PITR.",
+   "doubt": null
+  },
+  {
+   "no": 38,
+   "lessons": [
+    "rds-multi-az",
+    "rds-read-replicas",
+    "aurora"
+   ],
+   "explain": "Multi-AZ DB cluster có một writer và hai readable standby ở AZ khác, replication semi-synchronous (commit chỉ xác nhận khi ít nhất một standby đã nhận) nên không mất write đã commit, failover thường dưới 35 giây, và dashboard đọc qua reader endpoint. Multi-AZ DB instance có standby không phục vụ read. Read replica dùng replication async nên có thể mất dữ liệu, và không failover tự động. Aurora PostgreSQL là database product khác, vi phạm ràng buộc không migrate. Từ khóa: đọc trên standby + không mất commit + failover dưới 1 phút → Multi-AZ DB cluster.",
+   "doubt": null
+  },
+  {
+   "no": 39,
+   "lessons": [
+    "aurora-serverless",
+    "aurora"
+   ],
+   "explain": "Aurora Serverless (v2) cho writer tự scale theo ACU giữa min và max ngay khi tải tăng, nên hấp thụ burst write mà không cần resize tay, và chi phí thấp khi idle nhờ min thấp. Writer provisioned cỡ lớn cho peak thì trả tiền cho capacity rảnh gần cả ngày và vẫn không biết peak thật. Reader serverless không giúp gì vì burst là write. Lambda scale writer theo alarm là giải pháp tự chế, gây gián đoạn khi đổi instance và tăng overhead. Từ khóa: tải không đoán được + idle nhiều + burst write → Aurora Serverless writer.",
+   "doubt": null
+  },
+  {
+   "no": 40,
+   "lessons": [
+    "rds-backups-and-restore",
+    "rds-multi-az",
+    "rds-read-replicas"
+   ],
+   "explain": "Automated backup của RDS (retention tới 35 ngày) kết hợp snapshot với transaction log đẩy lên S3 khoảng mỗi 5 phút, cho point-in-time recovery tới bất kỳ thời điểm nào trong retention; restore tạo instance mới nên phải trỏ ứng dụng sang endpoint mới. Snapshot thủ công hằng ngày chỉ khôi phục được về thời điểm chụp, có thể mất gần 24 giờ dữ liệu. Multi-AZ standby và read replica đều nhận luôn lệnh UPDATE sai, không cứu được data corruption. Từ khóa: quay về một thời điểm cụ thể (2 phút trước lỗi) → PITR từ automated backup.",
+   "doubt": null
+  },
+  {
+   "no": 41,
+   "lessons": [
+    "rds-custom",
+    "databases-on-ec2"
+   ],
+   "explain": "RDS Custom for SQL Server cho quyền truy cập OS (RDP hoặc Session Manager) để cài agent, trong khi AWS vẫn lo backup và patching. RDS for SQL Server thông thường không cho vào OS, option group chỉ bật các tính năng có sẵn chứ không cài được agent tùy ý. SQL Server trên EC2 phải tự quản patching và nhiều việc vận hành khác. Aurora PostgreSQL vừa đổi engine vừa không cho truy cập OS. Từ khóa: cần OS access + AWS quản lý backup/patch + SQL Server → RDS Custom.",
+   "doubt": null
+  },
+  {
+   "no": 42,
+   "lessons": [
+    "r53-multivalue-routing",
+    "r53-health-checks"
+   ],
+   "explain": "Multivalue answer routing cho phép nhiều record cùng tên, mỗi record gắn health check riêng, Route 53 chỉ trả về tối đa 8 IP healthy để client tự chọn, đúng nhu cầu không dùng load balancer. Simple routing không gắn health check được nên vẫn trả cả IP hỏng. Failover routing chỉ trả một endpoint theo primary/secondary, không trả nhiều IP. Weighted routing trả từng record theo xác suất chứ không trả danh sách mọi instance đang khỏe. Từ khóa: trả nhiều IP healthy + không có load balancer → multivalue answer.",
+   "doubt": null
+  },
+  {
+   "no": 43,
+   "lessons": [
+    "r53-interoperability",
+    "r53-public-hosted-zones",
+    "route-53-fundamentals"
+   ],
+   "explain": "Tạo Route 53 public hosted zone, import zone file rồi đổi NS record ở registrar trỏ về 4 name server của zone là chuyển DNS hosting sang dịch vụ managed, không cần đổi registrar. Chỉ chuyển registration sang Route 53 không tự tạo hosted zone với các record hiện có, tắt BIND sẽ làm domain ngừng resolve. Private hosted zone chỉ resolve trong các VPC được associate, khách trên internet không dùng được. Chạy BIND trên Fargate vẫn là tự quản DNS server. Từ khóa: registrar bên ngoài + DNS cho internet + bỏ server tự quản → Route 53 public hosted zone.",
+   "doubt": null
+  },
+  {
+   "no": 44,
+   "lessons": [
+    "r53-geolocation-routing",
+    "r53-routing-policies"
+   ],
+   "explain": "Geolocation routing trả record theo vị trí của người hỏi; chỉ có hai record Australia và New Zealand và không có default record thì query từ quốc gia khác nhận NO ANSWER, đúng yêu cầu. Thêm default record sẽ trả lời cho mọi quốc gia còn lại. Latency routing chọn region có latency thấp nhất chứ không lọc theo quốc gia, một record duy nhất vẫn trả lời cho tất cả. Geoproximity với bias chỉ co giãn vùng phục vụ giữa các tài nguyên, record duy nhất vẫn trả lời cho mọi người. Từ khóa: chỉ phục vụ một số quốc gia + không trả lời nơi khác → geolocation không có default.",
+   "doubt": null
+  },
+  {
+   "no": 45,
+   "lessons": [
+    "waf",
+    "aws-organizations",
+    "aws-config"
+   ],
+   "explain": "AWS Firewall Manager quản lý WAF web ACL tập trung cho cả organization: cần bật all features trong Organizations và từ management account chỉ định một security account làm Firewall Manager administrator, bật AWS Config recording ở mọi member account (Firewall Manager dựa vào Config để phát hiện resource), rồi tạo Firewall Manager policy cho WAF với Core rule set, phạm vi mọi account, automatic remediation để tự gắn web ACL cho ALB hiện tại và tương lai. Tạo web ACL thủ công trong từng account thì ALB mới không tự được bảo vệ và team phải tự cấu hình. Shield Advanced là dịch vụ chống DDoS, không triển khai Core rule set. Security Hub CSPM chỉ phát hiện ALB thiếu web ACL, không tự khắc phục. Từ khóa: mọi account + resource tương lai + WAF tập trung → Firewall Manager (+ Organizations all features + Config).",
+   "doubt": null
+  },
+  {
+   "no": 46,
+   "lessons": [
+    "guardduty",
+    "aws-organizations",
+    "eventbridge"
+   ],
+   "explain": "GuardDuty phân tích VPC Flow Logs, DNS logs và CloudTrail để phát hiện instance liên lạc với IP độc hại hay đào crypto; delegated administrator với auto-enable quản lý tập trung mọi account, kể cả account mới, từ security account. Findings đi qua EventBridge kích hoạt Lambda cô lập instance (ví dụ đổi security group) và SNS báo đội bảo mật. Bật GuardDuty riêng từng account thì không quản lý tập trung và account mới không tự được bật. Inspector quét lỗ hổng phần mềm, không phát hiện threat từ log. Security Hub CSPM kiểm tra cấu hình theo best practice, không phân tích traffic. Từ khóa: threat detection từ Flow Logs/DNS/CloudTrail + multi-account → GuardDuty delegated admin.",
+   "doubt": null
+  },
+  {
+   "no": 47,
+   "lessons": [
+    "aws-config"
+   ],
+   "explain": "AWS Config là dịch vụ regional: muốn có compliance check, notification và configuration history ở region thứ hai thì phải bật Config (recorder, rule, SNS) ngay tại region đó; aggregator chỉ gom dữ liệu để xem chung ở một chỗ. Aggregator không tự đánh giá hay ghi lịch sử ở region chưa bật Config. Trusted Advisor không chạy managed rule của Config và không có configuration history. CloudTrail + EventBridge chỉ bắt API call, không đánh giá compliance hay lưu lịch sử cấu hình. Từ khóa: Config cho region mới → bật Config tại region đó (+ aggregator để xem tổng hợp).",
+   "doubt": null
+  },
+  {
+   "no": 48,
+   "lessons": [
+    "layer-7-firewall",
+    "nat-gateway",
+    "vpc-routing-and-internet-gateway"
+   ],
+   "explain": "AWS Network Firewall là dịch vụ managed; stateful domain list rule group lọc HTTPS theo tên miền (SNI) và HTTP Host header, không phụ thuộc IP phía sau, chỉ cần route traffic outbound đi qua firewall endpoint. Stateless rule group chỉ khớp theo IP, port, protocol, không hiểu tên miền. Forward proxy trên EC2 làm được nhưng phải tự vận hành, scale và vá. Security group chỉ dùng IP/CIDR nên phải cập nhật liên tục khi IP đổi. Từ khóa: allow list theo domain + least operational overhead → Network Firewall stateful domain list.",
+   "doubt": null
+  },
+  {
+   "no": 49,
+   "lessons": [
+    "sqs",
+    "asg-scaling-policies",
+    "event-driven-architecture"
+   ],
+   "explain": "Đặt SQS queue giữa hai tier để web tier chỉ cần ghi order vào queue (decouple): order được giữ an toàn kể cả khi processing tier chậm hay ngừng, và processing ASG scale theo backlog của queue, minimum bằng 0 khi không có order. Internal ALB vẫn là gọi đồng bộ, tier phía sau quá tải thì request vẫn lỗi và mất order. Kinesis với một cặp consumer cố định không scale theo backlog và không về 0. Gộp hai tier vào một ASG lớn hơn vẫn coupling và không giải quyết mất order. Từ khóa: 'accept orders even when slow or unavailable' + scale theo backlog → SQS + ASG scale theo queue.",
+   "doubt": null
+  },
+  {
+   "no": 50,
+   "lessons": [
+    "kinesis-data-firehose",
+    "kinesis-data-streams",
+    "lambda"
+   ],
+   "explain": "Data Firehose nhận Kinesis Data Stream làm source, gọi Lambda transform để xóa email rồi deliver vào S3, fully managed nên overhead thấp nhất, còn dashboard real-time vẫn đọc stream như cũ. Retention của Kinesis Data Streams tối đa 365 ngày, không đạt 3 năm, và stream không phải nơi lưu trữ lâu dài. Consumer tự viết chạy trên EC2 trong ASG phải tự vận hành. Amazon MQ là message broker, không đọc Kinesis stream. Từ khóa: stream → S3 + biến đổi dữ liệu + ít vận hành → Firehose với Lambda transform.",
+   "doubt": null
+  },
+  {
+   "no": 51,
+   "lessons": [
+    "api-gateway",
+    "lambda",
+    "serverless-architecture"
+   ],
+   "explain": "Edge-optimized REST API đưa request của client đi qua mạng edge của CloudFront gần người dùng ở cả ba châu lục rồi vào API Gateway, giảm latency cho client phân tán toàn cầu; Lambda + DynamoDB không có server và không tốn compute khi idle. Regional API tối ưu cho client cùng region, người dùng ở xa phải đi internet công cộng tới tận ap-southeast-2. Private API chỉ truy cập được từ trong VPC, app di động không gọi được. EC2 sau ALB ở ba region thì có server phải quản lý và tốn tiền khi idle. Từ khóa: client toàn cầu + serverless + latency thấp → API Gateway edge-optimized.",
+   "doubt": null
+  },
+  {
+   "no": 52,
+   "lessons": [
+    "lambda",
+    "sqs-dead-letter-queues",
+    "s3-events"
+   ],
+   "explain": "S3 gọi Lambda theo kiểu asynchronous; on-failure destination gửi invocation record gồm event gốc cùng error message và stack trace tới SQS (hoặc SNS, EventBridge, Lambda) sau khi hết retry. Dead-letter queue chỉ nhận payload của event, không kèm chi tiết lỗi. Tăng số lần retry không capture được event lỗi, và async invocation chỉ retry tối đa 2 lần. Đưa event qua SQS với redrive policy thì DLQ chỉ chứa message gốc, không có error và stack trace. Từ khóa: capture event lỗi + error message + stack trace → Lambda on-failure destination.",
+   "doubt": null
+  },
+  {
+   "no": 53,
+   "lessons": [
+    "ecs-launch-types-ec2-vs-fargate",
+    "eventbridge",
+    "lambda"
+   ],
+   "explain": "AWS Batch array job tách thành 5.000 child job chạy song song từ container image, compute environment managed trên Fargate tự cấp và giải phóng tài nguyên nên ban ngày không có compute nào chạy; EventBridge schedule submit job mỗi đêm. Lambda giới hạn 15 phút nên không chạy được slice dài 3 giờ. Một task Fargate xử lý tuần tự 5.000 slice thì không song song và không thể xong trong một đêm. ASG + SQS + scheduler instance tự dựng tốn công vận hành và scheduler instance chạy cả ngày. Từ khóa: nhiều job container song song, chạy lâu + managed → AWS Batch array job trên Fargate.",
+   "doubt": null
+  },
+  {
+   "no": 54,
+   "lessons": [
+    "lambda",
+    "nat-gateway",
+    "vpc-subnets"
+   ],
+   "explain": "Gắn Lambda vào private subnet của VPC (Lambda tạo ENI trong subnet) thì function tới được RDS bằng private IP; nhưng function trong VPC không có public IP, nên muốn gọi API trên internet phải route qua NAT gateway trong public subnet. Lambda với networking mặc định chạy ngoài VPC của bạn nên không chạm được DB private. Làm DB publicly accessible và mở MySQL ra internet là kém an toàn nhất. Chỉ mở outbound HTTPS trong security group không tạo ra đường ra internet khi subnet không có NAT. Từ khóa: Lambda cần cả tài nguyên VPC private lẫn internet → VPC + NAT gateway.",
+   "doubt": null
+  },
+  {
+   "no": 55,
+   "lessons": [
+    "s3-storage-classes"
+   ],
+   "explain": "S3 Glacier Instant Retrieval lưu trên nhiều AZ, truy xuất trong millisecond và có giá lưu trữ thấp hơn Standard-IA, hợp với dữ liệu giữ nhiều năm và chỉ đọc vài lần mỗi năm (phí truy xuất cao hơn nhưng tần suất rất thấp). Standard-IA đáp ứng yêu cầu nhưng đắt hơn với dữ liệu chỉ đọc vài lần mỗi năm. One Zone-IA không sống sót khi mất AZ, rủi ro với bản duy nhất. Glacier Flexible Retrieval với Expedited vẫn mất 1–5 phút, không phải millisecond. Từ khóa: đọc vài lần/năm + millisecond + chịu lỗi AZ → Glacier Instant Retrieval.",
+   "doubt": null
+  },
+  {
+   "no": 56,
+   "lessons": [
+    "s3-object-lock"
+   ],
+   "explain": "S3 Object Lock ở compliance mode với default retention 7 năm: không ai, kể cả root user, xóa hay ghi đè được object version cho tới khi hết retention, sau 7 năm thì được xóa. Governance mode cho user có quyền s3:BypassGovernanceRetention vượt qua lock nên không chặn được admin. Legal hold không có thời hạn và ai có quyền s3:PutObjectLegalHold đều gỡ được. MFA Delete chỉ thêm yêu cầu MFA, root user vẫn xóa được. Từ khóa: 'not deleted by anyone including root' + thời hạn cố định → Object Lock compliance mode.",
+   "doubt": null
+  },
+  {
+   "no": 57,
+   "lessons": [
+    "s3-encryption",
+    "encryption-fundamentals",
+    "kms"
+   ],
+   "explain": "Client-side encryption mã hóa file ngay trên máy của team pháp chế bằng key từ vault riêng, AWS chỉ nhận ciphertext và không bao giờ thấy plaintext hay key. SSE-KMS và SSE-S3 đều để S3 nhận plaintext rồi mã hóa phía server, và key nằm trong AWS. SSE-C không lưu key nhưng S3 vẫn nhận plaintext cùng key trong request để mã hóa, nên plaintext có mặt trong AWS trong chốc lát. HTTPS chỉ bảo vệ dữ liệu in transit. Từ khóa: 'plaintext never available to AWS' → client-side encryption.",
+   "doubt": null
+  },
+  {
+   "no": 58,
+   "lessons": [
+    "s3-events",
+    "lambda",
+    "serverless-architecture"
+   ],
+   "explain": "S3 Event Notifications cho sự kiện Object Created trên prefix uploads/ gọi Lambda ngay khi upload xong, Lambda tự scale theo burst và không tốn tiền khi không có upload, overhead thấp nhất. Container trên EC2 liệt kê bucket mỗi 30 giây tốn tiền chạy liên tục và phải tự quản trạng thái đã xử lý. SQS + Auto Scaling group EC2 làm được nhưng có capacity idle và nhiều thành phần phải vận hành. S3 Inventory chỉ tạo báo cáo hằng ngày, không đạt yêu cầu trong một phút. Từ khóa: xử lý từng upload + bursty + không trả tiền idle → S3 event → Lambda.",
+   "doubt": null
+  },
+  {
+   "no": 59,
+   "lessons": [
+    "s3-lifecycle-configuration",
+    "s3-storage-classes"
+   ],
+   "explain": "Một lifecycle rule chuyển sang Standard-IA sau 30 ngày (khi truy cập chỉ còn thỉnh thoảng), sang Glacier Flexible Retrieval sau 90 ngày (lấy lại trong vài giờ với standard retrieval) và expire sau 7 năm là rẻ nhất cho mẫu truy cập biết trước. Glacier Instant Retrieval có phí truy xuất cao và minimum 90 ngày, chỉ ở đó 60 ngày rồi chuyển đi sẽ bị tính phí xóa sớm. Intelligent-Tiering tính phí monitoring theo object và dành cho mẫu truy cập không đoán được. Lambda tự copy là custom code thay cho tính năng lifecycle sẵn có. Từ khóa: mẫu truy cập giảm dần theo thời gian đã biết → lifecycle Standard-IA → Glacier Flexible → expire.",
+   "doubt": null
+  },
+  {
+   "no": 60,
+   "lessons": [
+    "s3-bucket-keys",
+    "s3-encryption",
+    "kms"
+   ],
+   "explain": "S3 Bucket Key cho SSE-KMS dùng một key cấp bucket có thời hạn để sinh data key cho object, giảm mạnh số request tới KMS mà vẫn dùng customer managed key. Nhưng Bucket Key chỉ áp dụng cho object được mã hóa sau khi bật; ảnh cũ phải re-encrypt bằng thao tác copy (CopyObject hoặc S3 Batch Operations) mới dùng bucket key. Chỉ bật Bucket Key thì ảnh cũ vẫn gọi KMS mỗi lần đọc. SSE-S3 làm mất quyền kiểm soát của security trên customer managed key; DSSE-KMS không hỗ trợ Bucket Key và còn tăng request KMS. Từ khóa: giảm phí request KMS + áp cả object cũ → Bucket Key + copy để re-encrypt.",
+   "doubt": null
+  },
+  {
+   "no": 61,
+   "lessons": [
+    "interface-vpc-endpoints",
+    "bastion-host",
+    "ec2-instance-roles"
+   ],
+   "explain": "Session Manager cho shell tương tác qua SSM Agent kết nối outbound tới Systems Manager, nên instance không cần inbound rule hay SSH key; instance role cấp quyền SSM, còn interface VPC endpoint (ssm, ssmmessages, ec2messages) cho phép gọi dịch vụ bằng private IP khi không có IGW hay NAT. Bastion host cần SSH key và inbound SSH. Thêm internet gateway và NAT gateway khiến traffic đi qua internet, vi phạm yêu cầu chỉ dùng private IP. Mở inbound 443 trên instance là không cần thiết và vi phạm yêu cầu không có inbound. Từ khóa: shell access + no inbound + no SSH key + private only → Session Manager + interface endpoints.",
+   "doubt": null
+  },
+  {
+   "no": 62,
+   "lessons": [
+    "security-groups",
+    "compare-security-groups-vs-nacl"
+   ],
+   "explain": "Security group của tầng application lấy security group của web server làm source cho port 1337: chỉ ENI mang SG web mới kết nối được, và web server scale in/out cũng không phải sửa rule. Cho phép theo CIDR của public subnet thì ALB và NAT gateway cũng nằm trong dải đó nên cũng kết nối được. Liệt kê private IP hiện tại sẽ sai ngay khi web server scale. NACL không tham chiếu được security group, chỉ dùng CIDR. Từ khóa: chỉ một nhóm instance thay đổi liên tục → security group reference.",
+   "doubt": null
+  },
+  {
+   "no": 63,
+   "lessons": [
+    "compare-security-groups-vs-nacl",
+    "nacl",
+    "stateful-vs-stateless-firewalls"
+   ],
+   "explain": "Security group là stateful: rule inbound 443 đã đủ, response tự được phép đi ra dù SG không có outbound rule. NACL thì stateless và custom NACL ở đây chỉ có rule deny mặc định, nên cần hai rule trên NACL: inbound TCP 443 từ 0.0.0.0/0 và outbound ephemeral port 1024-65535 tới 0.0.0.0/0 để gói trả về tới được client. Thêm outbound ephemeral vào security group là thừa vì SG đã tự cho response đi ra. Thêm inbound ephemeral vào security group không giúp gì, vì client kết nối tới port 443 chứ không phải port ephemeral của server. Từ khóa: custom NACL chỉ có deny + SG stateful → NACL inbound 443 + NACL outbound ephemeral.",
+   "doubt": "Đáp án được đánh dấu là cặp 'network ACL inbound 443' + 'security group inbound TCP 1024-65535', nhưng rule inbound ephemeral trên security group không cần và không giúp gì (SG stateful, client kết nối tới 443). Vì NACL stateless, cặp đúng phải là network ACL inbound TCP 443 từ 0.0.0.0/0 + network ACL outbound TCP 1024-65535 tới 0.0.0.0/0."
+  },
+  {
+   "no": 64,
+   "lessons": [
+    "vpc-sizing-and-structure",
+    "custom-vpc",
+    "vpc-subnets"
+   ],
+   "explain": "VPC có thể thêm secondary IPv4 CIDR block (như 10.17.0.0/22, không trùng mạng on-prem 10.20.0.0/16) rồi tạo subnet mới từ dải đó; vì mỗi subnet chỉ nằm trong một AZ nên phải tạo một subnet cho mỗi AZ. Dùng 10.20.0.0/16 chồng lấn với on-prem, routing hybrid sẽ hỏng. Một subnet không thể trải qua ba AZ. CIDR chính của VPC không đổi kích thước được sau khi tạo, chỉ có thể thêm secondary. Từ khóa: VPC hết IP + không di chuyển resource → secondary CIDR + một subnet mỗi AZ.",
+   "doubt": null
+  },
+  {
+   "no": 65,
+   "lessons": [
+    "vpc-subnets",
+    "subnetting"
+   ],
+   "explain": "Mỗi subnet trong VPC mất 5 IP cho AWS (network address, VPC router, DNS, dự phòng, broadcast), nên /28 còn 11 IP dùng được, /27 còn 27, /26 còn 59. Cần 28 IP cho 28 task nên /27 thiếu đúng một địa chỉ, /26 là subnet nhỏ nhất đủ chỗ; /25 dư thừa. Đây là bẫy quen thuộc khi quên trừ 5 IP: /27 có 32 địa chỉ nhưng chỉ 27 dùng được. Từ khóa: số IP dùng được = 2^(32 − prefix) − 5.",
+   "doubt": null
+  }
+ ]
+}

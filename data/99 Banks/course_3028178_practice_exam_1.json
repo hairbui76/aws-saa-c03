@@ -1,0 +1,853 @@
+[
+  {
+    "no": 1,
+    "question": "You're deploying a demand-forecasting simulation on a cluster of EC2 instances in ap-southeast-2. The nodes exchange large volumes of data with each other during every simulation step, and the modeling team reports node-to-node network latency as the limiting factor.\n\nYou need the lowest possible network latency and highest possible throughput between the instances. How should you set this up?",
+    "options": {
+      "A": "Launch the instances into a spread placement group so each runs on distinct hardware with its own network and power source.",
+      "B": "Launch the instances into a cluster placement group in a single Availability Zone, using an instance type that supports enhanced networking.",
+      "C": "Launch the instances into a partition placement group that spans two Availability Zones, using an instance type that supports enhanced networking.",
+      "D": "Enable EBS optimization on every instance to give the cluster traffic dedicated network capacity."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 2,
+    "question": "Your in-memory product search service runs on memory optimized EC2 instances. During peak sales events it has crashed when the operating system ran out of memory, with no warning because CloudWatch showed only CPU, disk and network metrics for the instances.\n\nYou need a CloudWatch alarm that fires when memory utilization on any instance exceeds 85 percent. Operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Attach an IAM role with CloudWatch permissions, install and configure the CloudWatch agent to publish memory metrics, and alarm on the agent's memory utilization metric.",
+      "B": "Enable detailed monitoring on the instances so memory metrics are published every minute, and alarm on the EC2 memory utilization metric.",
+      "C": "Run a cron job on each instance that calls free every minute and publishes a custom memory metric with PutMetricData, then alarm on that metric.",
+      "D": "Install the CloudWatch agent to ship operating system logs to CloudWatch Logs, create a metric filter counting out-of-memory messages and alarm on the filter."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 3,
+    "question": "You have a batch workload that runs on EC2 instances in private subnets of a VPC in ap-southeast-2. Each night the instances write several terabytes of data to an S3 bucket in the same Region. The traffic flows through a NAT gateway in a public subnet.\n\nYou need to change the architecture so that the S3 traffic does not traverse the public internet and the cost to operate the solution must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Create an interface VPC endpoint for S3 in each Availability Zone and point the instances at its endpoint-specific DNS names.",
+      "B": "Create a gateway VPC endpoint for S3 in the VPC and associate it with the route tables of the private subnets.",
+      "C": "Replace the NAT gateway with a NAT instance on a smaller EC2 instance type and route the private subnets to it.",
+      "D": "Move the instances to private subnets with no NAT route and add a bucket policy that allows access from the VPC CIDR."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 4,
+    "question": "Your webstore database runs on EC2 instances in a VPC in ap-southeast-2. An analytics team in a different AWS account runs a VPC in us-east-1, and its instances are going to query the database.\n\nYou need to connect the two VPCs so that the queries travel over private IP addresses. The traffic must stay off the public internet and be encrypted in transit. How should you set this up?",
+    "options": {
+      "A": "Give the database instances public IPs, allow the database port from the analytics VPC's NAT gateway Elastic IP, and require TLS.",
+      "B": "Create an inter-Region VPC peering connection, add a route in the analytics VPC only, and allow the database port from the analytics VPC CIDR.",
+      "C": "Create an inter-Region VPC peering connection, add routes in both VPCs, and allow the database port from the analytics instances' security group ID.",
+      "D": "Create an inter-Region VPC peering connection, add routes in both VPCs, and allow the database port from the analytics VPC CIDR block."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 5,
+    "question": "You have EC2 instances in a VPC that are IPv6-only. Each night they download updates from software repositories on the internet that are reachable only over IPv6.\n\nYou need to allow the downloads. You must also ensure that inbound connections from the internet are blocked, even if someone adds an inbound allow rule to the instances' security groups. Which solution will meet these requirements?",
+    "options": {
+      "A": "Create a NAT gateway in a public subnet and add a ::/0 route from the instance subnets to it.",
+      "B": "Create an egress-only internet gateway, attach it to the VPC, and add a ::/0 route from the instance subnets to it.",
+      "C": "Attach an internet gateway, add a ::/0 route to it, and remove all inbound security group rules.",
+      "D": "Attach an internet gateway, add a ::/0 route to it, and add a network ACL rule that denies all inbound IPv6 traffic."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 6,
+    "question": "Your webstore runs as an ECS service on Fargate. You need the container code to read objects from an S3 bucket using temporary credentials. How should you set this up?",
+    "options": {
+      "A": "Create a gateway VPC endpoint for S3 in the cluster's VPC, add it to the subnet route tables, and allow the VPC in the bucket policy.",
+      "B": "Create an IAM role that ECS tasks can assume, grant it s3:GetObject on the bucket, and select it as the task role in the task definition.",
+      "C": "Create an IAM user with s3:GetObject on the bucket, generate an access key, and add the key ID and secret as environment variables in the container definition.",
+      "D": "Create an IAM role with s3:GetObject on the bucket, find the cluster's EC2 instances in the EC2 console, and attach the role to those instances."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 7,
+    "question": "Your platform team runs the Dropbear Awareness Campaign website on an on-premises Kubernetes cluster. The site is seasonal and is deployed with Kubernetes manifests and Helm charts.\n\nRunning the cluster all year costs too much, so you need to move the site to AWS. The team must keep using its existing Kubernetes tooling. Which solution meets these requirements with the least operational overhead?",
+    "options": {
+      "A": "Create an ECS cluster with the Fargate launch type, convert the manifests into task definitions and deploy the website as an ECS service.",
+      "B": "Create an Elastic Kubernetes Service (EKS) cluster, add a self-managed node group of EC2 instances and deploy the manifests.",
+      "C": "Create an Elastic Kubernetes Service (EKS) cluster, add a managed node group and deploy the manifests.",
+      "D": "Create an Elastic Kubernetes Service (EKS) cluster, add a Fargate profile that matches the website's namespace and deploy the manifests."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 8,
+    "question": "You keep a warm standby of the webstore in us-east-1 for disaster recovery. Two r6i.xlarge instances run permanently, and on failover an Auto Scaling group must add 18 more r6i.xlarge instances in us-east-1a within minutes. The last failover test failed to scale out with an insufficient capacity error.\n\nYou need assurance the 18 instances can launch in us-east-1a whenever failover occurs, without committing to the capacity beyond the next few months. What should you do?",
+    "options": {
+      "A": "Create an On-Demand Capacity Reservation for 18 r6i.xlarge instances in us-east-1a and point the Auto Scaling group's launch template at it.",
+      "B": "Buy regional Reserved Instances for 18 r6i.xlarge instances in us-east-1 and have the Auto Scaling group launch matching instances.",
+      "C": "Buy zonal Reserved Instances for 18 r6i.xlarge instances in us-east-1a with a 1-year term and have the Auto Scaling group launch matching instances.",
+      "D": "Configure the Auto Scaling group to launch the 18 instances as Spot Instances in us-east-1a with a persistent Spot request."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 9,
+    "question": "Your farm runs on m5 instances in ap-southeast-2. Over the next 12 months you plan to move part of it to Graviton-based m6g instances and to move the order-processing service from EC2 to ECS on Fargate.\n\nYou've been asked by finance for a one-year commitment-based discount that keeps applying through these changes without buying a new commitment. What should you do?",
+    "options": {
+      "A": "Buy a 1-year EC2 Instance Savings Plan for the m5 family in ap-southeast-2, sized to the current hourly spend.",
+      "B": "Buy a 1-year Compute Savings Plan sized to the current hourly compute spend.",
+      "C": "Buy 1-year Standard Reserved Instances for the m5 instances currently running in ap-southeast-2.",
+      "D": "Buy 1-year Convertible Reserved Instances for the m5 instances and exchange them for m6g Reserved Instances when the migration completes."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 10,
+    "question": "Your disaster recovery runbook creates a new EBS volume from the latest snapshot of a 2 TiB order database volume in ap-southeast-2b and attaches it to a standby instance. A new snapshot is taken every night. In recovery tests, queries against the restored volume run slowly for about the first hour after attachment, then return to normal.\n\nYou need a restored volume to deliver its full provisioned performance from the moment it's attached, and operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "After creating the volume from the snapshot, run a script on the standby instance that reads every block before the database starts.",
+      "B": "Enable fast snapshot restore on the order database volume so every nightly snapshot taken from it supports instant restore.",
+      "C": "Enable fast snapshot restore for the latest snapshot in ap-southeast-2b as part of the nightly snapshot process, and restore from that snapshot.",
+      "D": "Move the standby instance to a larger size with more EBS bandwidth before attaching the restored volume."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 11,
+    "question": "You take a nightly EBS snapshot of the order database volume and keep 14 days of them for operational recovery. Compliance has set a longer retention for the first snapshot of each month, and those are almost never accessed.\n\nYou need to retain the first snapshot of each month for seven years. A restore time of up to three days is acceptable for them, the nightly snapshots must stay immediately usable, and the cost to operate the solution must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Keep the nightly snapshots in the standard tier and archive the first snapshot of each month to the EBS Snapshots Archive tier for seven years.",
+      "B": "Keep the nightly and monthly snapshots in the standard tier, since snapshots are incremental and the retained monthly ones add little storage cost.",
+      "C": "Copy each monthly snapshot to an S3 bucket and apply an S3 Lifecycle rule moving the objects to S3 Glacier Deep Archive.",
+      "D": "Restore each monthly snapshot to a Cold HDD (sc1) volume, detach it and keep the volume for seven years instead of the snapshot."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 12,
+    "question": "Your webstore runs on a single m6g.4xlarge EC2 instance in ap-southeast-2. The application keeps each user's session data in the instance's memory. During sale events the instance hits 90 percent CPU utilization and page loads slow down. Outside sale events traffic is under a quarter of the peak. Peak traffic is expected to triple over the next year.\n\nYou need to add capacity without taking the webstore offline, and users must stay signed in and keep their cart contents for their entire visit. Which solution will meet these requirements most cost-effectively?",
+    "options": {
+      "A": "Change the instance type to the largest m6g size during a scheduled maintenance window and resize again whenever demand grows.",
+      "B": "Run the webstore, unchanged, on several m6g.large instances behind an Application Load Balancer and add or remove instances as demand changes.",
+      "C": "Move session data to an external database, run the webstore on several m6g.large instances behind an Application Load Balancer, and add or remove instances as demand changes.",
+      "D": "Move session data to an external database, run the webstore on several m6g.4xlarge instances behind an Application Load Balancer, and add or remove instances as demand changes."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 13,
+    "question": "Your developers run the webstore as a Java application on Apache Tomcat. Customers upload custom T-shirt designs, and rendering each design for print takes up to 30 minutes. You have no infrastructure team.\n\nYou need to host the web application and the rendering process in ap-southeast-2. Each must scale independently across multiple Availability Zones. Operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Create an Elastic Beanstalk web server environment on the Tomcat platform, with a rendering thread on the same instances polling an SQS queue.",
+      "B": "Create an Elastic Beanstalk web server environment on the Tomcat platform, with a worker environment rendering designs from the SQS queue Elastic Beanstalk manages.",
+      "C": "Launch two Auto Scaling groups of EC2 instances, one behind an Application Load Balancer, and script the other to render designs from an SQS queue.",
+      "D": "Create an Elastic Beanstalk web server environment on the Tomcat platform, with a Lambda function rendering each design on an S3 upload event."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 14,
+    "question": "Aus-E-Mart is opening pop-up stores across Europe, Asia and North America. Point-of-sale kiosks send stock-level updates to an inventory service that uses a custom UDP-based protocol and runs on EC2 instances behind Network Load Balancers (NLBs) in us-east-1 and ap-southeast-2. Store networks allow outbound traffic only to an approved IP address list that can't be updated whenever the infrastructure changes.\n\nYou need kiosk traffic to enter the AWS network as close to each store as possible and reach the closer Region. How should you set this up?",
+    "options": {
+      "A": "Create a CloudFront distribution with both NLBs as origins, and point the kiosks at its domain name for all inventory updates.",
+      "B": "Assign Elastic IP addresses to both NLBs, and create Route 53 latency-based records with health checks that return the closer healthy Region's NLB addresses.",
+      "C": "Create a Global Accelerator standard accelerator with both NLBs as endpoints, and add the NLBs' Elastic IP addresses to the approved lists.",
+      "D": "Create a Global Accelerator standard accelerator with both NLBs as endpoints, and add its static IP addresses to the approved lists."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 15,
+    "question": "Aus-E-Mart serves webstore product images from an S3 bucket through a CloudFront distribution. The cache policy uses a default TTL of 24 hours. Occasionally staff upload the wrong photo for a product and overwrite it with the correct one under the same object key, and customers keep seeing the wrong photo for up to a day.\n\nYou need the corrected photo to reach customers within minutes, the current cache hit ratio must be maintained, and changes to the application must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Enable S3 Versioning on the bucket so each corrected photo becomes the current version of the object.",
+      "B": "Set the Maximum TTL in the cache policy to 0 seconds so CloudFront checks the origin on every request.",
+      "C": "After each corrected photo is uploaded, create a CloudFront invalidation on the distribution for that photo's path only.",
+      "D": "Upload each corrected photo under a new versioned file name and update the webstore to reference the new name."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 16,
+    "question": "Aus-E-Mart serves cdn.ausemart.net through CloudFront. The origin is an Application Load Balancer (ALB) in ap-southeast-2 at origin.ausemart.net.\n\nYou need both connections to use HTTPS with automatically renewed certificates. What should you configure?",
+    "options": {
+      "A": "Request one ACM public certificate for both names in ap-southeast-2 with DNS validation, and associate it with the distribution and the ALB listener.",
+      "B": "Request ACM public certificates with DNS validation: one in us-east-1 for the distribution and one in ap-southeast-2 for the ALB listener.",
+      "C": "Request one ACM public certificate for both names in us-east-1 with DNS validation, and associate it with the distribution and the ALB listener.",
+      "D": "Import certificates from a third-party certificate authority into ACM in us-east-1 for the distribution and in ap-southeast-2 for the ALB listener."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 17,
+    "question": "Aus-E-Mart's payment service runs on EC2 instances behind a load balancer. The service is in scope for a compliance review.\n\nYou must keep TLS unbroken from the client to the instance, with no decryption on the load balancer. What should you configure?",
+    "options": {
+      "A": "Use a Network Load Balancer (NLB) with a TCP listener on port 443 forwarding to the instances, and install the certificates on the instances.",
+      "B": "Use a Network Load Balancer (NLB) with a TLS listener on port 443 forwarding to the instances, and install the certificates on the instances.",
+      "C": "Use an Application Load Balancer (ALB) with an HTTPS listener and an HTTPS target group, and install the certificates on the instances.",
+      "D": "Use an Application Load Balancer (ALB) with an HTTPS listener and an HTTP target group, and hold the certificate on the ALB in ACM."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 18,
+    "question": "You're redesigning the webstore as a three-tier application in one VPC across two Availability Zones. The web tier and application tier each run in an Auto Scaling group of EC2 instances.\n\nYou need the web tier to accept HTTPS from the internet. The application tier must accept connections only from the web tier and never be reachable from the internet. No EC2 instance in either tier may have a public IP address, and each tier must scale without the other being reconfigured. How should you set this up?",
+    "options": {
+      "A": "Deploy an internet-facing ALB targeting web instances in private subnets, plus an internal ALB for the application tier, reached by DNS name.",
+      "B": "Deploy an internet-facing ALB targeting web instances with public IP addresses, plus an internal ALB for the application tier, reached by DNS name.",
+      "C": "Deploy an internet-facing ALB targeting private web instances, plus a second internet-facing ALB for the application tier, allowing only the web tier by security group.",
+      "D": "Deploy an internet-facing ALB targeting web instances in private subnets, and configure each web instance with the private IP addresses of the application instances."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 19,
+    "question": "Aus-E-Mart runs a flash sale every Friday. The webstore Auto Scaling group uses a target tracking policy on average CPU utilization. Each Friday at 9:00 AM the sale is announced, traffic rises tenfold within two minutes, and customers see errors for several minutes while new instances launch. Load at other times is unpredictable.\n\nYou need capacity in place before each sale starts, and operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Replace the target tracking policy with a step scaling policy that adds more instances when average CPU utilization exceeds 80 percent.",
+      "B": "Keep the target tracking policy and add scheduled actions that raise minimum and desired capacity before 9:00 AM each Friday and lower them afterward.",
+      "C": "Replace the target tracking policy with scheduled actions that raise capacity before 9:00 AM each Friday and lower it afterward.",
+      "D": "Create a Lambda function on an EventBridge schedule that calls the Auto Scaling API to set desired capacity before 9:00 AM each Friday."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 20,
+    "question": "Your webstore runs on an Auto Scaling group of EC2 instances behind an Application Load Balancer (ALB) with sticky sessions enabled. Carts are held in memory and are lost when an instance terminates.\n\nCarts must survive any instance loss, and load must be spread evenly. What should you do?",
+    "options": {
+      "A": "Increase the stickiness duration on the ALB target group to 7 days so each shopper stays on the same instance.",
+      "B": "Store the cart in a DynamoDB table and keep sticky sessions enabled on the ALB target group.",
+      "C": "Store the cart in a DynamoDB table read on every request, and disable sticky sessions on the ALB target group.",
+      "D": "Set the group's minimum capacity equal to its maximum so no instance is terminated during scale-in, and lengthen the ALB health check interval."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 21,
+    "question": "Aus-E-Mart's Auto Scaling group has a termination lifecycle hook that runs a script to copy log files from each instance to Amazon S3. The copy can take up to 3 hours, but instances are terminated after 1 hour with the copy incomplete.\n\nWhat should you do to make sure the copy always finishes?",
+    "options": {
+      "A": "Change the lifecycle hook default result from ABANDON to CONTINUE so the instance waits for the copy.",
+      "B": "Have the script send a lifecycle action heartbeat periodically, then call CompleteLifecycleAction when the copy finishes.",
+      "C": "Have the script call CompleteLifecycleAction as soon as it starts so the instance waits until the copy finishes.",
+      "D": "Replace the termination hook with a launch lifecycle hook that copies the log files to Amazon S3."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 22,
+    "question": "Your Windows document management application runs on EC2 instances in two Availability Zones. Your existing on-premises Active Directory domain is reachable over Direct Connect.\n\nYou need to give the application a shared SMB file share. Access to files must be controlled by groups in that Active Directory domain, and the share must stay available if an Availability Zone fails. What should you configure?",
+    "options": {
+      "A": "Create an FSx for Windows File Server Single-AZ file system joined to the self-managed Active Directory domain and map the share over SMB.",
+      "B": "Create an FSx for Windows File Server Multi-AZ file system joined to the self-managed Active Directory domain and map the share over SMB.",
+      "C": "Create an Elastic File System (EFS) file system with mount targets in both Availability Zones and mount it over NFS.",
+      "D": "Create an FSx for Lustre persistent file system in the VPC and mount it with the Lustre client."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 23,
+    "question": "Your on-premises file server holds 60 TB of product photography and is at 95% capacity. Staff add files through SMB shares from Windows workstations.\n\nYou need every file saved through the shares to land in an S3 bucket as an object so a Lambda image-processing pipeline can read it directly. How staff save files can't change, files older than 90 days should move automatically to a lower-cost storage class, and you can't buy more on-premises storage. What should you do?",
+    "options": {
+      "A": "Deploy a Storage Gateway S3 File Gateway, present an SMB share backed by the bucket, and transition objects to S3 Standard-IA after 90 days.",
+      "B": "Deploy a Storage Gateway Volume Gateway in cached mode, present an iSCSI volume backed by the bucket, and transition data older than 90 days.",
+      "C": "Deploy a DataSync agent on premises, copy the SMB share to the bucket every 12 hours, and transition objects after 90 days.",
+      "D": "Deploy a Storage Gateway Tape Gateway, write the shares to virtual tapes, and archive tapes to S3 Glacier Deep Archive after 90 days."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 24,
+    "question": "You have 12 VPCs across four AWS accounts in ap-southeast-2 and will add more accounts each quarter. Your on-premises data center currently connects to one of the VPCs over a Site-to-Site VPN.\n\nYou need every VPC to reach every other VPC and the on-premises data center. The on-premises connection must be managed in one place, existing VPCs must not be reconfigured when an account is added, and operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Make one VPC the hub, terminate the Site-to-Site VPN on a virtual private gateway there, and peer the hub VPC with every other VPC.",
+      "B": "Create one Transit Gateway, share it through Resource Access Manager (RAM), attach every VPC, and terminate the VPN on it.",
+      "C": "Build a full mesh of VPC peering connections between all 12 VPCs and create a Site-to-Site VPN from a virtual private gateway in each VPC.",
+      "D": "Create a Transit Gateway in each account, attach that account's VPCs, peer the transit gateways, and terminate the VPN on one of them."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 25,
+    "question": "Aus-E-Mart is moving its business reporting server to an EC2 instance in a private subnet. Each night, on-premises applications need to export 1 to 2 TB to this server.\n\nYou need to ensure there is predictable bandwidth for this export. Connectivity between on-premises and the VPC must be redundant. Which two steps should you take? (Choose two.)",
+    "options": {
+      "A": "Order a Direct Connect connection with a private virtual interface (VIF) to a virtual private gateway on the VPC.",
+      "B": "Order a Direct Connect connection with a public virtual interface (VIF) to reach the instance.",
+      "C": "Create a Site-to-Site VPN over the internet to the same virtual private gateway as a backup path.",
+      "D": "Add a second customer gateway device and a second Site-to-Site VPN connection so the VPN has no single point of failure."
+    },
+    "answer": [
+      "A",
+      "C"
+    ]
+  },
+  {
+    "no": 26,
+    "question": "You attached an SCP denying all S3 actions to the root of your AWS Organization. An IAM role in the management account can still create S3 buckets. You need to block that role from S3. What should you do?",
+    "options": {
+      "A": "Attach an identity-based IAM policy to the role that denies all S3 actions.",
+      "B": "Attach the SCP directly to the management account as well as the organization root.",
+      "C": "Enable an AWS Config rule in the management account that detects new S3 buckets and deletes them.",
+      "D": "Create an IAM permissions boundary that denies S3 and attach it to the management account."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 27,
+    "question": "You have 25 AWS accounts in an AWS Organization. Staff identities live in an on-premises Active Directory domain.\n\nYou need to give staff single sign-on to the Management Console and the AWS CLI across all accounts, with access assigned centrally by directory group. The directory must remain the single source of truth, sign-on must keep working as new accounts are added, you must not create or maintain IAM users in any account, and operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "In each account, create a SAML 2.0 identity provider and IAM roles mapped to directory groups, with the on-premises IdP issuing assertions per account.",
+      "B": "Enable an organization instance of IAM Identity Center in the management account, connect the directory through AD Connector, and assign directory groups to accounts.",
+      "C": "Enable an account instance of IAM Identity Center in each member account, connect each through AD Connector, and assign directory groups in each account.",
+      "D": "Create an identity account with one IAM user per staff member, sync passwords from the directory with a script, and role-switch into the other accounts."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 28,
+    "question": "You govern 30 AWS accounts with Control Tower, and development teams deploy all infrastructure with AWS CloudFormation.\n\nYou've been asked by security to block any CloudFormation deployment that would create a noncompliant resource, before any resource is created. The check must apply to CloudFormation deployments only, must not affect actions made directly in the console, and its status must be visible in the Control Tower console. What should you configure?",
+    "options": {
+      "A": "Enable the relevant proactive control on the OU in Control Tower.",
+      "B": "Enable the relevant detective control on the OU in Control Tower.",
+      "C": "Enable the relevant preventive control on the OU in Control Tower.",
+      "D": "Write a custom AWS CloudFormation hook that rejects the noncompliant resource and register it in every account."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 29,
+    "question": "Your product images sit in an S3 bucket. The developers who upload them are IAM users in the IAM group WebstoreDevs.\n\nYou need to define the developers' write permission in the bucket policy, as security requires, so it's visible and audited at the resource. How should you set this up?",
+    "options": {
+      "A": "Add a bucket policy statement with the Principal set to the WebstoreDevs group ARN that allows s3:PutObject on the bucket.",
+      "B": "Create an IAM role WebstoreDevs members can assume and add a bucket policy statement with the Principal set to the role ARN that allows s3:PutObject.",
+      "C": "Attach a customer managed identity-based policy to the WebstoreDevs group allowing s3:PutObject on the bucket, leaving the bucket policy unchanged.",
+      "D": "Use Resource Access Manager (RAM) to share the bucket with the WebstoreDevs group as the principal and a managed permission allowing writes."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 30,
+    "question": "You manage 40 AWS accounts in an organization in AWS Organizations with all features enabled. The security team maintains a standard set of AWS Config rules.\n\nYou need AWS Config enabled, with that standard set of Config rules, in every account in ap-southeast-2 and us-east-1. The security team must be able to push rule changes to every account in one operation, they must not have to create IAM roles in the member accounts, and operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Create an AWS CloudFormation StackSet in the management account with self-managed permissions and deploy stack instances to all 40 member accounts in both Regions.",
+      "B": "Write a script that assumes a role in each account and runs create-stack in each Region, and rerun it whenever the rules change.",
+      "C": "Create an AWS CloudFormation StackSet in the management account with service-managed permissions and deploy stack instances to the organization's accounts in both Regions.",
+      "D": "Create a CloudFormation template with one nested stack per member account and Region and deploy it as a single stack in the management account."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 31,
+    "question": "Aus-E-Mart receives scanned warranty claim letters from customers as multi-page PDF files uploaded to an S3 bucket. Nobody on the team has machine learning expertise.\n\nYou need to identify the products and people named in each letter and its sentiment, and let analysts run ad hoc SQL queries over the results. Operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Extract the text with Rekognition, pass it to Comprehend for entities and sentiment, and query the results with Athena.",
+      "B": "Extract the text with a synchronous Textract call, pass it to Comprehend for entities and sentiment, and query the results with Athena.",
+      "C": "Extract the text with an asynchronous Textract job, pass it to Comprehend for entities and sentiment, and query the results with Athena.",
+      "D": "Extract the text with an asynchronous Textract job, pass it to a custom SageMaker AI model, and query the results with Athena."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 32,
+    "question": "Aus-E-Mart stores media files on an Elastic File System (EFS) file system in a VPC in ap-southeast-2, with mount targets in two Availability Zones. A Linux server in your on-premises data center works with the same media files.\n\nYou need the on-premises server to read and write the same files in place, and the traffic must not traverse the public internet. How should you set this up?",
+    "options": {
+      "A": "Establish a Site-to-Site VPN between the data center and the VPC, and mount the file system by a mount target IP address.",
+      "B": "Create a VPC peering connection between the data center network and the VPC, and mount the file system by a mount target IP address.",
+      "C": "Allow NFS from the data center's public IP in the mount target security group, and mount over the internet by a mount target IP address.",
+      "D": "Use DataSync to copy the file system to an NFS server in the data center hourly, and mount that local server."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 33,
+    "question": "Aus-E-Mart's webstore runs on EC2 instances with Elastic Block Store (EBS) volumes, an RDS for MySQL database, a DynamoDB table and an Elastic File System (EFS) file system in ap-southeast-2.\n\nYou must meet a new regulation: daily backups of every resource, retained for 7 years, copied to a second AWS Region, and nobody, even administrators with full access, may delete a backup before its retention ends. You don't want custom scripts and operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Run scheduled Lambda functions that snapshot each service and copy snapshots to the second Region, and attach an IAM deny on snapshot deletion to administrators.",
+      "B": "Enable RDS automated backups, DynamoDB point-in-time recovery and Data Lifecycle Manager for EBS, and use each service's native copy to the second Region.",
+      "C": "Create an AWS Backup plan for all resources: daily, 7-year retention, copied to a second-Region vault. Apply Vault Lock in compliance mode to both vaults.",
+      "D": "Create an AWS Backup plan for all resources: daily, 7-year retention, copied to a second-Region vault. Apply Vault Lock in governance mode to both vaults."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 34,
+    "question": "Aus-E-Mart stores two years of Application Load Balancer access logs and VPC Flow Logs in an S3 bucket. Your security team runs a handful of SQL queries against them each month, usually during an incident investigation.\n\nYou need to give the security team a way to run those queries. The logs must stay in the bucket in their original format, and no copy may be loaded into another data store. The cost to operate the solution must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Catalog the logs with an AWS Glue crawler and query them in place with Athena, paying per query.",
+      "B": "Create a provisioned Redshift cluster and query the logs in place as external tables with Redshift Spectrum.",
+      "C": "Load the logs into a Redshift Serverless namespace with Data Firehose and query them in the query editor.",
+      "D": "Index the logs into an OpenSearch Service domain with an OpenSearch Ingestion pipeline and query them in OpenSearch Dashboards."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 35,
+    "question": "Aus-E-Mart's order table in DynamoDB uses provisioned capacity sized for normal trade. You run flash sales a few times a month, announced on social media with no fixed schedule. During the last sale, order writes rose tenfold within a minute and the application got ProvisionedThroughputExceededException errors for 20 minutes.\n\nYou need to ensure there is no throttling during future sales. The cost to operate the solution must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Increase the table's provisioned write capacity to ten times the normal level permanently.",
+      "B": "Switch the table to on-demand capacity mode and let DynamoDB scale writes with the sale traffic.",
+      "C": "Lower the provisioned write capacity between sales so unused capacity accumulates in the burst pool for the next sale.",
+      "D": "Deploy a DynamoDB Accelerator (DAX) cluster in front of the table and route order writes through the DAX endpoint."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 36,
+    "question": "Aus-E-Mart's data lake is an S3 bucket in a central analytics account, cataloged in the AWS Glue Data Catalog and queried with Athena. A logistics partner operates its own AWS account.\n\nYou need the partner to query the shipments table with Athena. The partner must see every row but not the customer_email or customer_phone columns. The data must stay in Aus-E-Mart's bucket with no copy in the partner account, and the restriction must hold for every query engine the partner uses. How should you set this up?",
+    "options": {
+      "A": "Grant the partner account SELECT on the shipments table in Lake Formation; deny the two columns with an S3 bucket policy.",
+      "B": "Grant the partner account SELECT on the shipments table in Lake Formation, excluding the two columns; the partner queries through a resource link.",
+      "C": "Create an Athena view that omits the two columns and export its results to an S3 bucket in the partner account on a schedule.",
+      "D": "Create an S3 Access Point on the shipments prefix granting the partner account read access, and hide the two columns with Athena workgroup settings."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 37,
+    "question": "Aus-E-Mart stores customer loyalty balances in a DynamoDB table. A batch job that adjusts balances has twice written incorrect values, and once the error was found three weeks later.\n\nYou must be able to restore the table to its state at any chosen second within the past 30 days. Operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Enable point-in-time recovery, restore to a new table at the second before a faulty run, and switch the application to it.",
+      "B": "Take an on-demand backup of the table every day with AWS Backup and restore the backup taken before a faulty run.",
+      "C": "Configure a DynamoDB global table with a replica in a second Region and fail over to the replica after a faulty run.",
+      "D": "Enable DynamoDB Streams with old images on the table and replay the old images from the stream after a faulty run."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 38,
+    "question": "Your order database runs on an RDS for PostgreSQL Multi-AZ DB instance deployment in ap-southeast-2. The order dashboard's read queries run on the writer.\n\nYou need the dashboard's read queries on standby capacity instead. A committed write must never be lost during a failover, automatic failover must complete in under one minute, and you won't migrate to a different database product. How should you set this up?",
+    "options": {
+      "A": "Keep the Multi-AZ DB instance deployment and connect the dashboard to the standby instance.",
+      "B": "Create two RDS read replicas in other Availability Zones and connect the dashboard to the read replica endpoints.",
+      "C": "Migrate to a Multi-AZ DB cluster deployment with two readable standby instances and connect the dashboard to the cluster's reader endpoint.",
+      "D": "Migrate to an Aurora PostgreSQL-Compatible Edition DB cluster with two Aurora Replicas in other Availability Zones and connect the dashboard to the reader endpoint."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 39,
+    "question": "You're launching a returns-processing application on Aurora MySQL-Compatible Edition. Usage is unpredictable: the application idles most of the day, then handles bursts of several thousand write transactions after each courier delivery run. You can't forecast the peak.\n\nYou need the database to absorb the bursts without resizing database instances by hand, and the cost to operate the solution must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Create a provisioned Aurora DB cluster with a db.r6g.4xlarge writer instance sized for the largest peak you expect.",
+      "B": "Create an Aurora DB cluster with a Serverless writer, with a low minimum and a maximum capacity in Aurora capacity units (ACUs).",
+      "C": "Create an Aurora DB cluster with a provisioned db.r6g.large writer and a Serverless reader, with a low minimum and a maximum capacity in ACUs.",
+      "D": "Create a provisioned Aurora DB cluster with a db.r6g.large writer; a CloudWatch alarm invokes a Lambda function that scales the writer up on high CPU."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 40,
+    "question": "A developer ran an UPDATE without a WHERE clause against the webstore's RDS for MySQL DB instance and overwrote every product price. The mistake was noticed 40 minutes later.\n\nYou need the database back to its state two minutes before the statement ran, and the same capability for any moment in the next 30 days. How would you fix this?",
+    "options": {
+      "A": "Confirm automated backups are on with 30-day retention, restore to two minutes before the statement, and point the application at the new endpoint.",
+      "B": "Take a manual snapshot daily, retain the 30 most recent, restore the newest one, and point the application at the new endpoint.",
+      "C": "Convert the DB instance to a Multi-AZ DB instance deployment and, when bad data is found, fail over to the standby on the same endpoint.",
+      "D": "Create an RDS read replica in another Availability Zone and, when bad data is found, promote it and point the application at its endpoint."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 41,
+    "question": "A vendor requires a monitoring agent installed on the operating system of your SQL Server database host.\n\nYou need to install the agent while AWS manages backups and patching. Operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Deploy RDS for SQL Server and install the monitoring agent on the DB instance through an option group.",
+      "B": "Deploy SQL Server on an EC2 instance, install the agent on it and configure backups with AWS Backup.",
+      "C": "Migrate the database to Aurora PostgreSQL-Compatible Edition and connect to the writer instance with Session Manager to install the agent.",
+      "D": "Deploy RDS Custom for SQL Server and connect to the host with RDP or Session Manager to install the agent."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 42,
+    "question": "You run the Dropbear Awareness Campaign website on four EC2 instances in ap-southeast-2, each with its own public IP address.\n\nYou need DNS queries for www.dropbearaware.org to return only the IP addresses of instances currently serving the site, so a client can choose a working instance, and you must not add a load balancer. How should you set this up?",
+    "options": {
+      "A": "Create one simple routing A record listing all four IP addresses and associate a Route 53 health check with it.",
+      "B": "Create four multivalue answer A records, one per instance, and associate a Route 53 health check with each record.",
+      "C": "Create four failover A records, one primary and three secondary, and associate a Route 53 health check with each record.",
+      "D": "Create four weighted A records with equal weights and associate a Route 53 health check with each record."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 43,
+    "question": "You registered ausemart.net with a third-party registrar. Customers on the internet resolve the domain through two self-managed BIND servers on EC2.\n\nYou need to retire the servers. Operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Run BIND in containers on Amazon ECS with AWS Fargate across two Availability Zones and point the registrar's NS records at the new name servers.",
+      "B": "Transfer the domain registration from the third-party registrar to Route 53, then shut down the BIND servers.",
+      "C": "Create a Route 53 private hosted zone, import the zone file and point the registrar's NS records at its name servers.",
+      "D": "Create a Route 53 public hosted zone, import the zone file and point the registrar's NS records at its name servers."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 44,
+    "question": "You've licensed a video series for the Dropbear Awareness Campaign. The video site runs behind an Application Load Balancer in ap-southeast-2 at video.dropbearaware.org in a Route 53 public hosted zone.\n\nYou need the series shown only to viewers in Australia and New Zealand, and DNS queries from any other country must receive no answer. How should you set this up?",
+    "options": {
+      "A": "Create a single latency alias record tagged with ap-southeast-2 pointing at the load balancer and rely on latency routing to serve the nearest users.",
+      "B": "Create a single geoproximity record in ap-southeast-2 pointing at the load balancer with a bias of -99 to shrink the area it serves.",
+      "C": "Create two geolocation alias records, Australia and New Zealand, pointing at the load balancer, and no default record.",
+      "D": "Create two geolocation alias records, Australia and New Zealand, pointing at the load balancer, and a default record pointing at the load balancer."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 45,
+    "question": "Aus-E-Mart has 60 AWS accounts in one AWS Organization. Application teams add accounts and Application Load Balancers in ap-southeast-2 every month, and few load balancers have an AWS WAF web ACL. The company wants the AWS managed Core rule set on every current and future load balancer, checked continuously, with nothing for application teams to configure. Which combination of steps will meet these requirements? (Choose three.)",
+    "options": {
+      "A": "Create an AWS WAF web ACL with the Core rule set in each member account. Associate it with that account's load balancers.",
+      "B": "Enable AWS Config recording in ap-southeast-2 in every member account of the organization.",
+      "C": "Create an AWS Firewall Manager policy for AWS WAF in ap-southeast-2 with the Core rule set, scoped to all accounts, with automatic remediation.",
+      "D": "Subscribe every account to AWS Shield Advanced and enable automatic application layer DDoS mitigation on each load balancer.",
+      "E": "Enable all features in the organization. From the management account, designate a security account as the AWS Firewall Manager administrator.",
+      "F": "Enable AWS Security Hub CSPM in every account to detect load balancers that have no AWS WAF web ACL."
+    },
+    "answer": [
+      "B",
+      "C",
+      "E"
+    ]
+  },
+  {
+    "no": 46,
+    "question": "Aus-E-Mart runs EC2 workloads in 25 AWS accounts in one AWS Organization. New accounts are added regularly. The security team must be notified when an instance talks to a known malicious IP address or starts cryptocurrency mining. The instance must also be isolated automatically. Threats must be detected from VPC Flow Logs, DNS logs and AWS CloudTrail. The security team must manage detection and review findings for every account from one security account. Which solution will meet these requirements?",
+    "options": {
+      "A": "Designate a delegated GuardDuty administrator with auto-enable for all members. Send findings through EventBridge to a Lambda function that isolates the instance and notifies the team through SNS.",
+      "B": "Enable GuardDuty separately in each of the 25 accounts. Send findings in each account through EventBridge to a Lambda function that isolates the instance and notifies the team through SNS.",
+      "C": "Designate a delegated Inspector administrator with auto-enable for all members. Send findings through EventBridge to a Lambda function that isolates the instance and notifies the team through SNS.",
+      "D": "Enable Security Hub CSPM with the Foundational Security Best Practices standard. Send failed controls through EventBridge to a Lambda function that isolates the instance and notifies the team through SNS."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 47,
+    "question": "Aus-E-Mart use an AWS Config managed rule with SNS notifications in one Region. It now needs the same compliance checks, notifications and configuration history in a second Region. Which solution will meet these requirements?",
+    "options": {
+      "A": "Leave AWS Config off in the second Region. Create an aggregator in the first Region that includes the second Region so the existing rule covers both.",
+      "B": "Enable AWS Config in the second Region with the same managed rule and SNS topic. Create an aggregator in the first Region for a combined view.",
+      "C": "Use Trusted Advisor checks, which cover all Regions. Send their status changes through EventBridge to the SNS topic.",
+      "D": "Enable AWS CloudTrail in the second Region. Use EventBridge rules on configuration API calls to publish to the SNS topic."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 48,
+    "question": "Aus-E-Mart's server farm runs on EC2 instances in private subnets that reach the internet through a NAT gateway. Outbound HTTPS must be allowed only to an approved list of domain names. The control must not depend on the IP addresses behind those names, which change often. Which solution will meet these requirements with the LEAST operational overhead?",
+    "options": {
+      "A": "Deploy AWS Network Firewall and route outbound traffic through it. Allow the approved domains in a stateful domain list rule group.",
+      "B": "Deploy AWS Network Firewall and route outbound traffic through it. Allow the approved domains in a stateless rule group.",
+      "C": "Run a forward proxy on EC2 with the approved domains allow-listed. Send the instances' outbound HTTPS through the proxy.",
+      "D": "Limit the instances' security group outbound rules to HTTPS for the approved domains' current IP ranges. Update the rules when the IPs change."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 49,
+    "question": "Aus-E-Mart's order pipeline runs on EC2 instances in two tiers: a web tier in an Auto Scaling group accepts orders and calls a processing tier directly. During flash sales the processing tier falls behind. As a result, web requests time out and orders are lost.\n\nYou need orders accepted even when the processing tier is slow or unavailable, and the processing tier must scale with the backlog and run no instances when there are no orders. What should you do?",
+    "options": {
+      "A": "Place an internal Application Load Balancer between the tiers, set the processing group minimum to zero, and scale on request count per target.",
+      "B": "Put a Simple Queue Service (SQS) queue between the tiers, set the processing group minimum to zero, and scale on queue backlog.",
+      "C": "Write each order to a Kinesis Data Streams stream, and run a fixed pair of consumer instances that process records from it.",
+      "D": "Move both tiers onto a larger EC2 instance type in a single Auto Scaling group so they share the same capacity."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 50,
+    "question": "Aus-E-Mart streams webstore clickstream events into a Kinesis Data Streams stream. The stream feeds a real-time dashboard.\n\nYou need every event kept in S3 for 3 years for analysis. Customer email addresses must be removed before the events are stored. The operational overhead of the solution must be minimized. What should you do?",
+    "options": {
+      "A": "Increase the data stream's retention period to 3 years. Configure a transformation job to remove email addresses from the stored records.",
+      "B": "Run a consumer application on EC2 instances in an Auto Scaling group that reads the stream, removes email addresses, and writes the records to S3.",
+      "C": "Create a Data Firehose stream with the data stream as the source and a Lambda transform that removes email addresses, delivering to S3.",
+      "D": "Configure an MQ broker to consume the data stream, remove email addresses from each message, and deliver the messages to S3."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 51,
+    "question": "Aus-E-Mart is launching a REST API for its mobile app, called by customers in North America, Europe and Australia. Traffic is unpredictable and the API is often idle for hours.\n\nYou need to build this with no servers to manage and no compute cost while the API is idle, and latency must be as low as possible. Which solution will meet these requirements?",
+    "options": {
+      "A": "Create an API Gateway Regional REST API in ap-southeast-2 with a Lambda integration, storing data in DynamoDB.",
+      "B": "Create an API Gateway edge-optimized REST API with a Lambda integration, storing data in DynamoDB.",
+      "C": "Create an API Gateway private REST API with a Lambda integration, storing data in DynamoDB.",
+      "D": "Deploy the API on EC2 instances behind Application Load Balancers in three Regions with Route 53 latency-based routing."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 52,
+    "question": "S3 event notifications invoke a Lambda function that resizes Aus-E-Mart's uploaded product photos. Some photos fail on every retry and the events are discarded.\n\nYou need each failed event captured with the function's error message and stack trace so developers can investigate. What should you configure?",
+    "options": {
+      "A": "Configure an on-failure destination for the function's asynchronous invocations that sends invocation records to a Simple Queue Service (SQS) standard queue.",
+      "B": "Configure a dead-letter queue for the function's asynchronous invocations that sends failed events to a Simple Queue Service (SQS) standard queue.",
+      "C": "Increase the maximum retry attempts for the function's asynchronous invocations to 5 so each failed photo is retried until it succeeds.",
+      "D": "Send the S3 event notifications to an SQS queue that invokes the function, with a redrive policy to an SQS dead-letter queue."
+    },
+    "answer": [
+      "A"
+    ]
+  },
+  {
+    "no": 53,
+    "question": "Every night Aus-E-Mart recalculates product recommendations. The work splits into 5,000 independent slices that run from a container image; each slice needs up to 8 GB of memory and runs for up to 3 hours.\n\nYou need all slices to run in parallel, no compute may run during the day, and operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Use an EventBridge schedule to invoke a Lambda function built from the container image 5,000 times each night, once per slice.",
+      "B": "Run one Elastic Container Service (ECS) task on Fargate each night that processes all 5,000 slices one after another.",
+      "C": "Build an EC2 Auto Scaling group scaling on an SQS queue of slices, with a scheduler instance that loads the queue each night.",
+      "D": "Use an EventBridge schedule to submit an AWS Batch array job of 5,000 child jobs to a managed compute environment on Fargate."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 54,
+    "question": "The Aus-E-Mart webstore uses a Lambda function. An RDS for MySQL DB instance runs in private subnets of a VPC, and a third-party shipping rates API is on the internet.\n\nYou need the function to read from the DB instance and also call the shipping rates API, and the solution must be as secure as possible. Which solution will meet these requirements?",
+    "options": {
+      "A": "Keep the function on default Lambda networking and add an inbound rule to the DB instance's security group allowing MySQL from the function.",
+      "B": "Keep the function on default Lambda networking, make the DB instance publicly accessible, and allow MySQL from the internet in its security group.",
+      "C": "Attach the function to private subnets in the VPC and route the subnets' internet-bound traffic through a NAT gateway in a public subnet.",
+      "D": "Attach the function to private subnets in the VPC and allow outbound HTTPS to the internet in the function's security group."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 55,
+    "question": "You keep the finished artwork for every print-on-demand design in an S3 bucket. Each file is 40 MB to 300 MB, is the only copy, is kept for years, and is read only a few times a year, when a customer orders that design.\n\nYou need to pick a storage class. The artwork must survive the loss of an Availability Zone, an order must read a file within milliseconds, and the cost to operate the solution must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Store the artwork in S3 Standard-IA, uploading new designs directly into that class.",
+      "B": "Store the artwork in S3 Glacier Instant Retrieval, uploading new designs directly into that class.",
+      "C": "Store the artwork in S3 One Zone-IA, uploading new designs directly into that class.",
+      "D": "Store the artwork in S3 Glacier Flexible Retrieval, restoring each file with Expedited retrieval on order."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 56,
+    "question": "You store product safety test reports in an S3 bucket. A regulator has issued retention rules for the reports.\n\nYou need to configure the bucket to meet those rules. Once written, a report must not be deleted or altered by anyone for 7 years, including your own administrators and the AWS account root user. After 7 years the reports may be deleted. How should you set this up?",
+    "options": {
+      "A": "Create a new bucket with S3 Object Lock enabled and set a default 7-year retention period in governance mode.",
+      "B": "Create a new bucket with S3 Object Lock enabled and place a legal hold on each report, removing it after 7 years.",
+      "C": "Enable S3 Versioning and MFA Delete on the bucket so that permanently deleting any report version requires the root user's MFA device.",
+      "D": "Create a new bucket with S3 Object Lock enabled and set a default 7-year retention period in compliance mode."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 57,
+    "question": "Your legal team wants to store scanned contracts in an S3 bucket. The team keeps its encryption keys in its own key vault outside AWS.\n\nYou need to design the upload so that the plaintext of a contract is never available to AWS, even briefly while it's being written, and AWS never stores the encryption keys. How should you set this up?",
+    "options": {
+      "A": "Upload the contracts with SSE-KMS using a customer managed KMS key whose policy lets only the legal team's role decrypt.",
+      "B": "Upload the contracts with SSE-C, supplying a key the legal team generates and keeps in its own vault with every request.",
+      "C": "Encrypt each contract on a legal team workstation with a client-side library and a key from the team's vault, then upload the ciphertext.",
+      "D": "Upload the contracts over HTTPS with SSE-S3 and add a bucket policy denying any request where aws:SecureTransport is false."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 58,
+    "question": "Customers upload custom T-shirt artwork through your webstore into an S3 bucket under the uploads/ prefix. Traffic is bursty, thousands of uploads during a promotion and none on some days.\n\nYou need to check every file and generate a preview within a minute of the upload completing, without paying for idle capacity, and operational overhead must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Run an EC2 container that lists uploads/ every 30 seconds, checks a DynamoDB table of processed keys, and generates a preview for each new file.",
+      "B": "Send S3 Event Notifications for Object Created events on uploads/ to an SQS queue polled by an Auto Scaling group of EC2 instances that generate previews.",
+      "C": "Configure a daily S3 Inventory report for uploads/ and invoke a Lambda function on each new report to check new files and write previews to previews/.",
+      "D": "Send S3 Event Notifications for Object Created events on uploads/ to a Lambda function that checks the file and writes the preview to previews/."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 59,
+    "question": "You write 50 MB daily sales reports to an S3 bucket. Analysts open them often during the first month, occasionally for the next two months, and almost never after that.\n\nYou need to manage the reports over their lifetime. Finance must be able to retrieve any report within a few hours for 7 years, the reports must be deleted after 7 years, and the cost to operate the solution must be minimized. Which solution will meet these requirements?",
+    "options": {
+      "A": "Store the reports in S3 Intelligent-Tiering with the optional Archive Access tier enabled and add a Lifecycle rule expiring them after 7 years.",
+      "B": "Create one Lifecycle rule that transitions to Glacier Instant Retrieval at 30 days and Glacier Flexible Retrieval at 90 days, then expires at 7 years.",
+      "C": "Create one Lifecycle rule that transitions to S3 Standard-IA at 30 days and Glacier Flexible Retrieval at 90 days, then expires at 7 years.",
+      "D": "Run a daily Lambda function that copies reports to Standard-IA at 30 days and Glacier Flexible Retrieval at 90 days, deleting them at 7 years."
+    },
+    "answer": [
+      "C"
+    ]
+  },
+  {
+    "no": 60,
+    "question": "You store 400 million product images in an S3 bucket encrypted with SSE-KMS under a customer managed KMS key. The webstore reads millions of images a day, and the monthly KMS request charge now exceeds the storage charge.\n\nYou need to cut the KMS request charge. The images must stay under the customer managed key so security keeps control of key usage, and the saving must apply to existing images as well as new uploads. What should you do?",
+    "options": {
+      "A": "Enable an S3 Bucket Key in the bucket's SSE-KMS default encryption so S3 requests one time-limited bucket-level key from KMS instead of per-object data keys.",
+      "B": "Enable an S3 Bucket Key in the bucket's SSE-KMS default encryption, then re-encrypt the existing images in place with a copy operation.",
+      "C": "Change default encryption to SSE-S3 and re-encrypt the existing images in place so reads no longer involve KMS.",
+      "D": "Change default encryption to DSSE-KMS with the same customer managed key and enable an S3 Bucket Key so both layers share the bucket-level key."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 61,
+    "question": "Your webstore runs on EC2 instances in private subnets of a VPC with no internet gateway and no NAT gateway. Operations staff have asked for interactive shell access to troubleshoot the application.\n\nYou need to give them that access. Security rules say the instances must allow no inbound connections, SSH keys must not be distributed, and the instances must communicate with AWS services using private IP addresses only. How should you set this up?",
+    "options": {
+      "A": "Add an internet gateway and a bastion host in a public subnet, allow SSH from the bastion to the instances, and issue operators key pairs.",
+      "B": "Attach an instance role with AWS Systems Manager permissions, create interface VPC endpoints for Systems Manager in the private subnets, and use Session Manager.",
+      "C": "Attach an instance role with AWS Systems Manager permissions, add an internet gateway and a NAT gateway for outbound access, and use Session Manager.",
+      "D": "Attach an instance role with AWS Systems Manager permissions, create interface VPC endpoints, allow inbound TCP 443 from the endpoints, and use Session Manager."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 62,
+    "question": "Your webstore runs web servers in public subnets and application servers in private subnets. The public subnets also contain an Application Load Balancer and a NAT gateway. The web servers scale in and out.\n\nOnly the web servers may connect to the application servers on TCP port 1337. Which solution will meet this requirement?",
+    "options": {
+      "A": "In the application security group, allow TCP port 1337 from the CIDR ranges of the public subnets.",
+      "B": "In the application security group, allow TCP port 1337 with the web servers' security group as the source.",
+      "C": "In the application security group, allow TCP port 1337 from the private IP addresses of the current web servers.",
+      "D": "In the private subnets' network ACL, allow inbound TCP port 1337 with the web servers' security group as the source."
+    },
+    "answer": [
+      "B"
+    ]
+  },
+  {
+    "no": 63,
+    "question": "You're running the webstore on EC2 instances in a public subnet. Users connect over HTTPS. The instances' security group allows inbound TCP port 443 from 0.0.0.0/0 and has no outbound rules. The subnet's custom network ACL contains only its default deny rules.\n\nWhich two changes will let users reach the webstore? (Choose two.)",
+    "options": {
+      "A": "Add an outbound rule to the security group allowing TCP ports 1024-65535 to 0.0.0.0/0.",
+      "B": "Add an inbound rule to the network ACL allowing TCP port 443 from 0.0.0.0/0.",
+      "C": "Add an outbound rule to the network ACL allowing TCP ports 1024-65535 to 0.0.0.0/0.",
+      "D": "Add an inbound rule to the security group allowing TCP ports 1024-65535 from 0.0.0.0/0."
+    },
+    "answer": [
+      "B",
+      "D"
+    ]
+  },
+  {
+    "no": 64,
+    "question": "Your VPC uses 10.16.0.0/22, and subnets in three Availability Zones have used all of its addresses. The on-premises network uses 10.20.0.0/16.\n\nYou need to add an application tier in each Availability Zone without moving existing resources or overlapping the on-premises network. What should you do?",
+    "options": {
+      "A": "Associate the CIDR block 10.20.0.0/16 with the VPC and create a subnet from it in each Availability Zone for the tier.",
+      "B": "Associate a secondary CIDR block such as 10.17.0.0/22 with the VPC and create one subnet from it spanning the three Availability Zones for the tier.",
+      "C": "Change the VPC's CIDR block from 10.16.0.0/22 to 10.16.0.0/21 and create a subnet from the added space in each Availability Zone for the tier.",
+      "D": "Associate a secondary CIDR block such as 10.17.0.0/22 with the VPC and create a subnet from it in each Availability Zone for the tier."
+    },
+    "answer": [
+      "D"
+    ]
+  },
+  {
+    "no": 65,
+    "question": "Your containerized order-processing service runs in three Availability Zones. Each task uses one IPv4 address from its subnet, and the service scales to 28 tasks per Availability Zone.\n\nYou need the smallest subnet in each Availability Zone that can hold the maximum task count. What should you do?",
+    "options": {
+      "A": "Create a /28 subnet in each Availability Zone for the service's tasks.",
+      "B": "Create a /27 subnet in each Availability Zone for the service's tasks.",
+      "C": "Create a /26 subnet in each Availability Zone for the service's tasks.",
+      "D": "Create a /25 subnet in each Availability Zone for the service's tasks."
+    },
+    "answer": [
+      "C"
+    ]
+  }
+]
