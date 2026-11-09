@@ -87,14 +87,15 @@ function ItemView({
 }: {
   it: Item;
   state: 'enter' | 'shown' | 'dim';
-  highlight: boolean;
+  /** 'fade' lights the node up as it is drawn; 'on' shows it already lit (after a seek) */
+  highlight: false | 'fade' | 'on';
   fontScale: number;
 }) {
   const style = { '--d': `${it.order * 0.14}s` } as CSSProperties;
   return (
     <g className={`dg-item dg-${it.kind} ${state}`} style={style} opacity={it.el.op != null ? it.el.op / 100 : undefined}>
       {highlight && it.highlight && (
-        <g className="dg-hl">
+        <g className={`dg-hl ${highlight === 'on' ? 'on' : ''}`}>
           {it.highlight.map((p, i) => (
             <path key={i} d={p.d} stroke={p.stroke} strokeWidth={p.sw} fill="none" />
           ))}
@@ -133,7 +134,7 @@ function ItemView({
 }
 
 /** Dots travelling along arrows; driven by rAF so they start once the arrow is drawn. */
-function Packets({ arrows, running, slow }: { arrows: Item[]; running: boolean; slow: boolean }) {
+function Packets({ arrows, running, slow, settled }: { arrows: Item[]; running: boolean; slow: boolean; settled?: boolean }) {
   const refs = useRef<(SVGCircleElement | null)[]>([]);
   useEffect(() => {
     if (!running || !arrows.length) return;
@@ -144,7 +145,8 @@ function Packets({ arrows, running, slow }: { arrows: Item[]; running: boolean; 
         const c = refs.current[i];
         const pts = a.motion;
         if (!c || !pts || pts.length < 2) return;
-        const startDelay = slow ? (i % 5) * 300 : a.order * 140 + 650;
+        // while a step draws itself, a packet waits for its arrow; a settled step has them all drawn
+        const startDelay = slow ? (i % 5) * 300 : settled ? (i % 4) * 220 : a.order * 140 + 650;
         const dur = Math.max(900, (a.length || 200) * (slow ? 9 : 5));
         const t = now - t0 - startDelay;
         const f = t < 0 ? -1 : (t % (dur + 350)) / dur;
@@ -175,7 +177,7 @@ function Packets({ arrows, running, slow }: { arrows: Item[]; running: boolean; 
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [arrows, running, slow]);
+  }, [arrows, running, slow, settled]);
   return (
     <g className="dg-packets">
       {arrows.map((a, i) => (
@@ -200,6 +202,7 @@ export function DiagramSvg({
   cur,
   phase,
   runKey,
+  settled = false,
   fontScale = 1.25,
   className,
   children,
@@ -208,6 +211,8 @@ export function DiagramSvg({
   cur: number;
   phase: Phase | 'static';
   runKey: number;
+  /** jumped to by hand: show the current step finished (drawn, lit, packets flowing) instead of drawing it */
+  settled?: boolean;
   fontScale?: number;
   className?: string;
   /** drawn on top, in the diagram's coordinates (the ink layer) */
@@ -225,24 +230,26 @@ export function DiagramSvg({
     <svg className={`dg-svg ${className || ''}`} viewBox={`${bx} ${by} ${bw} ${bh}`} role="img">
       {model.items.map((it) => {
         if (!allShown && it.step > cur) return null;
-        const entering = live && it.step === cur;
+        const isCur = live && it.step === cur;
+        const entering = isCur && !settled;
         const state = entering ? 'enter' : live && it.step < cur ? 'dim' : 'shown';
         return (
           <ItemView
             key={entering ? `${it.id}-${runKey}` : it.id}
             it={it}
             state={state}
-            highlight={entering && it.kind === 'node'}
+            highlight={isCur && it.kind === 'node' ? (settled ? 'on' : 'fade') : false}
             fontScale={fontScale}
           />
         );
       })}
       {(live || phase === 'ended') && (
         <Packets
-          key={`${runKey}-${phase === 'ended'}`}
+          key={`${runKey}-${phase === 'ended'}-${settled}`}
           arrows={currentArrows}
-          running={phase !== 'paused'}
+          running={phase !== 'paused' || settled}
           slow={phase === 'ended'}
+          settled={settled}
         />
       )}
       {children}
@@ -486,7 +493,14 @@ export default function AnimatedDiagram({ diagram, name }: { diagram: Diagram; n
               onScale={setScale}
               onTap={phase === 'poster' || phase === 'ended' ? toggle : undefined}
             >
-              <DiagramSvg model={model} cur={cur} phase={phase} runKey={runKey} fontScale={prefs.fontScale} />
+              <DiagramSvg
+                model={model}
+                cur={cur}
+                phase={phase}
+                runKey={runKey}
+                settled={manual && phase === 'paused'}
+                fontScale={prefs.fontScale}
+              />
             </Viewport>
             {phase === 'poster' && (
               <button className="player-big-play" onClick={toggle} aria-label="Phát video sơ đồ">

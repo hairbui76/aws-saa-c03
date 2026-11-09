@@ -1189,6 +1189,11 @@ button.pill:hover {
 .player.paused .dg-hl {
   animation-play-state: paused;
 }
+/* a step reached by seeking: already lit, no fade-in */
+.dg-hl.on {
+  animation: none;
+  opacity: 0.55;
+}
 .player.ended .dg-arrow .dg-dash {
   animation: dg-march 1.2s linear infinite;
 }
