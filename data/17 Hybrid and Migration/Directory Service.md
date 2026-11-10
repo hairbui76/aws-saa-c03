@@ -87,7 +87,7 @@ flowchart LR
 |---|---|---|---|---|
 | Bản chất | Microsoft AD DS thật, domain riêng trong AWS | Domain controller do AWS quản lý, **join domain on-prem của bạn** | Proxy, không có directory riêng | Samba 4 (tương thích một phần) |
 | Quan hệ với on-prem | Tùy chọn **trust** 1 hoặc 2 chiều qua VPN/DX | **Một domain**, replicate, không trust | Proxy về AD on-prem qua VPN/DX | Không tích hợp |
-| Khi link on-prem đứt | User trong AWS vẫn chạy; user chỉ ở on-prem thì không | **Mọi user vẫn chạy** | **Hỏng** | Không ảnh hưởng |
+| Khi link on-prem đứt | User trong AWS vẫn chạy; user chỉ ở on-prem thì không | **Mọi user vẫn chạy** | **Hỏng** | Không áp dụng (không nối on-prem) |
 | Dùng được với | FSx, RDS, EC2, WorkSpaces, Identity Center (cần trust 2 chiều), Transfer Family | EC2, FSx, RDS; **không** WorkSpaces, Identity Center | WorkSpaces, Transfer Family…; **không** FSx, RDS | (môi trường cũ) |
 | Khi nào chọn | **Mặc định**; cần AD thật, schema extension, trust | Workload phụ thuộc AD chuyển lên AWS, muốn giữ **một domain** | Không muốn lưu gì về directory trên cloud | Không chọn được cho triển khai mới |
 
@@ -96,7 +96,7 @@ flowchart LR
 - **Hybrid Edition** khi: workload trong AWS phải nằm trong **chính domain on-prem hiện có** (một domain, không trust), AWS quản lý domain controller. Nhớ: không dùng với WorkSpaces / IAM Identity Center.
 - **AD Connector** khi: muốn dùng dịch vụ AWS cần directory (WorkSpaces…) **mà không lưu bất kỳ thông tin directory nào trên cloud**, chỉ proxy về AD on-prem. Nhớ điểm yếu: phụ thuộc kết nối private và AD on-prem; **FSx for Windows và RDS không dùng được**.
 - **IAM Identity Center** + AD on-prem qua Managed Microsoft AD → cần **trust hai chiều**.
-- **Simple AD** đã đóng với khách hàng mới: không phải đáp án cho triển khai mới. (Đề cũ có thể còn coi Simple AD là "mặc định, rẻ nhất, Samba".)
+- **Simple AD** đã đóng với khách hàng mới: không phải đáp án cho triển khai mới. (Bổ sung, bài không nói: đề cũ có thể còn coi Simple AD là "mặc định, rẻ nhất, Samba".)
 - Hãy nhóm Directory Service với [[FSx for Windows]] và WorkSpaces khi gặp câu hybrid Windows. (Bản khóa cũ nêu: đã gặp AD Connector trong đề thật.)
 - Đề chỉ hỏi ở mức kiến trúc và **chọn kiểu nào**, không hỏi chi tiết cài đặt.
 - Đừng nhầm với identity cho người dùng ứng dụng web/mobile ([[Cognito]]) hay quyền truy cập AWS API ([[IAM Basics]], [[IAM Roles]]).

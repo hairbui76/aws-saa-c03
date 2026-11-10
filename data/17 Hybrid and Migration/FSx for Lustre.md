@@ -29,7 +29,7 @@ videos: ["288 FSx for Lustre"]
 | AZ | **Chỉ một AZ** | **Replicate qua nhiều AZ** |
 | Tính năng thêm | | Tự **tier dữ liệu lạnh**, có **SSD read cache** tùy chọn |
 | S3 repository | Gắn được | **Không gắn được** |
-| Deployment type | Scratch hoặc Persistent | Chỉ Persistent (Scratch chỉ chạy với SSD) |
+| Deployment type | Scratch hoặc Persistent | Persistent (Bổ sung, bài không nói: suy ra từ "Scratch chỉ chạy với SSD") |
 
 ### Deployment types
 | | **Scratch** | **Persistent** |

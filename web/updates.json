@@ -799,6 +799,7 @@
       "kind": "updated",
       "summary": "Làm rõ thứ tự IKE Phase 1: PSK/certificate là nền tảng danh tính nhưng việc chứng minh diễn ra bên trong kênh đã bảo vệ sau Diffie-Hellman; DH public key không dùng để mã hóa dữ liệu.",
       "changed": [
+        "🖼️ Sơ đồ",
         "Cách hoạt động / Kiến trúc"
       ],
       "dropped": []
