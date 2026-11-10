@@ -3,7 +3,7 @@
   "sig": "9-1nmdcxc",
   "steps": [
    "Sơ đồ này nói về custom resource trong CloudFormation. Mỗi khi custom resource được tạo, cập nhật hay xóa, CloudFormation gửi event tới ServiceToken, và code xử lý xong sẽ gửi kết quả về ResponseURL.",
-   "Custom resource khai báo kiểu Custom S3Objects, với ServiceToken là ARN của Lambda. Vì nó tham chiếu bucket AnimalPics nên có phụ thuộc ngầm, và CloudFormation gửi event gồm RequestType, ResponseURL cùng các property tới Lambda.",
+   "Custom resource khai báo kiểu Custom CopyWebsiteFiles, với ServiceToken là ARN của Lambda. Vì nó tham chiếu bucket StaticWebsiteBucket nên có phụ thuộc ngầm, và CloudFormation gửi event gồm RequestType, ResponseURL cùng các property tới Lambda.",
    "Lambda rẽ nhánh theo loại request: nếu là Create thì copy object vào bucket, nếu là Delete thì xóa sạch mọi object, kể cả những object người dùng upload tay.",
    "Xử lý xong, Lambda phải gửi response JSON tới ResponseURL, vốn là một pre-signed S3 URL, với trạng thái SUCCESS hoặc FAILED, kèm PhysicalResourceId và Data nếu cần.",
    "Khi nhận SUCCESS, CloudFormation đánh dấu resource hoàn tất. Dữ liệu trong Data có thể dùng ở chỗ khác trong template thông qua Fn GetAtt.",

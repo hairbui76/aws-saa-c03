@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation, architecture]
 aliases: [Nested Stacks, Nested Stack, Root Stack, Parent Stack, AWS::CloudFormation::Stack]
 lessons: ["0337 CloudFormation Nested Stacks"]
+videos: ["319 [ASSOCIATESHARED] CloudFormation Nested Stacks"]
 ---
 # CFN Nested Stacks
 

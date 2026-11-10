@@ -30,7 +30,9 @@
     "Exam Cheat Sheet: Client VPN (split tunnel), private IP VPN qua transit VIF + TGW, VPN > 1.25 Gbps dùng TGW, DX tới 400 Gbps, mô hình DX resiliency (SLA 99.9% / 99.99%), Directory Service (Managed Microsoft AD mặc định, Hybrid Edition, Simple AD đã đóng), virtual tape 15 TB",
     "Top mẹo thi và concept map chương 17: thêm Client VPN, private IP VPN, SLA DX, Directory Service theo bài mới, FSx for Lustre SSD / Intelligent-Tiering, DataSync theo task",
     "Exam Cheat Sheet: CloudHSM và KMS đều FIPS 140-3 Level 3 (CloudHSM chọn theo single-tenant, non-FIPS mode, KSP/OpenSSL), Secrets Manager managed rotation cho RDS/Aurora, Inspector quét liên tục EC2 / ECR / Lambda, WAF 1500–5000 WCU; thêm Security Hub, Detective, Firewall Manager, Network Firewall, Compute Optimizer, Trusted Advisor, Managed Grafana, Managed Service for Prometheus",
-    "Top mẹo thi và concept map chương 18: thêm 8 bài mới (Managed Grafana, Managed Service for Prometheus, Compute Optimizer, Network Firewall, Trusted Advisor, Security Hub, Firewall Manager, Detective); CloudHSM FIPS 140-3; WAF CHALLENGE và aggregation key; Config periodic recording, Guard, SSM Automation; Inspector bản mới"
+    "Top mẹo thi và concept map chương 18: thêm 8 bài mới (Managed Grafana, Managed Service for Prometheus, Compute Optimizer, Network Firewall, Trusted Advisor, Security Hub, Firewall Manager, Detective); CloudHSM FIPS 140-3; WAF CHALLENGE và aggregation key; Config periodic recording, Guard, SSM Automation; Inspector bản mới",
+    "Exam Cheat Sheet: thêm Fn::GetStackOutput (đọc output stack khác region/account) và change set (pre-deployment validation, drift-aware)",
+    "Top mẹo thi và concept map chương 19: GetStackOutput cho cross-stack khác region/account, Mappings luôn hai cấp, RetainExceptOnCreate và RDS mặc định Snapshot, change set có validation và loại create/import/drift-aware"
   ],
   "missing": [],
   "lessons": {
@@ -1683,6 +1685,131 @@
     "Amazon Detective": {
       "kind": "new",
       "summary": "Dịch vụ điều tra bảo mật: gom sự kiện theo thời gian từ CloudTrail, VPC Flow Logs, GuardDuty findings thành graph để lần theo tương tác; administrator + member, hỗ trợ Organizations."
+    },
+    "CFN Physical and Logical Resources": {
+      "kind": "updated",
+      "summary": "Demo mới: console CloudFormation có Timeline view và tự đánh dấu sự kiện là nguyên nhân gốc có khả năng nhất (likely root cause); viết template trong VS Code có CloudFormation tooling gợi ý Type/property; kịch bản Aus-E-Mart, t3.micro.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Demo / Lab: template non-portable (0327, 0328)"
+      ],
+      "dropped": []
+    },
+    "CFN Template and Pseudo Parameters": {
+      "kind": "updated",
+      "summary": "Demo portable nay có 4 template stage1–stage4, thử ở us-west-2, và stage4 dùng parameter LatestAmiId trỏ SSM public parameter của Amazon Linux 2023 (al2023-ami-kernel-default-x86_64) thay cho Amazon Linux 2.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Demo / Lab: tiến hóa sang template portable (0333)"
+      ],
+      "dropped": []
+    },
+    "CFN Mappings": {
+      "kind": "updated",
+      "summary": "Mapping luôn tra hai cấp, Fn::FindInMap bắt buộc đủ 3 tham số (bản cũ: second-level key tùy chọn); ví dụ mới AEMInstanceSizes chọn instance size theo môi trường và tầng web/app.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc"
+      ],
+      "dropped": []
+    },
+    "CFN DependsOn": {
+      "kind": "updated",
+      "summary": "Implicit dependency tạo bởi Ref, GetAtt và cả Sub (bản cũ chỉ nêu Ref/GetAtt).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CFN Wait Conditions and cfn-signal": {
+      "kind": "updated",
+      "summary": "Demo WordPress với cfn-init + CreationPolicy của bản cũ (mục EC2) không còn trong khóa mới; demo so sánh user data và cfn-signal giữ nguyên, chỉ đổi kịch bản Aus-E-Mart.",
+      "changed": [
+        "Demo / Lab"
+      ],
+      "dropped": []
+    },
+    "CFN Cross-Stack References": {
+      "kind": "updated",
+      "summary": "Thêm Fn::GetStackOutput: đọc output của stack khác theo StackName/OutputName, không cần Export, đọc được cả region và account khác (Region, RoleArn, quyền cloudformation:DescribeStacks); ImportValue vẫn chỉ cùng account + region và export đang được import thì không xóa được.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh: Nested Stacks vs Cross-Stack References",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CFN StackSets": {
+      "kind": "updated",
+      "summary": "Mẹo phân biệt với cross-stack sửa theo bài Cross-Stack References mới: Fn::GetStackOutput đọc được output ở region/account khác, nhưng chỉ đọc giá trị chứ không triển khai stack như StackSets.",
+      "changed": [
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CFN Deletion Policy": {
+      "kind": "updated",
+      "summary": "Bài mới dạy RetainExceptOnCreate (giữ resource trừ khi stack tạo lần đầu bị rollback) và RDS instance mặc định là Snapshot chứ không phải Delete (bản cũ chỉ là phần bổ sung).",
+      "changed": [
+        "Khái niệm cốt lõi"
+      ],
+      "dropped": []
+    },
+    "cfn-init": {
+      "kind": "updated",
+      "summary": "cfn-init cài sẵn trên AMI Amazon Linux mới nhất; configSets không bắt buộc (một key tên config thì không cần --configsets); chỉ chạy một lần kể cả khi đổi metadata; ví dụ mới dùng dnf và configSet aem_webapp_install; demo WordPress của bản cũ không còn trong khóa.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh: User data vs cfn-init",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "cfn-hup": {
+      "kind": "updated",
+      "summary": "cfn-hup thường đã cài sẵn trên AMI Amazon Linux mới nhất, bạn vẫn phải tự cấu hình; demo đổi kịch bản Aus-E-Mart và bỏ lệnh sleep ở template cfn-init.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Demo / Lab"
+      ],
+      "dropped": []
+    },
+    "CFN Change Sets": {
+      "kind": "updated",
+      "summary": "Tạo change set chạy pre-deployment validation (cú pháp, trùng tên physical, service quota); có change set cho tạo stack mới (REVIEW_IN_PROGRESS), import resource và drift-aware change set; demo mới có tab Deployment validations và tùy chọn hành vi khi provisioning lỗi.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CFN Outputs": {
+      "kind": "updated",
+      "summary": "Ví dụ output dùng thuộc tính PublicDnsName của EC2 (!GetAtt Instance.PublicDnsName); bản cũ ghi DNSName, không phải thuộc tính EC2.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cách hoạt động / Kiến trúc"
+      ],
+      "dropped": []
+    },
+    "CFN Intrinsic Functions": {
+      "kind": "updated",
+      "summary": "Ví dụ Join tạo URL dùng thuộc tính PublicDnsName của EC2 (!GetAtt Instance.PublicDnsName); bản cũ ghi DNSName, không phải thuộc tính EC2.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cách hoạt động / Kiến trúc"
+      ],
+      "dropped": []
     }
   }
 }

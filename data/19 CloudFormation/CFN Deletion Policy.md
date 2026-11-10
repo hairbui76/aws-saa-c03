@@ -2,10 +2,11 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, data-protection, storage, database]
 aliases: [DeletionPolicy, Deletion Policy, CloudFormation DeletionPolicy, UpdateReplacePolicy]
 lessons: ["0340 ASSOCIATESHARED CloudFormation Deletion Policy"]
+videos: ["322 [ASSOCIATESHARED] CloudFormation Deletion Policy"]
 ---
 # CFN Deletion Policy
 
-> **TL;DR:** `DeletionPolicy` là thuộc tính đặt trên **từng resource** trong template, quyết định CloudFormation làm gì với **physical resource** khi logical resource bị xóa (bỏ khỏi template hoặc xóa cả stack): **Delete** (mặc định), **Retain** (giữ lại) hoặc **Snapshot** (chụp snapshot rồi mới xóa, chỉ với một số loại resource). Mục đích chính: **tránh mất dữ liệu**.
+> **TL;DR:** `DeletionPolicy` là thuộc tính đặt trên **từng resource** trong template, quyết định CloudFormation làm gì với **physical resource** khi logical resource bị xóa (bỏ khỏi template hoặc xóa cả stack): **Delete** (mặc định, trừ RDS instance mặc định Snapshot), **Retain** (giữ lại; biến thể **RetainExceptOnCreate** không giữ khi stack tạo lần đầu bị rollback) hoặc **Snapshot** (chụp snapshot rồi mới xóa, chỉ với một số loại resource). Mục đích chính: **tránh mất dữ liệu**.
 
 ## 🖼️ Sơ đồ
 ![[CFN Deletion Policy.excalidraw]]
@@ -18,15 +19,14 @@ lessons: ["0340 ASSOCIATESHARED CloudFormation Deletion Policy"]
 
 | Giá trị | Hành vi khi bị xóa | Ghi chú |
 |---|---|---|
-| **Delete** | Xóa physical resource | **Mặc định** với đa số resource |
+| **Delete** | Xóa physical resource | **Mặc định** với đa số resource (ngoại lệ RDS, xem dưới) |
 | **Retain** | Không xóa, physical resource **còn nguyên** trong account | Dùng được với mọi loại resource. Nếu mọi resource đều Retain thì xóa stack không xóa gì cả |
+| **RetainExceptOnCreate** | Kiểu Retain đặc biệt: **giữ** resource khi bị xóa qua update stack hoặc xóa stack, nhưng **không giữ** nếu stack đang tạo lần đầu mà lỗi và rollback | Bình thường khi tạo stack lỗi, CFN rollback và xóa mọi thứ đã tạo tới điểm lỗi, vì không ai muốn giữ resource của một stack tạo dở |
 | **Snapshot** | Chụp **snapshot** trước, rồi mới xóa resource | Chỉ resource hỗ trợ: **EBS volume, ElastiCache, Neptune, RDS, Redshift** (theo slide). **Không hỗ trợ EC2 instance** |
 
 - **Snapshot tồn tại sau khi stack biến mất**: chúng không còn do stack quản lý, **bạn phải tự dọn**, nếu không sẽ tiếp tục **tốn phí lưu trữ** (xem [[EBS Snapshots]], [[RDS Backups and Restore]]).
-- Bổ sung theo AWS hiện tại:
-  - Có thêm giá trị **`RetainExceptOnCreate`**: giữ resource khi xóa, **trừ khi** resource đó vừa được tạo trong chính thao tác stack bị rollback (tránh để lại rác khi tạo thất bại).
-  - Với `AWS::RDS::DBCluster` và `AWS::RDS::DBInstance` không thuộc cluster, **mặc định là Snapshot** chứ không phải Delete. (Khóa học chỉ nói mặc định chung là Delete.)
-  - Danh sách hỗ trợ Snapshot hiện còn có thêm một số loại khác (ví dụ DocumentDB cluster); với kỳ thi, nhớ nhóm EBS, ElastiCache, Neptune, RDS, Redshift là đủ.
+- **Ngoại lệ RDS**: với một RDS instance thông thường, **mặc định là Snapshot** chứ không phải Delete. Bài giảng nói đây là service duy nhất hành xử khác như vậy (tại thời điểm ghi hình). Bổ sung theo tài liệu AWS: cụ thể là `AWS::RDS::DBCluster` và `AWS::RDS::DBInstance` không thuộc cluster.
+- Bổ sung theo AWS hiện tại: danh sách hỗ trợ Snapshot còn có thêm một số loại khác (ví dụ DocumentDB cluster); với kỳ thi, nhớ nhóm EBS, ElastiCache, Neptune, RDS, Redshift là đủ.
 
 ## Cách hoạt động / Kiến trúc
 Ví dụ trong slide: stack tạo 1 EC2 instance, 1 EBS volume, 1 RDS instance, sau đó stack bị xóa.

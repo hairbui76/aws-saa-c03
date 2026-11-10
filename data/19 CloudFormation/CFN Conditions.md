@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation]
 aliases: [Conditions, CFN Condition, IsProd, Fn::If, Fn::Equals]
 lessons: ["0334 CloudFormation Conditions"]
+videos: ["316 [ASSOCIATESHARED] CloudFormation Conditions"]
 ---
 # CFN Conditions
 

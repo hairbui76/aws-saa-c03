@@ -25,17 +25,17 @@
       },
       {
         "type": "single",
-        "q": "Một stack có ba change set cho ba phiên bản template. Điều gì xảy ra với hai change set còn lại sau khi execute một change set?",
-        "options": ["Chúng được giữ lại để execute tuần tự sau đó", "Chúng được merge vào change set vừa execute", "Chúng tự chuyển sang trạng thái CREATE_PENDING", "CloudFormation xóa chúng vì đã lỗi thời"],
+        "q": "Một đội muốn phát hiện sớm lỗi cú pháp property, nhiều resource trùng một tên physical hoặc việc sắp chạm service quota trước khi thay đổi stack, để không phải dọn rollback giữa chừng. Cách nào phù hợp?",
+        "options": ["Update stack trực tiếp rồi đọc lỗi ở tab Events", "Đặt DeletionPolicy Retain cho mọi resource", "Bật stack termination protection", "Tạo change set: CloudFormation chạy pre-deployment validation và báo lỗi ở tab Deployment validations trước khi execute"],
         "answer": [3],
-        "explain": "Execute một change set tạo ra thao tác UpdateStack bình thường; các change set khác của stack bị xóa vì không còn phản ánh đúng trạng thái stack."
+        "explain": "Khi tạo change set, CloudFormation chạy pre-deployment validation (cú pháp property, trùng tên physical, service quota) và báo trước khi execute. Update trực tiếp thì những lỗi này chỉ lộ ra giữa chừng và stack phải rollback; DeletionPolicy và termination protection không kiểm tra template."
       },
       {
         "type": "multi",
         "q": "Phát biểu nào đúng về CloudFormation change set? (Chọn 2)",
-        "options": ["Tạo change set không làm thay đổi stack cho tới khi bạn chủ động Execute", "Change set đảm bảo việc update chắc chắn thành công", "Change set phát hiện các thay đổi làm tay bên ngoài CloudFormation", "Change set triển khai template ra nhiều account và region", "Một stack có thể có nhiều change set cùng lúc"],
+        "options": ["Tạo change set không làm thay đổi stack cho tới khi bạn chủ động Execute", "Change set đảm bảo việc update chắc chắn thành công", "Change set tự bảo vệ dữ liệu của resource bị xóa hoặc bị replace", "Change set triển khai template ra nhiều account và region", "Một stack có thể có nhiều change set cùng lúc"],
         "answer": [0, 4],
-        "explain": "Change set chỉ mô tả CloudFormation sẽ làm gì và một stack có thể có nhiều change set. Nó không đảm bảo update thành công (vẫn có thể lỗi do quota, quyền IAM); phát hiện thay đổi làm tay là drift detection."
+        "explain": "Change set chỉ mô tả CloudFormation sẽ làm gì (kèm pre-deployment validation) và một stack có thể có nhiều change set. Nó không đảm bảo thao tác chắc chắn thành công, không bảo vệ dữ liệu (đó là DeletionPolicy / UpdateReplacePolicy), và không triển khai ra nhiều account/region (đó là StackSets)."
       }
     ],
     "CFN Conditions": [
@@ -86,9 +86,9 @@
       {
         "type": "single",
         "q": "Một stack ở eu-west-1 cần dùng VPC ID mà một stack ở us-east-1 đã export. Phát biểu nào đúng?",
-        "options": ["Fn::ImportValue hoạt động bình thường giữa các region của cùng account", "Chỉ cần đổi export name thành dạng ARN đầy đủ là import được", "Cross-stack reference không hỗ trợ cross-region; cần cách khác như lưu giá trị vào SSM Parameter Store", "Dùng Ref với tên export để lấy giá trị từ region khác"],
+        "options": ["Fn::ImportValue hoạt động bình thường giữa các region của cùng account", "Chỉ cần đổi export name thành dạng ARN đầy đủ là import được", "Fn::ImportValue không dùng được giữa hai region; theo bài giảng mới, stack ở eu-west-1 có thể đọc output của stack us-east-1 bằng Fn::GetStackOutput, chỉ định Region: us-east-1", "Dùng Ref với tên export để lấy giá trị từ region khác"],
         "answer": [2],
-        "explain": "Danh sách exports là riêng cho từng region của từng account, nên ImportValue không hỗ trợ cross-region hay cross-account. Muốn chia sẻ qua region phải dùng cách khác như SSM Parameter Store hoặc custom resource."
+        "explain": "Danh sách exports là riêng cho từng region của từng account, nên ImportValue không hỗ trợ cross-region hay cross-account. Theo bài giảng mới (chưa đối chiếu tài liệu AWS), hàm Fn::GetStackOutput đọc thẳng output của stack khác theo StackName và OutputName, có tham số Region (và RoleArn khi khác account), cần quyền cloudformation:DescribeStacks."
       },
       {
         "type": "single",
@@ -183,7 +183,7 @@
         "q": "Phát biểu nào đúng về CloudFormation DeletionPolicy? (Chọn 2)",
         "options": ["Giá trị mặc định cho mọi resource là Retain", "Snapshot hỗ trợ cả EC2 instance", "Snapshot tạo bởi DeletionPolicy vẫn tồn tại sau khi stack bị xóa, bạn phải tự dọn và chúng tiếp tục tốn phí", "DeletionPolicy chặn việc xóa toàn bộ stack", "Retain dùng được với mọi loại resource"],
         "answer": [2, 4],
-        "explain": "Snapshot không còn do stack quản lý nên phải tự dọn, và Retain áp dụng được cho mọi resource. Mặc định chung là Delete; chặn xóa cả stack là việc của termination protection."
+        "explain": "Snapshot không còn do stack quản lý nên phải tự dọn, và Retain áp dụng được cho mọi resource. Mặc định chung là Delete (riêng RDS instance mặc định là Snapshot); chặn xóa cả stack là việc của termination protection."
       }
     ],
     "CFN DependsOn": [
@@ -197,9 +197,9 @@
       {
         "type": "single",
         "q": "CloudFormation tự suy ra thứ tự tạo giữa hai resource (implicit dependency) khi nào?",
-        "options": ["Khi hai resource cùng Type", "Khi hai resource được khai báo liền nhau trong template", "Khi resource A dùng !Ref hoặc !GetAtt tới resource B", "Khi hai resource cùng gắn một condition"],
+        "options": ["Khi hai resource cùng Type", "Khi hai resource được khai báo liền nhau trong template", "Khi resource A dùng !Ref, !GetAtt hoặc !Sub tham chiếu tới resource B", "Khi hai resource cùng gắn một condition"],
         "answer": [2],
-        "explain": "Chỉ tham chiếu được resource đã CREATE_COMPLETE, nên Ref/GetAtt tạo implicit dependency. Thứ tự khai báo trong template không quyết định thứ tự tạo; CFN tạo song song khi có thể."
+        "explain": "Chỉ tham chiếu được resource đã CREATE_COMPLETE, nên Ref, GetAtt và Sub (khi chuỗi có biến trỏ tới resource) đều tạo implicit dependency. Thứ tự khai báo trong template không quyết định thứ tự tạo; CFN tạo song song khi có thể."
       },
       {
         "type": "single",
@@ -280,7 +280,7 @@
         "q": "Cú pháp đúng của Fn::FindInMap là gì?",
         "options": ["!FindInMap [MapName, TopLevelKey, SecondLevelKey]", "!FindInMap [TopLevelKey, MapName, SecondLevelKey]", "!FindInMap [SecondLevelKey, TopLevelKey, MapName]", "!FindInMap MapName.TopLevelKey.SecondLevelKey"],
         "answer": [0],
-        "explain": "Thứ tự là tên mapping, top-level key (ví dụ !Ref AWS::Region), rồi second-level key (ví dụ HVM64)."
+        "explain": "Thứ tự là tên mapping, top-level key (ví dụ !Ref AWS::Region hoặc !Ref Environment), rồi second-level key (ví dụ HVM64 hoặc !Ref WorkloadTier). Mapping luôn tra hai cấp nên cả ba tham số đều bắt buộc."
       },
       {
         "type": "single",
@@ -338,7 +338,7 @@
       {
         "type": "single",
         "q": "Sau khi stack WordPress tạo xong, đội vận hành muốn thấy ngay URL truy cập trang web trên tab Outputs của console. Khai báo nào phù hợp?",
-        "options": ["Thêm parameter WordpressURL với Default là DNS name", "Thêm metadata AWS::CloudFormation::Init chứa URL", "Thêm output WordpressURL với Value: !Join ['', ['https://', !GetAtt Instance.DNSName]]", "Thêm mapping chứa URL theo region"],
+        "options": ["Thêm parameter WordpressURL với Default là DNS name", "Thêm metadata AWS::CloudFormation::Init chứa URL", "Thêm output WordpressURL với Value: !Join ['', ['https://', !GetAtt Instance.PublicDnsName]]", "Thêm mapping chứa URL theo region"],
         "answer": [2],
         "explain": "Outputs hiện giá trị trên console và CLI sau khi stack tạo xong; Join + GetAtt ghép thành URL động. Parameter là input, không thể biết trước DNS name của instance."
       },
@@ -354,21 +354,21 @@
         "q": "Một stack độc lập (không phải nested stack) cần dùng Security Group ID do một stack khác trong cùng account và region tạo ra. Cần làm gì?",
         "options": ["Chỉ cần khai báo Output, stack kia tự đọc được", "Dùng !GetAtt OtherStack.Outputs.SGId", "Khai báo Security Group ID trong Mappings của stack kia", "Khai báo Output kèm Export Name ở stack nguồn, stack sử dụng gọi Fn::ImportValue"],
         "answer": [3],
-        "explain": "Output thường chỉ hiện trên console/CLI; muốn stack độc lập khác dùng thì phải Export, bên dùng gọi ImportValue. GetAtt .Outputs chỉ dùng được giữa stack cha và nested stack."
+        "explain": "Output thường chỉ hiện trên console/CLI; cách cổ điển để stack độc lập khác dùng là Export rồi bên dùng gọi ImportValue (bài mới còn có Fn::GetStackOutput đọc output không cần Export). GetAtt .Outputs chỉ dùng được giữa stack cha và nested stack."
       },
       {
         "type": "single",
         "q": "Phát biểu nào đúng về section Outputs?",
         "options": ["Mọi template hợp lệ bắt buộc phải có Outputs", "Giá trị output chỉ có khi stack ở trạng thái CREATE_COMPLETE", "Mọi output đều tự động được stack khác đọc mà không cần cấu hình", "Output chỉ xem được qua CLI, không hiện trên console"],
         "answer": [1],
-        "explain": "Outputs là section tùy chọn và giá trị chỉ có khi stack CREATE_COMPLETE. Output hiện trên cả console và CLI, và chỉ dùng được ở stack khác khi Export."
+        "explain": "Outputs là section tùy chọn và giá trị chỉ có khi stack CREATE_COMPLETE. Output hiện trên cả console và CLI; stack khác dùng được qua Export + ImportValue hoặc qua Fn::GetStackOutput, không tự động."
       },
       {
         "type": "multi",
         "q": "Giá trị khai báo trong Outputs của một stack (không Export) được hiển thị hoặc sử dụng ở đâu? (Chọn 2)",
         "options": ["Tự động truyền vào user data của mọi EC2 instance trong account", "Console UI (tab Outputs) và CLI", "Stack cha, khi stack này là nested stack", "Stack ở account khác qua Fn::ImportValue", "Tự động ghi vào SSM Parameter Store"],
         "answer": [1, 2],
-        "explain": "Output hiện ở console và CLI và được trả về stack cha khi dùng nested stack. ImportValue cần Export và không hoạt động cross-account; Outputs không tự ghi vào SSM hay user data."
+        "explain": "Output hiện ở console và CLI và được trả về stack cha khi dùng nested stack. ImportValue cần Export và không hoạt động cross-account (đọc cross-account phải dùng Fn::GetStackOutput với RoleArn); Outputs không tự ghi vào SSM hay user data."
       }
     ],
     "CFN Physical and Logical Resources": [
@@ -451,7 +451,7 @@
         "q": "Một công ty cần bật AWS Config và triển khai cùng bộ Config Rules trên 50 AWS account ở nhiều region, quản lý tập trung từ một chỗ với ít công sức nhất. Giải pháp nào phù hợp?",
         "options": ["Nested stacks trong một root stack", "Đăng nhập từng account và tạo stack ở từng region", "Cross-stack references với Fn::ImportValue", "CloudFormation StackSets"],
         "answer": [3],
-        "explain": "StackSets dùng một template để create/update/delete stack trên nhiều account và region từ admin account. Nested stacks và cross-stack chỉ hoạt động trong một account/region."
+        "explain": "StackSets dùng một template để create/update/delete stack trên nhiều account và region từ admin account. Nested stacks và cross-stack references chỉ chia sẻ hoặc tái sử dụng giá trị giữa các stack, không triển khai stack ra hàng loạt account/region."
       },
       {
         "type": "single",
@@ -502,7 +502,7 @@
         "q": "Một template phải chạy được ở mọi region, luôn dùng AMI Amazon Linux mới nhất và người dùng không phải nhập gì. Cấu hình parameter nào đáp ứng yêu cầu?",
         "options": ["Parameter kiểu String không có default, người dùng tự tra AMI ID", "Parameter kiểu AWS::EC2::Image::Id với default là AMI ID của us-east-1", "Đặt cứng ImageId trong resource", "Parameter kiểu AWS::SSM::Parameter::Value<AWS::EC2::Image::Id> với default là path SSM public parameter của AMI"],
         "answer": [3],
-        "explain": "Parameter kiểu SSM trỏ tới public parameter tự lấy AMI mới nhất đúng region, đây là stage3 hoàn toàn portable trong demo. Default là AMI ID của us-east-1 vẫn fail ở region khác."
+        "explain": "Parameter kiểu SSM trỏ tới public parameter tự lấy AMI mới nhất đúng region, đây là stage4 hoàn toàn portable trong demo. Default là AMI ID của us-east-1 vẫn fail ở region khác."
       },
       {
         "type": "multi",
@@ -590,7 +590,7 @@
         "q": "Phát biểu nào đúng về vai trò của các helper script CloudFormation? (Chọn 2)",
         "options": ["cfn-init áp cấu hình desired state từ metadata vào instance", "cfn-signal là công cụ áp cấu hình packages và files", "cfn-hup theo dõi thay đổi metadata và kích hoạt chạy lại cfn-init", "cfn-hup được cài và chạy sẵn mặc định, không cần cấu hình", "User data tự chạy lại mỗi khi update stack"],
         "answer": [0, 2],
-        "explain": "cfn-init áp cấu hình, cfn-signal báo kết quả, cfn-hup theo dõi và kích hoạt chạy lại. cfn-hup phải tự cài và cấu hình (cfn-hup.conf, hooks.d), và user data chỉ chạy lần launch đầu."
+        "explain": "cfn-init áp cấu hình, cfn-signal báo kết quả, cfn-hup theo dõi và kích hoạt chạy lại. cfn-hup có thể đã cài sẵn trên AMI Amazon Linux mới nhất nhưng bạn vẫn phải tự cấu hình (cfn-hup.conf, hooks.d), và user data chỉ chạy lần launch đầu."
       }
     ],
     "cfn-init": [
@@ -599,7 +599,7 @@
         "q": "Một đội muốn khai báo ngay trong template CloudFormation những gói cần cài, file cần tạo và service phải chạy trên EC2, theo kiểu desired state và idempotent thay vì viết script bash dài. Giải pháp nào phù hợp?",
         "options": ["Viết toàn bộ script trong UserData", "Dùng custom resource gọi Lambda cài phần mềm", "Dùng Mappings chứa danh sách gói", "Khai báo AWS::CloudFormation::Init trong Metadata của instance và gọi cfn-init từ user data"],
         "answer": [3],
-        "explain": "cfn-init đọc AWS::CloudFormation::Init và đưa instance về desired state, idempotent sẵn. User data là procedural, phải tự viết logic kiểm tra đã cài hay chưa."
+        "explain": "cfn-init đọc AWS::CloudFormation::Init và đưa instance về desired state, idempotent sẵn (bản khóa cũ nêu, bài mới không nói). User data là procedural, phải tự viết logic kiểm tra đã cài hay chưa."
       },
       {
         "type": "single",
@@ -613,7 +613,7 @@
         "q": "Trong cfn-init, configSet dùng để làm gì?",
         "options": ["Chọn những config key nào sẽ được dùng và thứ tự chạy của chúng", "Định nghĩa timeout chờ signal", "Chọn region mà cfn-init kết nối tới", "Lưu mật khẩu cho database"],
         "answer": [0],
-        "explain": "configSet gom nhiều config key và quy định thứ tự, ví dụ wordpress_install gồm install_cfn → software_install → ... → configure_wordpress. Lệnh cfn-init chọn configSet bằng --configsets."
+        "explain": "configSet gom nhiều config key và quy định thứ tự, ví dụ aem_webapp_install gồm install_cfn → software_install → ... → configure_webapp; chỉ có một key tên config thì không cần configSets. Lệnh cfn-init chọn configSet bằng --configsets."
       },
       {
         "type": "single",

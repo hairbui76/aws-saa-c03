@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation, networking]
 aliases: [DependsOn, Explicit Dependency, Implicit Dependency]
 lessons: ["0335 CloudFormation DependsOn"]
+videos: ["317 [ASSOCIATESHARED] CloudFormation DependsOn"]
 ---
 # CFN DependsOn
 
@@ -13,8 +14,8 @@ lessons: ["0335 CloudFormation DependsOn"]
 
 ## Khái niệm cốt lõi
 - CFN cố gắng hiệu quả nên làm song song, đồng thời dựng **cây phụ thuộc**: VPC trước, rồi subnet, rồi EC2 trong subnet.
-- **Implicit dependency**: resource A dùng `!Ref B` hoặc `!GetAtt B.X` thì CFN biết phải tạo B trước. Lý do là **chỉ tham chiếu được resource đã `CREATE_COMPLETE`**. Cách này đúng trong khoảng **99%** trường hợp. Ví dụ: user data EC2 tham chiếu endpoint của Aurora cluster thì EC2 tự chờ Aurora xong.
-- **`DependsOn`**: khai báo rõ "B và C phụ thuộc A". CFN **không bắt đầu tạo** B và C cho tới khi A ở `CREATE_COMPLETE`.
+- **Implicit dependency**: một property của resource A dùng `!Ref B`, `!GetAtt B.X` hoặc **`!Sub` có `${B}` / `${B.X}`** thì CFN biết phải tạo B trước. Bài mới nêu đủ ba hàm **Ref, GetAtt và Sub** (bản khóa cũ chỉ nhắc Ref/GetAtt). Lý do là **chỉ tham chiếu được resource đã `CREATE_COMPLETE`**. Cách này đủ cho hầu hết trường hợp (bản khóa cũ nói khoảng **99%**). Ví dụ: user data EC2 tham chiếu endpoint của Aurora cluster thì EC2 tự chờ Aurora xong.
+- **`DependsOn`**: khai báo rõ "B và C phụ thuộc A". CFN **không bắt đầu tạo** B và C cho tới khi A ở `CREATE_COMPLETE`. Ngoài các ca bắt buộc, nó còn hữu ích với template lớn, phức tạp khi muốn ghi rõ quan hệ phụ thuộc.
 - Giá trị là **một resource** hoặc **một list resource**.
 - Tác động lên cả 3 thao tác:
   - **Create**: tạo resource phụ thuộc **sau**.
@@ -49,7 +50,7 @@ flowchart BT
 ## 🎯 Mẹo thi SAA-C03
 - Adrian nhắc thẳng: ca **EIP + IGW attachment** "tends to feature in exams". Stack lúc tạo hoặc xóa được, lúc lỗi, liên quan EIP/IGW → **thêm `DependsOn: <IGW attachment>`** vào EIP.
 - Muốn ép thứ tự tạo giữa hai resource không tham chiếu nhau → `DependsOn`.
-- `Ref`/`GetAtt` đã tạo dependency rồi, không cần `DependsOn` thừa.
+- `Ref`/`GetAtt`/`Sub` đã tạo dependency rồi, không cần `DependsOn` thừa.
 - Chờ **bootstrap trong instance** xong (không phải chờ resource tạo xong) là bài toán khác → [[CFN Wait Conditions and cfn-signal]].
 - `DependsOn` cũng dùng giữa các nested stack (AD stack phụ thuộc VPC stack), xem [[CFN Nested Stacks]].
 

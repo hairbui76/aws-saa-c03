@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, multi-account, organizations, automation]
 aliases: [StackSets, CloudFormation StackSets, Stack Sets, Stack Instances]
 lessons: ["0339 ASSOCIATESHARED CloudFormation Stack Sets"]
+videos: ["321 [ASSOCIATESHARED] CloudFormation Stack Sets"]
 ---
 # CFN StackSets
 
@@ -76,7 +77,7 @@ Trình tự:
 - Permission: **self-managed** (tự tạo IAM role) vs **service-managed** (dùng [[AWS Organizations]], role tự tạo). Đề nhắc "đã dùng AWS Organizations" → thường là service-managed.
 - Phân biệt với:
   - [[CFN Nested Stacks]]: tái sử dụng template **trong cùng một stack lớn**, cùng account/region.
-  - [[CFN Cross-Stack References]]: chia sẻ output giữa các stack **cùng region**.
+  - [[CFN Cross-Stack References]]: chỉ **đọc output** của stack khác (Export/ImportValue trong cùng account + region; `Fn::GetStackOutput` đọc được cả region/account khác), không triển khai stack ra nhiều account/region.
   - [[CFN Change Sets]]: xem trước thay đổi của **một** stack.
 - Bẫy: xóa stack instance mặc định **xóa luôn stack và resource** ở target; muốn giữ thì dùng **retain stacks**.
 

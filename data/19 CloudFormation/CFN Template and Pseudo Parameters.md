@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation]
 aliases: [CFN Parameters, Template Parameters, Pseudo Parameters, AWS::Region, Portable Template]
 lessons: ["0329 CloudFormation Template and Pseudo Parameters", "0333 DEMO Template v2 Portable"]
+videos: ["311 [ASSOCIATESHARED] CloudFormation Template and Pseudo Parameters", "315 [ASSOCIATESHARED] [DEMO] Template v2 - Portable"]
 ---
 # CFN Template and Pseudo Parameters
 
@@ -52,20 +53,21 @@ flowchart LR
 - **Giảm tối đa số parameter bắt buộc nhập.** Nên có default hợp lý, và lấy giá trị từ AWS (pseudo parameter, SSM) thay vì bắt người dùng gõ.
 
 ## Demo / Lab: tiến hóa sang template portable (0333)
-Bốn template: `nonportable`, `portable-stage1`, `portable-stage2`, `portable-stage3` (có cả bản JSON và YAML).
+Bốn template `stage1` → `stage4` (có cả bản JSON và YAML; video 315 của khóa mới). `stage1` chính là template non-portable của demo trước (bucket `osimart-test-bucket-12345`, `ImageId` đặt cứng, `t3.micro`).
 
 | Giai đoạn | Thay đổi | Kết quả |
 |---|---|---|
-| nonportable | Đặt cứng `BucketName` và `ImageId` | Stack thứ hai trong cùng account fail (bucket trùng tên) và fail rồi **rollback** |
-| stage1 | **Bỏ `BucketName`** | Tạo nhiều lần được. Nhưng sang **us-east-2** thì fail vì AMI ID là theo region |
-| stage2 | `ImageId: !Ref AMIID` (parameter String, không default) | Portable, nhưng người dùng phải tự tra AMI ID đúng region |
-| stage3 | Parameter kiểu **`AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>`**, default là path SSM public `/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2` | **Hoàn toàn portable**: tự lấy AMI Amazon Linux 2 **mới nhất** đúng region, không cần nhập gì |
+| stage1 | Đặt cứng `BucketName` và `ImageId` | Stack thứ hai trong cùng account fail (bucket trùng tên) rồi **rollback**; console đánh dấu sự kiện của bucket là nguyên nhân có khả năng nhất |
+| stage2 | **Bỏ `BucketName`** | Tạo nhiều lần được trong cùng account và region. Nhưng sang **us-west-2** thì fail vì AMI ID là theo region |
+| stage3 | `ImageId: !Ref AMIID` (parameter String có `Description`, không default) | Portable: console hỏi AMI ID lúc tạo stack, nhưng người dùng phải tự tra AMI ID đúng region; bỏ trống thì stack fail |
+| stage4 | Parameter `LatestAmiId` kiểu **`AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>`**, default là path SSM public `/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64` | **Hoàn toàn portable**: tự lấy AMI **Amazon Linux 2023 (x86_64) mới nhất** đúng region, không cần nhập gì; chạy được ở us-west-2 |
 
-- **Tự đặt tên physical resource**: khi không ghi `BucketName`, CFN đặt tên theo dạng `<tên stack>-<logical ID>-<chuỗi ngẫu nhiên>` (ví dụ `portablestage1-bucket-xxxx`). Tên stack là duy nhất trong region, logical ID là duy nhất trong template, thêm phần ngẫu nhiên nên tên luôn duy nhất.
+- **Tự đặt tên physical resource**: khi không ghi `BucketName`, CFN đặt tên theo dạng `<tên stack>-<logical ID>-<chuỗi ngẫu nhiên>`. Tên stack là duy nhất trong region, logical ID là duy nhất trong template, thêm phần ngẫu nhiên nên tên luôn duy nhất. Không phải resource nào cũng tự đặt tên được, nhưng nhiều loại thì có (bucket là một ví dụ).
 - SSM Parameter Store có nhiều **public parameter** do AWS duy trì (AMI ID, thông tin region và service...). Chúng giúp tham chiếu động những giá trị phụ thuộc region hoặc được AWS cập nhật. Xem [[SSM Parameter Store]].
-- (Khóa học dùng Amazon Linux 2. AL2 hết hỗ trợ vào giữa 2026, hiện nay nên dùng AL2023, ví dụ path `/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64`.)
+- Muốn AMI kiến trúc khác (ví dụ ARM) thì chỉ cần đổi path default sang public parameter tương ứng.
+- Cách làm giảng viên khuyên: bắt đầu từ template đơn giản, chạy được rồi mới thêm dần các tính năng để đạt best practice.
 
-**Quy tắc Adrian rút ra:**
+**Quy tắc rút ra:**
 1. **Không đặt tên cứng** cho resource cần tên duy nhất. Để CFN tự đặt.
 2. Tránh giá trị theo region (AMI ID, key name). Bước đầu tiên là đưa chúng thành parameter **có default hợp lý**, để ít nhất một region chạy được mà không phải nhập gì.
 3. Tốt nhất là **tham chiếu động** (SSM public parameter, pseudo parameter, [[CFN Mappings]]).

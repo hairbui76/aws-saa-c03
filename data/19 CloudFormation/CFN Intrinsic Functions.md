@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation]
 aliases: [Intrinsic Functions, Ref, GetAtt, Fn::GetAtt, Fn::Sub, Fn::Join, Fn::GetAZs, Fn::Select, Fn::Cidr, Fn::Base64]
 lessons: ["0330 CloudFormation Intrinsic Functions"]
+videos: ["312 [ASSOCIATESHARED] CloudFormation Intrinsic Functions"]
 ---
 # CFN Intrinsic Functions
 
@@ -53,8 +54,8 @@ flowchart LR
 - `!Select [ 0, !GetAZs "" ]` lấy phần tử đầu tiên (**index bắt đầu từ 0**). Nhờ vậy không phải đặt cứng tên AZ.
 
 ### Join và Split
-- `!Split [ "|", "roffle|truffles|penny|winkie" ]` cho ra `["roffle","truffles","penny","winkie"]`.
-- `!Join [ delimiter, [ v1, v2, ... ] ]` làm ngược lại. Ví dụ: `!Join [ '', [ 'http://', !GetAtt Instance.DNSName ] ]` tạo URL WordPress (thường đặt trong [[CFN Outputs]]).
+- `!Split [ ".", "koala.croc.snake.wombat" ]` cho ra `["koala","croc","snake","wombat"]`.
+- `!Join [ delimiter, [ v1, v2, ... ] ]` làm ngược lại. Ví dụ: `!Join [ '', [ 'http://', !GetAtt Instance.PublicDnsName ] ]` tạo URL web store (thường đặt trong [[CFN Outputs]], output `WebStoreURL`). Thuộc tính đúng là **`PublicDnsName`** như slide mới; bản khóa cũ ghi `Instance.DNSName` (bổ sung theo tài liệu AWS: EC2 không có thuộc tính `DNSName`).
 
 ### Base64 và Sub
 - User data EC2 phải gửi dạng **Base64**. Viết script dạng text thường rồi bọc bằng `!Base64` ([[EC2 User Data Bootstrapping]]).
