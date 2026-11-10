@@ -191,6 +191,7 @@
   "TTS": "Text-To-Speech",
   "SSML": "Speech Synthesis Markup Language",
   "KYC": "Know Your Customer",
+  "LLM": "Large Language Model",
   "TOTP": "Time-based One-Time Password",
   "OTP": "One-Time Password",
   "NIST": "National Institute of Standards and Technology",

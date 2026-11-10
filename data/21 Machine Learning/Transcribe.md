@@ -2,6 +2,7 @@
 tags: [saa-c03, s21-machine-learning, machine-learning, speech-to-text, asr, ai-services]
 aliases: [Amazon Transcribe, ASR, speech-to-text, Transcribe Medical, Transcribe Call Analytics]
 lessons: ["0370 Amazon Transcribe"]
+videos: ["373 Amazon Transcribe"]
 ---
 # Transcribe
 

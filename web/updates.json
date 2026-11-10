@@ -24,7 +24,9 @@
     "Trang chủ và các chỗ liệt kê chương: thêm hai chương mới 22 Systems Manager và 23 Elastic Beanstalk",
     "Exam Cheat Sheet: thêm Systems Manager (managed node, DHMC, hybrid activation, Session Manager, Run Command, Patch Manager) và Elastic Beanstalk (Standard/Cluster, deployment policy, clone và blue/green, RDS, .ebextensions)",
     "Exam Cheat Sheet: Aurora 256 TiB và storage co giãn lên xuống, Aurora I/O-Optimized, read replica 15/5/3 theo engine, Multi-AZ cluster chỉ MySQL/PostgreSQL, Aurora Global 10 secondary region, DMS Serverless và DMS Schema Conversion, Vault Lock compliance mode và PITR 35 ngày, EFS Elastic mặc định, Max I/O legacy, EC2 Mac",
-    "Top mẹo thi và concept map chương 11 và 12: Aurora 256 TiB và I/O-Optimized, Serverless v2, RDS Custom Oracle tới 3/2027, TDE không còn CloudHSM, Multi-AZ cluster semi-synchronous, DMS Serverless và Schema Conversion; EFS Elastic, Max I/O legacy, Vault Lock governance/compliance"
+    "Top mẹo thi và concept map chương 11 và 12: Aurora 256 TiB và I/O-Optimized, Serverless v2, RDS Custom Oracle tới 3/2027, TDE không còn CloudHSM, Multi-AZ cluster semi-synchronous, DMS Serverless và Schema Conversion; EFS Elastic, Max I/O legacy, Vault Lock governance/compliance",
+    "Exam Cheat Sheet: dịch vụ ML theo bản khóa mới: Rekognition pre-trained, text tối đa 100 từ/ảnh, video live qua KVS trích ảnh; Textract 1 trang sync, nhiều trang (tới 3.000) async; Polly Long-form và Generative; thêm SageMaker AI (LLM có sẵn dùng Bedrock, SageMaker AI Savings Plans); Kendra thuộc bản khóa cũ",
+    "Top mẹo thi và concept map chương 21: Lex là bot cho một việc cụ thể (có thể dùng LLM của Bedrock), 4 engine Polly, Rekognition Custom Labels và video live qua KVS → S3 → Lambda, Textract sync/async theo số trang, SageMaker AI và Bedrock; Kendra, Forecast, Fraud Detector không còn trong khóa mới"
   ],
   "missing": [],
   "lessons": {
@@ -1255,6 +1257,97 @@
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []
+    },
+    "Comprehend": {
+      "kind": "updated",
+      "summary": "Thêm targeted sentiment (sentiment cho từng cụm/entity trong văn bản); Comprehend Medical là dịch vụ riêng cho thông tin sức khỏe; analysis job xử lý tài liệu trong S3 không tương tác.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Lex": {
+      "kind": "updated",
+      "summary": "Lex là bot cho một việc cụ thể theo hội thoại bạn thiết kế, không phải AI assistant đa năng; NLU có thể dùng LLM của Amazon Bedrock nhưng vẫn chỉ chọn giữa các intent đã định nghĩa.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Polly": {
+      "kind": "updated",
+      "summary": "Polly nay có 4 engine: Standard (rẻ nhất), Neural, Long-form (nội dung dài, nhấn giọng đúng), Generative (giống người nhất, cho hội thoại); MP3/Ogg Vorbis cho web, mobile, PCM cho IoT, điện thoại; Polly không phân tích sentiment.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Rekognition": {
+      "kind": "updated",
+      "summary": "Rekognition là dịch vụ pre-trained, gọi API là dùng (không tự train như SageMaker AI); text trong ảnh tối đa 100 từ, nhiều text thì dùng Textract; video live theo bài KVS mới: trích ảnh JPEG ra S3 → Lambda → Rekognition Custom Labels → SNS.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Textract": {
+      "kind": "updated",
+      "summary": "Tài liệu một trang xử lý synchronous, tài liệu nhiều trang (PDF/TIFF tới 3.000 trang) xử lý asynchronous; Analyze Document có thêm Layout và Signatures; Analyze ID cho giấy tờ tùy thân Mỹ.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Transcribe": {
+      "dropped": [
+        "Demo / Lab"
+      ]
+    },
+    "Translate": {
+      "kind": "updated",
+      "summary": "Translate là AI service chuyên dụng cho dịch text → text: chọn nó thay vì model đa năng trên Amazon Bedrock hay tự train model trên SageMaker AI.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "SageMaker": {
+      "kind": "updated",
+      "summary": "Bài mới gọi là Amazon SageMaker AI (Amazon SageMaker là nền tảng data + AI rộng hơn); dùng khi tự build/train/host model, kể cả LLM mã nguồn mở, còn LLM có sẵn thì gọi qua Bedrock; chạy quanh năm dùng SageMaker AI Savings Plans, Compute Savings Plans không áp dụng.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Kendra": {
+      "kind": "removed",
+      "summary": "mục Machine Learning của khóa mới không còn bài Kendra"
+    },
+    "Forecast": {
+      "kind": "removed",
+      "summary": "mục Machine Learning của khóa mới không còn bài Forecast"
+    },
+    "Fraud Detector": {
+      "kind": "removed",
+      "summary": "mục Machine Learning của khóa mới không còn bài Fraud Detector"
     }
   }
 }
