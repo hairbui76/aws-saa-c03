@@ -69,7 +69,7 @@ Ví dụ của Adrian (đơn vị "gold coin"):
 - **Trả tiền cho host**; instance chạy trên host **không bị tính phí theo giây**. Có thể chạy nhiều size khác nhau tới hết capacity của host.
 - **Phải tự quản lý capacity**: capacity thừa là lãng phí, hết capacity thì không launch thêm được.
 - **Host affinity**: stop/start instance vẫn quay về đúng host đó → quan trọng cho licensing.
-- Lý do chính (cả thực tế lẫn đề thi): phần mềm **license theo socket/core vật lý**. Xem thêm [[Dedicated Hosts]].
+- Lý do chính (cả thực tế lẫn đề thi): phần mềm **license theo socket/core vật lý**. Xem thêm [[Dedicated Hosts]] và [[AWS Artifact and License Manager]] (License Manager theo dõi license).
 
 ### Dedicated Instances
 - Instance chạy trên host **chỉ chứa instance của bạn**, không chia sẻ phần cứng với khách hàng khác.

@@ -112,6 +112,6 @@ Ba demo đều tùy chọn (Optional), đăng nhập `iamadmin` của **General*
 ## Liên kết
 - Tiên quyết: [[AWS Accounts]], [[IAM Roles]]
 - Đi sâu: [[Service Control Policies]], [[AWS Control Tower]], [[IAM Identity Center]], [[AWS Resource Access Manager]], [[CloudTrail]] (organization trail)
-- Liên quan: [[Reserved Instances and Savings Plans]], [[AWS Budgets]], [[CFN StackSets]], [[IAM Basics]]
+- Liên quan: [[Reserved Instances and Savings Plans]], [[AWS Budgets]], [[AWS Cost Management]] (xem chi phí mọi account từ management account), [[CFN StackSets]], [[IAM Basics]]
 - Phân biệt với: [[IAM Groups]] (nhóm *user* trong một account; OU nhóm *account*)
 - MOC: [[_MOC 04 IAM Accounts and Organizations]]

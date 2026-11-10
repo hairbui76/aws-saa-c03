@@ -70,7 +70,7 @@ flowchart LR
 |---|---|---|---|---|
 | Mục đích | Xem, lọc, group, **dự báo** trên console | Dữ liệu **chi tiết nhất** để phân tích ngoài | Gắn chi phí với env / dự án / phòng ban | **Cảnh báo** khi chạm / dự báo vượt ngưỡng |
 | Đầu ra | Biểu đồ, bảng, saved report | File **CSV (gzip) / Parquet** trong **S3** | Dimension trong Cost Explorer và CUR | Email / SNS |
-| Tần suất | Gần như hằng ngày | Tối đa **1 lần/ngày** (lần đầu tới 24 giờ) | Phải chờ hiện ra rồi **activate** | Theo chu kỳ budget |
+| Tần suất | (Bài không nói) | Tối đa **1 lần/ngày** (lần đầu tới 24 giờ) | Phải chờ hiện ra rồi **activate** | Theo chu kỳ budget |
 | Chi phí | Monthly/daily miễn phí; **hourly có phí** | Trả phí lưu S3, công cụ phân tích | Miễn phí | (Xem note Budgets) |
 
 | Con số | Giá trị |

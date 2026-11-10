@@ -78,5 +78,5 @@ flowchart LR
 
 ## Liên kết
 - Tiên quyết: [[AWS Accounts]]
-- Liên quan: [[CloudWatch Basics]], [[SNS]], [[AWS Organizations]] (consolidated billing), [[Service Control Policies]], [[EC2 Purchase Options]], [[Reserved Instances and Savings Plans]], [[S3 Storage Classes]]
+- Liên quan: [[AWS Cost Management]] (Cost Explorer, Data Exports / CUR, cost allocation tags), [[CloudWatch Basics]], [[SNS]], [[AWS Organizations]] (consolidated billing), [[Service Control Policies]], [[EC2 Purchase Options]], [[Reserved Instances and Savings Plans]], [[S3 Storage Classes]]
 - MOC: [[_MOC 01 Accounts and Basics]]

@@ -67,5 +67,5 @@ flowchart TB
 
 ## Liên kết
 - Tiên quyết: [[VPC Peering]], [[Site-to-Site VPN]], [[Direct Connect]], [[VPC Routing and Internet Gateway]]
-- Liên quan: [[BGP]], [[Interface VPC Endpoints]], [[AWS Organizations]], [[Direct Connect Public VIF and VPN]], [[Direct Connect Resilience]]
+- Liên quan: [[BGP]], [[Interface VPC Endpoints]], [[AWS Organizations]], [[AWS Resource Access Manager]] (chia sẻ TGW giữa account), [[Direct Connect Public VIF and VPN]], [[Direct Connect Resilience]]
 - Phân biệt với: [[VPC Peering]], [[Compare - VPN vs Direct Connect]]

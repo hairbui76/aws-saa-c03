@@ -73,5 +73,5 @@ flowchart LR
 
 ## Liên kết
 - Tiên quyết: [[EC2 Architecture and Resilience]], [[EC2 Instance Types]], [[Virtualization]]
-- Liên quan: [[EC2 Purchase Options]], [[Reserved Instances and Savings Plans]], [[AWS Organizations]], [[EC2 Placement Groups]]
+- Liên quan: [[EC2 Purchase Options]], [[Reserved Instances and Savings Plans]], [[AWS Organizations]], [[AWS Resource Access Manager]] (chia sẻ host), [[AWS Artifact and License Manager]] (theo dõi license BYOL theo socket/core), [[EC2 Placement Groups]]
 - Phân biệt với: Dedicated Instances (trong [[EC2 Purchase Options]]), [[RDS Architecture]] (không chạy trên Dedicated Host)
