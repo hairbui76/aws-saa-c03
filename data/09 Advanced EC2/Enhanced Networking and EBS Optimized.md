@@ -2,6 +2,7 @@
 tags: [saa-c03, s09-advanced-ec2, compute, networking, storage, performance]
 aliases: [Enhanced Networking, SR-IOV, EBS Optimized, EBS-Optimized Instances, ENA]
 lessons: ["0177 Enhanced Networking EBS Optimized"]
+videos: ["173 [ASSOCIATESHARED] Enhanced Networking & EBS Optimized"]
 ---
 # Enhanced Networking and EBS Optimized
 
@@ -32,7 +33,7 @@ lessons: ["0177 Enhanced Networking EBS Optimized"]
 - **EBS optimized** = tối ưu stack và **cấp dung lượng (băng thông) riêng cho EBS**. EBS đạt tốc độ cao hơn, và storage với data không ảnh hưởng lẫn nhau.
 - Là thiết lập **theo từng instance** (bật/tắt).
 - Phần lớn instance hiện nay **hỗ trợ và bật mặc định, không tốn thêm phí**; tắt đi cũng không có tác dụng vì phần cứng đã tích hợp sẵn. Một số instance cũ hỗ trợ nhưng **bật thì tốn thêm phí**.
-- **Cần thiết** cho instance type/size hiệu năng cao, nhất là khi dùng volume hứa hẹn IOPS cao và latency thấp, ổn định như **GP2/GP3, io1/io2** (xem [[EBS Volume Types]]).
+- **Cần thiết** cho instance type/size hiệu năng cao, nhất là khi dùng volume hứa hẹn IOPS cao và latency thấp, ổn định như **GP2/GP3, io1/io2** (xem [[EBS Volume Types]]). (Bổ sung, bài không nói: từ 2025 io2 và io2 Block Express là một loại, xem [[EBS Volume Types]].)
 
 ## Cách hoạt động / Kiến trúc
 ```mermaid

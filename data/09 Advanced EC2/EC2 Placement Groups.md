@@ -2,6 +2,7 @@
 tags: [saa-c03, s09-advanced-ec2, compute, performance, resilience]
 aliases: [Placement Groups, Cluster Placement Group, Spread Placement Group, Partition Placement Group, PG]
 lessons: ["0175 EC2 Placement Groups"]
+videos: ["172 [ASSOCIATESHARED] EC2 Placement Groups"]
 ---
 # EC2 Placement Groups
 
@@ -23,7 +24,7 @@ Có **3 loại**, đều ảnh hưởng tới cách instance nằm trên phần 
 ### Cluster placement group
 - Mục tiêu: **hiệu năng cao nhất có thể** trong EC2.
 - **Chỉ một AZ.** Khi tạo group không chọn AZ; AZ bị **khóa theo instance đầu tiên** được launch vào group.
-- Các instance thường cùng **rack**, nhiều khi cùng **EC2 host**; có băng thông trực tiếp, nhanh tới mọi instance khác trong group.
+- Các instance nằm trên cùng một vị trí vật lý mà bài gọi là **hardware segment**: có thể hình dung là cùng **rack**, nhưng AWS **không hứa** đúng cùng rack; nhiều khi cùng **EC2 host**. Có băng thông trực tiếp, nhanh tới mọi instance khác trong group.
 - **Single-stream throughput: 10 Gbps**, so với **5 Gbps** thông thường (khóa học nói "10 GB/s", thực tế đơn vị là gigabit).
 - **Latency thấp nhất** và **packets per second (PPS) cao nhất** trong AWS.
 - Để đạt mức này cần instance có networking hiệu năng cao và bật **[[Enhanced Networking and EBS Optimized|enhanced networking]]**.
@@ -37,9 +38,9 @@ Có **3 loại**, đều ảnh hưởng tới cách instance nằm trên phần 
 - Mục tiêu: **availability và resilience tối đa**.
 - **Span được nhiều AZ.**
 - Mỗi instance nằm trên **rack riêng biệt**, có **nguồn điện và mạng riêng**. Một rack hỏng chỉ ảnh hưởng một instance (mỗi instance có blast radius riêng).
-- **Giới hạn cứng: 7 instance mỗi AZ** (mỗi group). Region càng nhiều AZ thì group chứa được càng nhiều instance.
+- **Giới hạn cứng: 7 instance đang chạy mỗi AZ, mỗi group** (vì AWS chỉ có hữu hạn hạ tầng tách biệt trong data center). Region càng nhiều AZ thì group chứa được càng nhiều instance. **Cần nhiều hơn thì dùng nhiều spread placement group.**
 - **Không hỗ trợ Dedicated Instances và [[Dedicated Hosts]].**
-- Use case: **số ít instance quan trọng** cần tách biệt nhau, ví dụ các mirror của file server, các domain controller.
+- Use case: giải pháp trong **một region** có **các bản sao dự phòng** cần tách biệt nhau để không cùng sập khi phần cứng AWS hỏng, ví dụ **download mirror**, nhiều bản sao của một web application. (Bản khóa cũ: các mirror của file server, các domain controller.)
 
 ### Partition placement group
 - Cho trường hợp **cần hơn 7 instance mỗi AZ** nhưng vẫn muốn chia thành các **fault domain** riêng.
@@ -78,12 +79,12 @@ flowchart TB
 | Phần cứng | Cùng rack, thường cùng host | Mỗi instance một rack riêng | Mỗi partition một nhóm rack riêng |
 | Ai quản lý việc đặt | AWS | AWS (tự động) | Bạn chọn partition hoặc để EC2 tự đặt; app topology-aware |
 | Resilience | Rất thấp | Cao nhất | Cao nếu app biết topology |
-| Use case | HPC, khoa học, node-to-node nhanh | Ít instance quan trọng: DC, file server mirror | HDFS, HBase, Cassandra, Kafka |
+| Use case | HPC, khoa học, node-to-node nhanh | Ít bản sao dự phòng quan trọng: download mirror, web app trùng lặp (bản cũ: DC, file server mirror) | HDFS, HBase, Cassandra, Kafka |
 | Ghi chú | 10 Gbps single stream; cần enhanced networking | Không hỗ trợ Dedicated Instances/Hosts | Có visibility partition |
 
 ## 🎯 Mẹo thi SAA-C03
 - Từ khóa "**low latency, high throughput giữa các node**", "**HPC**", "**tightly coupled**" thì chọn **Cluster** (kèm enhanced networking, và EFA cho MPI nếu đề nhắc).
-- Từ khóa "**ít instance quan trọng**, mỗi cái trên phần cứng riêng, tối đa availability" thì chọn **Spread**. Nhớ con số **7 instance mỗi AZ**.
+- Từ khóa "**ít instance quan trọng**, mỗi cái trên phần cứng riêng, tối đa availability" thì chọn **Spread**. Nhớ con số **7 instance đang chạy mỗi AZ mỗi group**; cần hơn thì dùng **nhiều spread group** (hoặc chuyển sang partition nếu app biết topology).
 - Từ khóa "**HDFS / HBase / Cassandra**", "**topology-aware**", "hàng trăm instance nhưng cần tách fault domain" thì chọn **Partition**.
 - Cluster **không span AZ**. Cần span AZ thì chọn spread hoặc partition.
 - Phân biệt spread và partition: spread do AWS tự lo nhưng giới hạn 7 instance/AZ; partition cho nhiều instance hơn nhưng bạn/ứng dụng phải quản lý việc đặt vào partition.

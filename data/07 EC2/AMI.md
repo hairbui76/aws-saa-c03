@@ -107,5 +107,5 @@ Rút ra:
 ## Liên kết
 - Tiên quyết: [[EC2 Basics]], [[EBS]], [[EBS Snapshots]]
 - Liên quan: [[EBS Encryption]], [[KMS]], [[EC2 Instance Connect and SSH]], [[AWS Organizations]], [[Animals4life Scenario]] (kịch bản của bản khóa cũ)
-- Dùng cùng: [[Launch Templates]], [[Auto Scaling Groups]], [[Horizontal vs Vertical Scaling]]
+- Dùng cùng: [[Launch Templates]], [[Auto Scaling Groups]], [[Horizontal vs Vertical Scaling]], [[EC2 Image Builder]] (tự động hóa việc bake, test, phân phối AMI)
 - Phân biệt với: [[EC2 User Data Bootstrapping]], [[cfn-init]]

@@ -2,6 +2,7 @@
 tags: [saa-c03, s09-advanced-ec2, security, iam, compute]
 aliases: [Instance Role, Instance Profile, EC2 Instance Profile, IAM Role for EC2]
 lessons: ["0168 EC2 Instance Roles Profile", "0169 DEMO Using EC2 Instance Roles"]
+videos: ["165 [ASSOCIATESHARED] EC2 Instance Roles & Profile", "166 [ASSOCIATESHARED] [DEMO] Using EC2 Instance Roles"]
 ---
 # EC2 Instance Roles
 
@@ -45,13 +46,18 @@ CLI kiểm tra lần lượt và dùng nguồn đầu tiên tìm thấy:
 
 Hệ quả: nếu ai đó chạy `aws configure` với long-term access key trên instance thì key đó **được ưu tiên hơn** instance role. (Danh sách hiện tại của AWS dài hơn, có thêm assume role, web identity, IAM Identity Center, credential process..., nhưng instance profile vẫn đứng cuối.)
 
+(Danh sách 6 mức này là của demo bản khóa cũ; demo mới chỉ nói gọn: AWS CLI tìm credential cấu hình sẵn trên máy hoặc thông tin đăng nhập tương tác trước, **không có thì fallback về instance role**.)
+
 ## Demo / Lab
-1. Instance Amazon Linux 2 chưa gắn role: `aws s3 ls` báo không có credential và gợi ý `aws configure`.
-2. Tạo role: trusted entity là AWS service EC2, gắn managed policy `AmazonS3ReadOnlyAccess`, tên `A4LInstanceRole`.
-3. EC2 console → Actions → Security → **Modify IAM role** → chọn role → Save.
-4. Chạy lại `aws s3 ls`: thành công, không cần cấu hình gì thêm.
-5. `curl .../latest/meta-data/iam/security-credentials/` trả về tên role; thêm tên role vào cuối thì thấy `AccessKeyId`, `SecretAccessKey`, `Token`, `Expiration`.
-6. Dọn dẹp: xóa role trong IAM, nhưng ô Modify IAM role **vẫn hiển thị tên đó**, vì đó là **instance profile** chứ không phải role. Phải chọn "No IAM role" và xác nhận "detach".
+1. Stack CloudFormation 1-click (IAM role stack) tạo VPC và một public instance Aus-E-Mart. Kết nối bằng [[EC2 Instance Connect and SSH|EC2 Instance Connect]]; AMI đã có sẵn AWS CLI.
+2. `aws s3 ls` thất bại: instance mới, chưa đăng nhập, chưa cấu hình credential nào nên không có cách nói chuyện với account.
+3. Tạo role: trusted entity **AWS service → EC2**, gắn managed policy **`AmazonS3FullAccess`** (chỉ để demo; thực tế nên tự viết policy hẹp hơn), tên `demo-instance-role`. Trang review cho thấy **trust policy** cho phép dịch vụ EC2 assume role. Tạo từ console nên AWS tạo luôn **instance profile cùng tên**.
+4. EC2 console → Actions → Security → **Modify IAM role** → chọn role (thực chất là chọn instance profile cùng tên) → Update IAM role.
+5. Chạy lại `aws s3 ls`: thành công, không phải đăng nhập hay lưu gì trên máy. Thử `aws s3 mb s3://<tên bucket duy nhất toàn cầu>` tạo bucket, `aws s3 ls` thấy bucket, rồi `aws s3 rb s3://…` xóa bucket. Ứng dụng dùng SDK gọi AWS API cũng lấy quyền theo cách này.
+6. Xem phía sau: metadata service là **IMDSv2** nên phải **lấy token trước** (xem [[EC2 Instance Metadata]]), rồi `curl …/latest/meta-data/iam/security-credentials/` trả về tên role; thêm tên role vào cuối thì thấy `AccessKeyId`, `SecretAccessKey`, `Token`… Credential **ngắn hạn**, ứng dụng tự viết phải lấy lại định kỳ, đúng như AWS CLI tự làm.
+7. Dọn dẹp: **Modify IAM role → No IAM role → detach trước**, rồi mới xóa role trong IAM; xóa stack.
+
+(Bản khóa cũ: instance Amazon Linux 2, role `A4LInstanceRole` với `AmazonS3ReadOnlyAccess`, `curl` metadata không cần token. Dọn dẹp xóa role trước, và ô Modify IAM role **vẫn hiển thị tên đó** vì đó là **instance profile** chứ không phải role; phải chọn "No IAM role" và xác nhận "detach".)
 
 ## 🎯 Mẹo thi SAA-C03
 - Ứng dụng trên EC2 cần truy cập S3/DynamoDB/... thì dùng **instance role (instance profile)**. **Không bao giờ** lưu access key trên instance hay trong [[EC2 User Data Bootstrapping|user data]]. Đáp án có "store access keys in the instance/AMI/user data" thì gần như chắc chắn sai.

@@ -90,16 +90,17 @@
         "explain": "Enhanced scanning dùng Amazon Inspector để quét lỗ hổng cả OS lẫn software package theo từng layer. Basic scanning chỉ ở mức cơ bản, không đầy đủ như yêu cầu."
       },
       {
-        "type": "single",
-        "q": "Mô hình quyền truy cập của public registry trong Amazon ECR là gì?",
+        "type": "multi",
+        "q": "Một kỹ sư tạo repository trong Amazon ECR. Những thiết lập nào phải quyết định ngay lúc tạo repository vì không đổi được sau đó? (Chọn 2)",
         "options": [
-          "Mọi thao tác pull và push đều cần quyền",
-          "Ai cũng push được, nhưng pull cần quyền",
-          "Chỉ các account trong cùng AWS Organization được pull",
-          "Ai cũng pull được, nhưng push cần quyền"
+          "Repository là public hay private",
+          "Lifecycle policy để expire image cũ",
+          "Kiểu mã hóa at rest (AES-256 hoặc KMS key)",
+          "Các tag gắn cho image",
+          "Repository policy cho phép account khác pull"
         ],
-        "answer": [3],
-        "explain": "Public registry cho phép mọi người pull (read-only công khai), còn push cần quyền. Mô hình mọi thao tác đều cần quyền là của private registry."
+        "answer": [0, 2],
+        "explain": "Theo bài, repository chọn public hoặc private lúc tạo và không đổi được; cấu hình mã hóa at rest (AES-256 hoặc KMS) cũng chỉ đặt được khi tạo repository. Lifecycle policy, tag và repository policy đều thêm hoặc sửa được bất cứ lúc nào."
       },
       {
         "type": "single",
@@ -138,7 +139,7 @@
           "ECS với Fargate launch type"
         ],
         "answer": [3],
-        "explain": "Fargate là serverless: AWS quản lý container host, bạn chỉ khai báo CPU/memory cho task. ECS EC2 mode vẫn bắt bạn lo capacity và availability của cluster."
+        "explain": "Fargate là serverless: AWS quản lý container host, bạn chỉ khai báo CPU/memory cho task, đây là mô hình đơn giản nhất. ECS trên EC2 bắt bạn lo capacity và availability của cluster; ECS Managed Instances bớt việc hơn nhưng vẫn là EC2 trong account (thấy instance, trả phí quản lý mỗi instance)."
       },
       {
         "type": "single",
@@ -154,15 +155,15 @@
       },
       {
         "type": "single",
-        "q": "Một công ty chạy một batch job container khoảng 1 giờ mỗi ngày, thời gian còn lại không có tải. Họ muốn tối ưu chi phí và không phải lo hạ tầng. Giải pháp nào phù hợp nhất?",
+        "q": "Một công ty chạy workload container lớn, ổn định trên Amazon ECS, cần instance GPU và chạy privileged Linux container. Họ không muốn tự chọn, patch AMI hay quản lý Auto Scaling Group cho container host. Lựa chọn capacity nào phù hợp nhất?",
         "options": [
-          "ECS EC2 mode với Auto Scaling Group tối thiểu 2 instance",
-          "Một EC2 instance chạy Docker liên tục",
-          "Chạy task trên ECS Fargate khi job cần chạy",
-          "EC2 Dedicated Host chạy Docker"
+          "ECS trên Fargate",
+          "ECS Managed Instances",
+          "ECS trên EC2 với AMI custom do đội vận hành tự patch",
+          "Chạy Docker trực tiếp trên một EC2 instance"
         ],
-        "answer": [2],
-        "explain": "Workload batch/periodic hợp với Fargate vì chỉ trả tiền CPU/memory khi task chạy. Giữ fleet EC2 chạy liên tục cho tải không đều là lãng phí vì vẫn trả tiền instance khi rảnh."
+        "answer": [1],
+        "explain": "Managed Instances vẫn chạy trên EC2 (có GPU, privileged Linux container, dùng được RI/Savings Plans) nhưng AWS lo AMI Bottlerocket, patch theo chu kỳ 14 ngày và tự scale, thay host; đổi lại không SSH được và trả thêm phí quản lý mỗi instance. Fargate không hỗ trợ GPU hay privileged container; ECS trên EC2 thì bạn phải tự quản AMI và capacity."
       },
       {
         "type": "single",
@@ -275,7 +276,7 @@
           "Self-managed nodes dùng Spot Instances"
         ],
         "answer": [1],
-        "explain": "Với Fargate profile, pod chạy trên Fargate, không phải chọn instance type hay lo scale/cluster packing. Managed node groups vẫn là EC2, chỉ tự động hóa provisioning và lifecycle."
+        "explain": "Với Fargate profile, pod chạy trên Fargate, không có EC2 instance nào để provision hay scale, không lo cluster packing. Managed node groups vẫn là EC2, chỉ tự động hóa provisioning và lifecycle; EKS Auto Mode cũng dùng EC2 (AWS chọn type, scale, patch, thay node mỗi 21 ngày)."
       },
       {
         "type": "single",
@@ -283,11 +284,11 @@
         "options": [
           "Amazon ECS Anywhere",
           "EKS với Fargate profile",
-          "AWS Local Zones",
+          "EKS Hybrid Nodes",
           "EKS Anywhere"
         ],
         "answer": [3],
-        "explain": "EKS Anywhere cho phép tạo EKS cluster on-premises hoặc bất kỳ đâu. ECS Anywhere dùng cho ECS chứ không phải Kubernetes."
+        "explain": "EKS Anywhere cho phép tạo cả EKS cluster on-premises hoặc bất kỳ đâu. EKS Hybrid Nodes chỉ đưa node (nơi chạy container) về on-prem, còn control plane vẫn do AWS quản lý. ECS Anywhere dùng cho ECS chứ không phải Kubernetes."
       },
       {
         "type": "single",
@@ -365,7 +366,7 @@
       },
       {
         "type": "multi",
-        "q": "Thành phần nào chạy trên mỗi worker node trong cluster Kubernetes? (Chọn 2)",
+        "q": "Theo kiến trúc mặc định, thành phần nào chạy trên các worker node trong cluster Kubernetes? (Chọn 2)",
         "options": [
           "kubelet",
           "etcd",
@@ -374,7 +375,7 @@
           "cloud-controller-manager"
         ],
         "answer": [0, 3],
-        "explain": "Mỗi node chạy container runtime, kubelet (agent giao tiếp control plane) và kube-proxy (networking cho service). etcd, kube-scheduler và cloud-controller-manager thuộc control plane."
+        "explain": "Node chạy container runtime (containerd hoặc runtime tương thích CRI), kubelet (agent giao tiếp control plane qua Kubernetes API) và kube-proxy (cách mặc định hiện thực service; một số networking add-on thay thế hẳn kube-proxy). etcd, kube-scheduler và cloud-controller-manager thuộc control plane."
       }
     ]
   }

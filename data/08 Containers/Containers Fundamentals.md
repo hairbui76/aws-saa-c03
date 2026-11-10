@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s08-containers, containers, compute, docker]
-aliases: [Containers, Container, Docker, Docker Image, Dockerfile, Container Registry, Docker Hub, Containerization]
+aliases: [Containers, Container, Docker, Docker Image, Dockerfile, Container Registry, Docker Hub, Containerization, OCI, Open Container Initiative]
 lessons: ["0155 Introduction to Containers", "0156 DEMO Creating container of cats Docker Image"]
+videos: ["152 [ASSOCIATESHARED] Introduction to Containers", "154 [SHAREDALL] [DEMO] Create 'Container of Crocs' Image on EC2"]
 ---
 # Containers Fundamentals
 
@@ -74,6 +75,7 @@ flowchart BT
 - Một image có thể sinh **nhiều container** trên **nhiều host**; mỗi container là duy nhất vì có layer R/W riêng.
 - Registry private thường yêu cầu xác thực; public thì thường ai cũng pull được.
 - Lưu ý thuật ngữ: Docker container / Docker host / Docker Hub chỉ là **một loại** container / container host / registry, nhưng vì Docker quá phổ biến nên người ta hay dùng lẫn lộn.
+- Có một chuẩn mở là **Open Container Initiative (OCI)**, định nghĩa thế nào là container, registry và các artifact đi kèm. Nghe ai nói "Docker" thì thường họ đang nói về container nói chung. [[ECR]] lưu được cả image theo chuẩn OCI.
 
 ### Đặc điểm chính (key concepts)
 - Dockerfile → build Docker image (nhiều layer) → chạy thành container.
@@ -83,26 +85,27 @@ flowchart BT
 - Container cô lập nên muốn truy cập từ ngoài phải **expose port** (ví dụ TCP/80 cho HTTP) → host và thế giới bên ngoài truy cập được dịch vụ.
 - Ứng dụng phức tạp có thể gồm **nhiều container** (ví dụ container web + container database), để scale từng phần hoặc tách tier.
 
-## Demo / Lab — "Container of Cats" Docker image
-Kiến trúc: một EC2 instance (dựng bằng 1-click [[CloudFormation Basics|CloudFormation]] stack, kết nối qua Session Manager thay vì SSH key) dùng làm Docker host để build image.
-1. **Cài Docker engine**: trên Amazon Linux 2 dùng `amazon-linux-extras install docker`, sau đó `service docker start`. (Amazon Linux 2023 không còn `amazon-linux-extras`; dùng `dnf install docker`.)
-2. `docker ps` báo lỗi quyền → thêm user vào group docker: `usermod -a -G docker ec2-user`, rồi logout/login lại (với Session Manager thì `sudo su - ec2-user`). `docker ps` trả về danh sách trống = OK.
-3. Thư mục ứng dụng gồm `index.html`, 6 ảnh JPG và **Dockerfile**. Các directive:
-   - `FROM centos:7` → base image.
-   - `LABEL maintainer=...` → mô tả/người duy trì.
-   - `RUN yum -y install httpd` → cài Apache.
-   - `COPY index.html` và `COPY *.jpg` vào `/var/www/html/` (thư mục Apache phục vụ).
-   - `ENTRYPOINT` → lệnh chạy đầu tiên khi tạo container (chạy Apache ở foreground).
-   - `EXPOSE 80` → chỉ **khai báo/tài liệu hóa** port mà container dùng; bản thân nó không cấu hình gì.
-4. `docker build -t containerofcats .` → dấu `.` là thư mục làm việc chứa Dockerfile. Docker kéo base image rồi chạy từng directive, mỗi bước tạo một layer; image được tag `:latest`.
-5. `docker images --filter reference=containerofcats` để xem image.
-6. `docker run -t -i -p 80:80 containerofcats` → map **port 80 của EC2 host tới port 80 của container**; truy cập public IP của instance (dùng HTTP, không HTTPS) thấy trang web.
-7. (Tùy chọn) Đẩy lên Docker Hub: `docker login --username=...` → `docker tag <image-id> <user>/containerofcats` → `docker push <user>/containerofcats:latest`. Image này được dùng lại trong demo [[ECS]] Fargate.
-8. Dọn dẹp: xóa CloudFormation stack (xóa instance cũng xóa luôn mật khẩu Docker Hub đã lưu trên máy).
+## Demo / Lab — "Container of Crocs" image trên EC2
+Kiến trúc: stack CloudFormation 1-click (us-east-1) tạo VPC Aus-E-Mart với các public subnet và một EC2 instance `AEM Public Instance` (Amazon Linux 2023, ARM64). Instance này đóng vai Docker host để build và chạy image.
+1. Đợi stack ở trạng thái `CREATE_COMPLETE` và instance pass 3/3 status check, rồi kết nối bằng **[[EC2 Instance Connect and SSH|EC2 Instance Connect]]** (user `ec2-user`).
+2. **Cài Docker engine** bằng package manager: `sudo dnf install docker`, rồi `sudo systemctl start docker`.
+3. `docker images` báo **permission denied** → thêm user vào group docker: `sudo usermod -a -G docker ec2-user`. Phải ngắt kết nối rồi kết nối lại thì thay đổi mới có hiệu lực; lúc này `docker images` trả về danh sách trống.
+4. Tải file zip của ứng dụng (lưu trên S3), `unzip`, `cd` vào thư mục container-of-crocs: có **Dockerfile**, các ảnh cá sấu và một `index.html`. Các directive trong Dockerfile:
+   - `FROM` image **Red Hat UBI 8** → base layer hệ điều hành.
+   - `LABEL` (tùy chọn) → tác giả là Aus-E-Mart.
+   - `RUN yum install` web server cho trang web tĩnh.
+   - `COPY` `index.html` và các file ảnh vào thư mục web.
+   - Chạy web server ở foreground, `EXPOSE 80` để truy cập web server qua port 80.
+5. `docker build -t containerofcrocs .` → `-t` gắn tag (tên) cho image, dấu `.` là thư mục làm việc chứa Dockerfile. Docker kéo base image UBI 8, chạy từng directive, mỗi bước tạo một layer.
+6. `docker images` → thấy image `containerofcrocs` tag `latest`.
+7. `docker run -t -i -p 80:80 containerofcrocs` → map **port 80 của EC2 host tới port 80 của container**; mở public IP của instance (HTTP) thấy trang web. Giảng viên nhấn mạnh: image chứa mọi thứ app cần nên chạy trên máy cá nhân, EC2 hay cloud khác đều như nhau (portability).
+8. Demo tiếp theo đẩy image này lên **[[ECR]]** để dùng với [[ECS]]. Nếu dừng ở đây thì xóa stack hoặc ít nhất stop instance.
 
 Rút ra: chạy Docker trực tiếp trên EC2 hợp cho thử nghiệm/build nhanh, **không phải cách khuyến nghị cho production** (xem [[ECS Launch Types EC2 vs Fargate]]).
 
-> Ghi chú hiện tại: CentOS 7 đã **hết hỗ trợ (EOL) từ 06/2024**, image `centos:7` và repo yum của nó không còn được cập nhật; khi làm lại lab nên đổi base image (ví dụ Amazon Linux, Rocky/Alma Linux, hoặc `httpd` chính thức).
+(Bản khóa cũ: demo "Container of Cats" dùng Amazon Linux 2 với `amazon-linux-extras install docker`, kết nối qua Session Manager, base image `centos:7`, rồi đẩy image lên **Docker Hub** bằng `docker login` / `docker tag` / `docker push`.)
+
+> Ghi chú hiện tại: phần lý thuyết vẫn lấy CentOS 7 làm ví dụ base image, nhưng CentOS 7 đã **hết hỗ trợ (EOL) từ 06/2024**, image `centos:7` và repo yum của nó không còn được cập nhật; demo mới đã đổi sang Red Hat UBI 8. (Bổ sung, bài không nói chuyện EOL.)
 
 ## 🎯 Mẹo thi SAA-C03
 - Đề nhắc **"lightweight", "portable", "consistent across environments", "start nhanh", "mật độ cao", "không cần full OS"** → nghĩ tới container.

@@ -1,22 +1,29 @@
 ---
 tags: [saa-c03, s08-containers, containers, compute, ecs]
-aliases: [Elastic Container Service, Amazon ECS, ECS Task, ECS Service, Task Definition, Container Definition, Task Role]
+aliases: [Elastic Container Service, Amazon ECS, ECS Task, ECS Service, Task Definition, Container Definition, Task Role, ECS Cluster]
 lessons: ["0157 ECS Concepts", "0159 DEMO Deploying container of cats using Fargate"]
+videos: ["156 [ASSOCIATESHARED] ECS - Concepts", "158 [SHAREDALL] [DEMO] - Deploy 'Container of Crocs' to Fargate"]
 ---
 # ECS
 
-> **TL;DR:** Amazon Elastic Container Service (ECS) là dịch vụ **managed container orchestration**: bạn đưa container image và chỉ dẫn, ECS quyết định chạy ở đâu và như thế nào trong một **cluster**. "ECS đối với container giống như EC2 đối với VM". Bốn khái niệm cần nắm: **container definition, task definition, task role, service**.
+> **TL;DR:** Amazon Elastic Container Service (ECS) là dịch vụ **managed container orchestration**: bạn đưa container image và chỉ dẫn, ECS quyết định chạy ở đâu và như thế nào trong một **cluster**. "ECS đối với container giống như EC2 đối với VM". Cluster chỉ là lớp quản lý; container chạy trên **capacity**: **Fargate, ECS Managed Instances hoặc EC2 tự quản**. Bốn khái niệm cần nắm: **container definition, task definition, task role, service**.
 
 ## 🖼️ Sơ đồ
 ![[ECS.excalidraw]]
 *Mở bằng plugin Excalidraw để chỉnh sửa · ảnh tĩnh: [[ECS.svg]]*
 
 ## Khái niệm cốt lõi
-- ECS nhận **container + instructions** và **orchestrate** nơi/cách chạy chúng; giảm gánh nặng tự quản container host như khi tự chạy Docker trên EC2 (xem [[Containers Fundamentals]]).
-- Cluster chạy ở một trong hai mode, khác nhau rất nhiều bên dưới (chi tiết: [[ECS Launch Types EC2 vs Fargate]]):
-  - **EC2 mode**: container host là EC2 instance trong account của bạn (chạy ECS agent).
-  - **Fargate mode**: serverless, AWS quản lý phần container host.
-- Image lấy từ một **container registry**: [[ECR]] (tích hợp IAM, scale tốt) hoặc registry khác như Docker Hub.
+- ECS nhận **container + instructions** và **orchestrate** nơi/cách chạy chúng; giảm gánh nặng tự quản container host như khi tự chạy Docker trên EC2 (xem [[Containers Fundamentals]]). Dễ coi ECS chỉ là một container engine, nhưng nó còn lo **scaling, health check, recovery (tự thay container lỗi), service discovery**.
+- Image lấy từ một **container registry**: [[ECR]] (tích hợp IAM, scale tốt) hoặc registry khác như Docker Hub, public hoặc private.
+
+### Cluster và capacity
+- **Cluster** là thứ tạo đầu tiên: **đơn vị quản lý logic** của ECS, ranh giới để tổ chức workload container. Networking, monitoring, quản lý phần lớn nằm ở mức cluster.
+- **Cluster không tự chạy container**, nó chỉ là management plane. Thứ thực sự chạy container là **capacity** (compute bên dưới). Có **3 lựa chọn**, đánh đổi khác nhau về quyền kiểm soát, chi phí và công vận hành (chi tiết: [[ECS Launch Types EC2 vs Fargate]]):
+  - **Fargate**: serverless, AWS quản lý phần container host.
+  - **ECS Managed Instances**: vẫn là EC2 trong account, nhưng AWS lo AMI, patch và scale host.
+  - **EC2 tự quản**: container host là EC2 instance trong account của bạn (chạy ECS agent), bạn quản lý.
+- (Bản khóa cũ chỉ có hai mode: EC2 mode và Fargate mode.)
+- Quy trình: tạo cluster → mô tả giải pháp bằng các **definition** (container nào, CPU/memory, network, IAM, bao nhiêu bản sao) → chọn capacity → chạy **task** hoặc **service**.
 
 ### Container definition
 - "Con trỏ" tới container: **image nằm ở đâu** (URL trên registry) và **port nào được expose** (port mapping, ví dụ 80/TCP).
@@ -28,7 +35,7 @@ lessons: ["0157 ECS Concepts", "0159 DEMO Deploying container of cats using Farg
   - Các **container definition** tạo nên ứng dụng.
   - **Resources**: CPU và memory cho task.
   - **Networking mode**.
-  - **Compatibility**: chạy được trên EC2 mode, Fargate hay cả hai.
+  - **Compatibility**: task được phép chạy trên capacity nào (EC2, Fargate, Managed Instances).
   - **Task role**.
   - Volume (khai báo theo task, các container trong task dùng chung).
 - Trong console, tạo task definition thì tạo kèm container definition, nên dễ nhầm; nhưng về kiến trúc chúng **tách biệt**. Nhiều task chỉ có 1 container càng làm rối thêm.
@@ -44,16 +51,17 @@ lessons: ["0157 ECS Concepts", "0159 DEMO Deploying container of cats using Farg
   - Chạy **bao nhiêu bản sao** của task (ví dụ 5 task) → scaling + high availability.
   - **Thay thế task lỗi**, restart, một số tính năng monitoring.
   - Đặt **load balancer** ([[Elastic Load Balancer]]) phía trước để phân phối tải qua các task.
-- Dùng service cho ứng dụng **long-running, business-critical, production** hoặc tải lớn. Có thể chạy một task đơn lẻ không cần service (như demo).
-- Thứ được deploy vào cluster là **task hoặc service**, áp dụng cho cả EC2 lẫn Fargate.
+- Dùng service cho ứng dụng **long-running, business-critical, production** hoặc tải lớn. Ví dụ: service chạy 15 bản sao trải trên các subnet ở nhiều AZ, một load balancer phía trước; người dùng chỉ thấy một điểm vào. Có thể chạy một task đơn lẻ không cần service khi chỉ cần dựng nhanh.
+- Thứ được deploy vào cluster là **task hoặc service**, áp dụng cho mọi loại capacity.
 
 ```mermaid
 flowchart LR
   REG["Registry (ECR / Docker Hub)"] --> CD["Container Definition: image + port"]
   CD --> TD["Task Definition: containers, CPU/mem, network mode, compatibility, Task Role"]
   TD --> SD["Service Definition: số bản sao, HA, restart, ELB"]
-  TD -->|"chạy task lẻ"| CL["ECS Cluster (EC2 hoặc Fargate)"]
+  TD -->|"chạy task lẻ"| CL["ECS Cluster (lớp quản lý logic)"]
   SD --> CL
+  CL --> CAP["Capacity: Fargate / Managed Instances / EC2"]
   ROLE["IAM Task Role"] -.->|"temporary credentials"| TD
 ```
 
@@ -65,23 +73,30 @@ flowchart LR
 | Task Role | IAM role mà **task** assume |
 | Service | Số bản sao, HA, restart, gắn load balancer |
 
-## Demo / Lab — Deploy "container of cats" lên Fargate
-Dùng [[Default VPC]] (subnet public tự cấp public IPv4), region us-east-1, image đã push lên Docker Hub ở bài [[Containers Fundamentals]].
-1. **Tạo cluster** loại "Networking only (Fargate)" (console cũ có 3 lựa chọn: Fargate, EC2 Linux, EC2 Windows). Không tạo VPC mới. Lần đầu trong account có thể lỗi liên quan **service-linked role** → làm lại là được (xem [[Service-linked Roles and PassRole]]).
-2. **Tạo task definition** compatibility **Fargate**: tên `containerofcats`, task role để trống (app không gọi AWS), OS family **Linux**, task size **1 GB memory / 0.5 vCPU**.
-3. **Thêm container definition** `containerofcatsweb`: image `docker.io/<user>/containerofcats`, soft memory limit 1024 MiB, **port mapping 80/TCP**. Xem JSON: task definition chứa danh sách `containerDefinitions` với port mapping và image URL.
-4. **Run task** (không dùng service): launch type **Fargate** (các lựa chọn khác: EC2, External), số task = 1, chọn VPC 172.31.0.0/16 và ít nhất 2 subnet (tránh thiếu capacity).
-5. Task được **inject vào VPC qua một ENI** → ENI có [[Security Groups|Security Group]] (mặc định cho phép port 80 từ mọi nơi) và **Auto-assign public IP = ENABLED**.
-6. Trạng thái: PROVISIONING → PENDING → **RUNNING**. Task có private IP và public IP trong default VPC; mở public IP thấy trang web.
-7. Dọn dẹp: stop task → **deregister** task definition → delete cluster.
+## Demo / Lab — Deploy "Container of Crocs" lên Fargate
+Dùng image `containerofcrocs` đã push lên [[ECR]] ở demo trước, region us-east-1.
+1. **Tạo cluster** `all-the-crocs`. Console cho chọn capacity sẵn có cho cluster: **Fargate only**, **Fargate + Managed Instances**, hoặc **Fargate + self-managed instances** (khi cần kiểm soát AMI, instance type). Chọn Fargate only, tắt monitoring. Lần đầu dùng ECS trong account hay bị **lỗi khi tạo cluster** → tạo lại cùng tên là được. Cluster lúc này chỉ là lớp quản lý, chưa có gì chạy.
+2. **Tạo task definition** `containerofcrocs` (tách riêng khỏi cluster như các khối Lego: định nghĩa giải pháp một chỗ, chạy ở cluster nào cũng được):
+   - Launch type **AWS Fargate**; OS/architecture **Linux/ARM64**, vì image được build trên instance ARM64 (Graviton).
+   - Task size **0.5 vCPU / 1 GB**; task role để mặc định (app không gọi dịch vụ AWS).
+   - Chỉ giữ **một container**, đánh dấu **essential** (bắt buộc phải chạy trong task). Image URI chọn bằng **Browse ECR images** → repository `containerofcrocs`. Port mapping **80/TCP**, app protocol HTTP. Tắt logging.
+   - Xem bản JSON: task definition chứa container, nguồn image, port.
+3. **Chạy**: có thể *Run task* (chạy task lẻ), nhưng demo dùng **Create service**:
+   - Chọn task definition và **revision** (sửa task definition sinh revision 1, 2, 3…; service có thể chuyển dần sang revision mới).
+   - Compute options: phân biệt **capacity provider strategy** với **launch type**; demo chọn launch type **Fargate**.
+   - Service có thêm nhiều thứ so với task lẻ: **AZ rebalancing**, số task mong muốn, **health check**, **load balancing**, **service auto scaling**.
+   - Networking: chọn VPC và subnet (ví dụ chỉ public subnet, hoặc trải nhiều AZ), tạo security group mới `containerofcrocs-SG` mở **HTTP 80** từ mọi nơi, bật **public IP**.
+4. Service deploy 1 task. Vào task (last status và desired status đều RUNNING) → **network bindings** có public IP → mở thấy trang Crocs. Thực tế thường đặt **load balancer** trước service thay vì truy cập thẳng task.
+5. Dọn dẹp: **delete service** (có thể cần *force delete*) → **deregister** task definition revision (đổi bộ lọc sang *Inactive* thấy các revision đã deregister) → **delete cluster** (console xóa cả CloudFormation stack nó tạo) → kiểm tra security group đã bị xóa; nếu lần đầu tạo cluster bị lỗi thì xóa luôn stack lỗi còn sót trong CloudFormation. Image trong ECR giữ lại (nằm trong free tier).
 
-> Ghi chú hiện tại: console "classic" và kiểu cluster "Networking only" trong demo đã bị thay. Console ECS mới tạo cluster rồi chọn hạ tầng (Fargate, EC2 qua Auto Scaling Group, hoặc External/ECS Anywhere); khái niệm task/service không đổi.
+(Bản khóa cũ: console "classic", cluster loại "Networking only (Fargate)", image `containerofcats` trên Docker Hub, task size 1 GB / 0.5 vCPU, chạy bằng *Run task* trong [[Default VPC]]; task được inject vào VPC qua một ENI có Security Group và public IP.)
 
 ## 🎯 Mẹo thi SAA-C03
 - **Container trong ECS cần quyền gọi S3/DynamoDB/...** → **Task Role** (không nhúng access key, không dựa vào instance role của host).
 - Phân biệt thêm (ngoài bài giảng, hay gặp trong đề): **Task execution role** là role cho **ECS agent/Fargate** để pull image từ [[ECR]] và gửi log tới [[CloudWatch Logs]]; **Task role** là quyền cho **code trong container**.
 - Cần **nhiều bản sao, HA, tự thay task lỗi, gắn ALB** → **ECS Service** (không phải task đơn lẻ).
 - Container definition = image + port; task definition = CPU/memory, network mode, compatibility, task role.
+- **Cluster** chỉ là lớp quản lý logic; container chạy trên **capacity**: Fargate, ECS Managed Instances hoặc EC2 (xem [[ECS Launch Types EC2 vs Fargate]]).
 - Đề muốn "chạy container mà không quản lý server" → ECS **Fargate**; "dùng Kubernetes/tránh vendor lock-in" → [[EKS]].
 
 ## Liên kết

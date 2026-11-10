@@ -24,7 +24,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | User cần pass role có sẵn cho service, không được tạo/sửa role | **`iam:PassRole`** (+ `iam:PassedToService`; role và user cùng account) | [[Service-linked Roles and PassRole]] |
 | Báo cáo compliance của AWS (SOC, PCI, ISO) cho auditor | **AWS Artifact** | [[AWS Artifact and License Manager]] |
 | Secret + **rotation tự động** (nhất là mật khẩu RDS) | **Secrets Manager** | [[Secrets Manager]] |
-| Cấu hình phân cấp, rẻ, SecureString, AMI mới nhất | **SSM Parameter Store** | [[SSM Parameter Store]] |
+| Cấu hình phân cấp, rẻ, SecureString, AMI mới nhất | **SSM Parameter Store** (share cross-account → Advanced tier) | [[SSM Parameter Store]] |
 | HSM riêng **single-tenant**, khách hàng tự quản, PKCS#11/JCE/CNG (KMS nay cũng FIPS 140-3 Level 3 nên "Level 3" một mình không đủ) | **CloudHSM** | [[CloudHSM]] |
 | SQL injection, XSS, geo match, rate limit HTTP | **WAF** (ALB, CloudFront, API Gateway) | [[WAF]] |
 | DDoS 24/7 response team, bồi hoàn chi phí scale | **Shield Advanced** | [[Shield]] |
@@ -55,14 +55,18 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Từ khóa trong đề | Chọn | Note |
 |---|---|---|
 | Container, không quản lý server | **ECS/EKS trên Fargate** | [[ECS Launch Types EC2 vs Fargate]] |
-| Kubernetes, tránh lock-in, đang chạy K8s on-prem | **EKS** | [[EKS]] |
+| Container cần GPU / privileged, không muốn lo AMI, patch, scale host | **ECS Managed Instances** (Bottlerocket, patch 14 ngày, không SSH, giá EC2 + phí quản lý) | [[ECS Launch Types EC2 vs Fargate]] |
+| Container cần custom AMI, SSH, Windows, task > 14 ngày, Spot/RI | **ECS trên EC2** | [[ECS Launch Types EC2 vs Fargate]] |
+| Kubernetes, tránh lock-in, đang chạy K8s on-prem | **EKS** (node EC2 do AWS lo hết → Auto Mode; node on-prem, control plane AWS → Hybrid Nodes) | [[EKS]] |
+| Quét lỗ hổng container image (OS + thư viện), tự xóa image cũ | **ECR** enhanced scanning (Inspector) + lifecycle policy | [[ECR]] |
+| Tự động build, test, cập nhật, phân phối AMI / container image | **EC2 Image Builder** | [[EC2 Image Builder]] |
 | Event-driven, chạy ≤ 15 phút | **Lambda** | [[Lambda]] |
 | HPC, tightly coupled, latency thấp giữa node | **Cluster placement group** + enhanced networking/EFA | [[EC2 Placement Groups]] |
 | License theo socket/core, BYOL | **Dedicated Host** | [[Dedicated Hosts]] |
 | Batch chịu gián đoạn, rẻ nhất | **Spot** | [[EC2 Purchase Options]] |
 | Chắc chắn launch được ở một AZ (sự kiện, Black Friday), không cam kết dài hạn | **On-Demand Capacity Reservation** (+ Savings Plans nếu cần giảm giá) | [[Reserved Instances and Savings Plans]] |
 | Tải 24/7, 1–3 năm; chuyển dần EC2 → Fargate → Lambda | **RI / Savings Plans** (Compute SP) | [[Reserved Instances and Savings Plans]] |
-| Memory, disk, app log của EC2/on-prem | **CloudWatch Agent** | [[CloudWatch Agent]] |
+| Memory, disk, app log của EC2/on-prem | **CloudWatch Agent** (`CloudWatchAgentServerPolicy`; instance tạo config: `CloudWatchAgentAdminPolicy`) | [[CloudWatch Agent]] |
 
 ### Storage (S3/EBS/EFS/FSx)
 | Từ khóa trong đề | Chọn | Note |
@@ -311,7 +315,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | IAM | 5.000 user/account (hard limit, Service Quotas không cho tăng); user ≤ 10 group; 300 group/account (nay xin tăng tới 500); 2 access key/user |
 | VPC | CIDR /28 → /16; mỗi subnet trừ **5 IP** (/28 → 11); router +1, DNS +2; default VPC 172.31.0.0/16, /20 mỗi AZ |
 | LB subnet | Nên /27 (cần ≥ 8 IP trống) |
-| EC2 | Metadata 169.254.169.254; user data ≤ 16 KB, chạy 1 lần; spread PG 7 instance/AZ |
+| EC2 | Metadata 169.254.169.254; user data ≤ 16 KB (trước base64), chạy 1 lần; spread PG 7 instance/AZ/group; Parameter Store cây tối đa 15 cấp; ECS Managed Instances patch 14 ngày; EKS Auto Mode thay node 21 ngày |
 | EBS | gp2 16K IOPS → io1 64K → gp3 80K → io2 Block Express 256K → (RAID 0 tới trần instance) → Instance Store hàng triệu; FSR tối đa 5/region |
 | S3 | Object 0–50 TB (khóa cũ: 5 TB); single PUT ≤ 5 GB; multipart nên dùng từ 100 MB; RTC 15 phút; 200 OK = đã lưu durable |
 | S3 bucket | Khóa cũ: 100 soft / 1.000 hard (khóa mới không nêu); nay: 10.000 mặc định (từ 11/2024) |

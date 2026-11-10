@@ -48,7 +48,7 @@
           "Bật EC2 detailed monitoring"
         ],
         "answer": [1],
-        "explain": "Agent cần quyền gửi dữ liệu, và best practice là IAM role gắn vào instance với CloudWatchAgentServerPolicy. Nhúng access key vừa kém an toàn vừa khó quản lý ở quy mô lớn."
+        "explain": "Agent cần quyền gửi dữ liệu, và best practice là IAM role gắn vào instance với CloudWatchAgentServerPolicy (ghi CloudWatch/CloudWatch Logs và đọc cấu hình agent từ Parameter Store). Riêng instance chạy wizard để lưu cấu hình vào Parameter Store cần CloudWatchAgentAdminPolicy. Nhúng access key vừa kém an toàn vừa khó quản lý ở quy mô lớn."
       },
       {
         "type": "multi",
@@ -125,6 +125,70 @@
         ],
         "answer": [1, 3],
         "explain": "Dedicated Host không dùng được với RDS và placement groups. Host vẫn chia sẻ được qua AWS RAM trong Organization, có reservation 1/3 năm, và host Nitro trộn được nhiều size."
+      }
+    ],
+    "EC2 Image Builder": [
+      {
+        "type": "single",
+        "q": "Một công ty phải tạo lại AMI chuẩn cho web server farm mỗi tháng: cài bản vá mới, chạy kiểm thử, rồi copy AMI sang 3 region khác. Hiện việc này làm tay và hay sai. Giải pháp nào giảm công vận hành nhiều nhất?",
+        "options": [
+          "Viết user data cài bản vá ở mỗi lần instance launch",
+          "Dùng EC2 Image Builder: pipeline theo lịch với recipe (base image + build component + test component) và distribution configuration tới 3 region",
+          "Tạo AMI bằng tay rồi dùng AWS Backup copy sang region khác",
+          "Bật EBS Fast Snapshot Restore cho snapshot của AMI ở cả 4 region"
+        ],
+        "answer": [1],
+        "explain": "EC2 Image Builder tự động hóa toàn bộ: build theo recipe, test bằng test component, rồi phân phối (copy/share) sang region/account khác theo distribution configuration, chạy theo lịch. User data làm chậm mỗi lần launch và không có bước test/phân phối image; làm tay vẫn tốn công."
+      },
+      {
+        "type": "multi",
+        "q": "Một image pipeline của EC2 Image Builder sử dụng những thành phần nào để biết cần build gì và build ở đâu? (Chọn 2)",
+        "options": [
+          "Recipe gồm base image, build component và test component",
+          "Infrastructure configuration: VPC, instance type/size, security group, logging",
+          "Launch template của Auto Scaling Group",
+          "CloudFormation change set",
+          "Một Lambda function để chạy test"
+        ],
+        "answer": [0, 1],
+        "explain": "Recipe định nghĩa image gì (base AMI hoặc container image), build thế nào (build component YAML/JSON) và test thế nào (test component). Infrastructure configuration định nghĩa môi trường build/test (VPC, instance type/size, SG, notification, logging). Distribution configuration là tùy chọn cho việc copy/share."
+      },
+      {
+        "type": "single",
+        "q": "Chi phí khi dùng EC2 Image Builder được tính như thế nào?",
+        "options": [
+          "Trả phí theo mỗi lần pipeline chạy",
+          "Trả phí theo số recipe và component",
+          "Không trả phí cho pipeline hay việc điều phối; chỉ trả tài nguyên dùng tới như EC2 build/test, EBS snapshot, container image trong ECR",
+          "Trả phí cố định mỗi tháng cho mỗi region bật Image Builder"
+        ],
+        "answer": [2],
+        "explain": "Bài nhấn mạnh Image Builder không tính phí pipeline hay điều phối build/test; bạn chỉ trả tài nguyên thực dùng: instance EC2 chạy build/test, EBS snapshot của AMI, container image lưu ở ECR."
+      },
+      {
+        "type": "single",
+        "q": "Trong một image pipeline, image vừa build xong (untested image) đi tiếp như thế nào trước khi được phân phối?",
+        "options": [
+          "Được copy ngay sang mọi region trong distribution configuration",
+          "Được launch trên một test instance để chạy test component; chỉ khi mọi test đã cấu hình pass thì mới được copy/share",
+          "Được gửi cho Amazon Inspector quét rồi tự động public",
+          "Được lưu vào S3 dưới dạng file VMDK để kiểm tra thủ công"
+        ],
+        "answer": [1],
+        "explain": "Luồng là BUILD → VALIDATE → TEST → DISTRIBUTE: untested image được launch trên instance mới (theo infrastructure configuration), test component chạy trên đó, và chỉ image pass mọi test đã cấu hình mới được phân phối."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về EC2 Image Builder? (Chọn 2)",
+        "options": [
+          "Tạo được cả AMI cho EC2 lẫn container image lưu trong Amazon ECR",
+          "Build và test có thể chạy ở bất kỳ region nào, không phụ thuộc region của pipeline",
+          "Có component bảo mật dựng sẵn như STIG, CIS và lifecycle policy để deprecate, disable hoặc delete image cũ",
+          "Chỉ chạy được thủ công, không lên lịch được",
+          "Image tạo ra không có version nên phải tự đặt tên để phân biệt"
+        ],
+        "answer": [0, 2],
+        "explain": "Image Builder hỗ trợ AMI và container image (ECR), có component STIG/CIS dựng sẵn và lifecycle policy dọn image cũ. Build/test chạy trong region của pipeline; pipeline chạy tay, theo schedule hoặc cron; recipe, component và image đều có version."
       }
     ],
     "EC2 Instance Roles": [

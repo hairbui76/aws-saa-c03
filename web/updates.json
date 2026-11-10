@@ -14,7 +14,9 @@
     "Exam Cheat Sheet: NAT Gateway có chế độ zonal (mỗi AZ một cái, trong public subnet) và regional (một NATGW cho cả VPC, AWS trải qua các AZ); private NAT Gateway cho mạng private chồng lấn",
     "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64",
     "Exam Cheat Sheet: mốc EBS mới (gp2 16K, io1 64K, gp3 80K / 2,000 MiB/s, io2 Block Express 256K; io2 = Block Express), FSR tối đa 5/region, Spot cảnh báo 2 phút và terminate/stop/hibernate, RI Standard/Convertible, ODCR giá On-Demand (immediate/future, open/targeted), Savings Plans không giữ capacity, Scheduled RI đã deprecated",
-    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans"
+    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans",
+    "Exam Cheat Sheet: thêm ECS Managed Instances, ECS trên EC2 khi cần custom AMI/SSH/Windows, EKS Auto Mode / Hybrid Nodes, ECR scanning + lifecycle policy, EC2 Image Builder, CloudWatchAgentAdminPolicy, Parameter Store share cross-account (Advanced) và 15 cấp, user data 16 KB trước base64",
+    "Top mẹo thi và concept map chương 08, 09: ba capacity của ECS (Managed Instances), ECR scanning/lifecycle, EKS Auto Mode và Hybrid Nodes, EC2 Image Builder, CloudWatchAgentAdminPolicy, nhiều spread group"
   ],
   "missing": [],
   "lessons": {
@@ -792,6 +794,125 @@
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []
+    },
+    "Containers Fundamentals": {
+      "kind": "updated",
+      "summary": "Demo mới build image \"Container of Crocs\" trên Amazon Linux 2023 (dnf install docker, EC2 Instance Connect, base Red Hat UBI 8) rồi đẩy lên ECR thay vì Docker Hub; thêm chuẩn mở Open Container Initiative (OCI).",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Demo / Lab — \"Container of Crocs\" image trên EC2"
+      ],
+      "dropped": []
+    },
+    "ECR": {
+      "kind": "updated",
+      "summary": "Mỗi account có sẵn một registry ở mỗi region; repository public/private và mã hóa chọn lúc tạo, không đổi được; thêm registry policy, OCI artifact (Helm chart), scanning basic miễn phí (OS) / enhanced Inspector có phí (OS + thư viện, liên tục), lifecycle policy, tag immutability; demo push image bằng get-login-password.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab — Push \"Container of Crocs\" lên ECR",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "ECS": {
+      "kind": "updated",
+      "summary": "Cluster là đơn vị quản lý logic, không tự chạy container; capacity có 3 lựa chọn (Fargate, ECS Managed Instances, EC2); demo mới: cluster nhiều capacity, task ARM64 lấy image từ ECR, chạy bằng service (capacity provider strategy vs launch type), revision task definition.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab — Deploy \"Container of Crocs\" lên Fargate",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "ECS Launch Types EC2 vs Fargate": {
+      "kind": "updated",
+      "summary": "Thêm capacity provider thứ ba ECS Managed Instances (EC2 Bottlerocket do AWS quản lý, patch 14 ngày, không SSH, chỉ Linux, giá EC2 + phí quản lý); EC2 có root access, privileged container, AMI custom; quy tắc chọn mới giữa Fargate, Managed Instances và EC2.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Kubernetes": {
+      "kind": "updated",
+      "summary": "Runtime là containerd hoặc runtime tương thích CRI; kube-controller-manager nay gồm EndpointSlice controller và service account controller; kube-proxy là cách mặc định hiện thực service nhưng có thể bị networking add-on thay thế.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi"
+      ],
+      "dropped": []
+    },
+    "EKS": {
+      "kind": "updated",
+      "summary": "Thêm EKS Auto Mode (AWS chọn instance type, scale, patch, thay node mỗi 21 ngày) và EKS Hybrid Nodes (node on-prem, control plane ở AWS) vào các kiểu node và cách chạy EKS.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 User Data Bootstrapping": {
+      "kind": "updated",
+      "summary": "Linux và Windows đều có thể bật cho user data chạy mỗi lần boot (mặc định chỉ một lần); 16 KB tính trước base64; status check độc lập hai chiều với user data; demo mới dựng web app Aus-E-Mart và đọc user data qua IMDSv2 (cần token).",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 Instance Roles": {
+      "kind": "updated",
+      "summary": "Demo mới đọc credential của role qua IMDSv2 (phải lấy token trước), detach role khỏi instance trước khi xóa; thứ tự ưu tiên credential 6 mức của CLI không còn được liệt kê.",
+      "changed": [
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab"
+      ],
+      "dropped": []
+    },
+    "SSM Parameter Store": {
+      "kind": "updated",
+      "summary": "Cây phân cấp tối đa 15 cấp; versioning để rollback; KMS cho audit trail; Advanced tier cần khi share parameter cross-account; có tier mặc định Intelligent-Tiering và data type EC2 image; demo mới với nhánh /aem/.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CloudWatch Agent": {
+      "kind": "updated",
+      "summary": "Phân biệt CloudWatchAgentServerPolicy (ghi log/metric, đọc config ở Parameter Store) và CloudWatchAgentAdminPolicy (thêm quyền ghi config); cài agent cho cả fleet bằng Systems Manager Run Command; demo mới không dùng collectd, có log group class.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 Placement Groups": {
+      "kind": "updated",
+      "summary": "Spread giới hạn 7 instance đang chạy mỗi AZ mỗi group, cần nhiều hơn thì dùng nhiều spread group; cluster nằm trên cùng hardware segment (AWS không hứa cùng rack); use case spread là bản sao dự phòng như download mirror.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 Image Builder": {
+      "kind": "new",
+      "summary": "Dịch vụ tự động build, test và phân phối AMI lẫn container image (ECR) qua image pipeline: recipe, infrastructure configuration, distribution configuration; không tính phí dịch vụ."
     }
   }
 }

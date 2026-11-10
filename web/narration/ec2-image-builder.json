@@ -1,0 +1,16 @@
+{
+ "EC2 Image Builder": {
+  "sig": "9-xc5h46",
+  "steps": [
+   "Sơ đồ này cho thấy EC2 Image Builder tự động build, test rồi phân phối image. Một pipeline chạy tay hoặc theo lịch, dùng recipe, infrastructure configuration và distribution configuration, và mọi thứ chạy trong account của bạn.",
+   "Bước một, build component viết bằng YAML hoặc JSON, tự viết, AWS managed hoặc lấy từ Marketplace, được áp lên base image trên một build instance.",
+   "Infrastructure configuration quyết định build instance chạy ở VPC nào, instance type và size gì, security group, notification và logging ra sao.",
+   "Bước hai, build instance tạo ra một untested image, tức image chưa qua kiểm thử.",
+   "Bước ba, untested image được launch trên một test instance mới, cũng theo infrastructure configuration.",
+   "Bước bốn, test component chạy các bài test trên test instance để kiểm tra image vừa tạo.",
+   "Bước năm, chỉ khi mọi test pass thì image mới được phân phối: AMI dùng cho EC2 hoặc Auto Scaling Group, container image vào ECR để ECS dùng.",
+   "Pipeline khởi động từ recipe với base image là AMI hoặc container image, có thể chỉ chạy khi có cập nhật. Distribution configuration quyết định copy hoặc share image sang region khác, account khác hay cả AWS Organization.",
+   "Khi đi thi, nhớ: cần tự động build, test, cập nhật và phân phối AMI hay container image theo lịch thì chọn EC2 Image Builder. Dịch vụ không tính phí, chỉ trả EC2, EBS snapshot và ECR; có component STIG, CIS dựng sẵn và lifecycle policy để dọn image cũ."
+  ]
+ }
+}

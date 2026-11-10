@@ -11,14 +11,15 @@
   ]
  },
  "EKS - nodes": {
-  "sig": "6-cgzn2",
+  "sig": "7-d9ynlz",
   "steps": [
-   "Sơ đồ này nói về ba kiểu worker node, các nơi có thể chạy EKS và lựa chọn persistent storage. Càng sang phải AWS càng gánh nhiều việc, nhưng hãy chọn theo yêu cầu.",
-   "EKS có thể chạy trên AWS, trên Outposts, ở bất kỳ đâu với EKS Anywhere, hoặc dùng EKS Distro open source. Storage mặc định là ephemeral, nên persistent storage dùng EBS, EFS hoặc FSx.",
-   "Self-managed nodes là EC2 do bạn tự dựng, patch và scale, tính giá EC2 thường, hợp khi cần toàn quyền kiểm soát. Nhớ kiểm tra kiểu node có hỗ trợ GPU, Windows pods hay Outposts không.",
-   "Managed node groups vẫn là EC2, nhưng EKS lo provisioning và lifecycle, hợp khi muốn tự động hóa. Fargate thì không còn instance, không chọn instance type, không lo cluster packing.",
-   "Bạn chỉ cần định nghĩa Fargate profile để pod chạy trên Fargate, nên đây là lựa chọn ít overhead nhất. Nhưng lưu ý, Fargate không hỗ trợ GPU.",
-   "Mẹo thi: nhiều pod trên nhiều AZ cần chia sẻ chung file thì chọn EFS. Cần chạy EKS on-prem thì chọn EKS Anywhere, hoặc EKS on Outposts."
+   "Sơ đồ này xếp các kiểu worker node của EKS, càng sang phải AWS càng gánh nhiều việc, cùng các nơi chạy EKS và storage bền vững. Nhưng hãy chọn theo yêu cầu, không chỉ theo độ tiện.",
+   "Self-managed nodes là EC2 do bạn tự dựng, patch, scale, được SSH và dùng AMI riêng, hợp khi cần toàn quyền kiểm soát node. Nhớ kiểm tra kiểu node có hỗ trợ Windows, GPU, Inferentia, Bottlerocket, Outposts hay Local Zones không.",
+   "Managed node groups vẫn là EC2, nhưng EKS lo provisioning và lifecycle, hợp khi muốn tự động hóa mà vẫn tự chọn instance.",
+   "EKS Auto Mode là compute EC2 gần như được quản lý hoàn toàn: AWS chọn instance type, scale, patch và thay node mỗi 21 ngày.",
+   "Fargate với Fargate profile không có instance nào, không chọn type, không lo packing, nên ít overhead nhất.",
+   "EKS chạy trên AWS là mặc định, ngoài ra có EKS on Outposts, EKS Anywhere cho cả cluster on-prem, EKS Hybrid Nodes đưa node về on-prem nhưng quản lý vẫn ở AWS, và EKS Distro là bản open source. Storage bền vững cho pod dùng EBS, EFS hoặc FSx.",
+   "Khi đi thi, nhớ: nhiều pod trên nhiều AZ cần chung file thì chọn EFS, chạy cả EKS on-prem thì EKS Anywhere hoặc Outposts, còn chạy container on-prem mà control plane ở AWS thì EKS Hybrid Nodes."
   ]
  }
 }

@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s08-containers, containers, kubernetes, compute]
-aliases: [K8s, Kubernetes 101, Pod, kubelet, kube-proxy, Ingress, Persistent Volume]
+aliases: [K8s, Kubernetes 101, Pod, kubelet, kube-proxy, Ingress, Persistent Volume, EndpointSlice]
 lessons: ["0161 Kubernetes 101"]
+videos: ["159 [SHAREDALL] Kubernetes 101"]
 ---
 # Kubernetes
 
@@ -16,13 +17,13 @@ lessons: ["0161 Kubernetes 101"]
 - **Cloud agnostic**: dùng on-prem hoặc trên AWS, Azure, GCP... → tránh vendor lock-in.
 
 ### Kiến trúc cluster
-- **Cluster**: tập tài nguyên compute **highly available**, tổ chức để hoạt động như **một đơn vị**.
+- **Cluster**: tập tài nguyên compute **highly available**, tổ chức để hoạt động như **một đơn vị**. Về khái niệm, cluster là một bản triển khai Kubernetes, cung cấp quản lý, orchestration, **tự phục hồi (healing)**, **service discovery** và truy cập.
 - **Control plane**: quản lý cluster: scheduling, application management, scaling, deployment...
 - **Node**: server ảo hoặc vật lý đóng vai **worker**, chạy ứng dụng container. Thực tế cluster có nhiều node (1 node chỉ dành cho test).
 - Phần mềm tối thiểu trên mỗi node:
-  - **Container runtime** (ví dụ **containerd**): xử lý thao tác container.
+  - **Container runtime**: **containerd** hoặc một runtime khác **tương thích CRI** (Container Runtime Interface); xử lý thao tác container.
   - **kubelet**: agent giao tiếp với control plane qua **Kubernetes API**.
-  - **kube-proxy**: chạy trên mọi node, điều phối networking với control plane; hiện thực **service** và cấu hình rule cho phép giao tiếp tới pod từ trong/ngoài cluster.
+  - **kube-proxy**: chạy trên **hầu hết** node, điều phối networking với control plane; là **cách mặc định** Kubernetes hiện thực **service**. Một số **networking add-on** ngoài thực tế **thay thế hẳn** kube-proxy bằng cách làm riêng của chúng. (Bản khóa cũ: kube-proxy chạy trên mọi node, cấu hình rule cho phép giao tiếp tới pod từ trong/ngoài cluster.)
 
 ### Thành phần control plane
 | Thành phần | Vai trò |
@@ -31,7 +32,7 @@ lessons: ["0161 Kubernetes 101"]
 | **etcd** | **Key-value store highly available**, backing store chính cho dữ liệu cluster |
 | **kube-scheduler** | Tìm pod chưa có node, gán node dựa trên resource requirement, deadline, **affinity/anti-affinity**, data locality, ràng buộc khác |
 | **cloud-controller-manager** (tùy chọn) | Tích hợp Kubernetes với cloud provider (AWS, Azure, GCP); cluster tự dựng ở nhà thường không có |
-| **kube-controller-manager** | Tập hợp controller: **node controller** (theo dõi/xử lý node outage), **job controller** (chạy pod để thực thi job), **endpoint controller** (liên kết service với pod), **service account & token controller** (tạo account, API token) |
+| **kube-controller-manager** | Tập hợp process controller: **node controller** (theo dõi/xử lý node outage), **job controller** (chạy pod để thực thi job), **EndpointSlice controller** (điền endpoint trong cluster, liên kết service với pod), **service account controller** (tạo service account). Bản khóa cũ gọi là endpoint controller và service account & token controller (tạo cả API token) |
 
 ```mermaid
 flowchart TB
@@ -49,7 +50,7 @@ flowchart TB
   subgraph N1["Node"]
     KL["kubelet"]
     KP["kube-proxy"]
-    RT["container runtime (containerd)"]
+    RT["container runtime (containerd / CRI)"]
     P1["Pod: container"]
     P2["Pod: container"]
   end

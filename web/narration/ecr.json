@@ -1,14 +1,14 @@
 {
  "ECR": {
-  "sig": "7-11qa8m5",
+  "sig": "7-792hsp",
   "steps": [
-   "Sơ đồ này nói về Amazon ECR, registry chứa container image do AWS quản lý, dùng cho Docker, ECS và EKS. Cấu trúc đi từ registry tới repository rồi tới image có tag, kèm nhiều tích hợp AWS mà Docker Hub không có.",
-   "Mỗi account có một public registry là ECR Public, cạnh đó là private registry theo từng region. Quyền truy cập do IAM điều khiển, còn enhanced scanning dùng Inspector để quét lỗ hổng cả OS lẫn package theo từng layer.",
-   "Với public registry, ai cũng pull được image, nhưng muốn push thì phải có quyền IAM. Trong repository web, một image có thể mang nhiều tag như latest và v1.2.",
-   "Repository còn chứa image khác với tag v1.1. Song song đó, ECR gửi metrics gần thời gian thực về CloudWatch cho authentication, push và pull, còn CloudTrail ghi lại mọi API call để biết ai đã push hoặc pull.",
-   "Với private registry, cả pull lẫn push đều cần quyền IAM, và tag phải unique trong một repository. ECR còn phát event tới EventBridge để kích hoạt workflow như scan hoặc deploy, và hỗ trợ replication cross-region lẫn cross-account.",
-   "Registry có thể chứa nhiều repository, như repository api ở đây. Docker host, ECS task hoặc EKS pod sẽ pull image về; nếu nằm trong subnet private không có NAT thì cần VPC endpoint cho ECR API và Docker, cộng S3 gateway endpoint vì layer lưu trên S3.",
-   "Khi đi thi, nhớ nhé: quét lỗ hổng OS và package thì chọn enhanced scanning, cần image ở region hoặc account khác thì dùng replication, audit ai push pull là CloudTrail, còn image mới kích hoạt pipeline là EventBridge."
+   "Sơ đồ này nói về Amazon ECR, registry chứa container image do AWS quản lý. Mỗi account có sẵn một registry ở mỗi region, bạn chỉ việc tạo repository bên trong, public hoặc private.",
+   "Repository là public hay private phải chọn lúc tạo và không đổi được. Quyền truy cập dùng IAM identity policy, registry policy theo từng region và repository policy cho từng repo. Scanning có bản basic miễn phí quét package OS, và bản enhanced dùng Inspector, có phí, quét cả thư viện ngôn ngữ và quét liên tục.",
+   "Theo bản khóa cũ, repository public cho ai cũng pull, nhưng push thì cần quyền IAM. Trong repository webapp1, một image có thể mang nhiều tag như latest và v1.2.",
+   "Repository còn chứa image khác với tag v1.1. Lifecycle policy đặt ở mức repository sẽ tự expire image cũ hoặc không dùng, còn CloudTrail ghi lại mọi API call để biết ai đã push hoặc pull.",
+   "Với repository private, cả pull lẫn push đều cần quyền IAM. Tag phải unique trong repo, và bật tag immutability thì không ai ghi đè được một tag đã có. EventBridge nhận event để kích hoạt workflow, còn replication cấu hình ở mức registry, chạy được cross-region lẫn cross-account.",
+   "Dấu gạch chéo trong tên như hr slash ausone tạo namespace để nhóm repository. Docker host, ECS task hoặc EKS pod sẽ pull image về; nếu nằm trong subnet private không có NAT thì cần VPC endpoint cho ECR API và Docker, cộng S3 gateway endpoint vì layer lưu trên S3.",
+   "Khi đi thi, nhớ nhé: quét OS cộng thư viện ngôn ngữ liên tục thì chọn enhanced scanning, tự xóa image cũ là lifecycle policy, cần image ở region hoặc account khác là replication, audit là CloudTrail, còn image mới kích hoạt pipeline là EventBridge."
   ]
  }
 }
