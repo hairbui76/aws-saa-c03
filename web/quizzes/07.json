@@ -88,21 +88,21 @@
         "answer": [
           0
         ],
-        "explain": "Vượt mốc ~260,000 IOPS per instance của EBS và chấp nhận dữ liệu không persistent (ứng dụng tự replicate) thì chọn Instance Store. io2 Block Express chỉ tới 256,000 IOPS/volume và RAID 0 vẫn bị trần ~260,000 IOPS/instance."
+        "explain": "Mỗi node cần hơn 500,000 IOPS: vượt trần EBS của phần lớn instance (ví dụ R5b lớn nhất chỉ 260,000 IOPS), trong khi dữ liệu chấp nhận không persistent vì ứng dụng tự replicate, nên chọn Instance Store (dòng i7i đạt hàng triệu IOPS). io2 Block Express chỉ tới 256,000 IOPS/volume và RAID 0 vẫn bị chặn ở trần của instance."
       },
       {
         "type": "single",
-        "q": "Gộp nhiều EBS volume thành RAID 0 trên một EC2 instance. Hiệu năng tối đa đạt được bị chặn ở khoảng bao nhiêu (theo khóa học)?",
+        "q": "Gộp nhiều EBS volume thành RAID 0 trên một EC2 instance. Điều gì giới hạn hiệu năng tối đa đạt được?",
         "options": [
-          "Khoảng 260,000 IOPS, trần per-instance",
-          "Khoảng 64,000 IOPS, trần của io1/io2",
+          "Trần hiệu năng EBS per-instance, do instance type và size quyết định",
+          "Trần 64,000 IOPS của io1, dù gộp bao nhiêu volume",
           "Không giới hạn, cứ thêm volume là tăng",
-          "Khoảng 16,000 IOPS, trần của gp3"
+          "Trần 16,000 IOPS của gp2"
         ],
         "answer": [
           0
         ],
-        "explain": "RAID 0 cho hiệu năng gần bằng tổng các volume nhưng luôn bị chặn bởi trần per-instance ~260,000 IOPS (và loại/size instance). Muốn cao hơn nữa phải dùng Instance Store."
+        "explain": "RAID 0 cho hiệu năng gần bằng tổng các volume nhưng luôn bị chặn bởi trần EBS của instance (instance Nitro lớn nhất mới đạt mức cao nhất; ví dụ R5b: 260,000 IOPS, 7,500 MB/s). Hai io2 Block Express gộp lại (512,000 IOPS) đã vượt trần của R5b, lúc đó instance là bottleneck. Muốn cao hơn nữa phải dùng Instance Store."
       },
       {
         "type": "single",
@@ -170,13 +170,13 @@
         "options": [
           "Bật tùy chọn Encrypt trực tiếp trên volume đang gắn",
           "Detach volume rồi bật encryption, sau đó attach lại",
-          "Tạo snapshot, copy snapshot với tùy chọn encrypt (hoặc tạo volume mã hóa từ snapshot), rồi thay volume cũ bằng volume mã hóa",
+          "Tạo snapshot, tạo volume mới có mã hóa từ snapshot (hoặc copy snapshot với tùy chọn encrypt), rồi thay volume cũ bằng volume mã hóa",
           "Bật EBS encryption by default, volume hiện có sẽ tự được mã hóa"
         ],
         "answer": [
           2
         ],
-        "explain": "Không bật mã hóa trực tiếp trên volume đang có được; phải đi qua snapshot → copy/tạo volume có encrypt → thay volume. Encryption by default chỉ áp dụng cho volume mới."
+        "explain": "Không bật mã hóa được cho volume hay snapshot đã tạo; phải snapshot → tạo volume mã hóa từ snapshot → thay volume. Encryption by default chỉ áp dụng cho volume mới."
       },
       {
         "type": "single",
@@ -208,7 +208,7 @@
       },
       {
         "type": "single",
-        "q": "Một EBS volume được tạo mới và mã hóa. Sau đó tạo snapshot từ volume này rồi tạo một volume mới từ snapshot. Phát biểu nào đúng?",
+        "q": "Một EBS volume được tạo mới và mã hóa. Sau đó tạo snapshot từ volume này rồi restore một volume mới từ snapshot, giữ nguyên KMS key. Phát biểu nào đúng?",
         "options": [
           "Snapshot không được mã hóa, chỉ volume gốc được mã hóa",
           "Volume mới tạo từ snapshot có DEK mới và khác hoàn toàn",
@@ -218,7 +218,7 @@
         "answer": [
           2
         ],
-        "explain": "Snapshot của volume mã hóa dùng cùng DEK, và volume tạo từ snapshot đó cũng dùng cùng DEK; chỉ volume tạo mới từ đầu mới có DEK mới. DEK chỉ lưu dạng đã mã hóa, bản plaintext chỉ nằm trong memory của EC2 host."
+        "explain": "Snapshot của volume mã hóa dùng cùng DEK, và volume restore từ snapshot với cùng KMS key cũng dùng cùng DEK; nếu chọn KMS key khác khi restore hoặc copy thì KMS sinh DEK mới dưới key mới. DEK chỉ lưu dạng đã mã hóa, bản plaintext chỉ nằm trong memory của EC2 host."
       }
     ],
     "EBS Snapshots": [
@@ -315,12 +315,12 @@
           "gp3 với IOPS provision thêm",
           "io1",
           "st1",
-          "io2"
+          "io2 Block Express"
         ],
         "answer": [
           3
         ],
-        "explain": "gp3 tối đa 16,000 IOPS. io1 tối đa 50 IOPS/GB nên 200 GB chỉ được 10,000 IOPS; io2 cho 500 IOPS/GB (tới 64,000) nên đáp ứng 40,000 IOPS trên volume nhỏ."
+        "explain": "Yêu cầu là latency thấp và ổn định, đúng use case của provisioned IOPS. gp3 nay provision được tới 80,000 IOPS nhưng không cam kết độ ổn định latency như io1/io2 Block Express. io1 tối đa 50 IOPS/GB nên 200 GB chỉ được 10,000 IOPS; io2 Block Express cho 1,000 IOPS/GB (tới 256,000) nên đáp ứng 40,000 IOPS trên volume nhỏ."
       },
       {
         "type": "single",
@@ -484,7 +484,7 @@
       },
       {
         "type": "single",
-        "q": "Một công ty cần chạy ứng dụng monolithic (database, middleware, runtime trên cùng OS) 24/7, yêu cầu OS và cấu hình cụ thể theo vendor, đang lift-and-shift từ on-premises. Dịch vụ compute nào là lựa chọn mặc định?",
+        "q": "Một công ty cần chạy ứng dụng monolithic (database, middleware, runtime trên cùng OS) 24/7, yêu cầu OS và cấu hình cụ thể theo vendor, đang lift-and-shift từ on-premises. Dịch vụ compute nào phù hợp nhất?",
         "options": [
           "AWS Lambda",
           "Amazon EC2",
@@ -494,7 +494,7 @@
         "answer": [
           1
         ],
-        "explain": "EC2 là compute mặc định cho workload truyền thống cần OS cụ thể, chạy dài hạn, monolithic và lift-and-shift. Lambda có giới hạn thời gian chạy và không cho kiểm soát OS."
+        "explain": "EC2 hợp workload truyền thống cần OS và cấu hình cụ thể, chạy dài hạn, monolithic, lift-and-shift, hoặc khi cần kiểm soát OS nhiều hơn. Lambda có giới hạn thời gian chạy và không cho kiểm soát OS."
       },
       {
         "type": "single",
@@ -517,14 +517,14 @@
         "q": "Admin SSH từ laptop vào một EC2 instance public được, nhưng EC2 Instance Connect trên console báo lỗi kết nối. Security Group chỉ cho phép TCP 22 từ IP của admin. Cần làm gì?",
         "options": [
           "Tạo lại key pair ở định dạng PPK",
-          "Thêm rule cho phép TCP 22 từ dải IP của dịch vụ EC2 Instance Connect trong region đó",
+          "Thêm rule cho phép TCP 22 từ dải IP của dịch vụ EC2 Instance Connect trong region đó (ví dụ AWS-managed prefix list của EC2 Instance Connect)",
           "Gắn Elastic IP cho instance",
           "Chạy chmod 400 cho file key"
         ],
         "answer": [
           1
         ],
-        "explain": "Với Instance Connect, kết nối SSH tới instance xuất phát từ dịch vụ AWS chứ không phải máy admin, nên SG phải cho phép dải IP của EC2_INSTANCE_CONNECT (lấy từ ip-ranges.json). chmod 400 chỉ sửa lỗi SSH client cục bộ."
+        "explain": "Với Instance Connect, kết nối SSH tới instance xuất phát từ dịch vụ AWS chứ không phải máy admin, nên SG phải cho phép dải IP của dịch vụ EC2 Instance Connect; cách gọn nhất là chọn prefix list do AWS quản lý thay vì tự nhập dải IP. chmod 400 chỉ sửa lỗi SSH client cục bộ."
       },
       {
         "type": "single",
@@ -542,9 +542,9 @@
       },
       {
         "type": "single",
-        "q": "Trên macOS, lệnh ssh -i A4L.pem ec2-user@<public-DNS> báo lỗi private key permissions are too open (0644). Cách khắc phục là gì?",
+        "q": "Trên macOS, lệnh ssh -i AEM.pem ec2-user@<public-DNS> báo lỗi private key permissions are too open (0644). Cách khắc phục là gì?",
         "options": [
-          "Chạy chmod 400 A4L.pem",
+          "Chạy chmod 400 AEM.pem",
           "Chuyển key sang định dạng PPK",
           "Mở thêm port 22 trên Security Group",
           "Đổi username thành root"
@@ -556,7 +556,7 @@
       },
       {
         "type": "single",
-        "q": "Theo khóa học, EC2 Instance Connect sử dụng qua console (trình duyệt) có yêu cầu gì về instance?",
+        "q": "EC2 Instance Connect thường (không qua EC2 Instance Connect Endpoint) dùng từ console có yêu cầu gì về instance?",
         "options": [
           "Instance phải có Session Manager agent",
           "Instance phải có public addressing (public IPv4)",
@@ -566,7 +566,7 @@
         "answer": [
           1
         ],
-        "explain": "Instance Connect qua console chỉ kết nối instance có public addressing; với instance private cần Instance Connect CLI kèm private connectivity, Session Manager hoặc EC2 Instance Connect Endpoint."
+        "explain": "EC2 Instance Connect thường dành cho instance có public IP hoặc truy cập được qua định tuyến thông thường; với instance private thì dùng EC2 Instance Connect Endpoint, Session Manager, hoặc Instance Connect CLI kèm private connectivity."
       },
       {
         "type": "single",
@@ -652,7 +652,7 @@
         "answer": [
           2
         ],
-        "explain": "Metadata (IMDSv1 theo khóa học) không xác thực, không mã hóa; ai có shell trên instance đều đọc được user data. Không đặt bí mật dài hạn trong user data."
+        "explain": "IMDSv1 không xác thực, và kể cả IMDSv2 thì mọi tiến trình trên instance vẫn tự lấy được token; dữ liệu metadata cũng không mã hóa. Ai có shell trên instance đều đọc được user data, nên không đặt bí mật dài hạn trong đó."
       }
     ],
     "EC2 Instance Types": [
@@ -668,7 +668,7 @@
         "answer": [
           1
         ],
-        "explain": "Compute Optimized (C) cho nhiều CPU hơn trên mỗi đô la, hợp media encoding, HPC, gaming. R là RAM, hợp workload thiếu memory."
+        "explain": "Compute Optimized (C) cho nhiều CPU hơn trên mỗi đô la, hợp media encoding, scientific modelling, gaming, batch. R là RAM, hợp workload thiếu memory."
       },
       {
         "type": "single",
@@ -981,12 +981,12 @@
           "Tạo Auto Scaling Group với min = max = 1 ở nhiều AZ",
           "Bật termination protection",
           "Tạo snapshot hằng giờ",
-          "Tạo CloudWatch alarm trên status check với action Recover"
+          "Dùng EC2 auto recovery: simplified automatic recovery (bật sẵn) hoặc CloudWatch alarm trên system status check với action Recover"
         ],
         "answer": [
           3
         ],
-        "explain": "EC2 Recover action chuyển instance sang host mới trong cùng AZ với cấu hình và IP addressing giữ nguyên. ASG sẽ thay bằng instance mới (ID mới) chứ không phục hồi instance cũ."
+        "explain": "Khi system status check fail, simplified automatic recovery (bật sẵn trên instance hỗ trợ) hoặc alarm Recover chuyển instance sang host mới trong cùng AZ, giữ instance ID, IP và EBS volume. ASG sẽ thay bằng instance mới (ID mới) chứ không phục hồi instance cũ."
       },
       {
         "type": "multi",
@@ -995,14 +995,14 @@
           "Tự chuyển instance sang AZ khác khi cả AZ sập",
           "Chỉ phục hồi trong cùng AZ, không bảo vệ khi toàn bộ AZ gặp sự cố",
           "Hỗ trợ mọi instance type, kể cả đời cũ",
-          "Không hỗ trợ instance có instance store volume",
+          "Chỉ kích hoạt dựa trên system status check, không dựa trên instance hay EBS status check",
           "Thay thế hoàn toàn nhu cầu dùng ASG và ELB cho HA"
         ],
         "answer": [
           1,
           3
         ],
-        "explain": "Recover chỉ trong cùng AZ, chỉ cho instance type đời mới và instance toàn EBS (không instance store). Đây là tính năng hẹp, không phải giải pháp HA tổng thể."
+        "explain": "Recovery chỉ dựa trên system status check (lỗi host) và chỉ chuyển instance sang host khác trong cùng AZ; không cứu được sự cố cả AZ và không thay được ASG, ELB, multi-AZ. Bản khóa cũ còn nêu chỉ hỗ trợ instance type đời mới và instance toàn EBS."
       },
       {
         "type": "single",
@@ -1032,7 +1032,7 @@
         "answer": [
           3
         ],
-        "explain": "Vertical scaling không cần sửa ứng dụng nên hợp với monolith, đổi lại cần reboot (downtime) và bị trần ở size lớn nhất. Horizontal yêu cầu ứng dụng hỗ trợ chạy nhiều bản và session off-host."
+        "explain": "Vertical scaling không cần sửa ứng dụng nên hợp với monolith, đổi lại mỗi lần resize cần stop/start (downtime) và bị trần ở size lớn nhất. Horizontal yêu cầu ứng dụng hỗ trợ chạy nhiều bản và session off-host."
       },
       {
         "type": "single",
@@ -1046,7 +1046,7 @@
         "answer": [
           0
         ],
-        "explain": "Horizontal scaling thêm/bớt instance mà không gián đoạn, gần như không giới hạn và phản ứng nhanh. Vertical cần reboot khi resize và có trần size."
+        "explain": "Horizontal scaling thêm/bớt instance mà không gián đoạn, gần như không giới hạn và phản ứng nhanh. Vertical cần stop/start khi resize và có trần size."
       },
       {
         "type": "single",
@@ -1067,7 +1067,7 @@
         "q": "Nhược điểm nào thuộc về vertical scaling?",
         "options": [
           "Ứng dụng phải hỗ trợ chạy nhiều bản song song",
-          "Mỗi lần resize cần reboot, chi phí tăng không tuyến tính ở size lớn và có trần hiệu năng",
+          "Mỗi lần resize cần stop/start instance, chi phí tăng không tuyến tính ở size lớn và có trần hiệu năng",
           "Cần load balancer đứng trước các instance",
           "Phải đưa session ra ngoài host"
         ],
@@ -1168,17 +1168,17 @@
     "Reserved Instances and Savings Plans": [
       {
         "type": "single",
-        "q": "Một batch job chạy hằng ngày lúc 23:00 trong 5 giờ, kéo dài ít nhất một năm. Theo khóa học, lựa chọn mua nào phù hợp nhất?",
+        "q": "Một công ty mua Standard Reserved Instance 3 năm cho 4 instance t3.xlarge, nhưng thực tế chạy 6 instance t3.xlarge cùng loại. Hóa đơn được tính thế nào?",
         "options": [
-          "Standard Reserved Instance 1 năm",
-          "Spot Instances",
-          "Scheduled Reserved Instances",
-          "Dedicated Hosts"
+          "Cả 6 instance đều được giá giảm",
+          "4 instance được giá giảm, 2 instance trả giá On-Demand",
+          "Chỉ được giảm giá khi launch instance dưới dạng Reserved Instance riêng",
+          "Reservation bị hủy vì số instance chạy không khớp"
         ],
         "answer": [
-          2
+          1
         ],
-        "explain": "Scheduled Reserved cho nhu cầu dài hạn nhưng không liên tục, theo khung giờ lặp lại (khóa học vẫn dạy dù hiện nay AWS không còn bán). Standard Reserved hợp tải 24/7 nên sẽ lãng phí 19 giờ mỗi ngày."
+        "explain": "RI không phải loại instance để launch mà là cam kết trên hóa đơn: AWS tự áp giá giảm cho đúng số instance khớp reservation, phần chạy thêm trả giá On-Demand. Ngược lại, reserve 6 mà chỉ chạy 4 vẫn phải trả đủ 6; reservation đã active thì không hủy được."
       },
       {
         "type": "single",
@@ -1192,7 +1192,7 @@
         "answer": [
           0
         ],
-        "explain": "On-Demand Capacity Reservation giữ capacity ở một AZ mà không cần cam kết dài hạn (không giảm giá, trả tiền dù không dùng). Regional RI không giữ capacity; Savings Plans chỉ giảm giá."
+        "explain": "On-Demand Capacity Reservation giữ capacity ở một AZ mà không cần cam kết dài hạn (trả giá On-Demand dù không dùng, không giảm giá; immediate reservation hủy lúc nào cũng được). Regional RI không giữ capacity; Savings Plans chỉ giảm giá."
       },
       {
         "type": "single",

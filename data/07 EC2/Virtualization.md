@@ -2,6 +2,7 @@
 tags: [saa-c03, s07-ec2, ec2, compute, virtualization, fundamentals]
 aliases: [Virtualization 101, Hypervisor, SR-IOV, Ảo hóa]
 lessons: ["0124 Virtualization 101"]
+videos: ["119 [ASSOCIATESHARED] Virtualization 101"]
 ---
 # Virtualization
 

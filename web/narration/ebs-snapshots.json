@@ -14,7 +14,7 @@
   "sig": "4-oywwx3",
   "steps": [
    "Sơ đồ này nói về hiệu năng khi restore từ snapshot. Dữ liệu được nạp lazily từ S3, nên lần đọc đầu chậm, và có hai cách khắc phục.",
-   "Từ snapshot trên S3, ta tạo volume mới, dữ liệu nạp dần trong nền. Cách một là bật Fast Snapshot Restore cho các AZ, volume khởi tạo đầy đủ ngay, nhưng tốn phí và giới hạn 50 FSR set mỗi region.",
+   "Từ snapshot trên S3, ta tạo volume mới, dữ liệu nạp dần trong nền. Cách một là bật Fast Snapshot Restore trên snapshot cho từng AZ, volume khởi tạo đầy đủ ngay, nhưng tốn phí và mỗi region chỉ có tối đa 5 FSR.",
    "Nếu đọc vào block chưa nạp, EBS phải kéo từ S3 nên chậm, gọi là first-read penalty. Cách hai là dùng dd đọc trước mọi block trong OS, miễn phí nhưng tốn công quản trị.",
    "Để so sánh, volume mới trống, không tạo từ snapshot, đạt hiệu năng đầy đủ ngay lập tức. Đề thi hỏi volume restore chậm lúc đầu thì nghĩ ngay tới FSR hoặc dd."
   ]

@@ -1,11 +1,11 @@
 {
  "Dedicated Hosts": {
-  "sig": "6-x1au8u",
+  "sig": "6-1pia372",
   "steps": [
    "Sơ đồ này nói về Dedicated Host, tức là cả một host vật lý cấp trọn cho account của bạn. Mỗi host gắn với một instance family, và cách chia instance khác nhau giữa host cũ với host Nitro.",
    "Bạn trả tiền cho cả host, theo On-Demand hoặc Reserved 1 hoặc 3 năm, còn instance chạy trên đó không tính thêm. Host A1 cũ có 16 core, bạn chỉ chọn một size, ví dụ 16 medium hoặc 8 large, không trộn được.",
-   "Lý do chính để dùng Dedicated Host là license phần mềm tính theo socket hoặc core vật lý, kiểu BYOL. Bạn thấy được phần cứng thật nên license đúng theo host của mình.",
-   "Với host R5 Nitro có 48 core, bạn trộn nhiều size: host 1 chạy một 12xlarge, một 4xlarge và bốn 2xlarge. Host còn có thể share qua RAM trong Organization, mỗi account chỉ điều khiển instance của mình.",
+   "Dùng Dedicated Host khi cần cách ly phần cứng, chẳng hạn theo quy định ngành, hoặc khi license phần mềm tính theo socket hay core vật lý, kiểu BYOL. Bạn thấy được phần cứng thật nên license đúng theo host của mình.",
+   "Với host R5 Nitro có 48 core, bạn trộn nhiều size: host 1 chạy một 12xlarge, một 4xlarge và bốn 2xlarge. Host còn có thể share qua RAM cho account, OU hoặc cả Organization, mỗi account chỉ điều khiển instance của mình.",
    "Host 2 lại chạy bốn 4xlarge cộng bốn 2xlarge, cũng dùng đủ 48 core. Lưu ý Dedicated Host không dùng được với RDS và placement group.",
    "Mẹo khi đi thi: nếu đề chỉ cần phần cứng không chia sẻ với khách khác mà không nhắc license theo socket hoặc core, thì Dedicated Instance thường đủ và rẻ hơn."
   ]

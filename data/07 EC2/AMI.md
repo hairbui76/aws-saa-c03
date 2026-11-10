@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s07-ec2, ec2, compute, storage, automation]
-aliases: [Amazon Machine Image, AMI Baking, Block Device Mapping]
+aliases: [Amazon Machine Image, AMI Baking, Block Device Mapping, Block public access for AMIs]
 lessons: ["0144 Amazon Machine Images (AMI)", "0145 DEMO Creating an Animals4life AMI PART1", "0146 DEMO Creating an Animals4life AMI PART2", "0147 DEMO Copying & Sharing an AMI"]
+videos: ["136 [ASSOCIATESHARED] Amazon Machine Images (AMI)", "137 [ASSOCIATESHARED] [DEMO] Create an Aus-E-Mart Web App AMI - PART1", "138 [ASSOCIATESHARED] [DEMO] Create an Aus-E-Mart Web App AMI - PART2", "139 [ASSOCIATESHARED] [DEMO] Copying and Sharing an AMI"]
 ---
 # AMI
 
@@ -27,7 +28,7 @@ lessons: ["0144 Amazon Machine Images (AMI)", "0145 DEMO Creating an Animals4lif
 
 ### Permissions (3 lựa chọn)
 1. **Private** (mặc định): chỉ account sở hữu dùng được.
-2. **Public**: mọi AWS account dùng được → cẩn thận lộ dữ liệu nhạy cảm (đặc biệt access key nằm trong image). (Hiện nay có setting *Block public access for AMIs* theo region, bật sẵn với account mới.)
+2. **Public**: mọi AWS account dùng được → cẩn thận lộ dữ liệu nhạy cảm (đặc biệt access key nằm trong image). **Mặc định bị chặn** bởi **Block public access for AMIs** (EC2 Dashboard → *Data protection and security*): guardrail AWS bật sẵn, chặn việc **share public mới**. Muốn public thì tắt, share, rồi nên bật lại; AMI đã public trước đó vẫn giữ public.
 3. **Chia sẻ explicit** cho các account ID cụ thể, hoặc cho cả **Organization/OU** (xem [[AWS Organizations]]). Khi share có tùy chọn cấp thêm **create volume permission** trên snapshot đi kèm.
 - Ưu tiên share explicit cho account tin cậy thay vì public.
 
@@ -71,38 +72,40 @@ flowchart LR
   A1 -->|"Copy AMI"| A2
 ```
 - Copy AMI = copy cả các snapshot sang region đích → tạo ra **AMI hoàn toàn khác, ID khác**.
-- Có thể **bật mã hóa trong lúc copy** (snapshot chưa mã hóa → mã hóa ở đích). Snapshot đã mã hóa thì **được mã hóa lại** bằng key ở region đích, vì [[KMS]] key là regional. Mặc định dùng AWS managed key `aws/ebs`, có thể chọn customer managed key (xem [[EBS Encryption]]).
+- Có thể **bật mã hóa trong lúc copy** (snapshot chưa mã hóa → mã hóa ở đích). Snapshot đã mã hóa thì **được mã hóa lại** bằng key ở region đích, vì [[KMS]] key là regional. Mặc định dùng AWS managed key `aws/ebs`, có thể chọn customer managed key (xem [[EBS Encryption]]). (Phần mã hóa khi copy: bản khóa cũ nêu, bài mới không nói.)
 - Thời gian copy phụ thuộc khoảng cách region và lượng dữ liệu, từ vài phút đến lâu hơn nhiều.
 
 ## Demo / Lab
-**Tạo Animals4life AMI (0145–0146):**
-1. Launch instance Amazon Linux 2 bằng CloudFormation, kết nối qua [[EC2 Instance Connect and SSH|EC2 Instance Connect]].
-2. Cài WordPress thủ công (MariaDB, Apache, PHP, tải và cấu hình WordPress), dừng ở màn hình cài đặt để người dùng AMI tự hoàn tất.
-3. Tùy biến: cài `cowsay`, tạo login banner (MOTD) "Amazon Linux 2 AMI - Animals4life", reboot để kiểm tra.
-4. **Stop instance** rồi *Image and templates → Create image*. Màn hình tạo AMI hiển thị block device mapping (device ID, loại volume, 8 GiB) và cho phép đổi kích thước/thêm volume.
-5. Theo dõi snapshot (pending → completed) rồi AMI (pending → available).
-6. Launch instance mới từ AMI: storage tự động giống bản gốc (8 GiB gp2), có sẵn banner và WordPress. Với AMI custom, console có thể đoán sai username, cần sửa thành `ec2-user`.
+**Tạo AMI cho web store Aus-E-Mart (2 phần):**
+1. Stack CloudFormation tạo instance `AEM-Public-Instance` (Amazon Linux 2023), kết nối qua [[EC2 Instance Connect and SSH|EC2 Instance Connect]].
+2. Cấu hình thủ công theo command list: `dnf install python3-pip unzip`, `pip install` Flask và Gunicorn, tải `aem-webstore.zip` bằng `curl`, giải nén, chuyển vào `/var/www/aem-webstore`, copy file service rồi `systemctl daemon-reload`, `enable`, kiểm tra `status` và `curl localhost/health`. App chạy dạng **service** nên tự lên lại sau reboot (đã thử reboot, web store vẫn chạy qua public IP).
+3. **Stop instance** rồi *Image and templates → Create image* (`AEM Web Store Image`). Màn hình tạo AMI hiện các volume sẽ chụp (đổi được size, thêm volume, nhưng thường không cần).
+4. Theo dõi snapshot (pending → completed; volume 8 GB chỉ dùng ~2 GB nên snapshot đầu chỉ ~2 GB) rồi AMI (pending → available).
+5. *Launch instance from AMI*: chọn `t4g.small` (ARM, rẻ), không key pair, VPC `aem-vpc1`, subnet `WebA`, SG `AEM Web Store` → mở public IP thấy web store chạy ngay, **không phải cài lại gì**.
+
+**Copy và share AMI:**
+- Đổi sang `us-west-2` thì không thấy AMI (AMI regional); ở `us-east-1` thì launch được vào mọi AZ. *Copy AMI* sang `us-west-2` → ở đích có AMI mới đang pending và **bản copy snapshot** (thời gian tùy khoảng cách và độ bận của region).
+- *Edit AMI permissions*: private (mặc định) / thêm account ID / share cho cả Organization hoặc OU theo ARN; tùy chọn thêm **create volume permission** cho snapshot (không tick thì account được share chỉ launch được instance, không tạo được volume từ snapshot).
+- Public bị chặn mặc định; xem ở EC2 Dashboard → *Data protection and security* → *Block public access for AMIs*.
+- Dọn dẹp: *Deregister AMI* và tick **Delete associated snapshots** ở **cả hai region**, terminate instance, xóa stack.
 
 Rút ra:
-- **Nên tạo AMI từ instance đã stop** để storage nhất quán. Tạo từ instance đang chạy thì AWS có thể reboot instance; tùy chọn *no reboot* tránh reboot nhưng rủi ro dữ liệu không nhất quán còn cao hơn.
-- Snapshot đầu tiên mất nhiều thời gian nhất vì phải copy toàn bộ dữ liệu.
-
-**Copy và share AMI (0147):**
-- Đổi region thì không thấy AMI nữa (AMI regional). Copy sang us-east-2, bật *Encrypt target EBS snapshots* với key `aws/ebs` → ở đích có AMI ID mới và snapshot đã mã hóa.
-- *Edit AMI permissions*: Private / Public / thêm account ID, hoặc share cho Organization/OU; tùy chọn thêm create volume permission cho snapshot.
-- Dọn dẹp: **Deregister AMI không xóa snapshot**, phải xóa snapshot riêng ở **cả hai region**.
+- **Nên tạo AMI từ instance đã stop** để image nhất quán: instance đang chạy có thể đang ghi dữ liệu lúc chụp.
+- Snapshot đầu tiên mất nhiều thời gian nhất, nhưng chỉ copy dữ liệu đã dùng.
+- (Bản khóa cũ: demo cài WordPress, cowsay và banner MOTD trên Amazon Linux 2 cho Animals4life; copy AMI sang us-east-2 có bật *Encrypt target EBS snapshots*; deregister AMI không xóa snapshot nên phải xóa snapshot riêng.)
 
 ## 🎯 Mẹo thi SAA-C03
 - **AMI = một region**, chỉ dùng được trong region đó (nhưng cho mọi AZ). Đáp án dùng "một AMI cho nhiều region" là **sai**; phải copy, và bản copy là **AMI khác, ID khác**.
 - **AMI baking**: cài và cấu hình sẵn instance + ứng dụng rồi tạo AMI để launch hàng loạt nhanh. So sánh với bootstrapping bằng user data trong [[EC2 User Data Bootstrapping]] (baking: launch nhanh hơn, kém linh hoạt hơn) và dùng cùng [[Launch Templates]]/[[Auto Scaling Groups]].
 - **AMI không sửa được**: muốn thay đổi thì launch instance từ AMI → cập nhật → tạo AMI mới.
 - Copy giữa region **kèm snapshot**; có thể thêm mã hóa trong lúc copy; dữ liệu mã hóa phải dùng KMS key ở region đích.
-- Permissions mặc định = **chỉ account của bạn**; có thể public hoặc share cho account cụ thể.
+- Permissions mặc định = **chỉ account của bạn**; share cho account, OU hoặc cả Organization. Share **public** bị **Block public access for AMIs** chặn mặc định.
+- Deregister AMI có tùy chọn **delete associated snapshots**; không chọn thì snapshot vẫn còn và vẫn tính phí.
 - Chi phí AMI = **dung lượng snapshot** mà nó tham chiếu.
 - Launch từ AMI tạo **volume mới từ snapshot** trong AZ đích → đây cũng là cách "chuyển" cấu hình instance sang AZ khác.
 
 ## Liên kết
 - Tiên quyết: [[EC2 Basics]], [[EBS]], [[EBS Snapshots]]
-- Liên quan: [[EBS Encryption]], [[KMS]], [[EC2 Instance Connect and SSH]], [[AWS Organizations]], [[Animals4life Scenario]]
+- Liên quan: [[EBS Encryption]], [[KMS]], [[EC2 Instance Connect and SSH]], [[AWS Organizations]], [[Animals4life Scenario]] (kịch bản của bản khóa cũ)
 - Dùng cùng: [[Launch Templates]], [[Auto Scaling Groups]], [[Horizontal vs Vertical Scaling]]
 - Phân biệt với: [[EC2 User Data Bootstrapping]], [[cfn-init]]

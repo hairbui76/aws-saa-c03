@@ -12,7 +12,9 @@
     "Exam Cheat Sheet: KMS nay FIPS 140-3 Level 3 (CloudHSM chọn theo single-tenant), DSSE-KMS và SSE-C legacy, S3 Express One Zone, Glacier +40 KB metadata, Intelligent-Tiering 90–730 / 183–730 ngày, CORS, Requester Pays, S3 Inventory, Block Public Access mức account/organization, S3 Events tới EventBridge, presigned URL bằng role",
     "Top mẹo thi và concept map chương 05: thêm CORS, S3 Requester Pays, S3 Inventory; SSE bắt buộc (mặc định SSE-S3), DSSE-KMS; KMS FIPS 140-3 Level 3; lifecycle qua Glacier IR ≥ 90 ngày; replication hai chiều tùy chọn",
     "Exam Cheat Sheet: NAT Gateway có chế độ zonal (mỗi AZ một cái, trong public subnet) và regional (một NATGW cho cả VPC, AWS trải qua các AZ); private NAT Gateway cho mạng private chồng lấn",
-    "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64"
+    "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64",
+    "Exam Cheat Sheet: mốc EBS mới (gp2 16K, io1 64K, gp3 80K / 2,000 MiB/s, io2 Block Express 256K; io2 = Block Express), FSR tối đa 5/region, Spot cảnh báo 2 phút và terminate/stop/hibernate, RI Standard/Convertible, ODCR giá On-Demand (immediate/future, open/targeted), Savings Plans không giữ capacity, Scheduled RI đã deprecated",
+    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans"
   ],
   "missing": [],
   "lessons": {
@@ -589,6 +591,204 @@
         "🖼️ Sơ đồ",
         "Bảng so sánh nhiều chiều",
         "Khi nào chọn cái nào",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 Architecture and Resilience": {
+      "kind": "updated",
+      "summary": "Host EC2 hiện đại chạy Nitro Hypervisor; thêm lựa chọn thứ ba Dedicated Instance (phần cứng riêng nhưng trả theo instance); bỏ ý \"EC2 là compute mặc định\", chọn EC2 khi workload truyền thống hoặc cần kiểm soát OS.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Khi nào dùng EC2?",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 Instance Types": {
+      "kind": "updated",
+      "summary": "Nay có 6 category (thêm HPC Optimized: Hpc6a/7a/7g); Accelerated có chip Trainium/Inferentia; ví dụ tên R8gd.8xlarge, chữ i = Intel; bảng family PART2 và demo tra cứu không còn.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Giải mã tên instance type: `R5dn.8xlarge`",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Bảng instance type tham khảo (theo slide khóa học)",
+        "Demo / Lab"
+      ]
+    },
+    "EC2 Instance Connect and SSH": {
+      "kind": "updated",
+      "summary": "Cho phép EC2 Instance Connect bằng AWS-managed prefix list thay vì tra ip-ranges.json; console có 4 cách kết nối (Instance Connect, Instance Connect Endpoint, Session Manager, Serial Console).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EBS": {
+      "kind": "updated",
+      "summary": "Demo mới dùng gp3, volume hiện trong OS là /dev/nvme1n1 (Nitro), chỉ nhắc fstab chứ không làm; phần Instance Store tách thành demo riêng.",
+      "changed": [
+        "Demo / Lab"
+      ],
+      "dropped": []
+    },
+    "EBS Volume Types": {
+      "kind": "updated",
+      "summary": "gp3 nay tới 64 TB, 80,000 IOPS, 2,000 MiB/s và là mặc định; io2 gộp vào io2 Block Express (từ 2025); gp2 1 credit = 1 I/O tới 256 KB, cạn credit thì tụt về baseline; non-Nitro chỉ 32,000 IOPS; ví dụ trần R5b và RAID 0.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng tổng hợp nhanh",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Instance Store": {
+      "kind": "updated",
+      "summary": "Số liệu hiệu năng mới: i7i tới hàng triệu IOPS (i7i.48xlarge 7.2 triệu read / 3.96 triệu write), D3 4,600 MB/s; một số type NVMe bắt buộc gắn instance store lúc launch; demo riêng với c6gd.medium.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Compare - EBS vs Instance Store": {
+      "kind": "updated",
+      "summary": "Thang mốc mới: gp2 16K, io1 64K, gp3 80K, io2 Block Express 256K IOPS; gp3 trần cao hơn io1 nhưng không cam kết latency; RAID 0 bị chặn bởi trần của từng instance (không còn mốc chung 260K).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Bảng so sánh nhiều chiều",
+        "Bảng số liệu cần thuộc (exam power-up)",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EBS Snapshots": {
+      "kind": "updated",
+      "summary": "FSR tối đa 5 mỗi region (trước ghi 50 set); thêm archive tier (tối thiểu 90 ngày, restore tới 72 giờ) và snapshot lock (WORM, chống xóa/ransomware).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EBS Encryption": {
+      "kind": "updated",
+      "summary": "Mã hóa cả dữ liệu đi giữa host và volume; restore/copy snapshot chọn được KMS key khác thì sinh DEK mới; tính năng miễn phí nhưng vẫn trả phí KMS; quy trình mã hóa volume cũ (snapshot → volume mã hóa) nay được dạy.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Các điểm tóm tắt (Exam PowerUp)",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 Network Interfaces IPs and DNS": {
+      "kind": "updated",
+      "summary": "Thêm private DNS kiểu resource name (theo instance ID, hỗ trợ IPv4/IPv6); Elastic IP chỉ có cho IPv4, IPv6 giữ nguyên qua stop/start.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "AMI": {
+      "kind": "updated",
+      "summary": "Share public bị Block public access for AMIs chặn mặc định; deregister AMI có tùy chọn xóa luôn snapshot; demo mới bake web store Python (Flask, Gunicorn) cho Aus-E-Mart và copy sang us-west-2.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 Purchase Options": {
+      "kind": "updated",
+      "summary": "Spot không còn đấu giá: pool theo type/AZ, giá AWS đặt; 3 lý do gián đoạn, cảnh báo 2 phút qua EventBridge và metadata, behavior terminate/stop/hibernate, rebalance recommendation; On-Demand có thể gặp insufficient capacity; thêm lý do cách ly cho Dedicated Host.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Reserved Instances and Savings Plans": {
+      "kind": "updated",
+      "summary": "RI dạy lại đầy đủ (Standard/Convertible, size flexibility, không hủy được); Scheduled RI đã deprecated; ODCR immediate/future-dated, open/targeted, giá On-Demand, Capacity Blocks for ML; Savings Plans không giữ capacity, không phủ Spot/RI, trả lại trong 7 ngày nếu ≤ $100/giờ.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Dedicated Hosts": {
+      "kind": "updated",
+      "summary": "Bài mới gộp vào mục EC2 Basics cùng Dedicated Instances: lý do chính thường là cách ly phần cứng theo quy định, license theo socket/core ít gặp hơn; tự quản lý capacity; share qua RAM cho account, OU hoặc cả Organization.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 Status Checks and Auto Recovery": {
+      "kind": "updated",
+      "summary": "Thêm EBS status check (instance Nitro, 3/3); simplified automatic recovery bật sẵn khi system check fail; recovery chỉ dựa trên system check, giữ ID, IP, EBS nhưng mất RAM.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "EC2 Shutdown Terminate and Termination Protection": {
+      "kind": "updated",
+      "summary": "Thêm stop protection (DisableApiStop) chặn cả stop lẫn terminate; demo riêng thay cho demo dùng chung với status check.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Horizontal vs Vertical Scaling": {
+      "kind": "updated",
+      "summary": "Resize EC2 khi vertical scaling cần stop rồi start instance (không chỉ reboot).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu"
+      ],
+      "dropped": []
+    },
+    "EC2 Instance Metadata": {
+      "kind": "updated",
+      "summary": "Bài mới dạy cả IMDSv1 và IMDSv2 (PUT lấy token), nhiều instance mới chỉ bật v2; metadata không mã hóa nhưng không rời host; demo dùng token và tùy chọn Optional/Required.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []

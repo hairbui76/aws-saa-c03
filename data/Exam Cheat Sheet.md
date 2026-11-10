@@ -60,6 +60,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | HPC, tightly coupled, latency thấp giữa node | **Cluster placement group** + enhanced networking/EFA | [[EC2 Placement Groups]] |
 | License theo socket/core, BYOL | **Dedicated Host** | [[Dedicated Hosts]] |
 | Batch chịu gián đoạn, rẻ nhất | **Spot** | [[EC2 Purchase Options]] |
+| Chắc chắn launch được ở một AZ (sự kiện, Black Friday), không cam kết dài hạn | **On-Demand Capacity Reservation** (+ Savings Plans nếu cần giảm giá) | [[Reserved Instances and Savings Plans]] |
 | Tải 24/7, 1–3 năm; chuyển dần EC2 → Fargate → Lambda | **RI / Savings Plans** (Compute SP) | [[Reserved Instances and Savings Plans]] |
 | Memory, disk, app log của EC2/on-prem | **CloudWatch Agent** | [[CloudWatch Agent]] |
 
@@ -233,26 +234,26 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 ### EBS volume types → [[EBS Volume Types]]
 | Loại | Max IOPS/volume | Max throughput | Boot | Dùng khi |
 |---|---|---|---|---|
-| gp3 | 16,000 (3,000 baseline) | 1,000 MB/s | Có | Mặc định, rẻ hơn gp2 ~20% |
-| gp2 | 16,000 (3 IOPS/GB, burst) | 250 MB/s | Có | Legacy; volume nhỏ dễ cạn burst credit |
-| io1/io2 | 64,000 | 1,000 MB/s | Có | DB cần IOPS cao, ổn định; Multi-Attach |
-| io2 Block Express | 256,000 | 4,000 MB/s | Có | > 64,000 IOPS |
+| gp3 | 80,000 (3,000 baseline) | 2,000 MiB/s | Có | Mặc định, rẻ hơn gp2 ~20%, 1 GB–64 TB |
+| gp2 | 16,000 (3 IOPS/GB, burst) | 250 MB/s | Có | Legacy; volume nhỏ dễ cạn burst credit (tụt về baseline) |
+| io1 | 64,000 (50 IOPS/GB) | 1,000 MB/s | Có | DB cần IOPS cam kết, latency ổn định; Multi-Attach |
+| io2 Block Express | 256,000 (1,000 IOPS/GB) | 4,000 MB/s | Có | > 64,000 IOPS, sub-ms, tới 64 TB (io2 = Block Express từ 2025) |
 | st1 (HDD) | 500 | 500 MB/s | **Không** | Throughput tuần tự: big data, log, Kafka |
 | sc1 (HDD) | 250 | 250 MB/s | **Không** | Dữ liệu lạnh, rẻ nhất |
 
-Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và (2025) gp3 lên tới 80,000 IOPS / 2,000 MiB/s, đề vẫn dùng mốc 16,000. Khóa học nói io2 Block Express đang preview; nay mọi io2 chạy trên Block Express.
+Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/s; gp3 có trần IOPS cao hơn io1 nhưng không cam kết latency như provisioned IOPS. Instance non-Nitro chỉ 32,000 IOPS. Bản khóa cũ (và có thể bộ đề cũ) dùng mốc gp3 16,000 IOPS / 1,000 MiB/s.
 
 ### EC2 purchase options → [[EC2 Purchase Options]], [[Reserved Instances and Savings Plans]]
 | Option | Dùng khi | Lưu ý |
 |---|---|---|
 | On-Demand | Ngắn hạn, không biết trước, không chịu gián đoạn | Mặc định |
-| Spot | Rẻ nhất, chịu gián đoạn, batch/stateless | **Không** dùng cho workload không chịu gián đoạn |
-| Reserved Instances | 24/7, steady-state, 1/3 năm | Regional RI không giữ capacity; Zonal RI giữ |
-| Savings Plans | Cam kết $/giờ 1/3 năm | Compute SP phủ EC2 + Fargate + Lambda |
-| On-Demand Capacity Reservation | Cần capacity đảm bảo, không cam kết | Không giảm giá, trả cả khi không dùng |
+| Spot | Rẻ nhất, chịu gián đoạn, batch/stateless, ECS/EKS, CI/CD | **Không** dùng cho workload không chịu gián đoạn; cảnh báo 2 phút (EventBridge + metadata); terminate / stop / hibernate |
+| Reserved Instances | 24/7, steady-state, 1/3 năm | Standard / Convertible; Regional RI không giữ capacity; Zonal RI giữ; active rồi không hủy được |
+| Savings Plans | Cam kết $/giờ 1/3 năm | Compute SP phủ EC2 + Fargate + Lambda; không giữ capacity; AWS khuyên dùng thay RI |
+| On-Demand Capacity Reservation | Cần capacity đảm bảo, không cam kết | Trả giá On-Demand cả khi không dùng, không giảm giá; immediate / future-dated; open / targeted |
 | Dedicated Instances | Không chia sẻ phần cứng với khách khác | Không cần quản lý host |
-| Dedicated Hosts | License theo socket/core, BYOL | Trả theo host; không dùng với placement group/RDS |
-| Scheduled RI | Khóa học: tải định kỳ vài giờ/ngày | Nay: AWS không còn bán |
+| Dedicated Hosts | License theo socket/core, BYOL; cách ly + kiểm soát host | Trả theo host, tự quản lý capacity; không dùng với placement group/RDS (khóa cũ) |
+| Scheduled RI | Khóa cũ: tải định kỳ vài giờ/ngày | Đã deprecated, không mua được |
 
 ### Route 53 routing policies → [[R53 Routing Policies]]
 | Policy | Health check | Dùng khi |
@@ -311,7 +312,7 @@ Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và 
 | VPC | CIDR /28 → /16; mỗi subnet trừ **5 IP** (/28 → 11); router +1, DNS +2; default VPC 172.31.0.0/16, /20 mỗi AZ |
 | LB subnet | Nên /27 (cần ≥ 8 IP trống) |
 | EC2 | Metadata 169.254.169.254; user data ≤ 16 KB, chạy 1 lần; spread PG 7 instance/AZ |
-| EBS | gp2/gp3 16K IOPS → io1/io2 64K → Block Express 256K → Instance Store hàng trăm nghìn+ |
+| EBS | gp2 16K IOPS → io1 64K → gp3 80K → io2 Block Express 256K → (RAID 0 tới trần instance) → Instance Store hàng triệu; FSR tối đa 5/region |
 | S3 | Object 0–50 TB (khóa cũ: 5 TB); single PUT ≤ 5 GB; multipart nên dùng từ 100 MB; RTC 15 phút; 200 OK = đã lưu durable |
 | S3 bucket | Khóa cũ: 100 soft / 1.000 hard (khóa mới không nêu); nay: 10.000 mặc định (từ 11/2024) |
 | S3 lifecycle | ≥ 30 ngày ở Standard trước khi sang IA; một rule qua Glacier IR phải ≥ 90 ngày mới sang Glacier Flexible; object < 128 KB mặc định không transition; min duration 30/90/180 ngày |

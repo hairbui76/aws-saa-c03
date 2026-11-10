@@ -10,9 +10,9 @@
   ]
  },
  "EC2 Instance Metadata - v2": {
-  "sig": "7-1c72w4h",
+  "sig": "7-1abwonx",
   "steps": [
-   "Sơ đồ này so sánh IMDSv1 mà khóa học dạy với IMDSv2 dùng session token. Hiện nay nhiều AMI và instance mới mặc định đã là IMDSv2-only.",
+   "Sơ đồ này so sánh IMDSv1 cũ với IMDSv2 dùng session token. Nhiều instance mới mặc định bật IMDSv2 và tắt IMDSv1, bạn chỉnh được thành Optional, Required hoặc tắt hẳn IMDS.",
    "Với IMDSv2, trước tiên ứng dụng phải gửi request PUT tới đường dẫn latest api token, kèm thời gian sống TTL, để xin một session token.",
    "IMDS trả về token, và ứng dụng giữ token này để dùng cho các request tiếp theo.",
    "Từ giờ mỗi request GET đều phải gửi kèm header X-aws-ec2-metadata-token. Có token hợp lệ thì IMDS mới trả metadata.",

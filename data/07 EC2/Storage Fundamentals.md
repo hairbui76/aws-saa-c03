@@ -2,6 +2,7 @@
 tags: [saa-c03, s07-ec2, ec2, storage, fundamentals, performance]
 aliases: [Storage Refresher, Block vs File vs Object, IOPS, Throughput, Ephemeral vs Persistent]
 lessons: ["0129 Storage Refresher"]
+videos: ["123 [ASSOCIATESHARED] Storage Refresher"]
 ---
 # Storage Fundamentals
 

@@ -1,10 +1,10 @@
 {
  "Reserved Instances and Savings Plans": {
-  "sig": "5-6tzk4q",
+  "sig": "5-128m411",
   "steps": [
    "Sơ đồ này tách bạch hai lợi ích khác nhau của reservation: giảm giá trên hóa đơn và giữ capacity. Mỗi lựa chọn cho bạn một hoặc cả hai, và đề thi rất hay bẫy ở chỗ Regional RI chỉ giảm giá thôi.",
    "Đầu tiên ta chia theo trục giảm giá: một bên là các lựa chọn có giảm giá so với On-Demand, bên kia là các lựa chọn không hề giảm giá.",
-   "Nhóm có giữ capacity gồm Zonal RI, vừa giảm giá vừa giữ chỗ nhưng chỉ trong một AZ. Scheduled RI cho khung giờ lặp lại, tối thiểu 1200 giờ mỗi năm, nay AWS ngừng bán. Còn On-Demand Capacity Reservation giữ chỗ không cần cam kết, nhưng trả tiền cho toàn bộ capacity đã đặt.",
+   "Nhóm có giữ capacity gồm Zonal RI, vừa giảm giá vừa giữ chỗ nhưng chỉ trong một AZ. Scheduled RI cho khung giờ lặp lại nay đã deprecated, không mua được nữa. Còn On-Demand Capacity Reservation giữ chỗ không cần cam kết, nhưng trả giá On-Demand cho toàn bộ capacity đã đặt.",
    "Nhóm không giữ capacity gồm Regional RI, giảm giá ở mọi AZ trong region, và Savings Plans, cam kết chi tiêu theo giờ không gắn instance hay AZ. On-Demand thì không cam kết, và khi thiếu tài nguyên sẽ xếp sau Reserved.",
    "Khi đi thi, nhớ nhé: hệ thống business-critical cần chắc chắn launch được thì phải giữ capacity bằng Zonal RI hoặc On-Demand Capacity Reservation. Khi thiếu tài nguyên, Reserved được đáp ứng trước, rồi tới On-Demand, cuối cùng là Spot."
   ]

@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s07-ec2, ec2, networking, compute, vpc]
-aliases: [ENI, Elastic Network Interface, Elastic IP, EIP, EC2 Public DNS, EC2 Private DNS]
+aliases: [ENI, Elastic Network Interface, Elastic IP, EIP, EC2 Public DNS, EC2 Private DNS, Resource name DNS]
 lessons: ["0141 Network Interfaces, Instance IPs and DNS"]
+videos: ["135 [ASSOCIATESHARED] Network Interfaces, Instance IPs and DNS"]
 ---
 # EC2 Network Interfaces IPs and DNS
 
@@ -39,8 +40,9 @@ lessons: ["0141 Network Interfaces, Instance IPs and DNS"]
 - Vì [[Security Groups]] gắn vào ENI, nếu cần các IP khác nhau chịu các bộ rule khác nhau thì phải tách chúng ra **nhiều ENI**, mỗi ENI một bộ SG. Nhiều IP trên cùng một ENI luôn dùng chung SG.
 
 ### Private IP và private DNS
-- Ví dụ primary private IP `10.16.0.10` → private DNS dạng `ip-10-16-0-10.ec2.internal` (us-east-1; region khác có dạng `ip-...<region>.compute.internal`).
-- Private DNS **chỉ resolve được trong VPC** và luôn trỏ về private IP. Dùng cho giao tiếp nội bộ.
+- Ví dụ primary private IP `10.16.0.10` → private DNS dạng **IP name** `ip-10-16-0-10.ec2.internal` (riêng us-east-1; region khác có dạng `ip-10-16-0-10.us-west-2.compute.internal`).
+- Kiểu đặt tên thứ hai là **resource name**: hostname dùng **instance ID** thay cho IP, ví dụ `i-0123456789.ec2.internal`. IP name chỉ cho IPv4, còn resource name resolve được **IPv4, IPv6 hoặc cả hai**.
+- Mọi private DNS đều kết thúc bằng `.internal`: **chỉ resolve được trong VPC**, dùng cho giao tiếp nội bộ.
 
 ### Public IPv4 (non-elastic)
 - Được cấp khi bật thủ công lúc launch, hoặc khi subnet bật auto-assign public IPv4 (xem [[VPC Subnets]]).
@@ -49,7 +51,8 @@ lessons: ["0141 Network Interfaces, Instance IPs and DNS"]
   - **Reboot/restart** → **không** đổi IP.
   - Bất cứ điều gì khiến instance chuyển sang host khác (ví dụ forced migration do AWS) → đổi IP.
 - Public IP **không thực sự nằm trên instance**: [[VPC Routing and Internet Gateway|Internet Gateway]] làm static NAT giữa public IP và private IP. OS **không bao giờ thấy public IPv4**.
-- Kèm theo **public DNS** dạng `ec2-<ip-gạch-ngang>.compute-1.amazonaws.com` (us-east-1; region khác: `ec2-...<region>.compute.amazonaws.com`).
+- Kèm theo **public DNS** dạng `ec2-<ip-gạch-ngang>.compute-1.amazonaws.com` (us-east-1; region khác: `ec2-...<region>.compute.amazonaws.com`, ví dụ `...us-west-2.compute.amazonaws.com`).
+- Public IPv4 đã đổi thì **không có cách nào lấy lại** IP cũ.
 
 ### Public DNS resolve khác nhau theo vị trí
 - **Trong VPC**: public DNS resolve ra **primary private IPv4** → traffic instance-to-instance đi thẳng trong VPC, không vòng ra IGW rồi quay lại.
@@ -61,6 +64,8 @@ lessons: ["0141 Network Interfaces, Instance IPs and DNS"]
 - Associate với một private IP trên primary hoặc secondary ENI.
 - Gắn EIP vào primary ENI → **public IPv4 thường bị gỡ ngay**, EIP thành public IP mới của instance.
 - Gỡ EIP ra → instance được cấp **public IPv4 mới**, **không bao giờ lấy lại IP cũ**.
+- Dùng EIP khi cần public IPv4 **không đổi**, hoặc public IPv4 **chuyển được giữa các instance**.
+- EIP **chỉ có cho IPv4**. Không có "Elastic IPv6" và cũng không cần: IPv6 vốn gần như duy nhất, routable công khai, và IPv6 gán cho interface **giữ nguyên qua stop/start**.
 - (Hiện nay, từ 02/2024, AWS tính phí cho **mọi** public IPv4, kể cả EIP đang gắn; trước đó EIP chỉ tính phí khi không gắn.)
 
 ## Cách hoạt động / Kiến trúc
@@ -95,7 +100,8 @@ flowchart TB
 - **Multi-homed**: instance có ENI ở 2 subnet (ví dụ một cho management, một cho data).
 - Cần **SG khác nhau cho các IP khác nhau** → dùng **nhiều ENI**, không phải nhiều IP trên một ENI.
 - **OS không bao giờ thấy public IPv4**. Không bao giờ cấu hình public IPv4 trong Windows/Linux trên EC2. (IPv6 thì khác: OS thấy vì IPv6 đều là public.)
-- Public IPv4 thường là **dynamic**: stop/start = đổi IP; reboot = giữ IP. Cần IP cố định → **Elastic IP**.
+- Public IPv4 thường là **dynamic**: stop/start = đổi IP; reboot = giữ IP. Cần IP cố định → **Elastic IP** (chỉ IPv4; IPv6 vốn giữ nguyên qua stop/start).
+- Private DNS có hai kiểu: **IP name** (`ip-10-16-0-10...`, chỉ IPv4) và **resource name** (`i-0123....ec2.internal`, IPv4/IPv6); cả hai chỉ resolve trong VPC.
 - Câu hỏi kinh điển: instance có public IP thường, gắn EIP rồi gỡ EIP, có lấy lại IP cũ được không? **Không**, sẽ nhận IP mới hoàn toàn.
 - **Public DNS = private IP trong VPC, public IP ở mọi nơi khác.**
 - NAT instance cần **tắt Source/Destination Check** trên ENI.

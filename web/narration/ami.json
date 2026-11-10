@@ -9,17 +9,17 @@
    "Các volume mới gắn vào instance mới, nên instance này có cấu hình storage và phần mềm y hệt bản gốc. Đây chính là ý tưởng AMI baking để launch hàng loạt.",
    "Phần permissions của AMI quyết định ai được dùng nó: mặc định là private, có thể share cho account hoặc OU cụ thể, hoặc public cho mọi người.",
    "Block device mapping là bảng nối snapshot ID với device ID gốc, ví dụ snap-boot với xvda và snap-data với xvdf, để AWS biết gắn volume mới vào đâu.",
-   "Khi đi thi nhớ: nên stop instance trước khi Create Image để dữ liệu nhất quán, launch từ AMI cũng là cách chuyển instance sang AZ khác. AMI không sửa được, chi phí là dung lượng snapshot, và deregister không xóa snapshot."
+   "Khi đi thi nhớ: nên stop instance trước khi Create Image để dữ liệu nhất quán, launch từ AMI cũng là cách chuyển instance sang AZ khác. AMI không sửa được, chi phí là dung lượng snapshot, và khi deregister phải tick xóa associated snapshots thì snapshot mới bị xóa theo."
   ]
  },
  "AMI - copy": {
-  "sig": "5-117rmg5",
+  "sig": "5-1bpqis7",
   "steps": [
    "Sơ đồ này nói về copy AMI sang region khác và chia sẻ AMI. Copy AMI nghĩa là copy cả snapshot, tạo ra một AMI hoàn toàn mới với ID mới ở region đích.",
    "AMI ami-aaa ở us-east-1 trỏ tới snapshot của nó. Khi copy sang us-east-2, ta nhận được ami-bbb, một AMI khác hẳn với ID riêng, không phải cùng một AMI.",
    "Snapshot cũng được copy sang đích. Có thể bật mã hóa trong lúc copy, còn snapshot đã mã hóa thì được mã hóa lại bằng KMS key của us-east-2, vì KMS key là regional.",
-   "Về chia sẻ: mặc định AMI là private, chỉ account sở hữu dùng. Nên share explicit cho account ID, Organization hoặc OU tin cậy, kèm create volume permission nếu cần. Public thì rất dễ lộ dữ liệu và access key.",
-   "Lời nhắc khi đi thi: đáp án dùng một AMI cho nhiều region là sai, phải copy. Và khi dọn dẹp, nhớ xóa snapshot ở cả hai region, vì deregister AMI không xóa snapshot."
+   "Về chia sẻ: mặc định AMI là private, chỉ account sở hữu dùng. Nên share explicit cho account ID, Organization hoặc OU tin cậy, kèm create volume permission nếu cần. Public thì bị Block public access chặn sẵn, muốn share public phải tắt tính năng này trước.",
+   "Lời nhắc khi đi thi: đáp án dùng một AMI cho nhiều region là sai, phải copy. Và khi dọn dẹp, nhớ deregister AMI và xóa snapshot ở cả hai region."
   ]
  }
 }

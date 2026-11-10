@@ -2,6 +2,7 @@
 tags: [saa-c03, s07-ec2, ec2, storage, instance-store, block-storage, performance]
 aliases: [Instance Store Volumes, Ephemeral Storage, Ephemeral Volumes]
 lessons: ["0134 Instance Store Volumes Architecture", "0139 DEMO EBS Volumes PART3"]
+videos: ["128 [ASSOCIATESHARED] Instance Store Volumes - Architecture", "133 [ASSOCIATESHARED] [DEMO] Instance Store Volumes"]
 ---
 # Instance Store
 
@@ -16,7 +17,7 @@ lessons: ["0134 Instance Store Volumes Architecture", "0139 DEMO EBS Volumes PAR
 - **Gắn vật lý vào một EC2 host**; mỗi host có instance store riêng, chỉ instance **trên host đó** mới truy cập được.
 - **Hiệu năng cao nhất trong AWS**, vượt xa EBS.
 - **Bao gồm trong giá instance** → "use it or lose it". Đã có thì không có lý do gì không dùng.
-- **Chỉ gắn lúc launch (ATTACHED AT LAUNCH)**. Không thể thêm instance store sau khi instance đã chạy (khác EBS). Câu này xuất hiện nhiều lần trong các đề AWS.
+- **Chỉ gắn lúc launch (ATTACHED AT LAUNCH)**. Không thể thêm instance store sau khi instance đã chạy (khác EBS). Câu này xuất hiện nhiều lần trong các đề AWS. Nhiều instance type dùng NVMe còn **tự động bắt buộc** gắn các volume này lúc launch.
 - Số lượng và kích thước volume phụ thuộc **instance type và size**. Một số type **không có** instance store; size càng lớn thường càng nhiều volume. Instance có chữ `d` trong tên (ví dụ `m5dn`, `r5d`) là có local NVMe (xem [[EC2 Instance Types]]).
 
 ## Cách hoạt động / Kiến trúc
@@ -41,23 +42,35 @@ flowchart LR
 - **Reboot (restart)** → **không** chuyển host → dữ liệu **còn nguyên**.
 
 ### Số liệu hiệu năng (theo slide)
-- **D3** (storage optimized, HDD): **4.6 GB/s** throughput, dung lượng lớn giá tốt, vượt xa EBS HDD (st1 tối đa 500 MB/s).
-- **I3** (NVMe SSD): tới **16 GB/s** sequential throughput, cao hơn nhiều so với EBS mạnh nhất.
-- IOPS còn chênh lệch lớn hơn: i3.16xlarge ~3.3 triệu read IOPS / 1.4 triệu write IOPS; **i3en.24xlarge ~2 triệu read / 1.6 triệu write IOPS**. Một vài mốc khác: i3.large ~100K read / 35K write; i3.8xlarge ~1.65 triệu / 720K.
-- So với io2 Block Express (256,000 IOPS/volume) thì instance store cao hơn cả chục lần.
+- **D3** (storage optimized, HDD): **4,600 MB/s** sequential throughput, dung lượng lớn giá tốt, vượt xa EBS HDD (st1 tối đa 500 MB/s).
+- **i7i** (storage optimized, NVMe SSD gắn local): tới **hàng triệu IOPS**, cao hơn nhiều so với EBS mạnh nhất. Bảng trên slide (100% random read IOPS / write IOPS):
+
+| Instance | Read IOPS | Write IOPS |
+|---|---|---|
+| i7i.large | 75,000 | 41,250 |
+| i7i.4xlarge | 600,000 | 330,000 |
+| i7i.16xlarge | 2,400,000 | 1,320,000 |
+| **i7i.48xlarge** | **7,200,000** | **3,960,000** |
+
+- So với io2 Block Express (256,000 IOPS/volume) thì instance store cao hơn hàng chục lần.
+- (Bản khóa cũ dùng dòng I3: tới 16 GB/s sequential throughput; i3.16xlarge ~3.3 triệu read / 1.4 triệu write IOPS; i3en.24xlarge ~2 triệu / 1.6 triệu.)
 
 ## Demo / Lab
-(Từ bài 0139, instance **m5dn.large** có 1 instance store volume **75 GB NVMe**, device `/dev/nvme1n1`; chi phí ~0.13–0.15 USD/giờ, ngoài free tier.)
-1. `lsblk` thấy root 8G (EBS) và volume instance store 75G. `file -s` → `data` (chưa có FS). Tạo XFS, mount vào `/instancestore`, tạo file test.
-2. **Reboot** → mount lại thủ công → **file vẫn còn** (cùng host). Public IPv4 không đổi.
-3. **Stop rồi start** → public IPv4 **đổi** (dấu hiệu chuyển host) → `file -s` lại báo `data`: file system và file test **mất hết**.
-- Rút ra: reboot giữ host (có thể giữ dữ liệu), stop/start chắc chắn đổi host và **chắc chắn mất dữ liệu instance store**.
+(Bài demo riêng của bản mới. Stack CloudFormation `instancestore` tạo VPC Aus-E-Mart có public subnet.)
+1. Launch instance Amazon Linux **Arm64 (Graviton)** cho rẻ. Tìm type có instance store: *Compare instance types* bật cột *local instance store*, hoặc gõ **`gd`** vào ô tìm (g = Graviton, d = instance store) → chọn **c6gd.medium**. Không cần key pair; đặt vào subnet `WebA` của `aem-vpc1`, SG dựng sẵn.
+2. Phần *Storage* khi launch: root 8 GB gp3 và **một instance store volume ~59 GB SSD** đi kèm instance type.
+3. Kết nối bằng EC2 Instance Connect: `lsblk` thấy root 8G và volume instance store; `sudo file -s /dev/nvme1n1` → `data` (chưa có FS). Tạo XFS, mount vào `/instancestore`, tạo file test.
+4. **Reboot** (kiểm tra bằng `uptime`) → mount lại thủ công → **file vẫn còn**.
+5. **Stop rồi start** → public IPv4 bị thu hồi và đổi (dấu hiệu rời host) → `lsblk` vẫn thấy một volume cùng size nhưng `file -s` báo `data`: file system và file test **mất hết**, kể cả khi tình cờ quay về cùng host.
+6. Dọn dẹp: terminate instance, xóa stack.
+- Rút ra: reboot giữ dữ liệu, stop/start hay sự cố đẩy instance sang host khác thì **chắc chắn mất dữ liệu instance store**.
+- (Bản khóa cũ làm phần này trong demo EBS PART3 với **m5dn.large**, 1 volume NVMe 75 GB, chi phí ~0.13–0.15 USD/giờ.)
 
 ## 🎯 Mẹo thi SAA-C03
 - **"Thêm instance store sau khi launch"** → **không thể**. Chỉ lúc launch.
 - Instance store là **ephemeral/temporary**: không bao giờ dùng cho dữ liệu cần persistent hoặc không thể tái tạo.
 - Mất dữ liệu khi: **move, resize, hardware failure**, stop/start. Reboot thì không.
-- Đề cần **IOPS/throughput cao hơn mọi EBS** (hàng trăm nghìn tới hàng triệu IOPS) và dữ liệu là **cache, buffer, scratch, dữ liệu tạm** hoặc đã được replicate ở nơi khác → **Instance Store**.
+- Đề cần **IOPS/throughput cao hơn mọi EBS** (hàng triệu IOPS) và dữ liệu là **cache, buffer, scratch, dữ liệu tạm** hoặc đã được replicate ở nơi khác → **Instance Store**.
 - Đề nhắc "chi phí" + instance đã có instance store → dùng nó vì đã trả tiền rồi.
 - Không có snapshot cho instance store; muốn bảo vệ dữ liệu phải tự replicate hoặc copy sang EBS/S3.
 

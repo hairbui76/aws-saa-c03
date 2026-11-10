@@ -2,10 +2,11 @@
 tags: [saa-c03, s07-ec2, ec2, storage, comparison, ebs, instance-store]
 aliases: [EBS vs Instance Store, Instance Store vs EBS, Choosing between Instance Store and EBS]
 lessons: ["0135 Choosing between the EC2 Instance Store and EBS"]
+videos: ["129 [ASSOCIATESHARED] Choosing Between the EC2 Instance Store and EBS"]
 ---
 # Compare - EBS vs Instance Store
 
-> **TL;DR:** Mặc định chọn **[[EBS]]** khi cần persistent, resilient hoặc tách khỏi vòng đời instance. Chọn **[[Instance Store]]** khi cần hiệu năng cực cao (> 260,000 IOPS), khi ứng dụng tự replicate dữ liệu, hoặc khi muốn tận dụng storage đã nằm sẵn trong giá instance. Bài này là bộ số liệu Adrian yêu cầu **thuộc lòng**.
+> **TL;DR:** Mặc định chọn **[[EBS]]** khi cần persistent, resilient hoặc tách khỏi vòng đời instance. Chọn **[[Instance Store]]** khi cần hiệu năng cực cao (hàng triệu IOPS, vượt trần EBS của instance), khi ứng dụng tự replicate dữ liệu, hoặc khi muốn tận dụng storage đã nằm sẵn trong giá instance. Bài này là bộ số liệu giảng viên yêu cầu **thuộc lòng**.
 
 ## 🖼️ Sơ đồ
 ![[Compare - EBS vs Instance Store.excalidraw]]
@@ -25,7 +26,7 @@ lessons: ["0135 Choosing between the EC2 Instance Store and EBS"]
 | Thêm sau khi launch | Được | **Không**, chỉ lúc launch |
 | Stop/start, resize, host maintenance | Dữ liệu giữ nguyên | **Mất dữ liệu** |
 | Reboot | Giữ nguyên | Giữ nguyên (cùng host) |
-| Hiệu năng tối đa | 16K (gp2/gp3), 64K (io1/io2), 256K (Block Express) IOPS/volume; ~260K IOPS/instance | **Hàng triệu IOPS**, tới 16 GB/s (I3), 4.6 GB/s HDD (D3) |
+| Hiệu năng tối đa | 16K (gp2), 64K (io1), 80K (gp3), 256K (io2 Block Express) IOPS/volume; tổng bị chặn bởi trần của instance | **Hàng triệu IOPS** (i7i), 4,600 MB/s HDD (D3) |
 | Snapshot | Có ([[EBS Snapshots]]) | Không |
 | Mã hóa KMS | Có ([[EBS Encryption]]) | Phần cứng NVMe tự mã hóa, không quản lý bằng KMS |
 | Chi phí | Trả theo GB-tháng (+ IOPS/throughput tùy loại) | **Đã bao gồm** trong giá instance |
@@ -50,39 +51,43 @@ lessons: ["0135 Choosing between the EC2 Instance Store and EBS"]
 | **Rẻ** (và cần EBS) | **st1** hoặc **sc1** |
 | **Throughput / streaming** | **st1** |
 | **Boot volume** | **KHÔNG** st1 hay sc1 |
-| ≤ **16,000 IOPS**/volume | gp2/gp3 |
-| 16,000 – **64,000 IOPS**/volume | io1/io2 |
-| Tới **256,000 IOPS**/volume | io2 Block Express |
-| **RAID 0 nhiều EBS volume** | Tới **260,000 IOPS** (trần per-instance; io1, io2 Block Express, gp2/gp3) |
-| **> 260,000 IOPS** và chấp nhận không persistent | **Instance Store** |
+| gp2 | Tối đa **16,000 IOPS**/volume, tăng theo size |
+| gp3 | **3,000 IOPS** mặc định, trả thêm tới **80,000 IOPS**/volume |
+| io1 | Tới **64,000 IOPS**/volume, **provisioned**: latency thấp, ổn định |
+| io2 Block Express | Tới **256,000 IOPS**/volume, sub-millisecond |
+| **RAID 0 nhiều EBS volume** | Cộng dồn hiệu năng các volume, tới **trần của instance** (instance Nitro lớn nhất: hàng trăm nghìn tới cả triệu IOPS) |
+| Hàng triệu IOPS và chấp nhận không persistent | **Instance Store** |
+
+- **gp3 có trần IOPS cao hơn io1**, nhưng gp3 không cam kết độ ổn định. Cần IOPS bảo đảm và latency ổn định (DB hiệu năng cao, app nhạy latency) → **io1/io2 Block Express**.
+- (Bản khóa cũ nêu thang 16K (gp2/gp3) → 64K (io1/io2) → 256K (Block Express) → 260K (trần per-instance khi RAID 0) → Instance Store.)
 
 ```mermaid
 flowchart TD
     A{"Cần persistent / resilient /<br/>tách khỏi vòng đời instance?"} -->|"Có"| EBS["EBS"]
-    A -->|"Không, hoặc app tự replicate"| B{"Cần > 260,000 IOPS?"}
+    A -->|"Không, hoặc app tự replicate"| B{"Cần hàng triệu IOPS<br/>(vượt trần EBS của instance)?"}
     B -->|"Có"| IS["Instance Store"]
     B -->|"Không"| C{"Instance đã có instance store<br/>và ưu tiên chi phí?"}
     C -->|"Có"| IS
     C -->|"Không"| EBS
     EBS --> D{"Yêu cầu chính?"}
     D -->|"Rẻ, throughput, không boot"| ST["st1 / sc1"]
-    D -->|"≤ 16K IOPS"| GP["gp3"]
-    D -->|"16K–64K IOPS"| IO["io1 / io2"]
-    D -->|"> 64K IOPS / volume"| BX["io2 Block Express<br/>hoặc RAID 0 (tới 260K/instance)"]
+    D -->|"Đa dụng (tới 80K IOPS)"| GP["gp3"]
+    D -->|"IOPS cam kết, latency ổn định"| IO["io1"]
+    D -->|"> 64K IOPS / volume, sub-ms"| BX["io2 Block Express<br/>hoặc RAID 0 (tới trần instance)"]
 ```
 
 ### RAID 0 với EBS
 - Gộp nhiều EBS volume thành **RAID 0** trong OS → hiệu năng gần bằng tổng các volume.
-- Nhưng luôn bị chặn bởi **trần per-instance (~260,000 IOPS)** và loại/size instance (phải là instance lớn, hiện đại). Gộp thêm volume cũng không vượt được trần này.
+- Nhưng luôn bị chặn bởi **trần per-instance** do loại/size instance quyết định: instance Nitro lớn nhất đạt hàng trăm nghìn tới cả triệu IOPS (ví dụ R5b: 260,000 IOPS), instance nhỏ chạm trần sớm hơn nhiều. Gộp thêm volume cũng không vượt được trần này. Phải chọn đúng số volume, đúng loại và size instance.
 - RAID 0 không có redundancy: một volume hỏng là mất cả set.
 
 ## 🎯 Mẹo thi SAA-C03
 - Từ khóa **persistent / durable / survive stop / detach & reattach** → EBS.
 - Từ khóa **temporary, cache, buffer, scratch, highest performance, millions of IOPS**, hoặc "data is replicated across nodes" → Instance Store.
 - **Cost-focused + EBS** → st1/sc1; **throughput/streaming** → st1; nhưng **boot** thì loại cả hai.
-- Nhớ các mốc **16K → 64K → 256K → 260K**: vượt mốc nào thì chuyển công nghệ tương ứng.
+- Nhớ các mốc: gp2 **16K**, io1 **64K**, gp3 **80K**, io2 Block Express **256K** IOPS/volume → RAID 0 tới trần instance → hàng triệu IOPS chỉ có Instance Store. Cần latency ổn định thì chọn provisioned IOPS (io1/io2 Block Express) dù gp3 có trần IOPS cao hơn io1. (Bộ đề cũ có thể dùng mốc gp3 = 16K.)
 - Hiệu năng EBS cao cần **instance đủ lớn**; nếu đề cho volume nhanh mà instance nhỏ → đổi instance type ([[EC2 Instance Types]], [[Enhanced Networking and EBS Optimized]]).
-- (Transcript có nhắc "instance rebooting" là nguyên nhân mất dữ liệu instance store; thực tế và demo bài 0139 cho thấy **reboot giữ dữ liệu**, chỉ stop/start, resize, host failure mới mất.)
+- **Reboot là thao tác duy nhất an toàn** với instance store; stop/start, maintenance, hỏng phần cứng hay bất cứ gì khiến instance đổi host đều làm mất dữ liệu.
 
 ## Liên kết
 - Tiên quyết: [[Storage Fundamentals]], [[EBS]], [[Instance Store]], [[EBS Volume Types]]

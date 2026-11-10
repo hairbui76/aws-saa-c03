@@ -2,6 +2,7 @@
 tags: [saa-c03, s07-ec2, ec2, compute, scaling, architecture]
 aliases: [Horizontal Scaling, Vertical Scaling, Scale Out, Scale Up, Off-host Sessions, Stateless]
 lessons: ["0153 Horizontal & Vertical Scaling"]
+videos: ["149 [ASSOCIATESHARED] Horizontal & Vertical Scaling"]
 ---
 # Horizontal vs Vertical Scaling
 
@@ -26,7 +27,7 @@ lessons: ["0153 Horizontal & Vertical Scaling"]
 | `t3.2xlarge` | 8 | 32 GiB |
 
 - Nhược điểm:
-  - **Mỗi lần resize cần reboot** → gián đoạn khách hàng → thường chỉ scale được trong **cửa sổ bảo trì (outage window)**, phản ứng chậm khi tải đổi nhanh.
+  - **Mỗi lần resize cần stop rồi start instance** (bản khóa cũ nói reboot) → gián đoạn khách hàng → thường chỉ scale được trong **cửa sổ bảo trì (outage window)**, phản ứng chậm khi tải đổi nhanh.
   - Instance lớn thường **đắt thêm một khoản (premium)**, chi phí tăng không tuyến tính ở các size cao.
   - Có **trần hiệu năng = size instance lớn nhất**.
 - Ưu điểm:
@@ -39,7 +40,7 @@ lessons: ["0153 Horizontal & Vertical Scaling"]
 - Cần **load balancer** đứng giữa khách hàng và instance để chia tải (xem [[Elastic Load Balancer]]). Mỗi click của một người dùng có thể rơi vào cùng một instance hoặc bất kỳ instance nào.
 - **"Sessions are everything"**: session là trạng thái tương tác của người dùng (đăng nhập, giỏ hàng, vị trí video đang xem...).
   - Một server thì session nằm trên server đó. Với nhiều instance, người dùng chuyển qua lại giữa các instance → **mất session**, bị logout, ứng dụng không dùng được.
-  - Giải pháp: ứng dụng tự hỗ trợ, hoặc **off-host sessions**: lưu session ở bên ngoài, ví dụ một database (thường là [[DynamoDB Architecture|DynamoDB]] hoặc [[ElastiCache]]). Khi đó instance là **stateless** ("dumb instances"), vào instance nào cũng được.
+  - Giải pháp: ứng dụng tự hỗ trợ, hoặc **off-host sessions**: lưu session ở bên ngoài, trong một database bên ngoài (ví dụ [[DynamoDB Architecture|DynamoDB]] hoặc [[ElastiCache]]; tên dịch vụ cụ thể là bản khóa cũ nêu). Khi đó instance là **stateless** ("dumb instances"), vào instance nào cũng được.
 - Ưu điểm (khi ứng dụng hỗ trợ):
   - **Không gián đoạn khi scale**: chỉ thêm hoặc bớt instance, kết nối hiện có không bị ảnh hưởng (kể cả khi scale in, vì session nằm ngoài).
   - **Gần như không có giới hạn**, không có trần size.
@@ -52,7 +53,7 @@ lessons: ["0153 Horizontal & Vertical Scaling"]
 flowchart LR
   subgraph V["Vertical (scale up)"]
     direction LR
-    V1["t3.large<br/>2 vCPU / 8 GiB"] -->|"resize + reboot"| V2["t3.xlarge<br/>4 vCPU / 16 GiB"] -->|"resize + reboot"| V3["t3.2xlarge<br/>8 vCPU / 32 GiB"]
+    V1["t3.large<br/>2 vCPU / 8 GiB"] -->|"resize (stop/start)"| V2["t3.xlarge<br/>4 vCPU / 16 GiB"] -->|"resize (stop/start)"| V3["t3.2xlarge<br/>8 vCPU / 32 GiB"]
   end
 ```
 
@@ -70,7 +71,7 @@ flowchart LR
 | Tiêu chí | Vertical | Horizontal |
 |---|---|---|
 | Cách scale | Đổi instance to hơn/nhỏ hơn | Thêm/bớt instance |
-| Gián đoạn | Có (reboot khi resize) | Không (nếu stateless) |
+| Gián đoạn | Có (stop/start khi resize) | Không (nếu stateless) |
 | Thời điểm scale | Thường chỉ trong outage window | Bất cứ lúc nào, phản ứng nhanh |
 | Giới hạn | Size instance lớn nhất | Gần như không giới hạn |
 | Chi phí | Instance lớn có premium | Instance nhỏ phổ thông, rẻ hơn |
@@ -79,7 +80,7 @@ flowchart LR
 | Hợp với | Mọi app, kể cả monolith | App stateless, phía sau load balancer |
 
 ## 🎯 Mẹo thi SAA-C03
-- Cách nhớ của Adrian: **Horizontal = thêm Bob** (1 Bob → 2 Bob → 4 Bob → vô số Bob); **Vertical = Bob to ra** (`bob.small` → `bob.medium` → `bob.large`).
+- Cách nhớ của giảng viên: **Horizontal = thêm CoolCroc** (1 croc → 2 croc → 4 croc → vô số croc); **Vertical = CoolCroc to ra** (small croc → medium croc → large croc). (Bản khóa cũ dùng nhân vật Bob.)
 - Đề nói "không được downtime khi scale", "tải thay đổi nhanh hoặc không đoán trước", "không giới hạn" → **horizontal** (ELB + [[Auto Scaling Groups]]).
 - Đề nói "ứng dụng legacy/monolith, không sửa code được" → vertical là cách đơn giản nhất (nhưng có downtime và có trần).
 - Horizontal scaling cần **stateless + off-host sessions**. Thấy người dùng bị logout hoặc mất giỏ hàng khi scale out → đưa session ra DynamoDB/ElastiCache (hoặc dùng session stickiness, xem [[SSL Offload and Session Stickiness]]).

@@ -1,11 +1,12 @@
 ---
 tags: [saa-c03, s07-ec2, ec2, compute, security, operations]
-aliases: [Termination Protection, DisableApiTermination, Shutdown Behavior, Instance-initiated Shutdown Behavior]
+aliases: [Termination Protection, DisableApiTermination, Stop Protection, DisableApiStop, Shutdown Behavior, Instance-initiated Shutdown Behavior]
 lessons: ["0152 DEMO Shutdown, Terminate & Termination Protection"]
+videos: ["148 [ASSOCIATESHARED] [DEMO] Stop and Termination Protection"]
 ---
 # EC2 Shutdown Terminate and Termination Protection
 
-> **TL;DR:** **Termination protection** (thuộc tính `DisableApiTermination`) chặn việc terminate nhầm instance quan trọng và tạo ra một quyền IAM riêng, giúp tách vai trò giữa người được gỡ bảo vệ và người được terminate. **Shutdown behavior** quyết định khi OS bên trong tự shutdown thì instance chuyển sang **stopped** (mặc định) hay **terminated**.
+> **TL;DR:** **Termination protection** (thuộc tính `DisableApiTermination`) chặn việc terminate nhầm instance quan trọng và tạo ra một quyền IAM riêng, giúp tách vai trò giữa người được gỡ bảo vệ và người được terminate. **Stop protection** (`DisableApiStop`) bảo vệ mạnh hơn: chặn cả **stop** lẫn **terminate**. **Shutdown behavior** quyết định khi OS bên trong tự shutdown thì instance chuyển sang **stopped** (mặc định) hay **terminated**.
 
 ## 🖼️ Sơ đồ
 ![[EC2 Shutdown Terminate and Termination Protection.excalidraw]]
@@ -31,6 +32,11 @@ lessons: ["0152 DEMO Shutdown, Terminate & Termination Protection"]
 - Bật tự động được khi launch bằng [[CloudFormation Basics|CloudFormation]] hoặc các công cụ tự động hóa khác.
 - Ghi chú: termination protection **không** chặn việc terminate do OS shutdown khi shutdown behavior = terminate, và không chặn [[Auto Scaling Groups|ASG]] scale-in (kiến thức ngoài bài).
 
+### Stop Protection
+- Bật tại *Instance settings → Change stop protection*. Bản chất là attribute **`DisableApiStop`** = true.
+- Hoạt động giống termination protection nhưng **mạnh hơn**: termination protection chỉ chặn terminate, còn stop protection chặn **cả stop lẫn terminate**.
+- Gặp lỗi API nhắc tới `disableApiStop` hoặc `disableApiTermination` → instance đang bật stop protection hoặc termination protection; phải tắt trước (ví dụ trước khi xóa stack).
+
 ### Shutdown behavior
 - *Instance settings → Change shutdown behavior*: khi shutdown **từ bên trong OS**, instance chuyển sang:
   - **Stop** (mặc định, nên dùng trong đa số trường hợp).
@@ -50,14 +56,17 @@ flowchart TB
 ```
 
 ## Demo / Lab
-- Dùng instance từ demo [[EC2 Status Checks and Auto Recovery]].
-- Bật termination protection → Terminate → nhận lỗi yêu cầu sửa `disableApiTermination`.
-- Tắt lại termination protection, xem tùy chọn *Change shutdown behavior* (Stop/Terminate), rồi xóa stack CloudFormation để dọn dẹp.
+- Stack CloudFormation riêng tạo `AEMPublicInstance`, giả sử là instance website quan trọng của Aus-E-Mart (bài mới có demo riêng "Stop and Termination Protection").
+- Bật termination protection → Terminate → nhận lỗi yêu cầu sửa `disableApiTermination`. Tắt lại.
+- Xem *Change shutdown behavior* (Stop/Terminate), không đổi.
+- Bật **stop protection** → không stop được, cũng không terminate được (lỗi nhắc `disableApiStop`). Tắt lại rồi xóa stack.
+- (Bản khóa cũ dùng lại instance từ demo [[EC2 Status Checks and Auto Recovery]] và không có phần stop protection.)
 
 ## 🎯 Mẹo thi SAA-C03
 - "Ngăn **xóa nhầm** EC2 instance quan trọng" → **bật termination protection** (`DisableApiTermination`).
 - Termination protection thêm một **permission riêng** → dùng [[IAM Identity Policies]] để tách người được gỡ bảo vệ và người được terminate.
-- Adrian nhấn mạnh tên attribute **`DisableApiTermination`** và thông báo lỗi (quan trọng hơn ở SysOps/Developer, nhưng nên nhớ).
+- Nhớ tên attribute **`DisableApiTermination`** (termination protection) và **`DisableApiStop`** (stop protection) cùng thông báo lỗi (quan trọng hơn ở SysOps/Developer, nhưng nên nhớ).
+- Muốn chặn **cả stop** chứ không chỉ terminate → **stop protection**.
 - Muốn instance **tự xóa khi OS shutdown** → đổi shutdown behavior sang **terminate**.
 
 ## Liên kết

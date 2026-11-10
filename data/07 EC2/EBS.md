@@ -2,6 +2,7 @@
 tags: [saa-c03, s07-ec2, ec2, storage, ebs, block-storage, resilience]
 aliases: [Elastic Block Store, EBS Volume, EBS Volumes]
 lessons: ["0130 Elastic Block Store EBS Service Architecture", "0137 DEMO EBS Volumes PART1", "0138 DEMO EBS Volumes PART2", "0139 DEMO EBS Volumes PART3"]
+videos: ["124 [ASSOCIATESHARED] Elastic Block Store (EBS) Service Architecture", "131 [ASSOCIATESHARED] [DEMO] EBS Volumes - PART1", "132 [ASSOCIATESHARED] [DEMO] EBS Volumes - PART2"]
 ---
 # EBS
 
@@ -54,27 +55,26 @@ flowchart TB
 - Copy snapshot qua region → **global resilience** (DR, migration).
 
 ## Demo / Lab
-Ba instance: Instance1-AZA, Instance2-AZA, Instance1-AZB; mỗi instance có boot volume gp2 8 GiB (100 IOPS do mức tối thiểu của gp2).
+Stack CloudFormation `EBSDemo` tạo VPC Aus-E-Mart và ba instance (Graviton, rẻ): AZA instance 1, AZA instance 2 (cùng `us-east-1a`) và AZB instance 1 (`us-east-1b`); mỗi instance có boot volume 8 GB.
 
 **Phần 1: tạo và dùng volume**
-1. Create volume: type **gp2**, 10 GiB (gp2 cho kích thước 1 GiB – 16,384 GiB; 3 IOPS/GiB, tối thiểu 100 IOPS, volume nhỏ có burst; ở ~10,000 GiB thì không còn burst và đạt trần 16,000 IOPS). Phải chọn **AZ** khi tạo (`us-east-1a`). Có thể chọn snapshot làm nguồn và thiết lập encryption.
-2. Trạng thái: `creating` → `available` → attach → `in-use`. Khi attach, **chỉ thấy instance cùng AZ**. Device name `/dev/sdf` có thể hiện trong Linux là `/dev/xvdf`.
-3. Trong OS:
+1. *Create volume*: console liệt kê gp3/gp2, io1/io2, HDD st1/sc1 và standard (magnetic thế hệ trước). Chọn **gp3**, 10 GiB, giữ IOPS mặc định. Phải chọn **AZ** (`us-east-1a`); có thể tạo từ snapshot và bật encryption (demo không dùng).
+2. Trạng thái: `creating` → `available` → attach → `in-use`. Khi attach, **chỉ thấy instance cùng AZ** (không thấy instance AZB). Chọn device name `/dev/sdf`; console nhắc tên trong OS có thể khác: trên instance hiện đại (Nitro) volume hiện ra là **`/dev/nvme1n1`**.
+3. Trong OS (kết nối bằng EC2 Instance Connect):
    - `lsblk` liệt kê block device (root 8G, volume mới 10G).
-   - `sudo file -s /dev/xvdf` → `data` nghĩa là chưa có file system.
-   - `sudo mkfs -t xfs /dev/xvdf` tạo file system XFS.
-   - `sudo mkdir /ebstest` rồi `sudo mount /dev/xvdf /ebstest`; `df -k` để kiểm tra.
-   - Tạo file test trong thư mục mount.
+   - `sudo file -s /dev/nvme1n1` → `data` nghĩa là chưa có file system.
+   - `sudo mkfs -t xfs /dev/nvme1n1` tạo file system XFS; chạy lại `file -s` thấy đã có file system.
+   - Tạo thư mục `/ebstest`, `sudo mount /dev/nvme1n1 /ebstest`, tạo file `testfile.txt`.
 
-**Phần 2: persistence và di chuyển**
-4. **Reboot** → file system **không tự mount** lại (mount thủ công không bền). Cách sửa: lấy UUID bằng `sudo blkid`, thêm dòng vào `/etc/fstab` (`UUID=... /ebstest xfs defaults,nofail`), chạy `sudo mount -a`. File test vẫn còn → dữ liệu persistent.
-5. Stop Instance1-AZA, **detach** volume, **attach** sang Instance2-AZA → `file -s` thấy sẵn XFS, chỉ cần mount là thấy file test. Volume giữ dữ liệu khi chuyển instance.
-6. Muốn đưa sang instance ở **AZ-B**: không attach trực tiếp được → **tạo snapshot** (vài giây đến vài giờ tùy lượng dữ liệu) → từ snapshot **create volume ở us-east-1b** (có thể đổi type, size, encryption lúc này) → attach vào instance AZ-B → thấy cùng dữ liệu.
-7. Snapshot có thể **copy sang region khác** (ví dụ Sydney) cho migration hoặc DR.
+**Phần 2: persistence, đổi instance, đổi AZ**
+4. **Reboot** → `df -k` không thấy volume vì mount thủ công không tự mount lại (production thì cấu hình `/etc/fstab`, có ghi chú trong command list) → mount lại → file test vẫn còn: volume persistent qua reboot.
+5. Stop AZA instance 1, **detach** volume, **attach** sang AZA instance 2 → `file -s` thấy sẵn file system, mount là thấy file test: volume độc lập với instance.
+6. Muốn đưa sang AZ B: stop instance 2, detach, **create snapshot** (lần đầu là full nên mất vài phút) → *Create volume from snapshot* ở `us-east-1b` (đổi được type, size, IOPS) → attach vào AZB instance 1, mount → thấy cùng dữ liệu.
+7. Snapshot có **Copy snapshot** sang region khác (ví dụ `ap-southeast-1`) để chuyển dữ liệu (và instance) qua region.
+8. Dọn dẹp: xóa snapshot, stop instance rồi detach/xóa hai volume đã tạo, xóa stack.
+- (Bản khóa cũ dùng gp2 với device `/dev/xvdf`, có làm mẫu fstab bằng `blkid` + `mount -a`, và gộp demo Instance Store vào phần 3. Bài mới tách demo Instance Store thành bài riêng, xem [[Instance Store]].)
 
-**Phần 3: Instance Store** (m5dn.large, có 1 instance store volume 75 GB NVMe `/dev/nvme1n1`): reboot thì dữ liệu còn, **stop/start thì mất** (public IP đổi, dấu hiệu instance đã chuyển host). Chi tiết ở [[Instance Store]].
-
-**Rút ra:** EBS tạo trong một AZ, chỉ gắn instance cùng AZ, chuyển giữa các instance mà giữ dữ liệu; snapshot (S3, regional) giúp chuyển sang AZ khác và copy qua region; EBS persistent còn instance store ephemeral.
+**Rút ra:** EBS tạo trong một AZ, chỉ gắn instance cùng AZ, chuyển giữa các instance mà giữ dữ liệu; snapshot (S3, regional) giúp chuyển sang AZ khác và copy qua region.
 
 ## 🎯 Mẹo thi SAA-C03
 - **EBS là AZ-scoped**: không attach chéo AZ. Cần dữ liệu ở AZ khác → **snapshot → create volume ở AZ đích**. Ở region khác → **copy snapshot** sang region đó.

@@ -2,6 +2,7 @@
 tags: [saa-c03, s07-ec2, ec2, compute, resilience, architecture]
 aliases: [EC2 Architecture, EC2 Hosts, EC2 AZ Resilience]
 lessons: ["0125 EC2 Architecture and Resilience"]
+videos: ["120 [ASSOCIATESHARED] EC2 Architecture and Resilience"]
 ---
 # EC2 Architecture and Resilience
 
@@ -13,9 +14,10 @@ lessons: ["0125 EC2 Architecture and Resilience"]
 
 ## Khái niệm cốt lõi
 - **EC2 instance = virtual machine**: một OS cộng phần tài nguyên được cấp phát: vCPU, memory, có thể có local storage, network storage, truy cập phần cứng khác như network, GPU. Xem nền tảng ở [[Virtualization]].
-- **EC2 host** là server vật lý do AWS quản lý. Hai loại:
+- **EC2 host** là server vật lý do AWS quản lý. Với các instance family hiện đại, host chạy **Nitro Hypervisor** của AWS (phần cứng + phần mềm do AWS quản lý, nằm bên dưới instance; xem [[Virtualization]]). Hai loại host:
   - **Shared host** (mặc định): nhiều khách hàng AWS dùng chung phần cứng, nhưng **cô lập hoàn toàn** với nhau (không thấy, không tương tác). Trả tiền theo từng instance: chạy bao lâu, cấp phát bao nhiêu tài nguyên.
   - **Dedicated host**: trả tiền cho **cả host**, không trả theo instance chạy trên đó; host chỉ dành riêng cho account của bạn. Chi tiết ở [[Dedicated Hosts]].
+- Lựa chọn thứ ba là **Dedicated Instance**, kiểu "ở giữa": instance chạy trên phần cứng chỉ dành cho account của bạn, nhưng vẫn **trả tiền theo instance** chứ không theo host. Chi tiết ở [[EC2 Purchase Options]].
 - **Hosts = 1 AZ**: AZ hỏng → host hỏng → instance hỏng. Kiến trúc sư phải giả định khi một AZ gặp sự cố thì phần lớn hoặc toàn bộ instance trong AZ đó bị ảnh hưởng.
 
 ## Cách hoạt động / Kiến trúc
@@ -62,19 +64,20 @@ flowchart TB
 - Vì sự cố luôn được cô lập trong một AZ, ta có thể thiết kế HA bằng cách đặt instance ở nhiều AZ và load balance giữa chúng (xem [[Elastic Load Balancer]], [[Auto Scaling Groups]], [[HA vs FT vs DR]]).
 
 ## Khi nào dùng EC2?
-EC2 là **compute mặc định** trong AWS. Chọn EC2 trước, chỉ chuyển sang dịch vụ khác ([[ECS]], [[Lambda]]) khi có yêu cầu cụ thể. Phù hợp với:
+Nguyên tắc của bài mới: hiểu yêu cầu rồi chọn dịch vụ hợp với yêu cầu đó, không chọn công nghệ chỉ vì nó mới. EC2 hợp nhất khi workload **truyền thống** hoặc khi cần **kiểm soát OS nhiều hơn** các dịch vụ compute khác ([[ECS]], [[Lambda]]). (Bản khóa cũ nêu thêm: EC2 là compute mặc định, chọn EC2 trước rồi mới chuyển khi có yêu cầu cụ thể.) Phù hợp với:
 - Workload truyền thống cần **OS + application** cụ thể (runtime, cấu hình riêng, yêu cầu hỗ trợ của vendor, đội ngũ quen cấu hình đó).
 - **Long-running compute**: chạy liên tục 24/7/365. Nhiều dịch vụ compute khác có giới hạn thời gian chạy, EC2 thì không.
 - Ứng dụng **kiểu server** (chạy trong OS, chờ kết nối đến).
 - Tải **burst** hoặc **steady-state** (có instance type cho cả hai, xem T-family trong [[EC2 Instance Types]]).
 - **Monolithic application stack** (DB + middleware + runtime trên cùng OS).
-- **Migrate** workload kiểu VM/server lên AWS, hoặc dựng môi trường **Disaster Recovery** cho hệ thống truyền thống.
+- **Migrate** workload kiểu VM/server lên AWS, hoặc dùng AWS làm môi trường **Disaster Recovery** cho hệ thống chạy trên server ảo ở on-premises hay cloud khác.
+- **Ứng dụng legacy** không sửa được, chỉ chạy (hoặc chỉ được vendor hỗ trợ) trên một cấu hình OS cụ thể.
 
 ## 🎯 Mẹo thi SAA-C03
 - **EC2 là AZ-resilient.** Thấy EC2 trong câu hỏi, hãy tìm chi tiết về AZ vì nó có thể quyết định đáp án.
 - EBS volume và ENI **không gắn chéo AZ**. Muốn chuyển instance/volume sang AZ khác → snapshot/AMI rồi tạo mới.
 - **Stop/start** có thể đổi host (và mất dữ liệu Instance Store); **reboot** thì không.
-- Shared host là mặc định; Dedicated host trả tiền theo host, phục vụ yêu cầu license/compliance.
+- Shared host là mặc định; Dedicated host trả tiền theo host, Dedicated Instance trả theo instance nhưng phần cứng không chia sẻ với khách khác (xem [[EC2 Purchase Options]]).
 - Câu hỏi về workload cần OS truyền thống, chạy dài hạn, monolithic, lift-and-shift → EC2 là lựa chọn mặc định.
 
 ## Liên kết

@@ -14,7 +14,7 @@ Section này đi tiếp từ [[_MOC 07 EC2|EC2 cơ bản]]: tự động cấu h
 3. [[SSM Parameter Store]] — kho cấu hình/secret dạng name/value có phân cấp, versioning, SecureString mã hóa KMS, phân quyền bằng IAM.
 4. [[CloudWatch Agent]] — agent trong OS thu thập metric bên trong (memory, disk) và log file ứng dụng đẩy lên CloudWatch/CloudWatch Logs; cần cài, cấu hình và role.
 5. [[EC2 Placement Groups]] — Cluster (hiệu năng, một AZ), Spread (tối đa 7 instance/AZ, mỗi cái một rack), Partition (topology-aware cho HDFS/Cassandra).
-6. [[Dedicated Hosts]] — thuê trọn host vật lý, trả theo host; use case chính là license theo socket/core (BYOL).
+6. [[Dedicated Hosts]] — thuê trọn host vật lý, trả theo host, tự quản lý capacity; dùng khi cần cách ly phần cứng theo quy định hoặc license theo socket/core (BYOL).
 7. [[Enhanced Networking and EBS Optimized]] — SR-IOV/ENA cho bandwidth, PPS cao và latency ổn định; EBS optimized cấp băng thông riêng cho EBS.
 
 ## Bản đồ khái niệm
