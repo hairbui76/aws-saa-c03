@@ -179,3 +179,35 @@ export function indexVideos(dir) {
   walk('');
   return out;
 }
+
+// Cross-checks the new course's manifest against the notes' `videos:` references.
+//   manifestVideos [{video_order, title, section_order}], noteRefs [{name, videos: string[]}], allow Set of "NNN".
+// unmapped: manifest videos no note references (and not in `allow`); unknown: refs that are malformed, point at a
+// number not in the manifest, or whose title differs from the manifest's; multi: videos used by several notes (info only).
+export function courseCoverage(manifestVideos, noteRefs, allow = new Set()) {
+  const byNum = new Map(manifestVideos.map((v) => [String(v.video_order).padStart(3, '0'), v]));
+  const users = new Map(); // num -> note names (valid refs only)
+  const unknown = [];
+  for (const n of noteRefs) {
+    for (const raw of n.videos ?? []) {
+      const ref = parseVideoRef(raw);
+      const v = ref && byNum.get(ref.num);
+      if (!v || v.title !== ref.title) {
+        unknown.push({ name: n.name, ref: raw });
+        continue;
+      }
+      const list = users.get(ref.num) ?? [];
+      if (!list.includes(n.name)) list.push(n.name);
+      users.set(ref.num, list);
+    }
+  }
+  const unmapped = [...byNum]
+    .filter(([num]) => !users.has(num) && !allow.has(num))
+    .map(([num, v]) => ({ num, title: v.title, section: v.section_order }))
+    .sort((a, b) => a.num.localeCompare(b.num));
+  const multi = [...users]
+    .filter(([, names]) => names.length > 1)
+    .map(([num, names]) => ({ num, notes: names }))
+    .sort((a, b) => a.num.localeCompare(b.num));
+  return { unmapped, unknown, multi };
+}

@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { slugify, noteHeadings, validateBatch, buildUpdatesIndex, lessonUpdate, parseVideoRef, indexVideos } from './lib/updates.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -30,30 +31,6 @@ const clipName = (text) => crypto.createHash('sha1').update(`${TTS_VOICE}|${TTS_
 const audioFiles = new Set(fs.existsSync(AUDIO) ? fs.readdirSync(AUDIO) : []);
 let narrated = 0;
 let voiced = 0;
-
-function parseFrontmatter(src) {
-  const m = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-  if (!m) return { meta: {}, body: src };
-  const meta = {};
-  for (const line of m[1].split(/\r?\n/)) {
-    const kv = line.match(/^(\w+):\s*(.*)$/);
-    if (!kv) continue;
-    let v = kv[2].trim();
-    if (v.startsWith('[')) {
-      try {
-        v = JSON.parse(v);
-      } catch {
-        v = v
-          .slice(1, -1)
-          .split(',')
-          .map((x) => x.trim().replace(/^["']|["']$/g, ''))
-          .filter(Boolean);
-      }
-    }
-    meta[kv[1]] = v;
-  }
-  return { meta, body: src.slice(m[0].length) };
-}
 
 // ---------- pass 1: collect chapters, lessons, diagrams ----------
 const chapters = [];
