@@ -2,6 +2,7 @@
 tags: [saa-c03, s04-iam-accounts-and-organizations, security, iam, policy]
 aliases: [IAM Policy, Identity Policy, Policy Document, Inline Policy, Managed Policy, Deny Allow Deny]
 lessons: ["0069 IAM Identity Policies"]
+videos: ["039 [ASSOCIATESHARED] IAM Identity Policies"]
 ---
 # IAM Identity Policies
 

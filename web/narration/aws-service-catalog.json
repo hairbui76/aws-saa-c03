@@ -1,0 +1,15 @@
+{
+ "AWS Service Catalog": {
+  "sig": "8-1iof3uw",
+  "steps": [
+   "Sơ đồ này giới thiệu AWS Service Catalog, một cổng self-service có kiểm soát. Admin định nghĩa sẵn product và gom vào portfolio, còn end user tự launch mà không cần quyền hạ tầng AWS.",
+   "Đầu tiên, technical admin định nghĩa product bằng template CloudFormation hoặc Terraform, kèm cấu hình của Service Catalog. Product chính là bản triển khai hoàn chỉnh được đóng gói lại.",
+   "Product được gom vào portfolio. Portfolio chứa quyền để tạo hạ tầng, giống một stack role, và quy định end user nào được xem, được launch, cùng các ràng buộc khi launch.",
+   "End user như sales, HR hay finance duyệt Service Catalog và chọn product muốn triển khai. Họ không hề có quyền tạo EC2 hay IAM.",
+   "Khi end user bấm launch, Service Catalog dùng quyền mà admin đã cấp trong product để tạo stack CloudFormation thay cho họ.",
+   "Stack tạo ra các tài nguyên thật như EC2, load balancer hay CloudFront distribution, rồi end user dùng trực tiếp hoặc giao cho khách hàng.",
+   "Với các việc sau triển khai như restart EC2, admin có thể thêm service actions dựa trên Systems Manager Automation, để end user tự làm mà vẫn trong giới hạn kiểm soát.",
+   "Khi đi thi, thấy yêu cầu cho end user hay khách hàng tự triển khai hạ tầng theo mẫu chuẩn, nhanh mà vẫn kiểm soát chặt, hãy chọn AWS Service Catalog. Quyền tạo hạ tầng nằm trong product, không nằm ở người dùng."
+  ]
+ }
+}

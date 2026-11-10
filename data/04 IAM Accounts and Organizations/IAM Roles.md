@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s04-iam-accounts-and-organizations, security, iam, identity, federation]
-aliases: [IAM Role, Role, Trust Policy, Permissions Policy, STS, AssumeRole, sts:AssumeRole, Temporary Credentials, ID Federation, Break Glass]
+aliases: [IAM Role, Role, Trust Policy, Permissions Policy, STS, AssumeRole, sts:AssumeRole, AssumeRoleWithWebIdentity, Temporary Credentials, ID Federation, Break Glass]
 lessons: ["0074 IAM Roles The Tech", "0075 When to use IAM Roles"]
+videos: ["044 [ASSOCIATESHARED] IAM Roles - The Tech", "045 [ASSOCIATESHARED] When to use IAM Roles"]
 ---
 # IAM Roles
 
@@ -59,7 +60,7 @@ flowchart LR
 
 ### 2. Break-glass / truy cập khẩn cấp
 - Wayne ở helpdesk, thuộc group có quyền **read-only** với account khách hàng. 99% thời gian thế là đủ.
-- Lúc 3 giờ sáng Chủ nhật cần stop/start/terminate EC2 gấp → Wayne **assume emergency role** để có thêm quyền trong thời gian ngắn.
+- Lúc 3 giờ sáng Chủ nhật cần stop/start/terminate EC2 gấp → Wayne **assume emergency role** để có thêm quyền trong thời gian ngắn. Muốn assume role này Wayne phải dùng **MFA**, và quyền có được chỉ tồn tại trong thời gian giới hạn của role.
 - Giống hộp kính chứa chìa khóa: ai cũng đập được, nhưng phải có chủ ý, và **biết được khi nào nó bị dùng** (việc assume role được log lại, xem [[CloudTrail]]). Quyền thường ngày vẫn giữ ở mức read-only.
 
 ### 3. Doanh nghiệp có identity provider sẵn (ID Federation, SSO)
@@ -67,10 +68,11 @@ flowchart LR
 - **External identity không thể dùng trực tiếp** để truy cập tài nguyên AWS (không dùng tài khoản AD, Facebook, Google để gọi S3 trực tiếp được).
 - Cho phép role trong account được assume bởi external identity (AD) → nhận credentials tạm thời → truy cập tài nguyên. Console có thể che bước này nên trông liền mạch.
 - Cấp quyền cho IdP bên ngoài và để external identity assume role như vậy gọi là **ID Federation**: chỉ phải quản lý vài role thay vì hàng nghìn user. Xem [[Directory Service]].
+- Khóa mới nói thêm: ID Federation hiện nay thường được dựng bằng **[[IAM Identity Center]]**; role vẫn là cơ chế chạy phía sau. Cách cấu hình thủ công với IdP chuẩn SAML 2.0 (ví dụ ADFS) xem [[SAML 2.0 Identity Federation]].
 
 ### 4. Ứng dụng mobile hàng triệu người dùng (Web Identity Federation)
 - Ví dụ app ride-sharing cần đọc/ghi DynamoDB. Không thể dùng IAM user vì giới hạn 5.000.
-- Người dùng đăng nhập bằng **web identity** (Google, Facebook...), trust policy của role tin các IdP đó → assume role → credentials tạm thời → truy cập DynamoDB.
+- Người dùng đăng nhập bằng **web identity** (Apple, Google, Facebook...), trust policy của role tin các IdP đó → app gọi STS bằng thao tác **`AssumeRoleWithWebIdentity`** → credentials tạm thời → truy cập DynamoDB.
 - Lợi ích:
   - **Không lưu AWS credentials trong app**, app bị khai thác cũng không lộ credentials.
   - Dùng tài khoản khách hàng đã có, không bắt tạo tài khoản mới.
@@ -109,7 +111,8 @@ flowchart LR
 - Không đếm được số principal, hoặc > 5.000 → **role**.
 - AWS service cần quyền (Lambda, EC2...) → **role**, không bao giờ hard-code access key.
 - App mobile/web hàng triệu người dùng, đăng nhập Google/Facebook → **Web Identity Federation** dùng role (thường qua [[Cognito]]). Đáp án "tạo IAM user cho mỗi người" là sai.
-- Doanh nghiệp có Active Directory, cần SSO hoặc > 5.000 nhân viên → **ID Federation + role**.
+- Doanh nghiệp có Active Directory, cần SSO hoặc > 5.000 nhân viên → **ID Federation + role**, ngày nay thường qua **[[IAM Identity Center]]**.
+- Web identity đổi lấy credentials bằng `sts:AssumeRoleWithWebIdentity` (SAML thì `AssumeRoleWithSAML`). Thấy chữ "AssumeRole..." trong đề là biết có role.
 - Đối tác/account khác cần truy cập → **cross-account role**; object upload qua role thuộc account sở hữu role.
 - **Trust policy** = ai được assume; **permissions policy** = được làm gì. Credentials do **STS** cấp qua `sts:AssumeRole`.
 - External identity không bao giờ truy cập tài nguyên AWS trực tiếp; luôn phải đổi sang credentials AWS (assume role).
@@ -117,6 +120,6 @@ flowchart LR
 ## Liên kết
 - Tiên quyết: [[IAM Basics]], [[IAM Identity Policies]], [[IAM Users and ARNs]]
 - Đi sâu: [[Service-linked Roles and PassRole]], [[EC2 Instance Roles]], [[AWS Organizations]]
-- Liên quan: [[Lambda]], [[Cognito]], [[Directory Service]], [[CloudTrail]], [[DynamoDB Architecture]], [[CFN Stack Roles]]
+- Liên quan: [[IAM Identity Center]], [[SAML 2.0 Identity Federation]], [[Lambda]], [[Cognito]], [[Directory Service]], [[CloudTrail]], [[DynamoDB Architecture]], [[CFN Stack Roles]]
 - Phân biệt với: [[IAM Users and ARNs]] (credentials dài hạn), [[IAM Groups]] (không phải identity thật)
 - MOC: [[_MOC 04 IAM Accounts and Organizations]]

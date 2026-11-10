@@ -1,0 +1,16 @@
+{
+ "SAML 2.0 Identity Federation": {
+  "sig": "9-xjcyrt",
+  "steps": [
+   "Sơ đồ này giải thích SAML 2.0 identity federation. Identity on-prem không dùng trực tiếp với AWS được, nên IdP chuẩn SAML 2.0 xác thực rồi cấp assertion, và STS đổi assertion đó lấy credentials của một IAM role.",
+   "Trước hết phải cấu hình trust hai chiều: AWS được đăng ký trong identity provider như ADFS, và một SAML identity provider được tạo trong IAM, kèm role tin IdP đó.",
+   "Ứng dụng nội bộ, hoặc nhân viên muốn vào console, bắt đầu bằng việc gửi yêu cầu truy cập tới identity provider của doanh nghiệp.",
+   "IdP xác thực yêu cầu với identity store như Active Directory, rồi lấy danh sách các role mà identity này được phép dùng.",
+   "IdP trả về một SAML assertion, giống như tấm thẻ chứng minh identity đã được xác thực, và AWS tin tấm thẻ này nhờ trust đã cấu hình.",
+   "Ứng dụng gửi assertion tới STS bằng thao tác AssumeRoleWithSAML để xin đổi lấy quyền của role đã chọn.",
+   "STS trả về credentials tạm thời của role, mặc định có hiệu lực một giờ và tối đa mười hai giờ.",
+   "Với credentials tạm thời đó, ứng dụng truy cập dịch vụ AWS như DynamoDB, hoặc nhân viên vào được AWS console.",
+   "Khi đi thi, chỉ chọn SAML 2.0 khi doanh nghiệp đã có IdP tương thích SAML 2.0 như ADFS. Google hay Facebook là web identity, không phải SAML. Với console, assertion được gửi tới SAML endpoint, endpoint tạo sẵn URL đăng nhập kèm credentials."
+  ]
+ }
+}

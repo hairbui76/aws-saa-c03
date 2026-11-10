@@ -1,11 +1,12 @@
 ---
 tags: [saa-c03, s04-iam-accounts-and-organizations, security, logging, audit, governance]
-aliases: [AWS CloudTrail, Trail, Organization Trail, Organizational Trail, Event History, Management Events, Data Events, Insights Events, Global Service Events]
+aliases: [AWS CloudTrail, Trail, Organization Trail, Organizational Trail, Event History, Management Events, Data Events, Network Activity Events, Insights Events, Global Service Events]
 lessons: ["0083 CloudTrail", "0084 DEMO Implementing an Organizational Trail"]
+videos: ["056 [ASSOCIATESHARED] CloudTrail", "057 [SHAREDALL] [DEMO] Implementing an Organizational Trail"]
 ---
 # CloudTrail
 
-> **TL;DR:** CloudTrail ghi lại **API call / hoạt động** tác động lên AWS account (do user, role hoặc service thực hiện). Mặc định có **Event History 90 ngày miễn phí**. Muốn lưu lâu dài, đưa sang S3 / CloudWatch Logs hay tùy biến thì tạo **trail** (một region hoặc mọi region, có thể là **organization trail**). Mặc định chỉ log **management events**; **data events** phải bật riêng và tốn phí. CloudTrail **không real-time** (trễ khoảng **15 phút**).
+> **TL;DR:** CloudTrail ghi lại **API call / hoạt động** tác động lên AWS account (do user, role hoặc service thực hiện). Mặc định có **Event History 90 ngày miễn phí**. Muốn lưu lâu dài, đưa sang S3 / CloudWatch Logs hay tùy biến thì tạo **trail** (một region hoặc mọi region, có thể là **organization trail**). Mặc định chỉ log **management events**; **data events** phải bật riêng và tốn phí. CloudTrail **không real-time**: có độ trễ, log file được giao nhiều lần mỗi giờ (khoảng **5 phút** một lần).
 
 ## 🖼️ Sơ đồ
 ![[CloudTrail.excalidraw]]
@@ -19,11 +20,12 @@ lessons: ["0083 CloudTrail", "0084 DEMO Implementing an Organizational Trail"]
 - Mỗi hoạt động được log là một **CloudTrail event**: bản ghi hành động của **user, role hoặc service**.
 - **Event History**: bật sẵn ở mọi account, **miễn phí**, giữ **90 ngày**. Dùng để tra nhanh (ai vừa đăng nhập, `iamadmin` vừa làm gì) kể cả khi không có trail nào.
 
-### Ba loại event
+### Các loại event
 | Loại | Nội dung | Mặc định |
 |---|---|---|
 | **Management events** | Thao tác quản lý tài nguyên, tức **control plane**: tạo/terminate EC2, tạo VPC, tạo/xóa EBS volume, tạo/xóa bucket, đăng nhập console | **Bật** |
 | **Data events** | Thao tác **trên/trong** tài nguyên: upload/đọc object S3, invoke Lambda | **Tắt** (khối lượng rất lớn), phải bật riêng, **có phí** |
+| **Network activity events** | Hoạt động ở tầng mạng, cụ thể là qua **VPC endpoint** (theo từng service hỗ trợ) | Tắt, bật riêng |
 | **Insights events** | Phát hiện hoạt động bất thường, lỗi, hành vi người dùng lạ | Tắt, bật riêng |
 
 ### Trail
@@ -60,34 +62,34 @@ flowchart LR
 | Data events | **$0.10 / 100.000 events**, tính từ event đầu tiên, bất kể số trail |
 | S3 / CloudWatch Logs | Tính theo dịch vụ đích |
 
-**Độ trễ:** thường giao log file **trong vòng 15 phút** sau hoạt động, publish nhiều lần mỗi giờ → **không real-time**.
+**Độ trễ:** CloudTrail publish log file nhiều lần mỗi giờ, khoảng **5 phút** một lần → **không real-time** (bản khóa cũ nói "trong vòng 15 phút"). Trail mới tạo thì có thể phải đợi 10–15 phút mới thấy file đầu tiên trong S3.
 
 ## Demo / Lab
-**0084 – Organizational Trail** (đăng nhập `iamadmin` ở **management account** General; organization trail **bắt buộc** tạo từ management account)
-1. CloudTrail → Trails → **Create trail**, tên `animals4life.org`. Console mới mặc định trail cho **all regions**; tick **Enable for all accounts in my organization**.
-2. Tạo **bucket S3 mới** `cloudtrail-animals4life-<số>` (tên duy nhất toàn cầu).
+**Implementing an Organizational Trail** (đăng nhập `iamadmin` ở **management account** General; organization trail **bắt buộc** tạo từ management account)
+1. CloudTrail → **Dashboard → Create a trail** (tránh nút tạo nhanh ở trang đầu vì đó là luồng quick create khác). Tick **Enable for all accounts in my organization**, đặt tên theo tổ chức (ví dụ `CloudTrailAusEMartOrg`). Console mặc định trail cho **all regions**.
+2. Tạo **bucket S3 mới** (tên duy nhất toàn cầu, ví dụ `cloudtrail-ausemart-<số>`).
 3. Tùy chọn khác:
-   - **SSE-KMS** mã hóa log: production nên bật, demo bỏ tick để đơn giản (xem [[KMS]]).
-   - **Log file validation**: phát hiện log bị sửa; nên bật cho audit.
+   - **SSE-KMS** mã hóa log: production nên bật vì log dùng cho audit, compliance; demo bỏ tick để đơn giản (xem [[KMS]]).
+   - **Log file validation**: phát hiện log bị sửa; nên bật cho production.
    - **SNS notification** mỗi lần giao log file: hữu ích khi tích hợp hệ thống ngoài ([[SNS]]).
-4. Bật **CloudWatch Logs**: log group mặc định, tạo **IAM role mới** để CloudTrail ghi vào CloudWatch Logs (service làm việc thay bạn thì cần role, xem [[IAM Roles]]).
-5. Event type: chỉ **management events** (read + write; có thể loại trừ KMS / RDS Data API events). Không bật data events và insights.
-6. Trail tạo xong: home region `us-east-1`, multi-region, organization trail. **Đợi 10–15 phút** để file log đầu tiên tới.
-7. Kiểm tra S3: cấu trúc thư mục `CloudTrail/<region>/...`, mở file `.json.gz` thấy `userIdentity` (iamadmin), account ID, `eventSource`, `eventName`, region, source IP, user agent.
-8. CloudWatch Logs → log group của trail → **log streams** đặt tên theo *org ID + account ID + region*, mỗi account một stream. Nội dung giống trong S3.
-9. Event History vẫn luôn có, dù có trail hay không.
-10. Chi phí: organization trail sinh nhiều request S3, có thể vượt free tier vài cent/tháng. Có thể **Stop logging** khi học. Production thì luôn để bật.
+4. Bật **CloudWatch Logs**: log group mặc định, tạo **IAM role mới** (ví dụ `CloudTrailRoleForCloudWatchLogs_AEM`) để CloudTrail ghi vào CloudWatch Logs (service làm việc thay bạn thì cần role, xem [[IAM Roles]]).
+5. Event type: chỉ **management events** (read + write; có thể loại trừ KMS / RDS Data API events). Console còn cho chọn **data events**, **Insights events** và **network activity events** (VPC endpoint); demo không bật.
+6. Chi phí ("Additional charges apply"): Event History 90 ngày miễn phí; **bản management events đầu tiên** của trail miễn phí. Nếu một account trong organization **đã có trail** ghi management events thì organization trail là **bản thứ hai** ở account đó → bị tính phí. S3 cũng tính phí lưu trữ và request.
+7. Trail tạo xong: home region `us-east-1`, multi-region, organization trail. **Đợi 10–15 phút** để file log đầu tiên tới.
+8. Kiểm tra S3: prefix `CloudTrail/<region>/<ngày>/...`, mở file `.json.gz` thấy `userIdentity` (iamadmin), account ID, `eventSource`, `eventName`, region, source IP, user agent.
+9. CloudWatch Logs → Log management → log group của trail → **log streams** đặt tên theo *org ID + account ID + CloudTrail + region*, mỗi account một stream. Nội dung giống trong S3, nhưng có thêm công cụ phân tích, tail log, metric filter, alarm.
+10. Event History vẫn luôn có, dù có trail hay không. Khi học có thể **Stop logging** để tránh phí S3 (free tier ngày càng ít); production thì luôn để bật.
 
 ## 🎯 Mẹo thi SAA-C03
-- Câu hỏi về **real-time logging** → **không phải CloudTrail** (trễ ~15 phút).
+- Câu hỏi về **real-time logging** → **không phải CloudTrail** (có độ trễ, log giao khoảng 5 phút một lần).
 - Mặc định chỉ có Event History **90 ngày**; muốn lưu lâu hơn → tạo **trail** đổ vào **S3**.
-- Mặc định trail chỉ log **management events**; cần log truy cập object S3 / invoke Lambda → bật **data events** (tốn phí).
+- Mặc định trail chỉ log **management events**; cần log truy cập object S3 / invoke Lambda → bật **data events** (tốn phí); hoạt động qua VPC endpoint → **network activity events**.
 - **IAM, STS, CloudFront** → global service events → **us-east-1**; trail phải bật global service events.
 - Log tập trung cho mọi account trong tổ chức → **organization trail** tạo từ **management account**.
 - Cần tìm kiếm, alarm, xử lý theo sự kiện trên API call → CloudTrail → **CloudWatch Logs** + metric filter.
 - Phát hiện log bị chỉnh sửa → **log file validation**.
 - "Ai đã xóa/sửa tài nguyên X?" → CloudTrail. "Tài nguyên có tuân thủ cấu hình không?" → [[AWS Config]].
-- (Hiện nay CloudTrail còn có **CloudTrail Lake** để truy vấn SQL và **network activity events** cho VPC endpoint; ngoài phạm vi khóa học.)
+- (Bổ sung, bài không nói: CloudTrail còn có **CloudTrail Lake** để truy vấn SQL trên event.)
 
 ## Liên kết
 - Tiên quyết: [[AWS Organizations]], [[CloudWatch Logs]], [[S3 Basics]]

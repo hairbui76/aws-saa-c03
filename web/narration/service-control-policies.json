@@ -1,12 +1,12 @@
 {
  "Service Control Policies": {
-  "sig": "5-12z1md2",
+  "sig": "5-jw8yta",
   "steps": [
-   "Sơ đồ này nói về Service Control Policies, hay SCP. SCP gắn vào root, OU hoặc account, không cấp quyền mà chỉ đặt trần quyền cho cả account, và kế thừa xuống cây tổ chức.",
-   "Ở đỉnh là Organization Root với FullAWSAccess cho phép mọi thứ. OU prod có thêm SCP chặn toàn bộ S3, còn OU dev chỉ kế thừa từ root. Riêng management account thì không bao giờ bị SCP giới hạn.",
+   "Sơ đồ này nói về Service Control Policies, hay SCP. SCP gắn vào root, OU hoặc account, không cấp quyền mà chỉ đặt trần quyền cho cả account, và quyền đi từ root xuống được lọc qua từng tầng của cây.",
+   "Ở đỉnh là Organization Root với FullAWSAccess cho phép mọi thứ. OU prod có thêm SCP chặn toàn bộ S3, còn OU dev có FullAWSAccess gắn trực tiếp. Riêng management account thì không bao giờ bị SCP giới hạn.",
    "Kết quả là account Production không dùng được S3, kể cả root user hay role AdministratorAccess, giống hệt trong demo. Còn Development vẫn dùng S3 bình thường vì không bị deny.",
    "Đây là logic giao nhau. Quyền chỉ có trong identity policy thì bị chặn vì vượt trần, quyền chỉ có trong SCP thì vô tác dụng vì SCP không cấp quyền. Chỉ phần giao mới là quyền hiệu lực.",
-   "Khi đi thi, nhớ rằng SCP kế thừa xuống mọi account và OU con, explicit deny ở đâu cũng thắng. Đừng chạy workload trong management account, và SCP là cách duy nhất gián tiếp giới hạn root user của member account."
+   "Khi đi thi, nhớ rằng deny gắn ở root hay OU sẽ chảy xuống mọi account bên dưới, còn allow phải có ở mọi tầng từ root, OU tới account. Explicit deny ở đâu cũng thắng, đừng chạy workload trong management account, và SCP là cách duy nhất gián tiếp giới hạn root user của member account."
   ]
  },
  "Service Control Policies - allow-deny-list": {

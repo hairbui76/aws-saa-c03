@@ -12,7 +12,7 @@
   ]
  },
  "AWS Control Tower - guardrails": {
-  "sig": "7-5egebs",
+  "sig": "7-cce677",
   "steps": [
    "Sơ đồ này so sánh hai loại guardrails. Preventative chặn trước bằng SCP, còn detective chỉ phát hiện sau bằng AWS Config rules, và guardrails tự áp lên mọi account trong landing zone.",
    "Preventative có trạng thái Enforced hoặc Not enabled. Detective thì không chặn gì cả, chỉ kiểm tra và báo cáo tình trạng compliance.",
@@ -20,7 +20,7 @@
    "Theo mức độ áp dụng, có Mandatory luôn bật, Strongly recommended là AWS khuyên bật, và Elective là tùy chọn cho yêu cầu đặc thù của tổ chức.",
    "Khi một request vi phạm rule, ví dụ tạo EC2 ở region bị cấm, SCP của Organizations xử lý. Còn tài nguyên đã tạo hoặc đổi cấu hình thì AWS Config rule kiểm tra compliance.",
    "Kết quả là SCP chặn hẳn, hành động không xảy ra. Còn Config rule chỉ đánh giá trạng thái là Clear hoặc In violation, tài nguyên vẫn tồn tại.",
-   "Nhắc khi đi thi: preventative bằng SCP, detective bằng AWS Config. Ngày nay AWS gọi guardrails là controls và thêm loại proactive, dùng CloudFormation Hooks kiểm tra tài nguyên trước khi tạo."
+   "Nhắc khi đi thi: preventative bằng SCP, detective bằng AWS Config. Khóa mới gọi guardrails là controls và có thêm loại proactive, kiểm tra stack CloudFormation trước khi tạo, không đạt thì chặn deployment."
   ]
  }
 }

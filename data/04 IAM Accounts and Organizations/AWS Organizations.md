@@ -2,6 +2,7 @@
 tags: [saa-c03, s04-iam-accounts-and-organizations, governance, multi-account, billing, security]
 aliases: [Organizations, AWS Org, Management Account, Master Account, Payer Account, Member Account, OU, Organizational Unit, Consolidated Billing, Role Switch, OrganizationAccountAccessRole]
 lessons: ["0077 AWS Organizations", "0078 DEMO AWS Organizations PART1", "0079 DEMO AWS Organizations PART2"]
+videos: ["048 [ASSOCIATESHARED] AWS Organizations", "049 [SHAREDALL] [DEMO] Setup an AWS Organization (Optional)", "050 [SHAREDALL] [DEMO] Setup Role Switching with AWS Organizations (Optional)", "051 [SHAREDALL] [DEMO] Configure Organizational Units (Optional)"]
 ---
 # AWS Organizations
 
@@ -23,6 +24,7 @@ lessons: ["0077 AWS Organizations", "0078 DEMO AWS Organizations PART1", "0079 D
 - **Standard account**: account không thuộc organization nào.
 - Dùng một standard account để **tạo** organization. Organization không nằm "trong" account đó; account chỉ được dùng để tạo nó. Account này trở thành **management account** (trước đây gọi là **master account**, slide vẽ vương miện).
 - Mỗi organization có **đúng một** management account và **0 hoặc nhiều member account**.
+- **Management account không đổi được** sau khi đã tạo organization. Vì vậy ở môi trường production nên tạo organization từ một account **không chạy tài nguyên hay workload** nào. Account đã là member của một organization thì không tạo được organization mới.
 - Đưa account vào organization bằng hai cách:
   - **Invite** account có sẵn: account đó phải **chấp nhận** lời mời, sau đó standard account trở thành **member account**.
   - **Create** account mới trực tiếp trong organization: chỉ cần **email duy nhất**, không có bước invite/accept.
@@ -56,6 +58,7 @@ flowchart TB
 - Với Organizations, **không cần IAM user ở mọi account**. Dùng [[IAM Roles]] để identity trong một account truy cập account khác.
 - Mô hình: **một account duy nhất chứa identity để đăng nhập**. Có thể là management account, nhưng doanh nghiệp lớn thường giữ management account "sạch" và dùng **một account riêng chuyên cho login**.
 - Identity trong account đó có thể là IAM user, hoặc identity on-premises qua **Identity Federation**.
+- Khóa mới nhấn mạnh thêm: khi đã có Organizations, có thể dùng **[[IAM Identity Center]]** để quản lý identity và quyền truy cập cho mọi account trong tổ chức từ một chỗ, thay vì quản lý IAM riêng trong từng account.
 - Từ account login, **role switch** sang các member account. Thực chất là **assume role** trong account đích; console UI che bớt chi tiết kỹ thuật.
 
 ```mermaid
@@ -72,21 +75,27 @@ flowchart LR
 | Role `OrganizationAccountAccessRole` | **Phải tạo thủ công** trong account được mời | **AWS tự tạo**, trust management account |
 | Truy cập ban đầu | Đã có identity riêng (root, IAM user) | Thường chỉ vào được bằng **role switch** |
 
-- Có thể gặp lỗi "too many accounts" khi invite/create vì quota số account khác nhau giữa các account; khi đó mở support request để tăng quota.
+- Có thể gặp lỗi quota khi invite/create (quota số account tối đa của organization khác nhau giữa các account, có khi bằng 0). Khi đó vào **Service Quotas** console, tìm AWS Organizations và **request increase** (khóa học gợi ý khoảng 10 là đủ cho demo). Xem [[Service Quotas]].
 
 ## Demo / Lab
-**0078 – Part 1 (tạo organization, mời Production)**
-1. Đăng nhập `iamadmin` của **General** (us-east-1) → Organizations console → **Create organization**. General thành **management account**. Nếu có thông báo thì xác minh email của management account.
-2. Mở trình duyệt/session riêng, đăng nhập `iamadmin` của **Production**, copy account ID.
-3. Ở General: **Add account → Invite account**, nhập account ID (hoặc email) của Production → Send invitation.
-4. Ở Production: Organizations → **Invitations** → **Accept**. Refresh ở General: thấy 2 account.
+Ba demo đều tùy chọn (Optional), đăng nhập `iamadmin` của **General** ở `us-east-1`.
 
-**0079 – Part 2 (role switch, tạo Development)**
-1. Vì Production được **invite**, phải tạo role thủ công: IAM → Roles → Create role → trusted entity **Another AWS account** = account ID của **General** → attach **AdministratorAccess** → tên **`OrganizationAccountAccessRole`** (viết hoa O, A, A, R, chính tả Mỹ có chữ "z"). Tab *Trust relationships* cho thấy role trust account General.
-2. Ở General (đăng nhập bằng IAM identity, role switch không dùng được với root): menu account → **Switch role** → account ID Production + tên role + display name `prod` + màu **đỏ**. Thanh trên đổi màu = đang ở account Production bằng credentials tạm thời (gọi `AssumeRole`). **Switch back** để quay lại. Shortcut nằm trong **role history** (lưu ở trình duyệt, không phải trong AWS).
-3. **Create account** trong organization: tên Development, email duy nhất (mẹo `ten+...@gmail.com`), tên role mặc định `OrganizationAccountAccessRole`. Tạo mất vài phút.
-4. Switch role sang Development (display `dev`, màu **vàng**). Có thể chuyển trực tiếp giữa các account bằng shortcut. Trong IAM của Development đã có sẵn `OrganizationAccountAccessRole` trust account General.
-5. Kết quả cấu trúc khóa học: **General (management)**, **Production (member, invited)**, **Development (member, created)**.
+**Setup an AWS Organization**
+1. Organizations console → **Create organization**. General thành **management account** (console nhắc: management account không đổi được sau khi tạo, production nên dùng account không có workload). Root container được tạo sẵn.
+2. Mở trình duyệt/session riêng (private window hoặc container tab), đăng nhập `iamadmin` của **Production**, copy account ID.
+3. Ở General: **Add an AWS account → Invite an existing AWS account**, nhập account ID (hoặc email) của Production, có thể kèm lời nhắn → Send invitation. Lỗi quota thì xin tăng "maximum number of accounts" ở Service Quotas.
+4. Ở Production: Organizations → **Invitations** → **Accept** (kiểm tra email nếu có bước xác minh). Refresh ở General: Production là member.
+5. **Create an AWS account**: tên Development, email duy nhất (mẹo plus addressing `ten+dev@...`), role IAM mặc định để role switch. Kết quả: **General (management)**, **Production (member, invited)**, **Development (member, created)**.
+
+**Setup Role Switching**
+1. Vì Production được **invite**, phải tạo role thủ công: IAM → Roles → Create role → trusted entity **AWS account → Another AWS account** = account ID của **General** (có tùy chọn **Require MFA**, demo không bật) → attach **AdministratorAccess** → tên **`OrganizationAccountAccessRole`** (viết hoa O, A, A, R, chính tả Mỹ có chữ "z"). Tab *Trust relationships* cho thấy account General được `sts:AssumeRole`.
+2. Ở General (đăng nhập bằng IAM identity): menu account → **Switch role** → account ID Production + tên role + display name `prod` + màu **đỏ**. Console gọi `AssumeRole`, nhận credentials tạm thời. Thông tin switch role chỉ lưu ở trình duyệt, không lưu phía AWS. **Switch back** để quay lại.
+3. Development được tạo trong organization nên role đã có sẵn: Switch role với account ID Development, cùng tên role, display `dev`, màu **cam**.
+
+**Configure Organizational Units**
+1. Organizations → chọn **Root** → Actions → **Create new** OU `prod`, rồi OU `dev`. Root luôn ở đỉnh, OU nằm dưới root.
+2. Chọn account Production → Actions → **Move** vào OU `prod`; Development → **Move** vào `dev`. General vẫn ở root.
+3. OU tự nó chủ yếu để sắp xếp, nhưng giúp gắn chính sách (ví dụ [[Service Control Policies|SCP]]) theo cấu trúc: cái gắn ở root sẽ "chảy" xuống mọi thứ bên dưới.
 
 ## 🎯 Mẹo thi SAA-C03
 - "Nhiều account, cần **một hóa đơn duy nhất**" → AWS Organizations + **consolidated billing**.
@@ -94,13 +103,15 @@ flowchart LR
 - Member account **không còn payment method riêng**.
 - Lợi ích giảm giá theo volume và giá trả trước (RI, Savings Plans) được **chia sẻ** trong organization.
 - Account tạo trong org có sẵn `OrganizationAccountAccessRole`; account được invite thì phải tự tạo role này.
+- **Management account không đổi được** sau khi tạo organization → chọn account "sạch", không chạy workload.
+- Quản lý identity và SSO cho mọi account trong organization → [[IAM Identity Center]].
 - Truy cập nhiều account: **một account identity + role switch (assume role)**, không tạo IAM user ở mọi account.
 - Đừng nhầm **organization root** (container) với **account root user**.
 - Giới hạn quyền của account trong org → [[Service Control Policies]]. Thiết lập multi-account tự động theo best practice → [[AWS Control Tower]].
 
 ## Liên kết
 - Tiên quyết: [[AWS Accounts]], [[IAM Roles]]
-- Đi sâu: [[Service Control Policies]], [[AWS Control Tower]], [[CloudTrail]] (organization trail)
+- Đi sâu: [[Service Control Policies]], [[AWS Control Tower]], [[IAM Identity Center]], [[AWS Resource Access Manager]], [[CloudTrail]] (organization trail)
 - Liên quan: [[Reserved Instances and Savings Plans]], [[AWS Budgets]], [[CFN StackSets]], [[IAM Basics]]
 - Phân biệt với: [[IAM Groups]] (nhóm *user* trong một account; OU nhóm *account*)
 - MOC: [[_MOC 04 IAM Accounts and Organizations]]

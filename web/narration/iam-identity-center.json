@@ -1,0 +1,16 @@
+{
+ "IAM Identity Center": {
+  "sig": "9-ppjkz7",
+  "steps": [
+   "Sơ đồ này nói về IAM Identity Center, tên cũ là AWS SSO. Nhân viên chỉ cần một identity để single sign-on vào mọi account trong AWS Organization và các business app.",
+   "Bước đầu là chọn identity source. Mặc định là directory có sẵn của Identity Center, nơi lưu user và group, ví dụ group Billing Department.",
+   "Tiếp theo, bạn tạo permission set như AdministratorAccess hay Billing, đặt session duration, rồi gán group cùng permission set cho các account.",
+   "Identity Center tự provision vào từng account trong organization, tạo identity provider và role AWSReservedSSO, nên bạn không phải cấu hình IAM ở từng account.",
+   "Người dùng vào AWS access portal với một lần đăng nhập kèm MFA, rồi từ đó SSO sang các app như Dropbox, Slack, Office 365, hoặc app SAML, OAuth riêng.",
+   "Identity source cũng có thể là AWS Managed Microsoft AD chạy trên Directory Service.",
+   "Hoặc là Active Directory on-premises của chính doanh nghiệp, kết nối bằng two-way trust.",
+   "Hoặc một IdP bên ngoài hỗ trợ SAML 2.0 như Okta hay Entra ID, có thể tự đồng bộ user và group bằng SCIM.",
+   "Khi đi thi: nhân viên cần SSO vào nhiều account và app thì chọn IAM Identity Center, còn khách hàng đăng nhập Google hay Facebook là Cognito. Organization instance luôn ở management account, có thể giao quản trị qua delegated administrator."
+  ]
+ }
+}

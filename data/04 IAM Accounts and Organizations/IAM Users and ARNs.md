@@ -2,7 +2,7 @@
 tags: [saa-c03, s04-iam-accounts-and-organizations, security, iam, identity]
 aliases: [IAM User, IAM Users, ARN, Amazon Resource Name, Principal, Authentication vs Authorization]
 lessons: ["0070 IAM Users and ARNs", "0071 DEMO Simple Identity Permissions in AWS"]
-videos: ["036 Amazon Resource Names (ARNs)", "037 [DEMO] Exploring Amazon Resource Names (ARNs)"]
+videos: ["036 Amazon Resource Names (ARNs)", "037 [DEMO] Exploring Amazon Resource Names (ARNs)", "040 [ASSOCIATESHARED] IAM Users", "041 [ASSOCIATESHARED] [DEMO] Simple Identity Permissions in AWS"]
 ---
 # IAM Users and ARNs
 
@@ -19,7 +19,8 @@ videos: ["036 Amazon Resource Names (ARNs)", "037 [DEMO] Exploring Amazon Resour
 
 ### Khi nào dùng IAM user
 - Dùng cho thứ cần truy cập **long-term**: người (James phòng kế toán, Mike kiến trúc sư), ứng dụng (ví dụ app backup cài trên từng laptop, mỗi laptop một user), service account.
-- Mẹo của Adrian: nếu bạn **hình dung được một thực thể cụ thể, có tên**, thì 99% đáp án đúng là IAM user.
+- Mẹo của giảng viên (nhắc lại ở bài IAM Roles): nếu bạn **hình dung được một thực thể cụ thể, có tên**, thì thường *có thể* dùng IAM user.
+- Khóa mới nhấn mạnh: **"có thể" chứ không phải "nên"**. Trước đây gần như chỉ tạo IAM user kèm **long-term credentials** (password, access key, rất ít khi đổi). AWS hỗ trợ **temporary credentials** tự hết hạn sau thời gian ngắn, được coi là **an toàn hơn**, dùng với [[IAM Roles]], federation và [[IAM Identity Center]] (SSO). IAM user chỉ là **một trong nhiều cách** cấp identity.
 
 ### Principal, Authentication, Authorization
 - **Principal**: thực thể (người, máy, service, hoặc nhóm các thứ đó) đang cố truy cập account. Lúc đầu chưa được định danh.
@@ -76,6 +77,7 @@ arn:aws:s3:::catgifs/*    ← mọi OBJECT trong bucket (không bao gồm bucket
 | Số group một user được tham gia | **10** | Xem [[IAM Groups]] |
 
 Hệ quả thiết kế: hệ thống có hơn 5.000 identity (ứng dụng quy mô Internet với hàng triệu người dùng, doanh nghiệp lớn hơn 5.000 nhân viên, sáp nhập công ty) **không thể** cấp mỗi người một IAM user. Giải pháp: [[IAM Roles]] và **Identity Federation** (dùng identity sẵn có như AD, Google… thay vì IAM user; xem [[Cognito]], [[Directory Service]]).
+- Khóa mới nói cụ thể: ứng dụng có rất nhiều khách hàng thì **ứng dụng tự quản lý user của nó**, chỉ dùng **một số ít IAM identity** để làm việc với AWS. Doanh nghiệp lớn thường đã có hệ thống identity (Active Directory on-prem hoặc IdP khác) → dùng **Identity Federation** để nhân viên dùng identity sẵn có và có **single sign-on** (xem [[SAML 2.0 Identity Federation]], [[IAM Identity Center]]).
 
 ## Demo / Lab
 **0071 – Simple Identity Permissions** (account General, `us-east-1`)
@@ -89,7 +91,7 @@ Hệ quả thiết kế: hệ thống có hơn 5.000 identity (ứng dụng quy 
 
 ## 🎯 Mẹo thi SAA-C03
 - Đề nói **hơn 5.000 user** hoặc ứng dụng web/mobile có hàng triệu người dùng mà đáp án là "tạo IAM user cho mỗi người dùng" → **sai**. Chọn federation / IAM roles (web identity → [[Cognito]]).
-- "Một người/ứng dụng cụ thể cần truy cập dài hạn" → IAM user.
+- "Một người/ứng dụng cụ thể cần truy cập dài hạn" → IAM user được, nhưng nếu đề nhấn mạnh bảo mật thì ưu tiên **temporary credentials** (role, Identity Center) hơn long-term credentials.
 - Password dùng cho console, access key dùng cho CLI/API; đều là long-term credentials.
 - Phân biệt `arn:aws:s3:::bucket` và `arn:aws:s3:::bucket/*` khi đọc policy.
 - `::` trong ARN = không cần chỉ định; `*` = wildcard. Không thay thế nhau được.
@@ -98,6 +100,6 @@ Hệ quả thiết kế: hệ thống có hơn 5.000 identity (ứng dụng quy 
 ## Liên kết
 - Tiên quyết: [[IAM Basics]], [[IAM Identity Policies]]
 - Liên quan: [[IAM Access Keys and AWS CLI]], [[IAM Groups]], [[MFA]], [[S3 Basics]], [[CloudFormation Basics]]
-- Thay thế khi vượt giới hạn: [[IAM Roles]], [[Cognito]], [[Directory Service]]
+- Thay thế khi vượt giới hạn: [[IAM Roles]], [[IAM Identity Center]], [[SAML 2.0 Identity Federation]], [[Cognito]], [[Directory Service]]
 - Phân biệt với: [[IAM Roles]] (credentials tạm thời, không gắn cố định với một thực thể)
 - MOC: [[_MOC 04 IAM Accounts and Organizations]]

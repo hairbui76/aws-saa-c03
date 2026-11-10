@@ -2,6 +2,7 @@
 tags: [saa-c03, s04-iam-accounts-and-organizations, security, iam, identity]
 aliases: [IAM Group, Groups, User Groups]
 lessons: ["0072 IAM Groups", "0073 DEMO Permissions control using IAM Groups"]
+videos: ["042 [ASSOCIATESHARED] IAM Groups", "043 [ASSOCIATESHARED] [DEMO] Permissions control using IAM Groups"]
 ---
 # IAM Groups
 

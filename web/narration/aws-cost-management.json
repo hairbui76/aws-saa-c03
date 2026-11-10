@@ -1,0 +1,13 @@
+{
+ "AWS Cost Management": {
+  "sig": "6-1cw0d3d",
+  "steps": [
+   "Sơ đồ này gói ba công cụ quản lý chi phí: Cost Explorer để xem, lọc và dự báo trên console, Data Exports với CUR 2.0 cho dữ liệu chi tiết nhất, và cost allocation tags để biết ai phải trả.",
+   "Dữ liệu usage và billing của mọi account trong organization đổ vào Cost Explorer, nơi bạn lọc và group theo service, region, linked account, xem theo tháng, ngày hoặc giờ có tính phí, và dự báo chi phí sắp tới. Dữ liệu đó cũng đi vào Data Exports.",
+   "Cost allocation tags như Environment, Project, CostCenter, cùng tag aws createdBy do AWS tạo, phải được activate rồi mới dùng để group hoặc lọc trong cả Cost Explorer lẫn CUR.",
+   "Data Exports tạo file CUR chi tiết tới từng resource, usage type và giá, giao vào S3 tối đa một lần mỗi ngày, dạng CSV nén hoặc Parquet.",
+   "Từ S3, bạn phân tích bằng Athena, QuickSight hoặc công cụ BI bên ngoài để có bức tranh chi phí đầy đủ nhất.",
+   "Khi đi thi: xem và dự báo chi phí thì chọn Cost Explorer, dữ liệu chi tiết nhất cho BI thì chọn CUR, chia chi phí theo phòng ban dùng cost allocation tags, còn cảnh báo vượt ngưỡng là AWS Budgets. Nhớ tag phải activate, có thể backfill cho tháng trước."
+  ]
+ }
+}

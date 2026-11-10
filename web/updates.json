@@ -6,7 +6,9 @@
     "Exam Cheat Sheet: thêm mẹo không để trống câu nào khi làm bài",
     "Top mẹo thi chương 00 và 01: thêm mẹo không để trống câu, ưu tiên credential ngắn hạn (aws login) thay access key",
     "Exam Cheat Sheet: object S3 tối đa 50 TB, Local Zone / Wavelength Zone / Outposts, Service Quotas (xin tăng theo region, quota request template, 5.000 IAM user là hard limit), alarm CloudWatch M of N",
-    "Top mẹo thi và concept map chương 03: thêm Wavelength Zone, Outposts, Service Quotas, S3 50 TB, alarm M of N"
+    "Top mẹo thi và concept map chương 03: thêm Wavelength Zone, Outposts, Service Quotas, S3 50 TB, alarm M of N",
+    "Exam Cheat Sheet: thêm IAM Identity Center, SAML 2.0 federation, PassRole, Service Catalog, Cost Explorer / CUR / cost allocation tags, RAM, Artifact, License Manager; SCP allow phải có ở mọi tầng; CloudTrail giao log khoảng 5 phút một lần; log class của CloudWatch Logs",
+    "Top mẹo thi và concept map chương 04: thêm 6 bài mới (Service Catalog, Cost Management, SAML 2.0, Identity Center, RAM, Artifact và License Manager), SCP allow ở mọi tầng, controls proactive của Control Tower"
   ],
   "missing": [],
   "lessons": {
@@ -226,6 +228,109 @@
     "Shared Responsibility Model": {
       "kind": "removed",
       "summary": "khóa mới không còn bài Shared Responsibility Model"
+    },
+    "IAM Users and ARNs": {
+      "kind": "updated",
+      "summary": "Khóa mới nhấn mạnh IAM user chỉ là một cách 'có thể' dùng: credentials tạm thời (role, federation, IAM Identity Center) an toàn hơn long-term credentials; app nhiều khách hàng nên tự quản lý user, doanh nghiệp dùng federation để có SSO",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "IAM Roles": {
+      "kind": "updated",
+      "summary": "Role break-glass phải assume kèm MFA; ID Federation nay thường dựng bằng IAM Identity Center; web identity đổi lấy credentials bằng thao tác STS AssumeRoleWithWebIdentity",
+      "changed": [
+        "Khi nào dùng role: các tình huống điển hình",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Service-linked Roles and PassRole": {
+      "kind": "updated",
+      "summary": "PassRole security model: user chỉ có quyền pass role (iam:PassRole kèm iam:GetRole), service mới nhận quyền của role; role và user phải cùng account; nên siết bằng ARN role và điều kiện iam:PassedToService",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "AWS Organizations": {
+      "kind": "updated",
+      "summary": "Management account không đổi được sau khi tạo organization (nên dùng account không chạy workload); có thể quản lý identity cho cả org bằng IAM Identity Center; quota số account xin tăng qua Service Quotas; demo thêm phần tạo OU và move account",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Service Control Policies": {
+      "kind": "updated",
+      "summary": "Deny trong SCP chảy xuống từ bất kỳ tầng nào, còn Allow phải có ở mọi tầng root, OU, account (FullAWSAccess được gắn ở mọi tầng, không detach được policy cuối cùng); gỡ allow ở một OU làm account bên dưới mất mọi quyền",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "CloudWatch Logs": {
+      "kind": "updated",
+      "summary": "Thêm thiết lập log group: retention mặc định vô thời hạn, log class Standard / Infrequent Access (chọn lúc tạo, không đổi được), deletion protection; metric filter không áp ngược cho log cũ; Logs Insights truy vấn bằng ngôn ngữ riêng, OpenSearch PPL, SQL; log từ ngoài AWS phải là UTF-8",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "CloudTrail": {
+      "kind": "updated",
+      "summary": "Thêm loại network activity events (hoạt động qua VPC endpoint); độ trễ nay nói là log giao khoảng 5 phút một lần (khóa cũ: trong vòng 15 phút); organization trail thành bản management events thứ hai (tính phí) ở account đã có trail",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "AWS Control Tower": {
+      "kind": "updated",
+      "summary": "Guardrails nay gọi là controls và có thêm loại proactive (kiểm tra stack CloudFormation trước khi tạo, trạng thái Pass / Fail / Skip); Security OU không còn bắt buộc; thêm Account Factory for Terraform (AFT)",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "AWS Service Catalog": {
+      "kind": "new",
+      "summary": "Bài mới: cổng self-service cho end user launch product dựng sẵn (CloudFormation / Terraform) gom trong portfolio, quyền tạo hạ tầng do admin cấp; dịch vụ regional; service actions qua Systems Manager Automation"
+    },
+    "AWS Cost Management": {
+      "kind": "new",
+      "summary": "Bài mới: Cost Explorer (lọc, group, dự báo; hourly có phí, multi-year 38 tháng miễn phí), Data Exports / CUR 2.0 (dữ liệu chi tiết nhất, giao S3 tối đa 1 lần mỗi ngày, CSV hoặc Parquet), cost allocation tags (user-defined và aws:createdBy, phải activate, backfill)"
+    },
+    "SAML 2.0 Identity Federation": {
+      "kind": "new",
+      "summary": "Bài mới: dùng IdP doanh nghiệp tương thích SAML 2.0 (ví dụ ADFS), trust hai chiều với IAM, đổi SAML assertion lấy credentials tạm thời qua AssumeRoleWithSAML (mặc định 1 giờ, tối đa 12 giờ) cho API/CLI và console"
+    },
+    "IAM Identity Center": {
+      "kind": "new",
+      "summary": "Bài mới: SSO một identity vào mọi account trong AWS Organizations và business app; identity source (directory sẵn có, Managed AD, AD on-prem, IdP SAML 2.0 + SCIM), permission set, organization instance ở management account; demo Aus-E-Mart"
+    },
+    "AWS Resource Access Manager": {
+      "kind": "new",
+      "summary": "Bài mới: chia sẻ (không sao chép) subnet, Transit Gateway, dedicated host… bằng resource share (resource, principal, permission); organization sharing để tự accept và share cho OU; regional, miễn phí, không re-share"
+    },
+    "AWS Artifact and License Manager": {
+      "kind": "new",
+      "summary": "Bài mới: Artifact tải báo cáo compliance của AWS (ISO, PCI, FedRAMP, SOC); License Manager theo dõi license, self-managed license gắn AMI chặn được launch vượt license, license asset groups, Linux và user-based subscriptions chỉ báo cáo"
     }
   }
 }

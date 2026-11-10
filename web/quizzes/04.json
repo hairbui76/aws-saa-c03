@@ -187,7 +187,7 @@
           "Dùng CloudTrail làm nguồn sự kiện real-time dưới một giây"
         ],
         "answer": [0, 2],
-        "explain": "Organization trail tạo từ management account log mọi account, mọi region; đưa sang CloudWatch Logs để dùng metric filter, alarm và xử lý theo sự kiện. CloudTrail không real-time (trễ khoảng 15 phút) và Event History chỉ giữ 90 ngày."
+        "explain": "Organization trail tạo từ management account log mọi account, mọi region; đưa sang CloudWatch Logs để dùng metric filter, alarm và xử lý theo sự kiện. CloudTrail không real-time (có độ trễ, log giao khoảng 5 phút một lần) và Event History chỉ giữ 90 ngày."
       }
     ],
     "CloudWatch Logs": [
@@ -205,15 +205,15 @@
       },
       {
         "type": "single",
-        "q": "Trong CloudWatch Logs, retention và permissions được cấu hình ở cấp nào?",
+        "q": "Một công ty đẩy rất nhiều log debug hiếm khi đọc vào CloudWatch Logs và muốn giảm chi phí; log này không cần metric filter hay Live Tail. Cách nào phù hợp?",
         "options": [
-          "Từng log event",
-          "Log group, áp cho mọi log stream bên trong",
-          "Từng log stream",
-          "Namespace của metric"
+          "Tạo log group mới với log class Infrequent Access cho log debug",
+          "Đổi log class của log group Standard đang có sang Infrequent Access",
+          "Đặt retention riêng cho từng log stream",
+          "Bật deletion protection trên log group"
         ],
-        "answer": [1],
-        "explain": "Log group là container chứa các stream cùng loại log và là nơi đặt retention, permissions, metric filter. Không cấu hình riêng ở từng stream."
+        "answer": [0],
+        "explain": "Log class Infrequent Access rẻ hơn nhưng không có metric filter, Live Tail, subscription filter, và chỉ chọn được lúc tạo log group (không đổi được log class của group có sẵn). Retention đặt ở log group, không ở stream; deletion protection chỉ chặn xóa log."
       },
       {
         "type": "single",
@@ -514,7 +514,7 @@
           "Gắn SCP deny các region khác us-east-1 vào organization root hoặc OU"
         ],
         "answer": [3],
-        "explain": "SCP giới hạn chính account nên gián tiếp giới hạn cả root user của member account, và kế thừa xuống cây tổ chức. Identity policy không áp được cho root user; Config chỉ phát hiện, không chặn."
+        "explain": "SCP giới hạn chính account nên gián tiếp giới hạn cả root user của member account, và SCP deny gắn ở root hoặc OU chảy xuống mọi account bên dưới. Identity policy không áp được cho root user; Config chỉ phát hiện, không chặn."
       },
       {
         "type": "single",
@@ -625,6 +625,383 @@
         ],
         "answer": [2],
         "explain": "Tạo SLR cần iam:CreateServiceLinkedRole với tên service (ví dụ qua điều kiện iam:AWSServiceName). Không nên đoán tên service vì mỗi service viết khác nhau và phân biệt hoa thường."
+      }
+    ],
+    "AWS Service Catalog": [
+      {
+        "type": "single",
+        "q": "Một công ty hosting muốn team sales tự dựng bản blog mẫu cho khách hàng để demo, theo đúng cấu hình chuẩn, nhưng team sales không được có quyền tạo EC2 hay IAM. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Cấp cho team sales AdministratorAccess trong một account riêng",
+          "AWS Service Catalog với product dựng sẵn trong một portfolio chia sẻ cho team sales",
+          "Gửi template CloudFormation cho team sales tự chạy bằng quyền của họ",
+          "AWS Resource Access Manager chia sẻ EC2 instance cho team sales"
+        ],
+        "answer": [1],
+        "explain": "Service Catalog là cổng self-service: admin định nghĩa product (CloudFormation hoặc Terraform), gom vào portfolio kèm quyền tạo hạ tầng; end user chỉ cần quyền launch product. Tự chạy template thì user phải có quyền tạo mọi tài nguyên; RAM chia sẻ tài nguyên, không triển khai theo mẫu."
+      },
+      {
+        "type": "multi",
+        "q": "Trong AWS Service Catalog, technical admin dùng gì để định nghĩa một product? (Chọn 2)",
+        "options": [
+          "Template CloudFormation",
+          "Template Terraform",
+          "AMI kèm user data, không cần template",
+          "SCP của AWS Organizations",
+          "Bucket policy S3"
+        ],
+        "answer": [0, 1],
+        "explain": "Product trong Service Catalog được định nghĩa bằng CloudFormation hoặc Terraform cùng cấu hình của Service Catalog. SCP và bucket policy là cơ chế quyền, không phải định nghĩa product."
+      },
+      {
+        "type": "single",
+        "q": "End user launch một product trong Service Catalog dù không có quyền tạo EC2 hay load balancer. Tài nguyên được tạo bằng quyền nào?",
+        "options": [
+          "Quyền của end user, được Service Catalog tạm nâng lên",
+          "Quyền của root user trong account",
+          "Quyền mà admin cấp kèm product/portfolio, giống một stack role của CloudFormation",
+          "Quyền của service-linked role của EC2"
+        ],
+        "answer": [2],
+        "explain": "Admin định nghĩa quyền cần thiết để tạo hạ tầng trong product/portfolio (giống stack role); Service Catalog dùng quyền đó để tạo stack. End user chỉ cần quyền được xem và launch product."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi triển khai, end user thường xuyên cần restart EC2 instance của product mà không phải gửi ticket cho help desk. Tính năng nào của Service Catalog đáp ứng việc này một cách có kiểm soát?",
+        "options": [
+          "Service actions tích hợp Systems Manager Automation",
+          "Portfolio sharing sang region khác",
+          "Cost allocation tags",
+          "CloudTrail data events"
+        ],
+        "answer": [0],
+        "explain": "Service actions cho phép end user tự thực hiện các việc sau triển khai (ví dụ restart EC2) qua Systems Manager Automation, vẫn trong giới hạn được kiểm soát."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về AWS Service Catalog?",
+        "options": [
+          "Là dịch vụ global, một catalog dùng cho mọi region tự động",
+          "Là dịch vụ regional; product được gom vào portfolio, portfolio quyết định end user nào thấy và launch được product",
+          "End user phải có quyền IAM đầy đủ cho mọi tài nguyên trong product",
+          "Chỉ hỗ trợ product là AMI"
+        ],
+        "answer": [1],
+        "explain": "Service Catalog là regional (cấu hình theo region có hỗ trợ). Product gom vào portfolio; portfolio chứa quyền tạo hạ tầng và quyền của end user (ai thấy, ai launch)."
+      }
+    ],
+    "AWS Cost Management": [
+      {
+        "type": "single",
+        "q": "Bộ phận tài chính muốn phân tích chi phí AWS chi tiết nhất có thể (từng resource, usage type, tag, giá) bằng Amazon Athena và QuickSight. Giải pháp nào phù hợp?",
+        "options": [
+          "Xem Cost Explorer với granularity monthly",
+          "Tạo Data Export CUR 2.0 giao vào S3 dạng Parquet",
+          "Tạo AWS Budget với ngưỡng 80%",
+          "Bật CloudTrail data events"
+        ],
+        "answer": [1],
+        "explain": "Data Exports (Cost and Usage Report 2.0) cho dữ liệu billing chi tiết nhất, giao tối đa 1 lần/ngày vào S3 dạng CSV hoặc Parquet để phân tích bằng Athena, QuickSight hay BI. Cost Explorer để xem trên console; Budgets để cảnh báo."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty gắn tag CostCenter cho mọi tài nguyên từ hôm qua nhưng không thấy tag này khi group by trong Cost Explorer. Nguyên nhân khả dĩ nhất là gì?",
+        "options": [
+          "Cost Explorer không hỗ trợ tag",
+          "Tag chưa được activate làm cost allocation tag trong Billing and Cost Management (và cần chờ dữ liệu cập nhật)",
+          "Tag chỉ dùng được trong CloudTrail",
+          "Phải xóa tag rồi gắn lại bằng Tag Editor"
+        ],
+        "answer": [1],
+        "explain": "Cost allocation tag không tự bật: phải đợi tag xuất hiện trong mục Cost allocation tags rồi Activate (ở management account nếu dùng Organizations), sau đó chờ dữ liệu cập nhật mới group/filter được trong Cost Explorer và CUR."
+      },
+      {
+        "type": "multi",
+        "q": "Những thiết lập Cost Explorer nào được giới thiệu là miễn phí? (Chọn 2)",
+        "options": [
+          "Multi-year data ở granularity monthly (tới 38 tháng)",
+          "Hourly granularity cho mọi service",
+          "Resource-level data ở granularity daily",
+          "Hourly granularity ở cấp resource",
+          "Gửi báo cáo CUR mỗi giờ"
+        ],
+        "answer": [0, 2],
+        "explain": "Multi-year data (monthly, 38 tháng) và resource-level data (daily) bật miễn phí. Hourly granularity tính phí theo số record; CUR giao tối đa 1 lần/ngày."
+      },
+      {
+        "type": "single",
+        "q": "Ban quản lý muốn biết tài nguyên EC2 nào do ai tạo ra khi xem dữ liệu chi phí. Tag nào phù hợp nhất?",
+        "options": [
+          "Tag user-defined Name",
+          "Tag do AWS tạo aws:createdBy (activate trong cost allocation tags)",
+          "Tag Environment",
+          "Không có cách nào, phải xem CloudTrail Event History"
+        ],
+        "answer": [1],
+        "explain": "aws:createdBy là cost allocation tag chính thức duy nhất do AWS tạo, cho biết ai đã tạo tài nguyên; cần activate trong Cost allocation tags. Tag này không tính vào quota tag."
+      },
+      {
+        "type": "single",
+        "q": "Công ty dùng AWS Organizations với 20 account và muốn xem, lọc và dự báo chi phí của tất cả account mà không đăng nhập từng account. Cách nào phù hợp?",
+        "options": [
+          "Đăng nhập từng member account và mở Cost Explorer",
+          "Dùng Cost Explorer ở management account, lọc hoặc group theo linked account, bật forecast",
+          "Tạo một Data Export trong mỗi member account",
+          "Bật CloudWatch billing alarm ở mọi region"
+        ],
+        "answer": [1],
+        "explain": "Với Organizations (consolidated billing), management account thấy chi phí mọi linked account; Cost Explorer lọc/group theo linked account và có forecast dựa trên dữ liệu lịch sử."
+      }
+    ],
+    "SAML 2.0 Identity Federation": [
+      {
+        "type": "single",
+        "q": "Một doanh nghiệp dùng Microsoft ADFS (tương thích SAML 2.0) và có team quản lý identity riêng. Họ muốn nhân viên dùng tài khoản sẵn có để vào AWS console mà không tạo IAM user. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo IAM user cho từng nhân viên, đồng bộ password từ AD",
+          "SAML 2.0 identity federation: IdP cấp assertion, đổi lấy credentials tạm thời của IAM role",
+          "Cognito user pool với đăng nhập Facebook",
+          "Chia sẻ access key của một IAM user chung"
+        ],
+        "answer": [1],
+        "explain": "SAML 2.0 federation dùng khi doanh nghiệp có IdP tương thích SAML 2.0 (ví dụ ADFS): IdP xác thực, cấp SAML assertion, AWS đổi lấy temporary credentials của role. Không phải tạo identity riêng trong AWS. Ngày nay thường cấu hình qua IAM Identity Center."
+      },
+      {
+        "type": "single",
+        "q": "Ứng dụng nội bộ nhận SAML assertion từ IdP on-prem và cần lấy credentials AWS. Ứng dụng gọi thao tác STS nào?",
+        "options": [
+          "AssumeRoleWithWebIdentity",
+          "GetSessionToken",
+          "AssumeRoleWithSAML",
+          "CreateAccessKey"
+        ],
+        "answer": [2],
+        "explain": "Với SAML 2.0 federation, ứng dụng gửi assertion tới STS bằng AssumeRoleWithSAML và nhận temporary credentials của role. AssumeRoleWithWebIdentity dành cho web identity (Google, Facebook…)."
+      },
+      {
+        "type": "single",
+        "q": "Một app mobile cho khách hàng muốn đăng nhập bằng Google và Facebook để truy cập DynamoDB. Kiến trúc SAML 2.0 federation có phù hợp không?",
+        "options": [
+          "Có, SAML 2.0 hỗ trợ mọi identity provider",
+          "Không, Google/Facebook là web identity; dùng web identity federation (thường qua Cognito)",
+          "Có, nhưng phải tạo IAM user cho mỗi khách hàng",
+          "Không, phải dùng access key nhúng trong app"
+        ],
+        "answer": [1],
+        "explain": "SAML 2.0 federation chỉ dành cho IdP doanh nghiệp tương thích SAML 2.0. Identity web/social như Google, Facebook dùng web identity federation (AssumeRoleWithWebIdentity), thường qua Cognito."
+      },
+      {
+        "type": "single",
+        "q": "Khi dùng SAML 2.0 federation để vào AWS console, bước nào xảy ra sau khi trình duyệt gửi SAML assertion tới AWS SAML (SSO) endpoint?",
+        "options": [
+          "Endpoint tạo IAM user mới cho nhân viên",
+          "Endpoint assume role đã chọn qua STS, nhận credentials tạm thời rồi tạo URL đăng nhập console có kèm credentials",
+          "Endpoint gửi password AD của nhân viên sang IAM",
+          "Endpoint yêu cầu nhân viên tạo access key"
+        ],
+        "answer": [1],
+        "explain": "SAML endpoint assume role qua STS thay người dùng, nhận temporary credentials và dựng URL đăng nhập console chứa credentials, trả về trình duyệt. Identity ngoài không bao giờ dùng trực tiếp với AWS."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về SAML 2.0 identity federation trong AWS? (Chọn 2)",
+        "options": [
+          "Cần trust hai chiều: AWS đăng ký trong IdP và SAML identity provider được tạo trong IAM",
+          "Credentials nhận được là long-term, không hết hạn",
+          "Credentials tạm thời mặc định 1 giờ, tối đa 12 giờ",
+          "Identity AD được dùng trực tiếp để gọi API S3",
+          "Chỉ dùng được cho CLI, không dùng được cho console"
+        ],
+        "answer": [0, 2],
+        "explain": "SAML 2.0 federation cần trust hai chiều giữa IdP và IAM; credentials là của IAM role, tạm thời (mặc định 1 giờ, tối đa 12 giờ). Dùng được cả cho API/CLI lẫn console; identity ngoài luôn được đổi lấy credentials AWS."
+      }
+    ],
+    "IAM Identity Center": [
+      {
+        "type": "single",
+        "q": "Một công ty có 50 account trong AWS Organizations và muốn nhân viên dùng một identity duy nhất (kèm MFA) để vào mọi account được phép và các app như Slack, Office 365, quản lý tập trung. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Tạo IAM user ở từng account",
+          "IAM Identity Center",
+          "Amazon Cognito user pool",
+          "Cấu hình SAML identity provider thủ công trong IAM của từng account"
+        ],
+        "answer": [1],
+        "explain": "IAM Identity Center cung cấp SSO cho mọi account trong organization và business app, quản lý user, group, permission set ở một chỗ. Cấu hình SAML thủ công trong từng account là cách legacy; Cognito dành cho customer identity."
+      },
+      {
+        "type": "single",
+        "q": "Trong IAM Identity Center, quyền mà một group nhận được trên một AWS account được định nghĩa bằng gì?",
+        "options": [
+          "Service Control Policy",
+          "Permission set gán cho group trên account đó",
+          "Bucket policy",
+          "Security group"
+        ],
+        "answer": [1],
+        "explain": "Permission set (predefined như AdministratorAccess, Billing hoặc custom, kèm session duration) được gán cho user/group trên từng account; Identity Center tự tạo IdP và role AWSReservedSSO_… trong account."
+      },
+      {
+        "type": "multi",
+        "q": "Doanh nghiệp dùng Okta làm IdP và muốn user, group tự động đồng bộ sang IAM Identity Center. Cần dùng gì? (Chọn 2)",
+        "options": [
+          "Identity source là IdP ngoài hỗ trợ SAML 2.0",
+          "SCIM để tự động provisioning user và group",
+          "AWS Resource Access Manager",
+          "Cognito identity pool",
+          "Tạo IAM user tương ứng cho mỗi user Okta"
+        ],
+        "answer": [0, 1],
+        "explain": "Identity Center hỗ trợ IdP ngoài qua SAML 2.0; với IdP hỗ trợ SCIM (Okta, Entra ID…) có thể tự động import user và group."
+      },
+      {
+        "type": "single",
+        "q": "Công ty khóa chặt management account, chỉ rất ít người được truy cập, nhưng IAM Identity Center (organization instance) nằm ở đó. Làm sao để team admin quản trị Identity Center mà không vào management account?",
+        "options": [
+          "Tạo account instance riêng trong từng member account",
+          "Dùng delegated administration, chọn một account khác để quản trị Identity Center",
+          "Chuyển organization instance sang một region khác",
+          "Tạo SCP cho phép admin truy cập"
+        ],
+        "answer": [1],
+        "explain": "Organization instance luôn ở management account; delegated administration cho phép quản trị Identity Center từ một account khác. Account instance không quản lý được truy cập vào các account của organization."
+      },
+      {
+        "type": "single",
+        "q": "Một startup xây app web cho khách hàng, cho phép đăng nhập bằng X, Google, Facebook. Đội ngũ đề xuất IAM Identity Center. Đánh giá nào đúng?",
+        "options": [
+          "Đúng, Identity Center là lựa chọn cho mọi loại identity",
+          "Không phù hợp: Identity Center dành cho workforce identity; customer/web identity nên dùng Cognito",
+          "Đúng, nhưng phải dùng account instance",
+          "Không phù hợp, phải tạo IAM user cho mỗi khách hàng"
+        ],
+        "answer": [1],
+        "explain": "Identity Center dành cho nhân viên (workforce) truy cập account và app nội bộ. Khách hàng đăng nhập bằng web identity (X, Google, Facebook) thường dùng Cognito."
+      }
+    ],
+    "AWS Resource Access Manager": [
+      {
+        "type": "single",
+        "q": "Network team quản lý một VPC trung tâm có sẵn kết nối hybrid và bảo mật. Nhiều account ứng dụng cần launch EC2 vào các subnet của VPC này mà không dựng lại mạng riêng. Giải pháp nào phù hợp?",
+        "options": [
+          "CloudFormation StackSets tạo bản sao VPC ở mỗi account",
+          "Chia sẻ subnet bằng AWS Resource Access Manager",
+          "VPC peering từ mỗi account tới VPC trung tâm rồi launch EC2 trực tiếp vào subnet",
+          "Cấp IAM user trong account network cho mọi team"
+        ],
+        "answer": [1],
+        "explain": "RAM chia sẻ quyền dùng subnet cho account khác (VPC sharing); consumer launch EC2 vào subnet được share, owner vẫn giữ quyền kiểm soát VPC. StackSets tạo bản sao chứ không dùng chung."
+      },
+      {
+        "type": "multi",
+        "q": "Sau khi share subnet bằng RAM, phát biểu nào đúng? (Chọn 2)",
+        "options": [
+          "Owner account vẫn kiểm soát route table, NACL của VPC",
+          "Consumer account được sửa route table của subnet",
+          "EC2 do consumer launch thuộc về consumer account",
+          "Owner account có toàn quyền trên EC2 của consumer",
+          "RAM tạo một bản sao subnet trong consumer account"
+        ],
+        "answer": [0, 2],
+        "explain": "RAM không chuyển quyền kiểm soát: owner giữ VPC, route table, NACL. Instance do consumer tạo là của consumer, owner không có quyền trên instance đó. RAM chia sẻ, không sao chép."
+      },
+      {
+        "type": "single",
+        "q": "Admin cố tạo resource share trong RAM cho một OU của organization nhưng gặp lỗi. Nguyên nhân khả dĩ nhất là gì?",
+        "options": [
+          "RAM không hỗ trợ chia sẻ trong AWS Organizations",
+          "Chưa bật sharing with AWS Organizations trong RAM ở management account",
+          "OU phải được gắn SCP FullAWSAccess",
+          "Resource share chỉ tạo được ở us-east-1"
+        ],
+        "answer": [1],
+        "explain": "Muốn share cho OU (và để principal trong org tự động nhận share không cần accept) phải bật sharing with AWS Organizations ở management account; không bật thì tạo share cho OU sẽ lỗi."
+      },
+      {
+        "type": "single",
+        "q": "Một account nhận được Transit Gateway được share qua RAM và muốn share tiếp cho account đối tác. Điều gì xảy ra?",
+        "options": [
+          "Được, mọi principal đều re-share được",
+          "Không được: chỉ account sở hữu tài nguyên mới share được",
+          "Được nếu cả hai account cùng region",
+          "Được nếu dùng customer managed permission"
+        ],
+        "answer": [1],
+        "explain": "RAM không cho re-share tài nguyên được share cho bạn; quyền truy cập luôn phải do account sở hữu tài nguyên cấp."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về AWS Resource Access Manager?",
+        "options": [
+          "RAM là global, share một lần dùng ở mọi region",
+          "RAM tính phí theo mỗi resource share",
+          "RAM là regional và miễn phí; account rời organization sẽ mất quyền với tài nguyên share cho organization",
+          "RAM share được mọi loại tài nguyên, kể cả S3 bucket và secret"
+        ],
+        "answer": [2],
+        "explain": "RAM là regional (share tạo ở region nào thì consumer thấy ở region đó), miễn phí (chỉ trả tiền tài nguyên). Thành viên org là động: rời org mất quyền ngay. S3 bucket, secret không share qua RAM."
+      }
+    ],
+    "AWS Artifact and License Manager": [
+      {
+        "type": "single",
+        "q": "Auditor của khách hàng yêu cầu bản báo cáo SOC và PCI chứng minh hạ tầng AWS đạt chuẩn. Công ty lấy tài liệu này ở đâu?",
+        "options": [
+          "AWS Config",
+          "AWS Artifact",
+          "AWS Audit Manager trong Control Tower",
+          "CloudTrail Event History"
+        ],
+        "answer": [1],
+        "explain": "AWS Artifact là cổng self-service để tải on-demand báo cáo compliance của AWS (ISO, PCI, FedRAMP, SOC…) và xem agreement với AWS; có thể chia sẻ cho khách nếu điều khoản cho phép."
+      },
+      {
+        "type": "single",
+        "q": "Công ty sở hữu license SQL Server cho 64 vCPU và muốn ngăn EC2 launch vượt số license này. Giải pháp nào phù hợp?",
+        "options": [
+          "License asset groups trong License Manager",
+          "Self-managed license trong License Manager gắn với AMI/launch template và đặt hard limit",
+          "Linux subscriptions trong License Manager",
+          "AWS Artifact"
+        ],
+        "answer": [1],
+        "explain": "Self-managed license gắn với AMI, launch template hoặc CloudFormation template; mỗi lần launch được đếm tự động và hard limit chặn launch vượt license. Đây là tính năng duy nhất của License Manager chặn được."
+      },
+      {
+        "type": "multi",
+        "q": "Những tính năng nào của AWS License Manager chỉ báo cáo, không chặn được việc sử dụng? (Chọn 2)",
+        "options": [
+          "Self-managed license gắn với AMI và đặt hard limit",
+          "License asset groups",
+          "Linux subscriptions",
+          "Hard limit trên launch template"
+        ],
+        "answer": [1, 2],
+        "explain": "License asset groups và Linux subscriptions chỉ phát hiện, báo cáo (dashboard, usage report, cảnh báo). Chỉ self-managed license với EC2 mới chặn được launch vượt số license."
+      },
+      {
+        "type": "single",
+        "q": "Muốn License Manager tự quét các EC2 instance ở nhiều region và nhiều account để tìm Windows Server, SQL Server, RHEL đang chạy (cả BYOL và license-included), cần điều kiện gì?",
+        "options": [
+          "Instance phải chạy trên Dedicated Host",
+          "Instance phải có SSM agent để license asset groups nhìn vào bên trong",
+          "Phải tạo self-managed license ở mỗi region",
+          "Phải bật CloudTrail data events"
+        ],
+        "answer": [1],
+        "explain": "License asset groups dựa vào SSM agent để xem phần mềm đang chạy trong instance; cấu hình ở một region với các source region, hoạt động cross-region và cross-account, có thể mất tới 24 giờ."
+      },
+      {
+        "type": "single",
+        "q": "Phần mềm được cấp license theo core hoặc socket vật lý. Kết hợp nào phù hợp để kiểm soát compliance trên AWS?",
+        "options": [
+          "EC2 shared tenancy + AWS Artifact",
+          "Dedicated Host + self-managed license trong License Manager",
+          "Spot instance + license asset groups",
+          "Lambda + user-based subscriptions"
+        ],
+        "answer": [1],
+        "explain": "License theo phần cứng vật lý (core/socket) thường dùng Dedicated Host để thấy phần cứng; self-managed license trong License Manager đếm và ép tuân thủ license."
       }
     ]
   }

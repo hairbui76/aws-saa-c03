@@ -1,0 +1,16 @@
+{
+ "AWS Artifact and License Manager": {
+  "sig": "9-18d2gz0",
+  "steps": [
+   "Sơ đồ này gồm hai dịch vụ về compliance. AWS Artifact là cổng self-service lấy báo cáo compliance và agreement của AWS, còn License Manager theo dõi, báo cáo và có thể chặn việc dùng vượt license.",
+   "Với Artifact, bạn tải on-demand các báo cáo như ISO, PCI, FedRAMP, SOC và xem agreement với AWS, để làm due diligence, audit, hoặc chia sẻ cho khách hàng nếu điều khoản cho phép.",
+   "Với License Manager, bạn tạo self-managed license mô tả thứ mình sở hữu, ví dụ SQL Server cho 64 vCPU, rồi gắn nó vào AMI, launch template hoặc CloudFormation template.",
+   "Mỗi lần launch EC2 từ AMI đó, license được đếm tự động, terminate thì giảm. Nếu đặt hard limit, lần launch vượt số license sẽ bị chặn.",
+   "License asset groups thì đi tìm phần mềm có license đang chạy trên EC2 ở nhiều region và nhiều account, nhờ SSM agent nhìn vào bên trong instance.",
+   "Kết quả đổ về dashboard, usage report và cảnh báo SNS khi sắp hết hạn, có thể mất tới hai mươi bốn giờ, và tính năng này chỉ báo cáo chứ không chặn.",
+   "Linux subscriptions tìm Linux trả phí như RHEL, SUSE, Ubuntu Pro trên EC2 mà không cần agent, vì dùng instance metadata.",
+   "User-based subscriptions tính license theo người dùng cho Office, Visual Studio thuê từ AWS, và cần tích hợp Active Directory.",
+   "Khi đi thi: chỉ self-managed license với EC2 mới chặn được launch vượt license, license theo core hoặc socket thì kết hợp Dedicated Host. Self-managed license và user-based subscriptions không cross-region, còn asset groups và Linux subscriptions thì có."
+  ]
+ }
+}

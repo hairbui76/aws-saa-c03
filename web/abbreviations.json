@@ -238,5 +238,16 @@
   "KVM": "Kernel-based Virtual Machine",
   "CAPTCHA": "Completely Automated Public Turing test to tell Computers and Humans Apart",
   "vCPU": "virtual CPU",
-  "IoT": "Internet of Things"
+  "IoT": "Internet of Things",
+  "CUR": "Cost and Usage Report",
+  "SCIM": "System for Cross-domain Identity Management",
+  "ADFS": "Active Directory Federation Services",
+  "FOCUS": "FinOps Open Cost and Usage Specification",
+  "AFT": "Account Factory for Terraform",
+  "RHEL": "Red Hat Enterprise Linux",
+  "PCI": "Payment Card Industry",
+  "SOC": "System and Organization Controls",
+  "DBA": "Database Administrator",
+  "PPL": "Piped Processing Language",
+  "SKU": "Stock Keeping Unit"
 }

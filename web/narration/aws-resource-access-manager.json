@@ -1,0 +1,12 @@
+{
+ "AWS Resource Access Manager": {
+  "sig": "5-1bgvuk8",
+  "steps": [
+   "Sơ đồ này nói về AWS Resource Access Manager, hay RAM. Owner tạo resource share gồm tài nguyên, principal và permission, còn consumer dùng chung đúng tài nguyên đó, owner vẫn giữ quyền kiểm soát.",
+   "Network team sở hữu central VPC và giữ toàn quyền với route table, NACL, kết nối hybrid. Họ tạo một resource share cho subnet web A, chọn principal là account của product team và managed permission mặc định cho subnet.",
+   "Product team chấp nhận share. Nếu đã bật sharing with AWS Organizations ở management account thì share trong organization được chấp nhận tự động.",
+   "Giờ product team launch EC2 vào subnet được share như subnet của chính mình. Instance đó thuộc về product team, còn owner không có quyền gì trên instance.",
+   "Khi đi thi, nhớ RAM chia sẻ quyền dùng chứ không tạo bản sao như StackSets, không re-share được, rời organization là mất quyền ngay. RAM là regional, miễn phí, và S3 bucket hay secret không share qua RAM."
+  ]
+ }
+}

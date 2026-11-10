@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s04-iam-accounts-and-organizations, security, iam]
-aliases: [Service-linked Role, SLR, PassRole, iam:PassRole, Role Separation, CreateServiceLinkedRole]
+aliases: [Service-linked Role, SLR, PassRole, iam:PassRole, PassRole Security Model, iam:PassedToService, Role Separation, CreateServiceLinkedRole]
 lessons: ["0076 Service-linked Roles & PassRole"]
+videos: ["046 PassRole Security Model", "047 Service-linked Roles"]
 ---
 # Service-linked Roles and PassRole
 
@@ -25,15 +26,26 @@ lessons: ["0076 Service-linked Roles & PassRole"]
 
 ### PassRole và role separation
 - *Role separation* ở đây là **phân tách vai trò công việc**: một nhóm (ví dụ security team) được tạo/sửa role, nhóm khác (ví dụ Bob) chỉ được **dùng** role đó với service.
-- Muốn Bob gán một role có sẵn cho service mà **không** được tạo hay sửa role, cấp cho Bob quyền `iam:PassRole` (thường kèm `iam:ListRoles`) **trên đúng ARN role đó**:
+- Muốn Bob gán một role có sẵn cho service mà **không** được tạo hay sửa role, cấp cho Bob quyền `iam:PassRole` (kèm `iam:GetRole`; thêm `iam:ListRoles` nếu cần chọn trong nhiều role) **trên đúng ARN role đó**:
 
 ```json
 {
   "Effect": "Allow",
-  "Action": ["iam:ListRoles", "iam:PassRole"],
-  "Resource": "arn:aws:iam::123456789012:role/my-role-for-XYZ"
+  "Action": ["iam:PassRole", "iam:GetRole"],
+  "Resource": "arn:aws:iam::123456789012:role/ec2-s3-all",
+  "Condition": {
+    "StringEquals": { "iam:PassedToService": "ec2.amazonaws.com" }
+  }
 }
 ```
+
+- `Resource` (role nào được pass) và `Condition` `iam:PassedToService` (pass cho service nào) là **tùy chọn** nhưng là best practice: user chỉ pass được một role cụ thể, và role chỉ được nhận bởi một service cụ thể.
+- Khóa mới gọi đây là **PassRole security model**. Các yêu cầu:
+  - User gọi service phải có quyền `iam:PassRole`.
+  - **Trust policy** của role phải cho service đó assume (ví dụ `"Principal": {"Service": "ec2.amazonaws.com"}`, `sts:AssumeRole`).
+  - **Role và user phải ở cùng một AWS account.**
+  - **Service** nhận quyền của role, **user thì không**: user chỉ có quyền pass role, không có quyền mà role cấp.
+- Ví dụ trong bài: Jane (project engineer) cần dựng hạ tầng cho cửa hàng Aus-E-Mart mới bằng CloudFormation, hoặc launch một EC2 instance cần full quyền S3 trên một bucket. Cách cũ là gán thẳng mọi quyền (IAM, S3, RDS, EC2…) cho Jane, làm security engineer lo ngại. Với PassRole, quyền nằm ở role (ví dụ `ec2-s3-all` chỉ cho `s3:*` trên `aemwebstore/*`), Jane chỉ có quyền pass role đó cho CloudFormation hoặc EC2.
 
 ## Cách hoạt động / Kiến trúc
 
@@ -48,7 +60,7 @@ flowchart LR
 ### Ví dụ với CloudFormation
 - **Mặc định**: CloudFormation dùng **quyền của identity đang tạo stack**. Bạn cần quyền tạo stack **và** quyền tạo mọi tài nguyên trong stack.
 - **Với PassRole**: Bob có quyền tạo stack + pass một role vào CloudFormation. **Role đó có thể có quyền lớn hơn quyền của Bob**, ví dụ được tạo tài nguyên mà Bob không được tạo trực tiếp. CloudFormation dùng quyền của role để làm việc với AWS (xem [[CFN Stack Roles]]).
-- Cùng mô hình áp dụng cho service-linked role và các role gán cho service khác (ví dụ gán role cho EC2 qua [[EC2 Instance Roles|instance profile]]).
+- Cùng mô hình áp dụng cho service-linked role và các role gán cho service khác (ví dụ gán role cho EC2 qua [[EC2 Instance Roles|instance profile]]). Khi user launch instance kèm role, IAM kiểm tra user có `iam:PassRole` trên role đó không; có thì instance (không phải user) nhận quyền của role.
 
 ## Bảng so sánh / số liệu
 | | IAM role thường | Service-linked role |
@@ -61,6 +73,7 @@ flowchart LR
 ## 🎯 Mẹo thi SAA-C03
 - "User cần cấu hình service với một role có sẵn nhưng không được tạo/sửa role" → cấp **`iam:PassRole`** trên ARN role đó.
 - PassRole cho phép user khởi chạy service với quyền **cao hơn** quyền của chính user, có kiểm soát (ví dụ CloudFormation stack role). Đây là kiến trúc bảo mật quan trọng.
+- Người nhận quyền của role là **service**, không phải user; role và user phải **cùng account**. Siết thêm bằng `Resource` = ARN role và điều kiện `iam:PassedToService`.
 - Service-linked role **không xóa được** khi service còn dùng.
 - Đề hỏi "role do service tự tạo, quyền do service định nghĩa" → service-linked role.
 

@@ -18,7 +18,11 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | App trên EC2/Lambda/container cần gọi AWS API | **IAM Role** (instance profile, task role), không dùng access key | [[EC2 Instance Roles]] |
 | Hàng triệu user web/mobile, đăng nhập Google/Facebook | **Cognito Identity Pool** (web identity federation) | [[Cognito]] |
 | Chặn mọi account dùng region/service X, giới hạn cả root của member account | **SCP** ở root/OU | [[Service Control Policies]] |
-| Dựng nhanh landing zone multi-account có guardrail | **Control Tower** | [[AWS Control Tower]] |
+| Dựng nhanh landing zone multi-account có guardrail | **Control Tower** (controls: preventative = SCP, detective = Config, proactive = kiểm tra CloudFormation trước khi tạo) | [[AWS Control Tower]] |
+| Nhân viên SSO một identity vào nhiều account trong org + business app (AD, Okta, Entra ID) | **IAM Identity Center** (permission set gán cho group trên account) | [[IAM Identity Center]] |
+| IdP doanh nghiệp tương thích **SAML 2.0** (ADFS), cấu hình federation thủ công | **SAML 2.0 federation**: `AssumeRoleWithSAML` → credentials tạm thời (1 h mặc định, tối đa 12 h) | [[SAML 2.0 Identity Federation]] |
+| User cần pass role có sẵn cho service, không được tạo/sửa role | **`iam:PassRole`** (+ `iam:PassedToService`; role và user cùng account) | [[Service-linked Roles and PassRole]] |
+| Báo cáo compliance của AWS (SOC, PCI, ISO) cho auditor | **AWS Artifact** | [[AWS Artifact and License Manager]] |
 | Secret + **rotation tự động** (nhất là mật khẩu RDS) | **Secrets Manager** | [[Secrets Manager]] |
 | Cấu hình phân cấp, rẻ, SecureString, AMI mới nhất | **SSM Parameter Store** | [[SSM Parameter Store]] |
 | FIPS 140-2 **Level 3**, single-tenant, PKCS#11/JCE/CNG | **CloudHSM** | [[CloudHSM]] |
@@ -115,6 +119,12 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Stack chỉ hoàn tất khi bootstrap EC2 xong | **CreationPolicy + cfn-signal** | [[CFN Wait Conditions and cfn-signal]] |
 | Xóa stack nhưng giữ DB/dữ liệu | **DeletionPolicy Retain/Snapshot** | [[CFN Deletion Policy]] |
 | Cảnh báo khi chi phí **dự báo** vượt mức | **AWS Budgets** | [[AWS Budgets]] |
+| Xem, lọc, dự báo chi phí trên console | **Cost Explorer** (hourly có phí) | [[AWS Cost Management]] |
+| Dữ liệu billing chi tiết nhất cho Athena / QuickSight / BI | **CUR 2.0 qua Data Exports** → S3 (CSV/Parquet) | [[AWS Cost Management]] |
+| Chargeback chi phí theo phòng ban / dự án | **Cost allocation tags** (phải activate) | [[AWS Cost Management]] |
+| End user tự launch hạ tầng theo mẫu chuẩn, không có quyền hạ tầng | **AWS Service Catalog** (product, portfolio) | [[AWS Service Catalog]] |
+| Nhiều account dùng **chung** subnet / TGW / dedicated host, không nhân bản | **RAM** (Resource Access Manager; bật organization sharing để share cho OU) | [[AWS Resource Access Manager]] |
+| Chặn launch EC2 vượt số license (SQL Server, Windows…) | **License Manager**: self-managed license gắn AMI / launch template | [[AWS Artifact and License Manager]] |
 | Chạm giới hạn tài nguyên khi mở rộng / sang region mới | **Service Quotas** → Request increase (theo region; CloudWatch alarm khi gần chạm) | [[Service Quotas]] |
 | Account mới trong Organization cần sẵn quota cao | **Quota request template** | [[Service Quotas]] |
 | Alarm báo nhầm vì spike ngắn | **Evaluation periods + datapoints to alarm** (M of N) | [[CloudWatch Basics]] |
@@ -302,7 +312,10 @@ Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và 
 | S3 Object Lock | Khóa học: chỉ bật khi tạo bucket; nay (11/2023): bật được cho bucket có sẵn đã bật versioning |
 | S3 encryption | Khóa học: không header thì không mã hóa; nay (01/2023): mặc định SSE-S3 |
 | KMS | Mã hóa trực tiếp ≤ 4 KB; xóa key chờ 7–30 ngày; rotation CMK: mặc định tắt, 1 năm (nay chỉnh 90–2560 ngày) |
-| CloudTrail | Event History 90 ngày; giao log trễ ~15 phút |
+| CloudTrail | Event History 90 ngày; không real-time, log giao khoảng 5 phút một lần (khóa cũ: trong vòng 15 phút) |
+| CloudWatch Logs | Retention mặc định vô thời hạn; log class Infrequent Access không có metric filter / Live Tail / subscription filter, không đổi log class sau khi tạo |
+| SAML federation | Credentials tạm thời mặc định 1 h, tối đa 12 h |
+| Cost | Cost Explorer multi-year 38 tháng (miễn phí); CUR giao ≤ 1 lần/ngày; tối đa 500 cost allocation tag active |
 | SQS | Message: khóa học 256 KB; nay 1 MiB (08/2025). Retention 4 ngày (1 phút–14 ngày); visibility 30 s (0–12 h); long poll ≤ 20 s; delay ≤ 15 phút |
 | SQS FIFO | 300 msg/s, 3.000 với batching (nay có high-throughput FIFO) |
 | Kinesis | Shard 1 MB/s (1.000 record/s) vào, 2 MB/s ra; retention 24 h → 365 ngày; Firehose buffer 1 MB / 60 s |
@@ -333,9 +346,13 @@ Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và 
 **Bảo mật & IAM**
 - Nhúng access key vào code/AMI/user data là đáp án sai kinh điển. Dùng role ([[EC2 Instance Roles]]).
 - SCP **không cấp quyền**, chỉ giới hạn; management account không bị SCP ảnh hưởng ([[Service Control Policies]]).
+- SCP: deny gắn ở root/OU chảy xuống, nhưng **allow phải có ở mọi tầng** root → OU → account; gỡ `FullAWSAccess` ở một OU mà không thay allow khác là account trong OU mất mọi quyền ([[Service Control Policies]]).
+- RAM **chia sẻ** chứ không sao chép (StackSets mới tạo bản sao); không re-share được ([[AWS Resource Access Manager]]).
+- Identity Center dành cho **workforce**; khách hàng đăng nhập Google/Facebook → Cognito ([[IAM Identity Center]]).
 - AWS Config chỉ **phát hiện**, không **ngăn**. Muốn ngăn thì dùng IAM/SCP ([[AWS Config]]).
 - GuardDuty phát hiện chứ không tự chặn; chặn L7 là việc của WAF, DDoS là Shield ([[GuardDuty]]).
-- CloudTrail không real-time (~15 phút) ([[CloudTrail]]).
+- CloudTrail không real-time (log giao khoảng 5 phút một lần) ([[CloudTrail]]).
+- Metric filter của CloudWatch Logs **không áp ngược** cho log đã có ([[CloudWatch Logs]]).
 - AWS managed key (`aws/s3`) không dùng cross-account được. Cần customer managed key ([[S3 Encryption]]).
 - ACM không gắn được vào EC2. Đặt ALB phía trước. Cert phải cùng region, riêng CloudFront ở us-east-1 ([[ACM]]).
 
