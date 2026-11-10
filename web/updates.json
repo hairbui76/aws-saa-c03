@@ -1392,6 +1392,14 @@
     "Amazon MSK": {
       "kind": "new",
       "summary": "Apache Kafka managed: AWS lo broker, topic giữ record theo retention, consumer group độc lập với offset, provisioned hoặc Serverless, public cần auth IAM/SCRAM/mTLS."
+    },
+    "DynamoDB TTL": {
+      "kind": "updated",
+      "summary": "Delete do TTL ghi vào stream của table dạng system delete (cửa sổ 24 giờ); không có stream riêng cho TTL như bản cũ.",
+      "changed": [
+        "Cách hoạt động / Kiến trúc"
+      ],
+      "dropped": []
     }
   }
 }

@@ -88,7 +88,7 @@ flowchart LR
 - "Serverless app cần database không quản lý server, tự scale" → DynamoDB (thường đi với [[Lambda]] và [[API Gateway]], xem [[Serverless Architecture]]).
 - Dữ liệu **mặc định đã multi-AZ** — không có tùy chọn "bật Multi-AZ" như RDS.
 - PITR: **tắt mặc định**, bật theo table, recovery window **1–35 ngày**, granularity **1 giây**, restore ra **table mới**.
-- Không có gì để chọn về hiệu năng thì nhớ: **on-demand là mặc định** và là lựa chọn AWS khuyên dùng cho phần lớn workload.
+- Nhớ: **on-demand là mặc định** và là lựa chọn AWS khuyên dùng cho phần lớn workload.
 - Item tối đa **400 KB** → dữ liệu lớn (ảnh, file) lưu trong [[S3 Basics|S3]] và chỉ giữ pointer trong DynamoDB.
 
 ## Liên kết
