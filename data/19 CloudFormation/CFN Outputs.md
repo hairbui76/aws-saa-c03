@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation]
 aliases: [Outputs, Stack Outputs, CFN Output]
 lessons: ["0332 CloudFormation Outputs"]
+videos: ["314 [ASSOCIATESHARED] CloudFormation Outputs"]
 ---
 # CFN Outputs
 

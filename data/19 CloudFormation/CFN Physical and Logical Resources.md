@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation]
 aliases: [Logical Resource, Physical Resource, CFN Stack, Non-portable Template]
 lessons: ["0326 CloudFormation Physical Logical Resources", "0327 DEMO Simple Non Portable Template PART1", "0328 DEMO Simple Non Portable Template PART2"]
+videos: ["308 [ASSOCIATESHARED] CloudFormation Physical & Logical Resources", "309 [ASSOCIATESHARED] [DEMO] Simple Non Portable Template - PART1", "310 [ASSOCIATESHARED] [DEMO] Simple Non Portable Template - PART2"]
 ---
 # CFN Physical and Logical Resources
 
@@ -43,21 +44,21 @@ flowchart LR
 - CFN tự xác định thứ tự tạo và chạy song song khi có thể. Khi cần ép thứ tự, xem [[CFN DependsOn]].
 
 ### Ứng dụng
-- Tự động hóa: một template WordPress dựng được 1, 10 hay 100 site.
+- Tự động hóa: một template dựng được 1, 10 hay 100 storefront theo vùng của Aus-E-Mart, thay vì dựng tay từng cái.
 - **Change management**: lưu template trong source control, review và duyệt trước khi áp dụng.
 - Dựng nhanh môi trường dùng một lần.
 
 ## Demo / Lab: template non-portable (0327, 0328)
-Mục tiêu: tự tay thấy vì sao template không portable là bad practice.
-1. Viết `nonportable.yaml` với section `Resources` (thụt lề 2 dấu cách cho mỗi cấp), gồm hai logical resource:
-   - `Bucket`: `Type: 'AWS::S3::Bucket'`, `Properties: BucketName: 'accatpics1333333337'` (**tên đặt cứng**).
-   - `Instance`: `Type: 'AWS::EC2::Instance'`, `InstanceType: 't2.micro'`, `ImageId: 'ami-...'` (**AMI ID của Amazon Linux 2 ở us-east-1, đặt cứng**).
-   - Nguồn tham khảo cú pháp: **AWS CloudFormation User Guide, resource type reference**. Trang này liệt kê property bắt buộc/tùy chọn và **property nào khi đổi sẽ gây replacement**, kèm ví dụ JSON/YAML.
-2. Lỗi 1: tên bucket đã có người dùng. Tên S3 bucket là **globally unique** trên mọi account và mọi region ([[S3 Basics]]). Cách debug chuẩn: mở tab **Events** của stack và tìm **dòng lỗi màu đỏ đầu tiên** (`CREATE_FAILED`).
-3. Đổi tên bucket cho duy nhất thì stack `nonportable1` tạo thành công: Bucket thường xong trước, Instance xong sau, rồi stack chuyển `CREATE_COMPLETE`. Tab **Resources** cho thấy logical ID và physical ID tương ứng.
-4. Lỗi 2: tạo stack thứ hai `nonportable2` từ **cùng template** thì fail với "bucket already exists in another stack". Vì tên đặt cứng nên **template chỉ dùng được một lần**.
-5. Xóa cả hai stack: Events cho thấy CFN xóa luôn physical resource. Đây là lợi ích "lifecycle khớp nhau", account được dọn sạch.
-6. Lỗi 3: sang **us-west-2** tạo stack thì fail với "image ID does not exist". **AMI ID là tài nguyên theo region** ([[AMI]]), nên AMI của us-east-1 không tồn tại ở region khác. Template bị **khóa vào một region**.
+Mục tiêu: tự tay thấy vì sao template không portable là bad practice. (Video 309, 310 của khóa mới.)
+1. Viết template trong code editor (demo dùng **VS Code**, lưu file đuôi `.yml`). Với **CloudFormation tooling** cài trong editor và ngôn ngữ chọn là CloudFormation, editor gợi ý giá trị `Type` và tên property khi bấm **Ctrl+Space**, rê chuột lên property thì báo kiểu dữ liệu và lỗi (ví dụ thiếu giá trị hợp lệ). Gợi ý chỉ để đỡ gõ, vẫn cần hiểu mình đang khai báo gì.
+2. Bắt đầu từ ba dòng chép ở tài liệu: `AWSTemplateFormatVersion` và section `Resources` (thụt lề 2 dấu cách cho mỗi cấp). Hai logical resource:
+   - `MyS3Bucket`: `Type: AWS::S3::Bucket`, `Properties: BucketName: 'OzEmartTestBucket-12345'` (**tên đặt cứng**). Tên logic chỉ dùng trong template, không phải tên bucket thật.
+   - `MyEC2Instance`: `Type: AWS::EC2::Instance`, `InstanceType: t3.micro`, `ImageId: 'ami-...'` (**AMI ID copy từ màn hình Launch instance ở us-east-1, đặt cứng**).
+   - Nguồn tham khảo cú pháp: **CloudFormation template reference** (resource type reference). Trang này liệt kê property bắt buộc/tùy chọn, kiểu dữ liệu, **điều gì xảy ra khi đổi property rồi áp lại vào stack** (ví dụ gây replacement), và ví dụ JSON/YAML đầy đủ ở cuối trang.
+3. Create stack → Upload a template file (CFN tự lưu file template vào một S3 bucket trong account) → stack `SimpleStack1` → `CREATE_COMPLETE`. Theo dõi ở tab **Events** (dạng Table) hoặc **Timeline** (xem resource nào làm chậm việc triển khai). Tab **Resources** ghép logical ID với physical ID, có link mở thẳng EC2 instance và bucket. Nếu lần đầu đã lỗi thì gần như chắc là do tên bucket: tên S3 bucket là **globally unique** trên mọi account và mọi region ([[S3 Basics]]).
+4. Lỗi 1: tạo stack thứ hai `SimpleStack2` từ **cùng template** thì fail vì bucket đã tồn tại (nằm trong stack kia). Cách debug: ở Events tìm **dòng lỗi màu đỏ đầu tiên** (`CREATE_FAILED`); console còn **đánh dấu sẵn dòng là nguyên nhân gốc có khả năng nhất (likely root cause)**. Vì tên đặt cứng nên **template chỉ dùng được một lần**.
+5. Xóa cả hai stack (gõ tên stack để xác nhận): CFN xóa luôn physical resource. Đây là lợi ích "lifecycle khớp nhau", account được dọn sạch.
+6. Lỗi 2: sang **us-west-2** tạo `SimpleStack3` thì EC2 instance fail vì AMI không tồn tại, việc tạo bucket bị dừng theo và stack **rollback**. **AMI ID là tài nguyên theo region** ([[AMI]]), nên AMI của us-east-1 không có ở region khác. Template bị **khóa vào một region**.
 
 **Rút ra:** đặt cứng tên cần unique làm giới hạn **số lần** áp template. Đặt cứng giá trị theo region (AMI ID, key pair) làm giới hạn **region**. Cách sửa từng bước nằm ở [[CFN Template and Pseudo Parameters]]: bỏ tên cứng để CFN tự đặt, đưa AMI thành parameter, rồi dùng SSM public parameter.
 

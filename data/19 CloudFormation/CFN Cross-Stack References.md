@@ -1,11 +1,12 @@
 ---
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation, architecture, networking]
-aliases: [Cross-Stack References, Cross-Stack Reference, Fn::ImportValue, ImportValue, CFN Exports, Export]
+aliases: [Cross-Stack References, Cross-Stack Reference, Fn::ImportValue, ImportValue, CFN Exports, Export, Fn::GetStackOutput, GetStackOutput]
 lessons: ["0338 CloudFormation Cross Stack References"]
+videos: ["320 [ASSOCIATESHARED] CloudFormation Cross-Stack References"]
 ---
 # CFN Cross-Stack References
 
-> **TL;DR:** Cross-stack reference cho phép một stack dùng **resource thật** do stack khác tạo: stack nguồn **export** một output dưới một tên duy nhất trong region, stack khác lấy giá trị bằng `Fn::ImportValue` thay vì `Ref`. Dùng cho shared services (ví dụ **shared VPC**), kiến trúc service-oriented và các phần có **vòng đời khác nhau**. Chỉ hoạt động trong **cùng account và cùng region**.
+> **TL;DR:** Cross-stack reference cho phép một stack dùng **resource thật** do stack khác tạo. Bài mới dạy hai cách: (1) stack nguồn **export** một output dưới một tên duy nhất trong region, stack khác lấy bằng `Fn::ImportValue` thay vì `Ref`, chỉ trong **cùng account và cùng region**, và hai stack bị liên kết (export đang được import thì không xóa được); (2) hàm mới hơn **`Fn::GetStackOutput`** đọc thẳng output của stack khác theo tên stack và tên output, **không cần Export**, đọc được cả **region khác và account khác** nếu có quyền `cloudformation:DescribeStacks`. Dùng cho shared services (ví dụ **shared VPC**), kiến trúc service-oriented và các phần có **vòng đời khác nhau**.
 
 ## 🖼️ Sơ đồ
 ![[CFN Cross-Stack References.excalidraw]]
@@ -33,7 +34,17 @@ lessons: ["0338 CloudFormation Cross Stack References"]
 - **Export name phải duy nhất trong một region của account**. Ví dụ chỉ có một `SHAREDVPCID` trong us-east-1 của account đó.
 - Thứ thường export từ shared VPC stack: VPC ID, subnet IDs, CIDR ranges, Security Group IDs, bất cứ thứ gì stack khác cần.
 - Stack dùng gọi **`Fn::ImportValue`** với export name thay cho `Ref`, và nhận về giá trị đã export.
-- **Không hỗ trợ cross-region hay cross-account.**
+- `ImportValue` **không hỗ trợ cross-region hay cross-account** (exports list chỉ thấy trong region và account của nó).
+- Stack export và stack import **bị liên kết**: export đang được stack khác import thì CloudFormation **chặn xóa** export đó, để không làm hỏng stack phụ thuộc phía sau ("an active stack import prevents deletion of an export").
+
+### Fn::GetStackOutput (cách mới hơn)
+- Bên stack nguồn chỉ cần một **output bình thường**, **không cần Export**, không phải lo exports list nằm ở region hay account nào.
+- Bên stack dùng gọi **`Fn::GetStackOutput`** và chỉ rõ **tên stack** (`StackName`) và **tên output** (`OutputName`) muốn lấy.
+- Tùy chọn:
+  - **`Region`**: khi stack nguồn nằm ở **region khác**.
+  - **`RoleArn`**: IAM role dùng để đọc output, cần nhất khi lấy output từ **account khác**.
+- Vì không có exports list công khai, phải lo **quyền**: identity (hoặc stack role, xem [[CFN Stack Roles]]) cần **`cloudformation:DescribeStacks`** trên stack nguồn. Dùng admin thì có thể không để ý; dùng role riêng cho CFN hoặc đọc cross-account thì phải cấp rõ.
+- Phù hợp khi chỉ muốn **lấy giá trị** mà không muốn hai stack bị ràng buộc với nhau như Export/ImportValue.
 
 ```yaml
 # Stack nguồn: Shared VPC stack
@@ -51,6 +62,22 @@ Resources:
     Properties:
       VpcId: !ImportValue SHAREDVPCID
       ...
+```
+
+Ví dụ `Fn::GetStackOutput` trên slide (stack nguồn chỉ có output `SharedPubSubID: Value: !Ref PublicSubnet`, không Export):
+```yaml
+Resources:
+  WebStoreInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t4g.nano
+      ImageId: !Ref LatestAmiId
+      SubnetId:
+        Fn::GetStackOutput:
+          StackName: SharedVPCStack
+          OutputName: SharedPubSubID
+          Region: us-east-1                                   # tùy chọn
+          RoleArn: arn:aws:iam::123456789012:role/XStackOutRole   # tùy chọn
 ```
 
 ## Cách hoạt động / Kiến trúc
@@ -71,14 +98,26 @@ flowchart LR
     end
 ```
 
-Quy trình 3 bước:
+Quy trình 3 bước (Export/ImportValue):
 1. Trong stack nguồn, đưa giá trị cần chia sẻ vào **Outputs** (ví dụ `Value: !Ref VPC`).
 2. Thêm **`Export: Name`** để đẩy giá trị vào danh sách exports của region.
 3. Ở mỗi stack cần dùng, gọi **`!ImportValue <export name>`**.
 
-Bổ sung theo hành vi hiện tại của AWS (bài giảng không nói):
-- **Không xóa được** stack nguồn, cũng **không sửa/xóa được** một export, khi export đó còn đang được stack khác import. Phải gỡ import trước. Đây là cơ chế bảo vệ resource dùng chung.
-- Muốn chia sẻ giá trị qua region/account thì phải dùng cách khác, ví dụ lưu vào [[SSM Parameter Store]] hoặc dùng [[CFN Custom Resources]].
+- Export đang được stack khác import thì **không xóa được** (bài giảng nói CloudFormation chặn để bảo vệ stack phụ thuộc). Bổ sung theo tài liệu AWS (bài không nói chi tiết): cũng **không sửa được** export đó và **không xóa được** stack nguồn; phải gỡ import trước.
+
+Với `Fn::GetStackOutput` thì không có bước Export và exports list:
+```mermaid
+flowchart LR
+    subgraph SRC["Account A, region us-east-1"]
+        SV["SharedVPCStack<br/>Output SharedPubSubID = !Ref PublicSubnet<br/>(không Export)"]
+    end
+    subgraph DST["Account A hoặc account khác, region bất kỳ"]
+        APP["Web store stack<br/>SubnetId: Fn::GetStackOutput<br/>StackName + OutputName (+ Region, RoleArn)"]
+    end
+    APP -->|"đọc output, cần cloudformation:DescribeStacks<br/>(qua RoleArn nếu khác account)"| SV
+```
+
+- Trước đây (bản khóa cũ) muốn chia sẻ giá trị qua region/account phải tự làm cách khác như lưu vào [[SSM Parameter Store]] hoặc dùng [[CFN Custom Resources]]. Bài mới dùng `Fn::GetStackOutput` với `Region` / `RoleArn` cho trường hợp này.
 
 ## Bảng so sánh: Nested Stacks vs Cross-Stack References
 
@@ -86,9 +125,9 @@ Bổ sung theo hành vi hiện tại của AWS (bài giảng không nói):
 |---|---|---|
 | Tái sử dụng gì | **Template (code)**: mỗi lần dùng tạo resource mới | **Stack (resource thật)**: nhiều stack dùng chung một resource |
 | Vòng đời | **Lifecycle linked**: tạo/update/xóa cùng nhau | **Vòng đời độc lập**: shared dài hạn, app ngắn hạn |
-| Cơ chế lấy giá trị | Root đọc `GetAtt <Nested>.Outputs.X` | Output + `Export`, bên dùng `Fn::ImportValue` |
+| Cơ chế lấy giá trị | Root đọc `GetAtt <Nested>.Outputs.X` | Output + `Export`, bên dùng `Fn::ImportValue`; hoặc output thường, bên dùng `Fn::GetStackOutput` |
 | Ai tạo các stack | Root stack tự tạo stack con | Mỗi stack được tạo riêng, độc lập |
-| Phạm vi | Trong cấu trúc root stack | Cùng account + cùng region |
+| Phạm vi | Trong cấu trúc root stack | `ImportValue`: cùng account + cùng region. `GetStackOutput`: cả region khác, account khác (có quyền `cloudformation:DescribeStacks`) |
 | Ví dụ điển hình | VPC + AD + App của **một** giải pháp; vượt 500 resource | **Shared VPC**, shared services, service-oriented architecture |
 | Thay đổi thường xuyên một phần | Không phù hợp | Phù hợp: chỉ update stack liên quan |
 
@@ -96,9 +135,11 @@ Bổ sung theo hành vi hiện tại của AWS (bài giảng không nói):
 - Adrian: hiểu khác biệt nested stacks và cross-stack references là **thiết yếu** cho kỳ thi, và chọn sai ngoài thực tế cho kết quả "không lý tưởng".
 - **Template không phải stack**: template dùng để tạo một hoặc nhiều stack, mỗi stack là duy nhất. Reuse **template** → nested stacks. Reuse **stack/resource** → cross-stack references.
 - Từ khóa cho cross-stack: "shared services VPC", "nhiều ứng dụng ngắn hạn dùng chung hạ tầng", "service-oriented", "vòng đời khác nhau (long vs short)", "tham chiếu resource của stack khác", "export/import".
-- Export name **duy nhất trong region của account**; `Fn::ImportValue` **thay cho `Ref`**; **không cross-region, không cross-account**.
+- Export name **duy nhất trong region của account**; `Fn::ImportValue` **thay cho `Ref`**; ImportValue **không cross-region, không cross-account**.
+- Cần đọc output của stack ở **region khác hoặc account khác**, hoặc không muốn Export (không muốn hai stack bị khóa vào nhau) → **`Fn::GetStackOutput`** (StackName, OutputName, tùy chọn Region, RoleArn), nhớ quyền **`cloudformation:DescribeStacks`**.
+- Export đang được import thì **không xóa được**: đây là ràng buộc của Export/ImportValue. Bài giới thiệu GetStackOutput là cách đơn giản hơn khi chỉ cần **lấy giá trị** mà không phụ thuộc chặt vào stack kia.
 - Đề cho tình huống cần nhiều account/region dùng chung template → [[CFN StackSets]], không phải cross-stack.
-- Nhập tay ID vào parameter là giá trị tĩnh, không phải tham chiếu: đáp án đúng khi đề hỏi "tham chiếu động" là Export/ImportValue.
+- Nhập tay ID vào parameter là giá trị tĩnh, không phải tham chiếu: đáp án đúng khi đề hỏi "tham chiếu động" là Export/ImportValue (hoặc GetStackOutput).
 
 ## Liên kết
 - Tiên quyết: [[CloudFormation Basics]], [[CFN Outputs]], [[CFN Intrinsic Functions]], [[CFN Physical and Logical Resources]]

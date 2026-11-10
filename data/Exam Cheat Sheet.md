@@ -124,6 +124,8 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Deploy cùng hạ tầng ra nhiều account + region | **CloudFormation StackSets** | [[CFN StackSets]] |
 | Stack chỉ hoàn tất khi bootstrap EC2 xong | **CreationPolicy + cfn-signal** | [[CFN Wait Conditions and cfn-signal]] |
 | Xóa stack nhưng giữ DB/dữ liệu | **DeletionPolicy Retain/Snapshot** | [[CFN Deletion Policy]] |
+| Stack đọc output của stack khác ở region/account khác, không cần Export | **Fn::GetStackOutput** (ImportValue chỉ cùng account + region) | [[CFN Cross-Stack References]] |
+| Xem trước và bắt lỗi (cú pháp, trùng tên, quota) trước khi đổi stack | **Change Sets** (pre-deployment validation, drift-aware) | [[CFN Change Sets]] |
 | Cảnh báo khi chi phí **dự báo** vượt mức | **AWS Budgets** | [[AWS Budgets]] |
 | Xem, lọc, dự báo chi phí trên console | **Cost Explorer** (hourly có phí) | [[AWS Cost Management]] |
 | Dữ liệu billing chi tiết nhất cho Athena / QuickSight / BI | **CUR 2.0 qua Data Exports** → S3 (CSV/Parquet) | [[AWS Cost Management]] |

@@ -12,19 +12,19 @@ Section đi sâu vào CloudFormation sau phần nhập môn ở [[CloudFormation
 1. [[CFN Physical and Logical Resources]] — template chứa logical resource, stack tạo physical resource; template ≠ stack; template đặt cứng giá trị là non-portable.
 2. [[CFN Template and Pseudo Parameters]] — template parameter do người nhập, pseudo parameter `AWS::` do AWS cấp; công cụ chính để template portable.
 3. [[CFN Intrinsic Functions]] — Ref, GetAtt, GetAZs, Select, Join, Sub, Base64, Cidr... lấy dữ liệu lúc runtime.
-4. [[CFN Mappings]] — bảng tra tĩnh đọc bằng `FindInMap`, ca kinh điển là AMI theo region.
+4. [[CFN Mappings]] — bảng tra tĩnh luôn hai cấp, đọc bằng `FindInMap` đủ 3 tham số; ví dụ instance size theo môi trường/tầng, AMI theo region.
 5. [[CFN Outputs]] — trả giá trị sau khi tạo stack, được stack cha đọc hoặc export cho stack khác.
 6. [[CFN Conditions]] — điều kiện true/false quyết định resource có được tạo không; một template cho dev và prod.
 7. [[CFN DependsOn]] — explicit dependency khi CFN không tự suy ra, ca kinh điển EIP chờ IGW attachment.
 8. [[CFN Wait Conditions and cfn-signal]] — CreationPolicy/WaitCondition + cfn-signal để stack chờ bootstrapping thành công trong timeout.
 9. [[CFN Nested Stacks]] — root stack tạo stack con từ template riêng; reuse template, vượt 500 resource, chỉ khi cùng lifecycle.
-10. [[CFN Cross-Stack References]] — Export + `Fn::ImportValue` dùng resource thật của stack khác, cùng account và region.
+10. [[CFN Cross-Stack References]] — Export + `Fn::ImportValue` (cùng account và region) hoặc `Fn::GetStackOutput` (không cần Export, cả region/account khác) để dùng resource thật của stack khác.
 11. [[CFN StackSets]] — một template triển khai ra nhiều account và region, self-managed hoặc service-managed qua Organizations.
-12. [[CFN Deletion Policy]] — Delete / Retain / Snapshot quyết định số phận physical resource khi bị xóa.
+12. [[CFN Deletion Policy]] — Delete / Retain / RetainExceptOnCreate / Snapshot quyết định số phận physical resource khi bị xóa; RDS mặc định Snapshot.
 13. [[CFN Stack Roles]] — CFN assume role để thao tác resource; user chỉ cần quyền stack + `iam:PassRole`.
 14. [[cfn-init]] — helper đọc `AWS::CloudFormation::Init` để đưa EC2 về desired state.
 15. [[cfn-hup]] — daemon phát hiện metadata đổi sau update stack và chạy lại cfn-init.
-16. [[CFN Change Sets]] — xem trước thay đổi (thêm, sửa, xóa, replace) trước khi execute update stack.
+16. [[CFN Change Sets]] — xem trước thay đổi (thêm, sửa, xóa, replace) và chạy pre-deployment validation trước khi execute; có loại create, update, import, drift-aware.
 17. [[CFN Custom Resources]] — gửi event create/update/delete tới Lambda hoặc SNS để làm việc CFN không hỗ trợ native.
 
 ## Bản đồ khái niệm
@@ -65,6 +65,7 @@ flowchart TB
   end
   OUT -->|"GetAtt .Outputs"| NEST
   OUT -->|"Export / ImportValue"| XS
+  OUT -->|"GetStackOutput (khác region/account)"| XS
   STACK --> SS
 
   subgraph SAFE["Vận hành an toàn"]
@@ -73,7 +74,7 @@ flowchart TB
     ROLE["Stack Roles + PassRole"]
     CR["Custom Resources (Lambda / SNS)"]
   end
-  CS -->|"preview"| STACK
+  CS -->|"preview + validation"| STACK
   DP -->|"Retain / Snapshot"| PHY
   ROLE -->|"quyền tạo resource"| STACK
   CR --> RES
@@ -93,7 +94,7 @@ flowchart TB
 ## 🎯 Top mẹo thi của section
 - **Template ≠ stack**: reuse **template** → Nested Stacks; reuse **resource thật của stack khác** → Cross-Stack References ([[CFN Nested Stacks]], [[CFN Cross-Stack References]]).
 - Nested stacks chỉ khi mọi phần **lifecycle linked**; từ khóa "vượt 500 resource", "modular template" ([[CFN Nested Stacks]]).
-- Cross-stack: export name duy nhất trong region, `Fn::ImportValue` thay `Ref`, **không cross-region, không cross-account** ([[CFN Cross-Stack References]]).
+- Cross-stack: export name duy nhất trong region, `Fn::ImportValue` thay `Ref`, ImportValue **không cross-region, không cross-account**, export đang được import thì không xóa được; đọc output ở **region/account khác** hoặc không muốn Export → **`Fn::GetStackOutput`** (cần `cloudformation:DescribeStacks`) ([[CFN Cross-Stack References]]).
 - Cùng hạ tầng cho **nhiều account và nhiều region** từ một chỗ → **StackSets** (service-managed khi đã dùng Organizations) ([[CFN StackSets]]).
 - Template chỉ chạy được ở một region hoặc một lần → nghi giá trị đặt cứng; dùng parameter, pseudo parameter, Mappings, SSM parameter ([[CFN Physical and Logical Resources]], [[CFN Template and Pseudo Parameters]]).
 - AMI theo region → **Mappings + `AWS::Region`**; luôn AMI mới nhất → **SSM public parameter** ([[CFN Mappings]]).
@@ -101,7 +102,7 @@ flowchart TB
 - Stack lỗi khi tạo/xóa liên quan **EIP + IGW** → thêm **DependsOn** IGW attachment ([[CFN DependsOn]]).
 - Stack báo CREATE_COMPLETE nhưng app trên EC2/ASG chưa cài xong → **CreationPolicy + cfn-signal**; chờ hệ thống ngoài → **WaitCondition**; timeout tối đa 12 giờ và hết hạn = fail ([[CFN Wait Conditions and cfn-signal]]).
 - Update stack phải cập nhật cấu hình OS trên EC2 đang chạy → **cfn-hup + cfn-init**; user data chỉ chạy lần launch đầu ([[cfn-hup]], [[cfn-init]]).
-- Xóa stack nhưng giữ DB/bucket → **Retain**; giữ bản sao dữ liệu RDS/EBS/Redshift → **Snapshot**; EC2 instance không hỗ trợ Snapshot ([[CFN Deletion Policy]]).
+- Xóa stack nhưng giữ DB/bucket → **Retain** (không muốn giữ rác khi stack tạo lần đầu bị rollback → **RetainExceptOnCreate**); giữ bản sao dữ liệu RDS/EBS/Redshift → **Snapshot**; EC2 instance không hỗ trợ Snapshot; RDS instance mặc định đã là Snapshot ([[CFN Deletion Policy]]).
 - User quyền thấp cần CFN tạo resource họ không tự tạo được → **stack role**, user chỉ cần quyền stack + `iam:PassRole` ([[CFN Stack Roles]]).
-- "Preview thay đổi, xem resource nào bị replace/xóa trước khi update" → **Change Sets**; change set không bảo vệ dữ liệu ([[CFN Change Sets]]).
+- "Preview thay đổi, xem resource nào bị replace/xóa trước khi update", "bắt lỗi cú pháp/trùng tên/quota trước khi triển khai" → **Change Sets** (pre-deployment validation; có loại create, import, drift-aware); change set không bảo vệ dữ liệu ([[CFN Change Sets]]).
 - CFN không hỗ trợ native, tích hợp hệ thống ngoài, empty S3 bucket khi xóa stack → **Lambda-backed Custom Resource**, nhớ gửi response về ResponseURL ([[CFN Custom Resources]]).

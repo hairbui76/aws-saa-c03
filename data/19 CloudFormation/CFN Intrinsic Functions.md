@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation]
 aliases: [Intrinsic Functions, Ref, GetAtt, Fn::GetAtt, Fn::Sub, Fn::Join, Fn::GetAZs, Fn::Select, Fn::Cidr, Fn::Base64]
 lessons: ["0330 CloudFormation Intrinsic Functions"]
+videos: ["312 [ASSOCIATESHARED] CloudFormation Intrinsic Functions"]
 ---
 # CFN Intrinsic Functions
 

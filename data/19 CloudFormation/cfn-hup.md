@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, automation, compute, bootstrapping]
 aliases: [cfn-hup, CFN Hup]
 lessons: ["0343 ASSOCIATESHARED CloudFormation cfn hup", "0344 ASSOCIATESHARED DEMO wait conditions cfnsignal cfninit and cfnhup PART1", "0345 ASSOCIATESHARED DEMO wait conditions cfnsignal cfninit and cfnhup PART2"]
+videos: ["325 [ASSOCIATESHARED] CloudFormation cfn-hup", "326 [ASSOCIATESHARED] [DEMO] wait conditions, cfnsignal, cfninit and cfnhup - PART1", "327 [ASSOCIATESHARED] [DEMO] wait conditions, cfnsignal, cfninit and cfnhup - PART2"]
 ---
 # cfn-hup
 
@@ -18,7 +19,7 @@ lessons: ["0343 ASSOCIATESHARED CloudFormation cfn hup", "0344 ASSOCIATESHARED D
 - [[cfn-init]] chỉ **chạy một lần** lúc bootstrapping. Sửa template rồi update stack thì cfn-init **không** tự chạy lại, nên cấu hình mới không được áp vào OS.
 - User data cũng vậy: chỉ chạy lần launch đầu tiên. Đổi user data qua update stack thì instance bị stop/start nhưng script **không** chạy lại.
 - **cfn-hup** lấp khoảng trống này:
-  - Là công cụ **bạn phải tự cài và cấu hình** trên instance. Thường làm ngay trong quá trình bootstrap (ví dụ một config key `install_cfn` trong `AWS::CloudFormation::Init`).
+  - Là công cụ chạy trong OS của instance mà **bạn chịu trách nhiệm cài và cấu hình**. Dùng **AMI Amazon Linux mới nhất** thì cfn-hup **thường đã được cài sẵn**, nhưng việc cấu hình (file `cfn-hup.conf`, hook, bật service) vẫn là của bạn. Thường làm ngay trong quá trình bootstrap (ví dụ một config key `install_cfn` trong `AWS::CloudFormation::Init`) hoặc bằng công cụ cấu hình khác.
   - Được trỏ vào một logical resource trong stack và **theo dõi metadata** của resource đó.
   - Khi phát hiện thay đổi, chạy **action tùy cấu hình**. Phổ biến nhất là chạy lại `cfn-init` để áp lại desired state.
 - Kết quả: cfn-init + cfn-hup biến mỗi lần **UpdateStack có đổi metadata** thành một lần cập nhật cấu hình OS của EC2.
@@ -62,10 +63,10 @@ sequenceDiagram
 | 4. cfn-init + `cfn-signal` + **cfn-hup** | Có | **Có** | Sửa cả hai vấn đề |
 
 ## Demo / Lab
-- Mô phỏng bootstrapping dài bằng `sleep 300` (5 phút); trang web hiển thị một CFN parameter (`Message`, "Cats are the best").
+- Video 326, 327 (bản cũ 0344, 0345). Mô phỏng bootstrapping dài bằng `sleep 300` (5 phút); trang web hiển thị một CFN parameter (`Message`, "G'day from Ozzy Mart"). Template có security group, S3 bucket và EC2 instance.
 - **Template 1 (user data)**: stack xong trong khoảng 60 s nhưng web chưa lên vì còn đang sleep. CloudFormation không biết gì về bootstrapping bên trong. Update parameter thì đó là **update with some interruption**: instance bị stop rồi start, mất public IPv4 cũ, nhưng trang web **không đổi** vì user data chỉ chạy một lần.
 - **Template 2 (+ signal)**: thêm CreationPolicy và một dòng `cfn-signal -e $?` cuối user data. Stack chỉ `CREATE_COMPLETE` khi bootstrap xong, nên vừa xong là web dùng được ngay. Update vẫn không cập nhật trang.
-- **Template 3 (cfn-init)**: `packages` cài web server, `files` tạo HTML, `commands` chạy sleep 300, `services` bật/chạy httpd. Xem log `cloud-init-output.log`, `cfn-init-cmd.log`, `cfn-init.log` để chẩn đoán (đọc bằng `sudo`).
+- **Template 3 (cfn-init)**: `packages` cài web server, `files` tạo HTML, `services` bật/chạy httpd; lệnh sleep 300 trong `commands` được comment cho đỡ chờ. Xem log `cloud-init-output.log`, `cfn-init-cmd.log`, `cfn-init.log` để chẩn đoán (đọc bằng `sudo`).
 - **Template 4 (+ cfn-hup)**: `sudo tail -f /var/log/cfn-hup.log` thấy nó trỏ tới endpoint đúng region và báo "no change in path Resources.Instance.Metadata.AWS::CloudFormation::Init". Update stack với Message mới. Khi stack ở `UPDATE_COMPLETE`, lần kiểm tra kế tiếp (interval 1 phút) báo "data has changed from previous state", chạy lại cfn-init. `cfn-init.log` cho thấy `index.html` được backup và ghi lại. Trang web cập nhật **mà không thay instance**.
 
 ## 🎯 Mẹo thi SAA-C03

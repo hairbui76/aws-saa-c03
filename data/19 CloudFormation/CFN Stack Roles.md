@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, security, iam]
 aliases: [Stack Roles, CloudFormation Service Role, CFN Service Role, Stack Role]
 lessons: ["0341 ASSOCIATESHARED CloudFormation Stack Roles"]
+videos: ["323 [ASSOCIATESHARED] CloudFormation Stack Roles"]
 ---
 # CFN Stack Roles
 

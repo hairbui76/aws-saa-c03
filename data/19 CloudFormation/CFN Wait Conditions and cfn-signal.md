@@ -2,6 +2,7 @@
 tags: [saa-c03, s19-cloudformation, cloudformation, iac, automation, compute, bootstrapping]
 aliases: [cfn-signal, CreationPolicy, Creation Policy, WaitCondition, Wait Condition, WaitConditionHandle, Wait Handle]
 lessons: ["0336 CloudFormation Wait Conditions cfn signal", "0167 DEMO CFN INIT and CFN Creation Policies", "0344 DEMO wait conditions cfnsignal cfninit and cfnhup PART1", "0345 DEMO wait conditions cfnsignal cfninit and cfnhup PART2"]
+videos: ["318 [ASSOCIATESHARED] CloudFormation Wait Conditions & cfn-signal", "326 [ASSOCIATESHARED] [DEMO] wait conditions, cfnsignal, cfninit and cfnhup - PART1", "327 [ASSOCIATESHARED] [DEMO] wait conditions, cfnsignal, cfninit and cfnhup - PART2"]
 ---
 # CFN Wait Conditions and cfn-signal
 
@@ -120,11 +121,11 @@ flowchart LR
 | Timeout | Tối đa 12 giờ (ISO 8601, vd `PT15M`) | Tối đa 12 giờ (giây, vd `300`; max 43200) |
 
 ## Demo / Lab
-- **0167 (WordPress với cfn-init + CreationPolicy)**: CreationPolicy timeout 15 phút trên EC2Instance. User data chỉ còn update hệ thống, chạy [[cfn-init]], rồi `cfn-signal` gửi kết quả. Stack mất thêm vài phút vì phải chờ instance launch, pass status checks, chạy xong cfn-init. Trong tab Events xuất hiện dòng **"Received SUCCESS signal with UniqueId <instance-id>"**: đó là tín hiệu stack chờ. Lúc đó mới chắc instance đã sẵn sàng, không chỉ dựa vào "2/2 status checks" của EC2.
-- **0344 (so sánh user data trần và user data + signal)**:
-  - Template 1 chỉ có user data với `sleep 300` giả lập bootstrap dài: stack `CREATE_COMPLETE` sau khoảng 60 s nhưng web chưa lên tới 5 phút sau. CloudFormation hoàn toàn không biết về bootstrap.
+- **0167 (WordPress với cfn-init + CreationPolicy)**, demo của bản khóa cũ (mục EC2), **khóa mới không còn demo này**, giữ lại để tham khảo: CreationPolicy timeout 15 phút trên EC2Instance. User data chỉ còn update hệ thống, chạy [[cfn-init]], rồi `cfn-signal` gửi kết quả. Stack mất thêm vài phút vì phải chờ instance launch, pass status checks, chạy xong cfn-init. Trong tab Events xuất hiện dòng **"Received SUCCESS signal with UniqueId <instance-id>"**: đó là tín hiệu stack chờ. Lúc đó mới chắc instance đã sẵn sàng, không chỉ dựa vào "2/2 status checks" của EC2.
+- **Video 326 (bản cũ 0344): so sánh user data trần và user data + signal**:
+  - Template 1 chỉ có user data với `sleep 300` giả lập bootstrap dài: stack `CREATE_COMPLETE` sau khoảng 60 s nhưng trang "G'day from Ozzy Mart" chưa lên tới 5 phút sau. CloudFormation hoàn toàn không biết về bootstrap.
   - Template 2 chỉ thêm **2 thay đổi**: một `CreationPolicy` và **một dòng `cfn-signal` cuối user data**. Stack lâu hơn (khoảng 6–7 phút) nhưng khi `CREATE_COMPLETE` thì web dùng được ngay. Toàn bộ stack chỉ `CREATE_COMPLETE` khi mọi resource, kể cả instance đang chờ signal, đều xong.
-  - Cả hai template vẫn chung một hạn chế: update stack không cập nhật cấu hình OS. Cách sửa nằm ở [[cfn-init]] + [[cfn-hup]] (0345), bảng 4 bước tiến hóa xem trong note [[cfn-hup]].
+  - Cả hai template vẫn chung một hạn chế: update stack không cập nhật cấu hình OS. Cách sửa nằm ở [[cfn-init]] + [[cfn-hup]] (video 327, bản cũ 0345), bảng 4 bước tiến hóa xem trong note [[cfn-hup]].
 
 ## 🎯 Mẹo thi SAA-C03
 - Adrian nhấn mạnh: **phải hiểu cả CreationPolicy và WaitCondition** cho kỳ thi.

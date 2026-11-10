@@ -10,15 +10,15 @@
   ]
  },
  "CFN Template and Pseudo Parameters - portable": {
-  "sig": "7-tgt3oj",
+  "sig": "7-u0ktle",
   "steps": [
    "Sơ đồ này theo dõi demo bốn giai đoạn, biến một template non-portable thành portable. Mỗi bước bỏ bớt một giá trị đặt cứng, cuối cùng chạy được ở mọi region mà không cần nhập gì.",
-   "Bước nhảy quan trọng là từ stage2 sang stage3: thay parameter String bằng parameter kiểu SSM AMI ID, với default là path public parameter của Amazon Linux mới nhất.",
+   "Bước nhảy quan trọng là từ stage3 sang stage4: thay parameter String bằng parameter LatestAmiId kiểu SSM AMI ID, với default là path public parameter của Amazon Linux 2023 mới nhất.",
    "Kết quả là template hoàn toàn portable, tự lấy AMI mới nhất đúng region. Quy tắc rút ra: không đặt tên cứng, đưa giá trị theo region thành parameter có default, và tốt nhất là tham chiếu động.",
-   "Quay lại điểm xuất phát: template nonportable đặt cứng cả BucketName lẫn ImageId, nên stack thứ hai trong cùng account fail vì trùng tên bucket rồi rollback. Stage1 sửa bằng cách bỏ BucketName để CloudFormation tự đặt tên.",
-   "Stage1 tạo nhiều lần được, nhưng sang us-east-2 lại fail vì AMI ID là giá trị riêng theo từng region. Vì thế stage2 chuyển ImageId thành parameter.",
-   "Stage2 đã portable, nhưng người dùng vẫn phải tự tra AMI ID đúng region mỗi lần tạo stack, khá bất tiện và dễ sai.",
-   "Ghi nhớ khi thi: tên tự đặt gồm tên stack, logical ID và chuỗi ngẫu nhiên nên luôn duy nhất. Ngoài ra Amazon Linux 2 hết hỗ trợ giữa 2026, nên hiện nay hãy dùng path SSM của AL2023."
+   "Quay lại điểm xuất phát: stage1 đặt cứng cả BucketName lẫn ImageId, nên stack thứ hai trong cùng account fail vì trùng tên bucket rồi rollback. Stage2 sửa bằng cách bỏ BucketName để CloudFormation tự đặt tên.",
+   "Stage2 tạo nhiều lần được, nhưng sang us-west-2 lại fail vì AMI ID là giá trị riêng theo từng region. Vì thế stage3 chuyển ImageId thành parameter.",
+   "Stage3 đã portable, nhưng người dùng vẫn phải tự tra AMI ID đúng region mỗi lần tạo stack, bỏ trống thì stack fail, khá bất tiện và dễ sai.",
+   "Ghi nhớ khi thi: tên tự đặt gồm tên stack, logical ID và chuỗi ngẫu nhiên nên luôn duy nhất. Default của stage4 là path SSM public parameter cho AMI Amazon Linux 2023 kiến trúc x86 64 bit."
   ]
  }
 }
