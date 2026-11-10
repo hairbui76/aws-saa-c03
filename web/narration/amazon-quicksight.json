@@ -1,0 +1,16 @@
+{
+ "Amazon QuickSight": {
+  "sig": "9-1066ulc",
+  "steps": [
+   "Sơ đồ này nói về Amazon QuickSight, dịch vụ BI trong bộ Amazon Quick. Tính tiền theo user, có reader giá thấp cho người chỉ xem; khán giả đông và khó đoán thì dùng capacity pricing theo session 30 phút. Luồng làm việc là connect, prepare, analyze, share.",
+   "Đầu tiên, kết nối nguồn dữ liệu. QuickSight tích hợp sẵn nguồn AWS như Athena, RDS, Aurora, Redshift kể cả Spectrum, OpenSearch và S3, rồi chuẩn bị dữ liệu bằng cách biến đổi hoặc làm giàu.",
+   "Bạn có thể query thẳng nguồn hoặc import vào SPICE, engine in-memory của QuickSight cho dashboard nhanh ở quy mô lớn. Sau đó đội BA và BI phân tích để rút ra insight.",
+   "Dữ liệu trong SPICE được dùng trực tiếp cho phần phân tích, không phải truy vấn lại nguồn mỗi lần.",
+   "Cuối cùng, chia sẻ kết quả cho người ra quyết định qua dashboard, báo cáo, hoặc embed vào ứng dụng và website. Dashboard private mặc định, phải share cho user hay group với vai trò viewer hoặc co-owner.",
+   "QuickSight còn kết nối được nguồn SaaS như Jira, GitHub, ServiceNow và Salesforce.",
+   "Các database bên ngoài như Microsoft SQL Server, MySQL và PostgreSQL cũng là nguồn được hỗ trợ.",
+   "Và cả các sản phẩm như Apache Spark, Snowflake, Presto và Teradata. Không cần thuộc hết, chỉ cần nhận ra từ khóa.",
+   "Khi đi thi, thấy dashboard, visualization, business intelligence hay ad-hoc analysis, nhất là kèm các nguồn như Athena hay Redshift, thì chọn QuickSight, trừ khi có lý do mạnh để chọn khác."
+  ]
+ }
+}

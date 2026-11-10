@@ -24,7 +24,9 @@
     "Trang chủ và các chỗ liệt kê chương: thêm hai chương mới 22 Systems Manager và 23 Elastic Beanstalk",
     "Exam Cheat Sheet: thêm Systems Manager (managed node, DHMC, hybrid activation, Session Manager, Run Command, Patch Manager) và Elastic Beanstalk (Standard/Cluster, deployment policy, clone và blue/green, RDS, .ebextensions)",
     "Exam Cheat Sheet: Aurora 256 TiB và storage co giãn lên xuống, Aurora I/O-Optimized, read replica 15/5/3 theo engine, Multi-AZ cluster chỉ MySQL/PostgreSQL, Aurora Global 10 secondary region, DMS Serverless và DMS Schema Conversion, Vault Lock compliance mode và PITR 35 ngày, EFS Elastic mặc định, Max I/O legacy, EC2 Mac",
-    "Top mẹo thi và concept map chương 11 và 12: Aurora 256 TiB và I/O-Optimized, Serverless v2, RDS Custom Oracle tới 3/2027, TDE không còn CloudHSM, Multi-AZ cluster semi-synchronous, DMS Serverless và Schema Conversion; EFS Elastic, Max I/O legacy, Vault Lock governance/compliance"
+    "Top mẹo thi và concept map chương 11 và 12: Aurora 256 TiB và I/O-Optimized, Serverless v2, RDS Custom Oracle tới 3/2027, TDE không còn CloudHSM, Multi-AZ cluster semi-synchronous, DMS Serverless và Schema Conversion; EFS Elastic, Max I/O legacy, Vault Lock governance/compliance",
+    "Exam Cheat Sheet: thêm Neptune, OpenSearch, Lake Formation, EMR, QuickSight, Data Exchange, MSK; DynamoDB on-demand mặc định và PITR 1–35 ngày, Global Tables MRSC, ElastiCache Valkey, Redshift Serverless, Athena for Apache Spark",
+    "Top mẹo thi và concept map chương 20: 7 bài mới (Neptune, OpenSearch, Lake Formation, EMR, QuickSight, Data Exchange, MSK), Global Tables MREC/MRSC, Valkey, Redshift Serverless, Athena Spark"
   ],
   "missing": [],
   "lessons": {
@@ -1255,6 +1257,141 @@
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []
+    },
+    "DynamoDB Architecture": {
+      "kind": "updated",
+      "summary": "On-demand nay là capacity mode mặc định và được AWS khuyên dùng; PITR có recovery window cấu hình 1–35 ngày; dữ liệu luôn mã hóa at rest bằng AWS owned key hoặc KMS key của bạn.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Backup",
+        "Billing",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "DynamoDB Operations and Performance": {
+      "kind": "updated",
+      "summary": "On-demand là mặc định; provisioned sang on-demand tối đa 4 lần mỗi 24 giờ; thêm partition và auto scaling (min, max, target); eventually consistent là mặc định, giảm 50% cả với on-demand; bỏ con số on-demand đắt khoảng 5 lần.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Capacity modes",
+        "Query vs Scan",
+        "Consistency model",
+        "Tính RCU/WCU",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "DynamoDB Indexes LSI and GSI": {
+      "kind": "updated",
+      "summary": "LSI không xóa được sau khi tạo; chỉ LSI fetch attribute chưa project từ base table, GSI chỉ trả attribute đã project.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Local Secondary Index (LSI)",
+        "Bảng so sánh",
+        "Lưu ý thiết kế",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "DynamoDB Streams and Triggers": {
+      "kind": "updated",
+      "summary": "Streams là tính năng native, không phải Kinesis (có tùy chọn tích hợp Kinesis); Lambda đọc stream qua event source mapping, poll và xử lý theo batch.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Triggers = Streams + Lambda",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "DynamoDB Global Tables": {
+      "kind": "updated",
+      "summary": "Thêm hai consistency mode chọn lúc tạo, không đổi được: MREC (mặc định, bất đồng bộ, last writer wins) và MRSC (đồng bộ, strongly consistent ở mọi region, ghi xung đột bị từ chối).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh với giải pháp global khác",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "DAX": {
+      "kind": "updated",
+      "summary": "Write-through ghi DynamoDB trước, ghi thành công mới đưa vào cache (bản cũ: ghi cả hai cùng lúc); ghi DynamoDB lỗi thì không cache gì.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cách hoạt động / Kiến trúc",
+        "Khi nào dùng / không dùng"
+      ],
+      "dropped": []
+    },
+    "ElastiCache": {
+      "kind": "updated",
+      "summary": "Ba engine Valkey, Redis OSS và Memcached; Valkey là bản mã nguồn mở tương thích Redis, AWS khuyên dùng cho triển khai mới.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Athena": {
+      "kind": "updated",
+      "summary": "Thêm engine Apache Spark (notebook PySpark, DPU-giờ), workgroup chọn engine cố định, capacity reservation cho SQL, Federated Query qua Glue hoặc Lambda; demo Animals4life không còn.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Athena for Apache Spark",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Demo / Lab"
+      ]
+    },
+    "Redshift": {
+      "kind": "updated",
+      "summary": "Thêm Redshift Serverless (RPU, namespace, workgroup), MPP, Multi-AZ với node RG/RA3, leader node không tính tiền, pause cluster, slice 2/4/8/16, nạp bằng Glue ETL, Enhanced VPC Routing cho Serverless cần 3 subnet.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Provisioned vs Serverless",
+        "Cách hoạt động / Kiến trúc",
+        "Resilience và Recovery",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Amazon Neptune": {
+      "kind": "new",
+      "summary": "Graph database managed, giống RDS/Aurora: VPC, Multi-AZ, read replica, PITR, Serverless (NCU), Global Database, Neptune Analytics; cho mạng xã hội, gian lận, recommendation."
+    },
+    "Amazon OpenSearch Service": {
+      "kind": "new",
+      "summary": "Search và log analytics near real-time (fork Elasticsearch/Kibana): domain hoặc Serverless (OCU), nạp qua CloudWatch Logs, Firehose, Ingestion, Lambda; Dashboards, QuickSight, vector search."
+    },
+    "AWS Lake Formation": {
+      "kind": "new",
+      "summary": "Phân quyền theo database, table, cột, hàng cho S3 data lake (S3 + Glue Data Catalog): LF-Tag, data filter, registration role, share cross-account qua RAM, Blueprint."
+    },
+    "Amazon EMR": {
+      "kind": "new",
+      "summary": "Hadoop/Spark managed: EC2 (primary, core, task node, HDFS, một AZ), Serverless, EKS, Outposts; cluster transient, EMRFS/S3A, Spot cho task node."
+    },
+    "Amazon QuickSight": {
+      "kind": "new",
+      "summary": "BI dashboard và visualization trong bộ Amazon Quick: tính tiền theo user, nguồn AWS và bên ngoài, SPICE in-memory, dashboard private mặc định."
+    },
+    "AWS Data Exchange": {
+      "kind": "new",
+      "summary": "Tìm, subscribe và cung cấp dataset bên thứ ba qua file (bản sao), API, S3, Redshift datashare, Lake Formation (truy cập tại chỗ); Open Data on AWS."
+    },
+    "Amazon MSK": {
+      "kind": "new",
+      "summary": "Apache Kafka managed: AWS lo broker, topic giữ record theo retention, consumer group độc lập với offset, provisioned hoặc Serverless, public cần auth IAM/SCRAM/mTLS."
     }
   }
 }

@@ -80,4 +80,5 @@ flowchart LR
 - Liên quan: [[Kinesis Data Firehose]], [[Kinesis Data Analytics]], [[Kinesis Video Streams]], [[Lambda]], [[Glue]]
 - Đích phân tích: [[Athena]], [[Redshift]]
 - Phân biệt với: [[SQS]], [[SNS]], [[Compare - SQS vs SNS vs Kinesis]]
+- Đã dùng Apache Kafka: [[Amazon MSK]]
 - Section: [[_MOC 14 Serverless and Application Services]]

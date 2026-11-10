@@ -2,6 +2,7 @@
 tags: [saa-c03, s20-nosql-and-analytics, database, dynamodb, serverless]
 aliases: [DynamoDB, DDB, Amazon DynamoDB, DynamoDB Tables]
 lessons: ["0350 DynamoDB Architecture"]
+videos: ["333 [ASSOCIATESHARED] DynamoDB Architecture Basics"]
 ---
 # DynamoDB Architecture
 
@@ -20,10 +21,10 @@ lessons: ["0350 DynamoDB Architecture"]
 - **NoSQL, public DBaaS**: endpoint public nên truy cập được từ Internet, hoặc từ VPC có Internet Gateway, hoặc qua **Gateway VPC Endpoint** (xem [[Gateway VPC Endpoints]]) — DynamoDB là một trong hai dịch vụ (cùng S3) dùng gateway endpoint. Xem [[AWS Public vs Private Services]].
 - Lưu được dữ liệu **key/value** đơn giản lẫn dữ liệu có cấu trúc kiểu **document**. Nói chặt chẽ: *wide-column key/value database* (xem [[Database Models]]).
 - **Không có self-managed server/infrastructure**: khác với [[RDS Architecture|RDS]], [[Aurora]], [[Aurora Serverless]] — những thứ đó là *database server*-as-a-service (bạn vẫn có instance/cluster). Với DynamoDB, thứ được giao dưới dạng dịch vụ là chính cái **table**.
-- **Hiệu năng**: chọn *provisioned* (đặt thủ công hoặc để auto scaling tăng/giảm) hoặc *on-demand* (set-and-forget). Chi tiết ở [[DynamoDB Operations and Performance]].
+- **Hiệu năng**: chọn *provisioned* (đặt thủ công hoặc để auto scaling tăng/giảm) hoặc *on-demand* (set-and-forget). **On-demand nay là mode mặc định và được AWS khuyên dùng cho phần lớn workload.** Chi tiết ở [[DynamoDB Operations and Performance]].
 - **Resilience**: mặc định dữ liệu được sao chép qua nhiều storage node ở **nhiều AZ** trong region — không phải tự cấu hình như [[RDS Multi-AZ]]. Có thể tùy chọn **global** bằng [[DynamoDB Global Tables]].
 - **Nhanh**: chạy trên SSD, độ trễ **single-digit millisecond** (muốn microsecond thì thêm [[DAX]]).
-- Có sẵn **backup, point-in-time recovery, encryption at rest**.
+- Có sẵn **backup, point-in-time recovery**. Dữ liệu **luôn được mã hóa at rest**: mặc định bằng **AWS owned key** do DynamoDB tự quản lý, hoặc dùng **KMS key trong account của bạn** khi cần kiểm soát key (xem [[KMS]]).
 - **Event-driven integration**: làm việc gì đó khi dữ liệu thay đổi — xem [[DynamoDB Streams and Triggers]].
 
 ### Table, item, attribute
@@ -59,25 +60,23 @@ flowchart LR
 
 ### On-demand backup
 - Giống **manual snapshot** của RDS ([[RDS Backups and Restore]]): full backup của table, giữ tới khi bạn tự xóa.
-- Restore được **cùng region hoặc cross-region** (một cách để chuyển dữ liệu sang region khác).
+- Restore được **cùng region hoặc cross-region** (một cách để chuyển dữ liệu sang region khác; bản khóa cũ nêu, bài mới không nói).
 - Khi restore có thể chọn **giữ hay bỏ index**, và **đổi cấu hình encryption**.
 - Bạn chịu trách nhiệm tạo backup và dọn backup cũ.
 
 ### Point-in-time Recovery (PITR)
 - **Tắt mặc định**, phải bật **riêng cho từng table**.
-- Khi bật: ghi lại liên tục mọi thay đổi trong cửa sổ **35 ngày**.
+- Khi bật: ghi lại liên tục mọi thay đổi trong một **recovery window cấu hình được, từ 1 đến 35 ngày**.
 - Restore ra **table mới** tại bất kỳ thời điểm nào trong cửa sổ đó với độ mịn **1 giây**.
 
 ```mermaid
 flowchart LR
-    A["DynamoDB Table (PITR bật)"] -->|"ghi liên tục các thay đổi"| W["Cửa sổ 35 ngày"]
+    A["DynamoDB Table (PITR bật)"] -->|"ghi liên tục các thay đổi"| W["Recovery window 1–35 ngày"]
     W -->|"restore, granularity 1 giây"| B["Table MỚI"]
 ```
 
-> Ghi chú hiện tại (2026): AWS đã cho phép cấu hình recovery period của PITR từ 1 đến 35 ngày; mặc định và tối đa vẫn là 35 ngày.
-
 ## Billing
-- Tính theo **table**: RCU/WCU đã đặt (hoặc số operation nếu on-demand) + **storage** + **feature** bật thêm (PITR, streams, global tables...).
+- Tính theo **table**: RCU/WCU đã đặt (provisioned) hoặc **read/write request unit tiêu thụ theo từng request** (on-demand) + **storage** + **feature** bật thêm (PITR, streams, global tables...).
 - **Không có chi phí base/infrastructure** — chỉ trả cho thứ dùng.
 - Có thể mua **reserved capacity** cho provisioned throughput dài hạn để được giá rẻ hơn (giống tinh thần [[Reserved Instances and Savings Plans]]).
 
@@ -88,12 +87,13 @@ flowchart LR
 - Đề/đáp án nhắc tới **SQL** → thường loại DynamoDB. Truy cập bằng console, CLI, API. (DynamoDB có **PartiQL** — ngôn ngữ *giống* SQL — nhưng không hỗ trợ SQL thật.)
 - "Serverless app cần database không quản lý server, tự scale" → DynamoDB (thường đi với [[Lambda]] và [[API Gateway]], xem [[Serverless Architecture]]).
 - Dữ liệu **mặc định đã multi-AZ** — không có tùy chọn "bật Multi-AZ" như RDS.
-- PITR: **tắt mặc định**, bật theo table, **35 ngày**, granularity **1 giây**, restore ra **table mới**.
+- PITR: **tắt mặc định**, bật theo table, recovery window **1–35 ngày**, granularity **1 giây**, restore ra **table mới**.
+- Không có gì để chọn về hiệu năng thì nhớ: **on-demand là mặc định** và là lựa chọn AWS khuyên dùng cho phần lớn workload.
 - Item tối đa **400 KB** → dữ liệu lớn (ảnh, file) lưu trong [[S3 Basics|S3]] và chỉ giữ pointer trong DynamoDB.
 
 ## Liên kết
 - Tiên quyết: [[Database Models]], [[ACID vs BASE]], [[AWS Public vs Private Services]]
 - Tiếp theo: [[DynamoDB Operations and Performance]], [[DynamoDB Indexes LSI and GSI]], [[DynamoDB Streams and Triggers]], [[DynamoDB Global Tables]], [[DAX]], [[DynamoDB TTL]]
-- Phân biệt với: [[RDS Architecture]], [[Aurora Serverless]], [[ElastiCache]]
+- Phân biệt với: [[RDS Architecture]], [[Aurora Serverless]], [[ElastiCache]], [[Amazon Neptune]] (graph database)
 - Truy cập riêng tư: [[Gateway VPC Endpoints]]
 - Section: [[_MOC 20 NoSQL and Analytics]]

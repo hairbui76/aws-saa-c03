@@ -2,6 +2,7 @@
 tags: [saa-c03, s20-nosql-and-analytics, database, dynamodb, performance]
 aliases: [LSI, GSI, Local Secondary Index, Global Secondary Index, DynamoDB Indexes]
 lessons: ["0353 DynamoDB Local and Global Secondary Indexes"]
+videos: ["338 [ASSOCIATESHARED] DynamoDB Indexes (LSI and GSI)"]
 ---
 # DynamoDB Indexes LSI and GSI
 
@@ -31,7 +32,7 @@ lessons: ["0353 DynamoDB Local and Global Secondary Indexes"]
 ## Local Secondary Index (LSI)
 
 - Alternative view với **cùng PK, SK khác**.
-- **BẮT BUỘC tạo cùng lúc với base table** — không thể thêm sau.
+- **BẮT BUỘC tạo cùng lúc với base table** — không thể thêm sau, và **cũng không xóa được**: LSI tồn tại suốt vòng đời của table.
 - Tối đa **5 LSI** mỗi base table.
 - **Dùng chung RCU/WCU** với base table (khi table dùng provisioned capacity).
 - Hỗ trợ cả **strongly consistent read**.
@@ -62,16 +63,17 @@ flowchart LR
 |---|---|---|
 | Partition key | **Giống** base table | **Khác** (tùy chọn) |
 | Sort key | Khác | Khác (tùy chọn) |
-| Thời điểm tạo | **Chỉ khi tạo table** | **Bất kỳ lúc nào** |
+| Thời điểm tạo | **Chỉ khi tạo table** (và không xóa được) | **Bất kỳ lúc nào** |
 | Số lượng | 5 / table | 20 / table (mặc định) |
 | Capacity | **Chia sẻ** với table | **Riêng** |
 | Consistency | Strong hoặc eventual | **Chỉ eventual** |
 | Projection | ALL / KEYS_ONLY / INCLUDE | ALL / KEYS_ONLY / INCLUDE |
 | Sparse | Có | Có |
+| Query attribute không được project | Vẫn chạy, DynamoDB **fetch** từ base table (rất tốn capacity) | **Không fetch**: chỉ trả được attribute đã project |
 
 ## Lưu ý thiết kế
 - **Cẩn thận với projection**: đọc/ghi luôn tính trên toàn bộ item → project ALL thì index tốn capacity tương ứng với mọi attribute.
-- Ngược lại, Query index mà cần attribute **không được project** thì vẫn chạy được nhưng DynamoDB phải fetch lại từ base table ở hậu trường → **rất tốn kém**. Phải lên kế hoạch index trước.
+- Ngược lại, Query **LSI** mà cần attribute **không được project** thì vẫn chạy được nhưng DynamoDB phải fetch lại từ base table ở hậu trường → **rất tốn kém**. Với **GSI thì không có fetch**: query trên GSI chỉ trả về được những attribute đã project vào index. Phải lên kế hoạch projection trước.
 - AWS khuyến nghị: **dùng GSI làm mặc định**, chỉ dùng LSI khi **cần strong consistency**.
 - Base table thiết kế PK/SK cho **access pattern chính**; index phục vụ **access pattern phụ** (ví dụ team security/data science chỉ quan tâm alarm) — cùng dữ liệu, nhiều góc nhìn.
 
@@ -81,7 +83,8 @@ flowchart LR
 - "Cần alternative **sort key** nhưng giữ PK" → LSI. "Cần **partition key khác**" → GSI.
 - "Index cần **strongly consistent read**" → LSI (GSI chỉ eventual).
 - LSI dùng chung capacity với table; GSI có capacity riêng — một GSI bị thiếu WCU có thể gây throttle ghi lên base table (kiến thức bổ sung).
-- Projection không đủ attribute → query tốn kém; project quá nhiều → index tốn capacity/storage.
+- Projection không đủ attribute → LSI phải fetch từ base table (tốn kém), GSI thì không trả được attribute đó; project quá nhiều → index tốn capacity/storage.
+- LSI **không thêm sau và không xóa được** khi table đã tạo.
 
 ## Liên kết
 - Tiên quyết: [[DynamoDB Architecture]], [[DynamoDB Operations and Performance]]

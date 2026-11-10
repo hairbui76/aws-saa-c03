@@ -12,14 +12,14 @@
   ]
  },
  "DynamoDB Operations and Performance - consistency": {
-  "sig": "7-1my5kzk",
+  "sig": "7-1p29s22",
   "steps": [
    "Sơ đồ này nói về consistency và capacity mode. Mỗi item được sao chép ra nhiều storage node ở các AZ khác nhau, với một node làm leader.",
    "Bước đầu tiên, mọi lệnh ghi luôn đi vào leader node. Leader có dữ liệu mới nhất ngay lập tức, nên nó được xem là consistent.",
-   "Strongly consistent read luôn đọc từ leader, nên luôn ra dữ liệu mới nhất, giá đầy đủ 1 RCU cho 4 KB mỗi giây. Nếu leader hỏng, DynamoDB tự bầu leader mới.",
-   "Leader sao chép sang các node khác trong vài millisecond. Eventually consistent read đọc node ngẫu nhiên, rẻ một nửa, nhưng hiếm khi có thể ra dữ liệu cũ. Khi thi, cần dữ liệu mới nhất như tồn kho hay y tế thì chọn strongly consistent.",
-   "Về capacity mode, on-demand không cần đặt gì, trả tiền theo request. Phù hợp tải khó đoán, ứng dụng mới ra mắt, hoặc khi muốn ít quản trị nhất.",
-   "Provisioned thì bạn đặt RCU và WCU cho từng table, có thể kèm auto scaling và reserved capacity. Phù hợp tải ổn định và muốn tối ưu chi phí.",
+   "Strongly consistent read luôn đọc từ leader nên luôn ra dữ liệu mới nhất, giá đầy đủ 1 RCU cho 4 KB mỗi giây. Nó không phải mặc định, bạn phải yêu cầu rõ trên từng lệnh đọc. Nếu leader hỏng, DynamoDB tự bầu leader mới.",
+   "Leader sao chép sang các node khác trong vài millisecond. Eventually consistent read là mặc định, đọc node ngẫu nhiên, rẻ một nửa ở cả provisioned lẫn on-demand, nhưng hiếm khi có thể ra dữ liệu cũ. Cần dữ liệu mới nhất như tồn kho hay y tế thì chọn strongly consistent.",
+   "Về capacity mode, on-demand nay là mặc định: không đặt gì, trả theo request unit. Hợp với tải khó đoán, table chỉ bận vài giờ mỗi ngày, hoặc khi muốn ít quản trị nhất.",
+   "Provisioned thì bạn đặt RCU và WCU cho từng table, có thể kèm auto scaling với minimum, maximum và target utilization, cùng reserved capacity. Nó chỉ rẻ hơn khi capacity được dùng đều đặn.",
    "Lưu ý khi thi: burst pool chỉ bằng 300 giây capacity, đừng dựa vào nó. Hết pool sẽ bị throttle với lỗi ProvisionedThroughputExceededException, cách xử lý là retry với exponential backoff hoặc tăng capacity."
   ]
  }

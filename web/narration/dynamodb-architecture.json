@@ -12,12 +12,12 @@
   ]
  },
  "DynamoDB Architecture - backup": {
-  "sig": "4-1v1kpr9",
+  "sig": "4-15lh0dk",
   "steps": [
-   "Sơ đồ này so sánh hai kiểu backup của DynamoDB. On-demand là bản full do bạn tự tạo và tự xóa, còn PITR ghi liên tục và restore tới từng giây trong 35 ngày.",
-   "On-demand backup giống manual snapshot của RDS, bạn chủ động tạo và nó tồn tại tới khi bạn xóa. PITR thì tắt mặc định, phải bật riêng cho từng table, sau đó tự ghi mọi thay đổi trong cửa sổ 35 ngày.",
+   "Sơ đồ này so sánh hai kiểu backup của DynamoDB. On-demand là bản full do bạn tự tạo và tự xóa, còn PITR ghi liên tục và restore tới từng giây trong một recovery window cấu hình được từ 1 tới 35 ngày.",
+   "On-demand backup giống manual snapshot của RDS, bạn chủ động tạo và nó tồn tại tới khi bạn xóa. PITR thì tắt mặc định, phải bật riêng cho từng table, sau đó tự ghi mọi thay đổi trong recovery window từ 1 tới 35 ngày.",
    "Bản on-demand có thể restore cùng region hoặc sang region khác, được chọn giữ hay bỏ index và đổi cấu hình encryption. PITR luôn restore ra một table mới, tại thời điểm bất kỳ với độ mịn 1 giây.",
-   "Lời nhắc khi đi thi: đề hỏi khôi phục về thời điểm bất kỳ trong vài tuần qua thì bật PITR. Còn nếu cần DR đa region gần như không mất dữ liệu, Global Tables tốt hơn restore backup cross-region."
+   "Lời nhắc khi đi thi: đề hỏi khôi phục về thời điểm bất kỳ trong vài tuần qua thì bật PITR, cửa sổ 1 tới 35 ngày, độ mịn 1 giây, luôn ra table mới. Còn nếu cần DR đa region gần như không mất dữ liệu, Global Tables tốt hơn restore backup cross-region."
   ]
  }
 }

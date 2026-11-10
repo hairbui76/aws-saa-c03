@@ -100,11 +100,18 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Relational, tải thất thường, dev/test tắt khi rảnh | **Aurora Serverless** | [[Aurora Serverless]] |
 | DR cross-region relational, RPO ~1 s | **Aurora Global Database** | [[Aurora Global Database]] |
 | Chi phí I/O chiếm phần lớn hóa đơn Aurora (≥ ~25%), muốn giá dễ đoán | **Aurora I/O-Optimized** | [[Aurora]] |
-| NoSQL ghi ở nhiều region (active-active) | **DynamoDB Global Tables** | [[DynamoDB Global Tables]] |
+| NoSQL ghi ở nhiều region (active-active) | **DynamoDB Global Tables** (MREC mặc định; strong ở mọi region → MRSC) | [[DynamoDB Global Tables]] |
 | Cache DynamoDB, microsecond | **DAX** | [[DAX]] |
-| Cache generic, session store, sub-ms | **ElastiCache** (Redis nếu cần HA/backup) | [[ElastiCache]] |
-| Data warehouse, OLAP, petabyte | **Redshift** | [[Redshift]] |
-| SQL ad-hoc trên S3/log, serverless | **Athena** | [[Athena]] |
+| Cache generic, session store, sub-ms | **ElastiCache** (Valkey / Redis OSS nếu cần HA/backup) | [[ElastiCache]] |
+| Data warehouse, OLAP, petabyte | **Redshift** (tải biến động, không quản capacity → Redshift Serverless) | [[Redshift]] |
+| SQL ad-hoc trên S3/log, serverless | **Athena** (pipeline PySpark serverless → Athena for Apache Spark) | [[Athena]] |
+| Graph, quan hệ thay đổi liên tục (social, fraud, recommendation) | **Neptune** | [[Amazon Neptune]] |
+| Search, log analytics near real-time, Elasticsearch / Kibana | **OpenSearch** | [[Amazon OpenSearch Service]] |
+| S3 data lake cần quyền theo cột / hàng / table | **Lake Formation** | [[AWS Lake Formation]] |
+| Hadoop, Hive, HBase, Presto, Spark quy mô lớn | **EMR** (Spot cho task node) | [[Amazon EMR]] |
+| Dashboard, visualization, BI | **QuickSight** | [[Amazon QuickSight]] |
+| Lấy / bán dataset bên thứ ba | **Data Exchange** | [[AWS Data Exchange]] |
+| Đã dùng Apache Kafka, không muốn quản broker | **MSK** (xây mới native → Kinesis Data Streams) | [[Amazon MSK]] |
 
 ### Decoupling & Serverless
 | Từ khóa trong đề | Chọn | Note |
@@ -349,7 +356,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | Lambda | Timeout 15 phút; memory 128 MB–10 GB; /tmp 512 MB–10 GB |
 | API Gateway | Timeout 29 s (504); cache 500 MB–237 GB, TTL 300 s (max 3.600 s); 429 = throttling |
 | Step Functions | Standard ≤ 1 năm; Express ≤ 5 phút |
-| DynamoDB | Item ≤ 400 KB; RCU 4 KB, WCU 1 KB; PITR 35 ngày; Streams 24 h |
+| DynamoDB | Item ≤ 400 KB; RCU 4 KB, WCU 1 KB; on-demand mặc định, provisioned → on-demand ≤ 4 lần / 24 h; PITR 1–35 ngày; Streams 24 h; LSI ≤ 5, GSI 20 |
 | RDS | Automated backup ≤ 35 ngày; PITR ~5 phút; Multi-AZ failover 60–120 s (Multi-AZ Cluster ~35 s); IAM DB auth token 15 phút |
 | Aurora | 6 bản sao / 3 AZ; 15 replica; 256 TiB (storage co giãn lên xuống); billing theo giây, tối thiểu 10 phút; I/O-Optimized khi I/O ≥ ~25% chi phí |
 | Aurora Global | Replication ~1 s, RTO < 1 phút; tối đa 10 secondary region; 16 replica mỗi secondary |
@@ -362,7 +369,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | Snow | Snowball kinh tế 10 TB–10 PB; Snowmobile ≥ 10 PB (tới 100 PB), một site |
 | Storage Gateway | Stored 16 TB/volume × 32 = 512 TB; Cached 32 TB/volume × 32 = 1 PB |
 | AWS Backup | Cold storage ≥ 90 ngày; Vault Lock compliance cool-off ≥ 72 h; continuous backup PITR tới 35 ngày |
-| Redshift | Auto snapshot ~8 h hoặc 5 GB; retention 1 ngày mặc định, tối đa 35 |
+| Redshift | Auto snapshot ~8 h hoặc 5 GB; retention 1 ngày mặc định, tối đa 35; Serverless cần ≥ 2 subnet / 2 AZ (Enhanced VPC Routing: 3) |
 | ELB | 4 loại: CLB (v1, legacy), ALB, NLB, GWLB (v2) |
 | EFS | Throughput: **Elastic** (mặc định), Bursting, Provisioned; Max I/O là legacy |
 
@@ -423,6 +430,8 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 - Multi-AZ (instance) không scale đọc; read replica không tự failover ([[RDS Multi-AZ]]).
 - Data corruption: restore PITR, không dùng read replica vì replica cũng hỏng theo ([[RDS Backups and Restore]]).
 - "Không được sửa code" thì ElastiCache gần như sai. Cân nhắc read replica hoặc DAX ([[ElastiCache]]).
+- DAX không cache strongly consistent read; GSI chỉ eventual và không fetch attribute chưa project; LSI không thêm sau, không xóa được ([[DAX]], [[DynamoDB Indexes LSI and GSI]]).
+- Lake Formation vô nghĩa nếu user còn quyền S3 trực tiếp: phải gỡ quyền S3 của user ([[AWS Lake Formation]]).
 - Firehose là **near real-time**. Đề đòi real-time thì chọn Kinesis Data Streams ([[Kinesis Data Firehose]]).
 - Standard queue không đổi sang FIFO tại chỗ. Phải tạo queue mới đuôi `.fifo` ([[SQS Standard vs FIFO]]).
 - Message xử lý trùng: tăng visibility timeout, không phải delay queue ([[SQS Delay Queues]]).

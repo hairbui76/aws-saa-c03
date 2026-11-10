@@ -1,0 +1,15 @@
+{
+ "AWS Lake Formation": {
+  "sig": "8-1hik8ba",
+  "steps": [
+   "Sơ đồ này nói về AWS Lake Formation. S3 cộng Glue Data Catalog tạo thành data lake theo kiểu schema-on-read. Bucket policy chỉ thấy bucket, prefix và object, còn Lake Formation cấp quyền theo database, table, cột và hàng.",
+   "Aus-E-Mart đổ dữ liệu từ nhiều nguồn vào bucket aem-datalake ở dạng nguyên gốc: file CSV của kho mỗi đêm, clickstream qua Firehose, access log của ALB hay CloudFront, và bảng orders trong RDS qua Lake Formation Blueprint. Bucket chỉ là bucket S3 bình thường.",
+   "Bob phân tích clickstream bằng Athena. Grant của Bob kèm data filter theo hàng, chỉ thấy dữ liệu từ thiết bị mobile. Athena đi qua Glue Data Catalog, nơi định nghĩa database aem_lake với bốn table.",
+   "Julie ở phòng finance dùng QuickSight làm dashboard đơn hàng. Grant của Julie loại bỏ cột email, nên cô thấy table orders nhưng không bao giờ thấy email.",
+   "Catalog hỏi Lake Formation xem request có được phép không. Quyền có thể cấp theo tên hoặc theo LF-Tag, kèm data filter, và share được sang account khác qua RAM mà dữ liệu không di chuyển.",
+   "Lake Formation đưa temporary credentials cho đúng request đó thông qua registration role, role đăng ký cùng S3 location và có quyền S3.",
+   "Chỉ registration role thực sự đọc bucket. Bob và Julie không hề có quyền S3 của riêng mình.",
+   "Khi đi thi, nhớ: nếu user còn quyền đọc thẳng S3 thì họ vượt qua mọi grant, vì Lake Formation chỉ kiểm soát engine đi qua catalog như Athena, Redshift Spectrum, EMR, Glue ETL, QuickSight. S3 data lake cần quyền theo cột, hàng, table thì chọn Lake Formation."
+  ]
+ }
+}

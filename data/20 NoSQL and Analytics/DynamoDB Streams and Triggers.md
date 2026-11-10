@@ -2,6 +2,7 @@
 tags: [saa-c03, s20-nosql-and-analytics, database, dynamodb, serverless, event-driven]
 aliases: [DynamoDB Streams, DynamoDB Triggers, DDB Streams, Stream View Types]
 lessons: ["0354 DynamoDB Streams Lambda Triggers"]
+videos: ["339 [ASSOCIATESHARED] DynamoDB Streams and Triggers"]
 ---
 # DynamoDB Streams and Triggers
 
@@ -17,7 +18,7 @@ lessons: ["0354 DynamoDB Streams Lambda Triggers"]
 - Ghi lại **theo thứ tự** mọi thay đổi trên item: **insert, update, delete**.
 - **Rolling window 24 giờ**.
 - Bật **theo từng table** (mặc định tắt).
-- Kiến trúc nền tương tự Kinesis (shard), như Adrian giới thiệu — xem [[Kinesis Data Streams]]. (Ngoài DynamoDB Streams, hiện DynamoDB còn tùy chọn đẩy change data thẳng vào Kinesis Data Streams với thời gian lưu dài hơn.)
+- Nghe giống Kinesis nhưng **không phải Kinesis**: Streams là tính năng **native của DynamoDB**. Nếu muốn, DynamoDB có tùy chọn **tích hợp với Kinesis** ([[Kinesis Data Streams]]) thay cho DynamoDB Streams. (Bản khóa cũ giới thiệu kiến trúc nền của Streams tương tự Kinesis, với shard.)
 
 ### Stream view types
 Mỗi stream chọn một view type, quyết định nội dung mỗi record. Ví dụ: một item bị **xóa attribute thứ 4**.
@@ -42,20 +43,23 @@ flowchart LR
 
 1. Item thay đổi trong table đã bật stream.
 2. Stream record được thêm vào stream (nội dung theo view type).
-3. **Lambda function** được invoke, nhận dữ liệu view làm **event** — chính lần invoke này là "trigger".
+3. **Lambda function** được invoke, nhận dữ liệu view làm **event** — chính lần invoke này là "trigger". Phía Lambda gọi là **event source mapping**: Lambda **poll stream** và invoke function với **từng batch record**.
 
 - Event-driven, giống trigger của Oracle nhưng **serverless**: không phải poll database, chỉ tốn compute khi thực sự có thay đổi → rẻ và hiệu quả. Xem [[Event-Driven Architecture]].
 
 ### Use case
-- **Reporting / analytics**: báo cáo khi mức tồn kho đổi, thống kê sản phẩm phổ biến.
-- **Aggregation**: kiểm phiếu cho app bình chọn, tổng hợp tồn kho.
-- **Messaging / notification**: app chat nhóm lưu tin nhắn trong DynamoDB → trigger gửi **push notification** cho thành viên (có thể qua [[SNS]]).
+Ví dụ của bài là cửa hàng Aus-E-Mart:
+- **Reporting / analytics**: mỗi lần tồn kho của một sản phẩm (ví dụ Croc Cap) đổi → trigger cập nhật báo cáo **low stock** trực tiếp, không cần job chạy theo lịch.
+- **Aggregation**: mỗi đơn hàng ghi vào table orders → trigger cập nhật **tổng doanh số trong ngày** theo sản phẩm.
+- **Notification**: sản phẩm hết hàng có hàng trở lại → một lần update item kích hoạt **push notification** tới mọi khách đang chờ (có thể qua [[SNS]]).
+- (Bản khóa cũ dùng ví dụ kiểm phiếu cho app bình chọn và app chat nhóm gửi push notification.)
 
 ## 🎯 Mẹo thi SAA-C03
 - "Thực hiện hành động **khi dữ liệu trong DynamoDB thay đổi**", "trigger", "event-driven, serverless, không polling" → **DynamoDB Streams + Lambda**.
 - Nhớ **4 view type** và **24 giờ** retention.
 - Cần cả trạng thái trước và sau mà không đọc lại table → **NEW_AND_OLD_IMAGES**.
-- Streams phải **bật theo table**; streams cũng là nền tảng cho [[DynamoDB Global Tables]] (replication giữa region).
+- Streams phải **bật theo table**; streams cũng là nền tảng cho [[DynamoDB Global Tables]] (replication giữa region; bổ sung, bài không nói).
+- DynamoDB Streams là tính năng native, **không phải Kinesis**; Lambda đọc stream qua **event source mapping** (poll, xử lý theo batch).
 - Phân biệt: [[S3 Events]] cho thay đổi object S3; [[EventBridge]] cho event của dịch vụ AWS nói chung; DynamoDB Streams cho thay đổi **item** trong table.
 
 ## Liên kết

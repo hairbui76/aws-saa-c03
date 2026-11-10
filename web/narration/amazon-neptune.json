@@ -1,0 +1,12 @@
+{
+ "Amazon Neptune": {
+  "sig": "5-9pbss9",
+  "steps": [
+   "Sơ đồ này nói về Amazon Neptune, graph database managed. Trong graph database, quan hệ quan trọng ngang với dữ liệu: node là những thứ được lưu, có label và property, còn relationship có hướng, có tên, thay đổi linh hoạt và truy vấn được như node.",
+   "Ví dụ của bài: Whiskers có minion là Bob và Julie, có kẻ thù là Woofie, còn thẻ tín dụng thuộc về Bob. Về hạ tầng, Neptune giống RDS hay Aurora: chạy trong VPC, private mặc định, có instance ghi và read replica ở AZ khác. Public endpoint phải opt-in từng instance và bắt buộc IAM database authentication.",
+   "Bob sống ở căn nhà, Julie từng ghé thăm căn nhà đó. Quan hệ có thể thêm hay đổi bất cứ lúc nào. Thêm read replica ở AZ thứ ba giúp scale đọc và tăng resilience với Multi-AZ.",
+   "Neptune có continuous backup vào S3 và point in time recovery, Neptune Serverless tự scale theo NCU, Global Database với một region ghi và tối đa 5 region chỉ đọc, và Neptune Analytics chạy thuật toán graph trong bộ nhớ. Relational cũng lưu được quan hệ, nhưng truy vấn quan hệ phức tạp rất nặng.",
+   "Khi đi thi, thấy graph, quan hệ thay đổi liên tục như mạng xã hội, phát hiện gian lận, recommendation engine, network và IT operations, life sciences hay knowledge graph cho GenAI thì chọn Neptune. Relational thì RDS hoặc Aurora, key value thì DynamoDB."
+  ]
+ }
+}

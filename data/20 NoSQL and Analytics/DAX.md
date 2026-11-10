@@ -2,6 +2,7 @@
 tags: [saa-c03, s20-nosql-and-analytics, database, dynamodb, caching, performance]
 aliases: [DynamoDB Accelerator, Amazon DAX, DynamoDB DAX]
 lessons: ["0356 DynamoDB Accelerator DAX"]
+videos: ["340 [ASSOCIATESHARED] DynamoDB Accelerator (DAX)"]
 ---
 # DAX
 
@@ -49,7 +50,7 @@ sequenceDiagram
   - **Item cache**: item lấy bằng `GetItem` / `BatchGetItem` (chỉ định PK, và SK nếu có).
   - **Query cache**: tập item từ `Query` / `Scan` **kèm tham số** của lệnh → chạy lại đúng query/scan đó thì trả kết quả từ cache.
 - Hiệu năng: **cache hit ~ microseconds** (ví dụ ~400 µs); **cache miss ~ single-digit ms** (như DynamoDB thường).
-- **Write-through**: ghi qua DAX SDK thì dữ liệu được ghi vào DynamoDB **và** vào cache cùng lúc. Khi miss lúc đọc, dữ liệu được ghi vào primary node rồi replicate sang replica.
+- **Write-through**: ghi qua DAX SDK thì dữ liệu được ghi vào **DynamoDB trước**; ghi thành công thì DAX mới ghi cùng dữ liệu vào cache. **Ghi DynamoDB lỗi thì không có gì được cache.** Khi miss lúc đọc, dữ liệu được ghi vào primary node rồi replicate sang replica.
 - **Scaling**: scale **up** (node lớn hơn) và scale **out** (thêm node).
 
 ```mermaid
@@ -69,8 +70,8 @@ flowchart LR
 
 | Hợp với DAX | Không hợp với DAX |
 |---|---|
-| Workload **đọc nhiều** hoặc **bursty**, đọc lặp lại cùng dữ liệu | Ứng dụng cần **strongly consistent read** |
-| Đang phải đặt **RCU rất cao** (đắt) — cache giúp giảm chi phí | Ứng dụng **không nhạy latency** |
+| Workload **đọc nhiều** (chấp nhận eventual consistency) hoặc **bursty**, đọc lặp lại cùng dữ liệu | Ứng dụng cần **strongly consistent read** (đi thẳng xuống DynamoDB, **kết quả không được cache**) |
+| Đang phải đặt **RCU rất cao** (đắt) — cache giúp giảm chi phí | Ứng dụng **không nhạy latency** (bản khóa cũ nêu) |
 | Hiệu năng kém vào **mùa sale**, có item/table "nóng" | Workload **write-heavy**, hiếm khi đọc |
 | Dữ liệu dùng lệch (ví dụ time series gần đây được đọc nhiều) | |
 | Cần **response time cực thấp** (microsecond) | |

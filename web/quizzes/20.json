@@ -16,15 +16,15 @@
       },
       {
         "type": "single",
-        "q": "Amazon Athena tính phí chủ yếu dựa trên yếu tố nào (ngoài phí lưu trữ S3 của dữ liệu gốc)?",
+        "q": "Một đội data cần chạy pipeline ETL nhiều bước bằng PySpark trên dữ liệu trong S3 (đọc, làm sạch, đổi hình dạng, ghi ra) mà không muốn quản cluster hay EC2. Họ đang chạy SQL trong workgroup primary của Athena. Cách nào đúng?",
         "options": [
-          "Số giờ chạy của query engine được provision trước",
-          "Số lượng table và database được định nghĩa trong Athena",
-          "Số node compute được chọn khi tạo workgroup",
-          "Lượng dữ liệu mà mỗi query quét"
+          "Đổi analytics engine của workgroup primary từ SQL sang Apache Spark",
+          "Tạo workgroup mới chọn engine Apache Spark, viết PySpark trong notebook; trả tiền theo DPU-giờ khi session chạy",
+          "Giữ engine SQL và mua capacity reservation để chạy PySpark",
+          "Dựng một EMR cluster trên EC2 chạy liên tục"
         ],
-        "answer": [3],
-        "explain": "Athena không có chi phí base, không tính theo giờ; chỉ trả cho lượng dữ liệu mà query đọc (khoảng 5 USD/TB quét). Athena không có node hay cluster nào để provision."
+        "answer": [1],
+        "explain": "Athena for Apache Spark là nền tảng Spark serverless: viết PySpark trong notebook, Spark session chạy trên DPU tự scale, trả theo DPU-giờ. Engine chọn khi tạo workgroup và không đổi được; capacity reservation chỉ dành cho SQL. EMR trên EC2 thì phải quản cluster."
       },
       {
         "type": "single",
@@ -57,11 +57,11 @@
         "options": [
           "Dùng S3 Select trên từng object rồi ghép kết quả trong ứng dụng",
           "Export định kỳ DynamoDB và RDS sang S3 bằng AWS Glue job",
-          "Dùng Athena Federated Query với data source connector chạy trên AWS Lambda",
+          "Dùng Athena Federated Query với data source connector",
           "Dùng Redshift Spectrum để query DynamoDB và RDS"
         ],
         "answer": [2],
-        "explain": "Athena Federated Query dùng connector chạy trên Lambda để query nguồn không phải S3 như DynamoDB, RDS, CloudWatch Logs, DocumentDB hay nguồn JDBC. Export bằng Glue vẫn phải di chuyển dữ liệu; Redshift Spectrum query dữ liệu trên S3 chứ không phải DynamoDB."
+        "explain": "Athena Federated Query dùng data source connector (đi qua AWS Glue hoặc Lambda) để query nguồn không phải S3 như DynamoDB, CloudWatch Logs, DocumentDB, MySQL, PostgreSQL, Oracle, SQL Server. Export bằng Glue vẫn phải di chuyển dữ liệu; Redshift Spectrum query dữ liệu trên S3 chứ không phải DynamoDB."
       }
     ],
     "DAX": [
@@ -156,13 +156,13 @@
         "type": "single",
         "q": "Phát biểu nào đúng về Point-in-time Recovery (PITR) của DynamoDB?",
         "options": [
-          "PITR tắt mặc định, bật theo từng table, cho phép restore ra table mới tại bất kỳ thời điểm nào trong 35 ngày với độ mịn 1 giây",
+          "PITR tắt mặc định, bật theo từng table, cho phép restore ra table mới tại bất kỳ thời điểm nào trong recovery window (cấu hình 1–35 ngày) với độ mịn 1 giây",
           "PITR bật mặc định cho mọi table và restore ghi đè lên table hiện tại",
           "PITR giữ thay đổi trong 7 ngày với độ mịn 5 phút",
           "PITR chỉ restore được về các mốc snapshot tạo thủ công"
         ],
         "answer": [0],
-        "explain": "PITR mặc định tắt, phải bật riêng từng table; khi bật sẽ ghi liên tục thay đổi trong cửa sổ 35 ngày và restore ra table mới với granularity 1 giây. Snapshot thủ công là on-demand backup, một tính năng khác."
+        "explain": "PITR mặc định tắt, phải bật riêng từng table; khi bật sẽ ghi liên tục thay đổi trong recovery window cấu hình được từ 1 đến 35 ngày và restore ra table mới với granularity 1 giây. Snapshot thủ công là on-demand backup, một tính năng khác."
       },
       {
         "type": "single",
@@ -204,15 +204,15 @@
       },
       {
         "type": "single",
-        "q": "Trong DynamoDB Global Tables, nếu cùng một item bị ghi gần như đồng thời ở hai region khác nhau thì xung đột được giải quyết thế nào?",
+        "q": "Trong DynamoDB Global Tables dùng chế độ mặc định (MREC), nếu cùng một item bị ghi gần như đồng thời ở hai region khác nhau thì xung đột được giải quyết thế nào?",
         "options": [
           "Region được chỉ định làm master luôn thắng",
-          "Ghi thứ hai bị từ chối với ConditionalCheckFailedException",
+          "Không có cơ chế nào, cả hai region giữ giá trị riêng mãi mãi",
           "Hai phiên bản được giữ song song để ứng dụng tự chọn",
           "Last writer wins: bản ghi mới nhất thắng và được replicate lên mọi replica"
         ],
         "answer": [3],
-        "explain": "Global Tables dùng cơ chế last writer wins, đơn giản và kết quả dễ dự đoán. Không có region master vì mọi replica table ngang hàng (multi-master)."
+        "explain": "Với MREC, Global Tables dùng cơ chế last writer wins, đơn giản và kết quả dễ dự đoán. Không có region master vì mọi replica table ngang hàng (multi-active). Chỉ ở chế độ MRSC thì lệnh ghi xung đột mới bị từ chối và ứng dụng phải retry."
       },
       {
         "type": "single",
@@ -224,7 +224,7 @@
           "Không đọc được cho tới khi replication hoàn tất ở mọi region"
         ],
         "answer": [0],
-        "explain": "Strongly consistent read chỉ có trong cùng region nơi ghi; giữa các region luôn là eventually consistent do replication bất đồng bộ (thường dưới 1 giây). Chế độ multi-Region strong consistency mới hơn không phải trọng tâm của khóa học và đề thi."
+        "explain": "Ở chế độ mặc định MREC, strongly consistent read chỉ có trong cùng region nơi ghi; giữa các region luôn là eventually consistent do replication bất đồng bộ (thường dưới 1 giây). Muốn strongly consistent read ở mọi region thì phải tạo global table ở chế độ MRSC."
       },
       {
         "type": "single",
@@ -240,15 +240,15 @@
       },
       {
         "type": "single",
-        "q": "Một ứng dụng toàn cầu cần database quan hệ dùng SQL, với một region chính nhận ghi và các region khác phục vụ đọc với latency thấp. Giải pháp nào phù hợp?",
+        "q": "Một ứng dụng tài chính dùng DynamoDB Global Tables ở ba region, yêu cầu mọi lần đọc ở bất kỳ region nào cũng thấy dữ liệu mới nhất và không bao giờ có lệnh ghi bị ghi đè âm thầm. Chấp nhận ghi chậm hơn. Cấu hình nào phù hợp?",
         "options": [
-          "DynamoDB Global Tables",
-          "Amazon Aurora Global Database",
-          "DynamoDB với DAX ở mỗi region",
-          "Amazon ElastiCache for Redis Global Datastore làm database chính"
+          "Global table chế độ MREC, đọc với ConsistentRead ở mọi region",
+          "Global table chế độ MRSC, chọn khi tạo global table",
+          "Tạo global table MREC rồi đổi sang MRSC khi cần",
+          "Một DAX cluster ở mỗi region trước global table"
         ],
         "answer": [1],
-        "explain": "Yêu cầu relational/SQL toàn cầu với một region ghi và region phụ chỉ đọc là đặc trưng của Aurora Global Database. Global Tables là NoSQL multi-master, không hỗ trợ SQL quan hệ."
+        "explain": "MRSC replicate đồng bộ nên strongly consistent read được ở mọi region; ghi chậm hơn và lệnh ghi xung đột bị từ chối để app retry, không ghi đè âm thầm. MREC chỉ strong trong region vừa ghi và dùng last writer wins. Consistency mode chọn lúc tạo, không đổi được."
       }
     ],
     "DynamoDB Indexes LSI and GSI": [
@@ -519,7 +519,7 @@
         "type": "single",
         "q": "Một công ty cần giảm tải đọc cho database Aurora MySQL nhưng có yêu cầu không được thay đổi logic code ứng dụng (chỉ được đổi endpoint đọc). Giải pháp nào phù hợp nhất?",
         "options": [
-          "Amazon ElastiCache for Redis",
+          "Amazon ElastiCache for Valkey",
           "Amazon ElastiCache for Memcached",
           "Thêm Aurora Replicas và dùng reader endpoint cho các lần đọc",
           "DynamoDB Accelerator (DAX)"
@@ -541,7 +541,7 @@
       },
       {
         "type": "multi",
-        "q": "Một công ty đang chọn engine cho ElastiCache. Hai yêu cầu nào chỉ Redis đáp ứng còn Memcached thì không? (Chọn 2)",
+        "q": "Một công ty đang chọn engine cho ElastiCache. Hai yêu cầu nào chỉ Valkey / Redis OSS đáp ứng còn Memcached thì không? (Chọn 2)",
         "options": [
           "Replication qua nhiều AZ để đạt high availability",
           "Độ trễ truy cập sub-millisecond",
@@ -550,33 +550,33 @@
           "Kiến trúc multi-threaded tận dụng CPU nhiều core"
         ],
         "answer": [0, 3],
-        "explain": "Chỉ Redis có replication/Multi-AZ và backup/restore. Sub-millisecond và hỗ trợ nhiều ngôn ngữ là đặc điểm chung của cả hai; multi-threaded là ưu điểm của Memcached."
+        "explain": "Chỉ Valkey và Redis OSS có replication/Multi-AZ và backup/restore. Sub-millisecond và hỗ trợ nhiều ngôn ngữ là đặc điểm chung của mọi engine; multi-threaded là ưu điểm của Memcached."
       },
       {
         "type": "single",
         "q": "Một đội cần một lớp cache đơn giản (dữ liệu dạng string), muốn tận dụng tối đa CPU nhiều core qua kiến trúc multi-threaded, và chấp nhận mất dữ liệu cache khi node hỏng. Engine nào phù hợp nhất?",
         "options": [
-          "ElastiCache for Redis với cluster mode",
+          "ElastiCache for Valkey với replica nhiều AZ",
           "DynamoDB Accelerator (DAX)",
-          "ElastiCache for Redis với Multi-AZ",
+          "ElastiCache for Redis OSS với Multi-AZ",
           "ElastiCache for Memcached"
         ],
         "answer": [3],
-        "explain": "Memcached có cấu trúc dữ liệu đơn giản, multi-threaded và không có persistence, phù hợp khi chấp nhận mất dữ liệu. Redis hợp khi cần HA, backup, transactions hay cấu trúc dữ liệu nâng cao."
+        "explain": "Memcached có cấu trúc dữ liệu đơn giản, multi-threaded và không có persistence, phù hợp khi chấp nhận mất dữ liệu. Valkey hoặc Redis OSS hợp khi cần HA, backup, transactions hay cấu trúc dữ liệu nâng cao."
       }
     ],
     "Redshift": [
       {
         "type": "single",
-        "q": "Một doanh nghiệp muốn gom dữ liệu từ nhiều database OLTP (RDS, Aurora) về một nơi để phân tích xu hướng dài hạn và chạy báo cáo BI trên dữ liệu quy mô petabyte. Dịch vụ nào phù hợp nhất?",
+        "q": "Một doanh nghiệp muốn gom dữ liệu từ nhiều database OLTP (RDS, Aurora) vào một data warehouse để chạy báo cáo BI quy mô lớn. Nhu cầu phân tích lúc nhiều lúc ít, đội vận hành không muốn chọn node hay quản lý capacity và không muốn trả tiền khi warehouse rảnh. Giải pháp nào phù hợp nhất?",
         "options": [
+          "Amazon Redshift provisioned cluster với reserved node",
+          "Amazon Redshift Serverless",
           "Amazon RDS for PostgreSQL với read replicas",
-          "Amazon DynamoDB",
-          "Amazon Redshift",
-          "Amazon ElastiCache for Redis"
+          "Amazon Athena trên dữ liệu export ra S3"
         ],
-        "answer": [2],
-        "explain": "Redshift là data warehouse OLAP, lưu theo cột, quy mô petabyte, dùng cho reporting và analytics dài hạn. RDS là OLTP lưu theo hàng, không tối ưu cho truy vấn phân tích tổng hợp."
+        "answer": [1],
+        "explain": "Data warehouse OLAP cho BI là Redshift; tải biến động, không muốn quản lý capacity và không trả tiền khi rảnh là Redshift Serverless (base và max RPU, tính theo RPU-giây). Provisioned hợp với tải ổn định, nặng; Athena dành cho query ad-hoc trên S3, không có warehouse."
       },
       {
         "type": "single",
@@ -624,7 +624,447 @@
           "Là full snapshot mỗi lần và được lưu trên EBS trong cùng AZ với cluster"
         ],
         "answer": [2],
-        "explain": "Automatic snapshot chạy khoảng mỗi 8 giờ hoặc 5 GB thay đổi, incremental, lưu trên S3, retention mặc định 1 ngày và tối đa 35 ngày. Manual snapshot mới là loại không tự hết hạn."
+        "explain": "Automatic snapshot chạy khoảng mỗi 8 giờ hoặc 5 GB thay đổi, incremental, lưu trên S3, retention mặc định 1 ngày và cấu hình được (tối đa 35 ngày). Manual snapshot mới là loại không tự hết hạn."
+      }
+    ],
+    "Amazon Neptune": [
+      {
+        "type": "single",
+        "q": "Một mạng xã hội cần lưu người dùng và các quan hệ follow, kết bạn, hủy kết bạn thay đổi liên tục, và thường truy vấn \"bạn của bạn\" nhiều cấp. Database nào phù hợp nhất?",
+        "options": [
+          "Amazon RDS for PostgreSQL với nhiều bảng nối (JOIN)",
+          "Amazon DynamoDB với GSI",
+          "Amazon Neptune",
+          "Amazon Redshift"
+        ],
+        "answer": [2],
+        "explain": "Dữ liệu mà quan hệ quan trọng ngang dữ liệu và thay đổi liên tục là graph, chọn Neptune. Relational coi quan hệ là công dân hạng hai, truy vấn quan hệ nhiều cấp rất nặng; DynamoDB là key-value; Redshift là data warehouse OLAP."
+      },
+      {
+        "type": "single",
+        "q": "Đội chống gian lận muốn phát hiện mẫu bất thường như một thẻ tín dụng được dùng bởi nhiều người ở các địa chỉ khác nhau, dựa trên quan hệ giữa người, địa chỉ và thẻ. Dịch vụ nào phù hợp?",
+        "options": [
+          "Amazon Neptune",
+          "Amazon ElastiCache for Valkey",
+          "Amazon Athena",
+          "Amazon Kinesis Data Streams"
+        ],
+        "answer": [0],
+        "explain": "Phát hiện gian lận dựa trên quan hệ (ai ở đâu, ai dùng thẻ nào) là use case điển hình của graph database, tức Neptune. Các dịch vụ còn lại không được thiết kế cho truy vấn theo quan hệ."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần cho ứng dụng bên ngoài VPC kết nối tới Amazon Neptune qua public endpoint. Điều gì đúng?",
+        "options": [
+          "Neptune luôn public như DynamoDB nên không cần làm gì",
+          "Phải opt-in public endpoint cho từng instance và bắt buộc cấu hình IAM database authentication",
+          "Chỉ cần gắn Elastic IP cho cluster",
+          "Neptune không hỗ trợ public endpoint trong mọi trường hợp"
+        ],
+        "answer": [1],
+        "explain": "Neptune chạy trong VPC, private mặc định. Muốn public endpoint phải opt-in theo từng instance và bắt buộc IAM database authentication."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về Amazon Neptune? (Chọn 2)",
+        "options": [
+          "Neptune Global Database có một region ghi và tối đa 5 region phụ chỉ đọc",
+          "Neptune Serverless scale compute theo đơn vị RCU và WCU",
+          "Neptune hỗ trợ Multi-AZ, read replica, continuous backup và point-in-time recovery giống RDS / Aurora",
+          "Neptune Analytics là database giao dịch chính của Neptune",
+          "Neptune không chạy trong VPC"
+        ],
+        "answer": [0, 2],
+        "explain": "Neptune vận hành giống RDS / Aurora: trong VPC, Multi-AZ, read replica, continuous backup vào S3 và PITR. Global Database có 1 region ghi, tối đa 5 region đọc. Serverless dùng NCU; Neptune Analytics là engine in-memory riêng chạy thuật toán graph, không phải database giao dịch."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dược cần mô hình hóa thuốc nào tương tác với thuốc nào và thuốc nào từng chữa được bệnh nào, các liên kết thay đổi theo nghiên cứu mới. Họ muốn dịch vụ AWS managed. Lựa chọn nào phù hợp nhất?",
+        "options": [
+          "Amazon Aurora MySQL",
+          "Amazon DynamoDB",
+          "Amazon OpenSearch Service",
+          "Amazon Neptune"
+        ],
+        "answer": [3],
+        "explain": "Life sciences với quan hệ giữa các thực thể (thuốc, bệnh) là use case của graph database, nên chọn Neptune. Aurora là relational, DynamoDB là key-value, OpenSearch là search và log analytics."
+      }
+    ],
+    "Amazon OpenSearch Service": [
+      {
+        "type": "single",
+        "q": "Một công ty cần phân tích log ứng dụng và VPC Flow Logs gần thời gian thực, full-text search trên hàng tỷ dòng log, với dashboard và alert, bằng dịch vụ AWS managed. Đề cũ nhắc tới Elasticsearch và Kibana. Dịch vụ nào phù hợp?",
+        "options": [
+          "Amazon Athena",
+          "Amazon OpenSearch Service",
+          "Amazon Redshift",
+          "Amazon QuickSight"
+        ],
+        "answer": [1],
+        "explain": "Search, log analytics near real-time và tên Elasticsearch / Kibana (OpenSearch là bản fork) là dấu hiệu của OpenSearch Service; OpenSearch Dashboards có sẵn dashboard và alert. Athena hợp query ad-hoc thỉnh thoảng; Redshift là data warehouse; QuickSight là BI."
+      },
+      {
+        "type": "single",
+        "q": "VPC Flow Logs của một công ty đang được gửi vào CloudWatch Logs. Họ muốn đưa luồng log này vào Amazon OpenSearch Service với ít công sức nhất. Cách nào phù hợp?",
+        "options": [
+          "Viết ứng dụng trên EC2 đọc log rồi ghi vào OpenSearch",
+          "Export log sang S3 mỗi ngày rồi dùng Athena",
+          "Tạo subscription filter trên log group của CloudWatch Logs để đẩy event vào OpenSearch",
+          "Dùng DynamoDB Streams"
+        ],
+        "answer": [2],
+        "explain": "CloudWatch Logs giao native vào OpenSearch qua subscription filter; Amazon Data Firehose cũng là đường native. Tự viết ứng dụng tốn vận hành; Athena không làm search near real-time."
+      },
+      {
+        "type": "single",
+        "q": "Clickstream đang vào Kinesis Data Streams. Cần đưa vào OpenSearch, buffer và batch dữ liệu, có thể biến đổi trên đường đi, không quản server. Giải pháp nào phù hợp nhất?",
+        "options": [
+          "Gắn Amazon Data Firehose vào stream và trỏ đích tới OpenSearch",
+          "Gửi thẳng từ Kinesis Data Streams vào OpenSearch Dashboards",
+          "Dùng Amazon MQ làm trung gian",
+          "Dùng S3 Lifecycle để chuyển dữ liệu"
+        ],
+        "answer": [0],
+        "explain": "Firehose là đường native vào OpenSearch, buffer và batch dữ liệu, biến đổi được nếu cần. Kinesis Data Streams không phải nguồn native (cần Firehose, Lambda hoặc OpenSearch Ingestion); OpenSearch Dashboards chỉ query index chứ không nhận dữ liệu."
+      },
+      {
+        "type": "single",
+        "q": "Workload search của một startup lúc cao lúc thấp, có lúc không có truy vấn nào. Họ không muốn chọn instance type, số node, và muốn trả ít nhất khi rảnh. Cách chạy OpenSearch nào phù hợp?",
+        "options": [
+          "OpenSearch domain với instance lớn nhất",
+          "OpenSearch domain bật auto scaling theo CPU",
+          "Chạy OpenSearch tự quản trên EC2 Spot",
+          "OpenSearch Serverless với min và max OCU, scale về 0 được khi rảnh"
+        ],
+        "answer": [3],
+        "explain": "Serverless không có node để quản: đặt min và max OCU, tự scale trong khoảng đó, chỉ trả OCU được cấp và có thể scale về 0. Domain trả theo instance-giờ và không có auto scaling."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng GenAI cần tìm tài liệu có ý nghĩa gần với câu hỏi (semantic search) bằng cách lưu embedding, rồi đưa tài liệu cho model để trả lời dựa trên dữ liệu công ty (RAG). Dịch vụ dữ liệu AWS managed nào hỗ trợ việc này theo bài học?",
+        "options": [
+          "Amazon OpenSearch Service với vector search",
+          "Amazon DynamoDB TTL",
+          "Amazon Redshift Spectrum",
+          "AWS Lake Formation"
+        ],
+        "answer": [0],
+        "explain": "OpenSearch lưu embedding và tìm bản gần nhất (vector search), cho semantic search; ứng dụng lấy tài liệu liên quan từ OpenSearch đưa cho model, đó là cách RAG hoạt động. Các lựa chọn khác không làm vector search."
+      }
+    ],
+    "AWS Lake Formation": [
+      {
+        "type": "single",
+        "q": "Một công ty dựng data lake trên S3 với Glue Data Catalog. Analyst chỉ được xem một số cột của table orders (không thấy email) và chỉ các hàng thuộc quốc gia AU khi query bằng Athena. Giải pháp nào đáp ứng?",
+        "options": [
+          "Viết bucket policy với điều kiện theo prefix",
+          "Dùng AWS Lake Formation: grant SELECT trên table với data filter (row expression + loại bỏ cột email)",
+          "Tạo IAM policy cho phép s3:GetObject trên bucket",
+          "Bật S3 Object Lock"
+        ],
+        "answer": [1],
+        "explain": "Bucket policy và IAM chỉ thấy bucket, prefix, object, không thấy table, cột hay hàng do Glue tạo ra. Lake Formation cấp quyền trên catalog, data filter giới hạn hàng và cột (tới từng ô)."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi cấu hình Lake Formation grant cho user, kiểm tra thấy user vẫn đọc được toàn bộ file trong bucket data lake bằng S3 API. Nguyên nhân và cách khắc phục?",
+        "options": [
+          "Lake Formation chưa bật versioning; bật versioning",
+          "Grant phải tạo lại bằng LF-Tag",
+          "User vẫn còn quyền S3 trực tiếp, vượt qua Lake Formation; gỡ mọi quyền S3 trực tiếp, chỉ registration role của Lake Formation đọc bucket",
+          "Lake Formation chỉ áp dụng cho Redshift"
+        ],
+        "answer": [2],
+        "explain": "Lake Formation được thực thi bởi query engine đi qua catalog (Athena, Redshift Spectrum, EMR, Glue ETL, QuickSight). Ai đọc thẳng S3 thì Lake Formation không thấy request; chỉ registration role nên có quyền S3."
+      },
+      {
+        "type": "single",
+        "q": "Đội bảo mật muốn cấp quyền cho nhóm finance trên mọi table và cột liên quan tài chính, kể cả table tạo sau này, mà không phải cấp lại theo từng tên table. Tính năng Lake Formation nào phù hợp?",
+        "options": [
+          "LF-Tag: gắn tag cho table / cột rồi cấp quyền trên tag",
+          "Blueprint",
+          "Data filter theo row expression",
+          "Registration role"
+        ],
+        "answer": [0],
+        "explain": "LF-Tag cho phép gắn tag lên table / cột trong catalog (ví dụ finance) và cấp quyền trên tag thay vì theo tên. Blueprint dùng để đưa dữ liệu RDS vào data lake; data filter giới hạn hàng / cột cho một grant theo tên table."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về AWS Lake Formation? (Chọn 2)",
+        "options": [
+          "Lake Formation đọc S3 thay user qua registration role và cấp temporary credentials cho từng request",
+          "Muốn dùng Lake Formation phải bật chế độ data lake trên S3 bucket",
+          "Share data lake cho account khác dùng resource sharing của AWS RAM, dữ liệu không di chuyển",
+          "Lake Formation thay thế Glue Data Catalog",
+          "Lake Formation chỉ kiểm soát được ở mức bucket và prefix"
+        ],
+        "answer": [0, 2],
+        "explain": "Lake Formation đăng ký S3 location kèm một role có quyền S3 và cấp credential tạm theo request. Cross-account dùng RAM (resource link), dữ liệu ở nguyên bucket. S3 không có nút data lake: cấu trúc đến từ Glue Data Catalog, Lake Formation dùng catalog đó để cấp quyền tới cột, hàng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn đưa bảng orders từ Amazon RDS vào S3 data lake và catalog hóa tự động, không tự viết Glue job hay crawler. Tính năng nào phù hợp?",
+        "options": [
+          "S3 Replication",
+          "Lake Formation Blueprint",
+          "DynamoDB Streams",
+          "Redshift COPY"
+        ],
+        "answer": [1],
+        "explain": "Blueprint của Lake Formation là template sinh Glue job, crawler, kích hoạt copy database như RDS vào S3 và catalog hóa giúp bạn."
+      }
+    ],
+    "Amazon EMR": [
+      {
+        "type": "single",
+        "q": "Một công ty đang chạy Hadoop on-premises với Hive và HBase, các team phải xếp hàng chờ cluster chung. Họ muốn chuyển lên AWS, mỗi workload một cluster tạo lúc cần rồi xóa. Dịch vụ và cách dùng nào phù hợp?",
+        "options": [
+          "Amazon Redshift provisioned",
+          "AWS Glue",
+          "Amazon EMR với transient cluster",
+          "Amazon Athena SQL"
+        ],
+        "answer": [2],
+        "explain": "Hadoop, Hive, HBase là từ khóa của EMR; EMR cho dựng cluster transient (provision, chạy workload, terminate) thay vì một cluster chung dài hạn. Glue cũng chạy Spark nhưng không cho hệ sinh thái Hadoop đầy đủ như HBase."
+      },
+      {
+        "type": "single",
+        "q": "Trong một EMR cluster trên EC2 chạy job dài, đội muốn giảm chi phí bằng Spot mà không có rủi ro mất dữ liệu HDFS hay dừng cả cluster. Nên dùng Spot cho loại node nào?",
+        "options": [
+          "Primary node",
+          "Core node",
+          "Cả primary và core node",
+          "Task node"
+        ],
+        "answer": [3],
+        "explain": "Task node chỉ chạy task, không giữ HDFS: bị terminate thì task chạy lại ở node khác, không mất dữ liệu. Primary hỏng là cả cluster dừng; core node giữ HDFS nên Spot có thể làm mất dữ liệu."
+      },
+      {
+        "type": "single",
+        "q": "Kết quả cuối của một job EMR phải được giữ lại sau khi cluster bị terminate và chịu được lỗi AZ. Nên ghi kết quả vào đâu?",
+        "options": [
+          "S3, thông qua EMRFS / S3A",
+          "HDFS trên core node",
+          "Instance store của task node",
+          "EBS gắn vào primary node"
+        ],
+        "answer": [0],
+        "explain": "HDFS gắn với vòng đời cluster và chỉ ở một AZ, mất khi cluster tắt hoặc core node hỏng. EMRFS / S3A dựa trên S3 nên tồn tại sau vòng đời cluster và chịu được lỗi AZ."
+      },
+      {
+        "type": "single",
+        "q": "Một ngân hàng muốn dùng EMR nhưng quy định bắt buộc dữ liệu không được rời trung tâm dữ liệu của họ. Cách triển khai EMR nào phù hợp?",
+        "options": [
+          "EMR Serverless",
+          "EMR trên Outposts (chỉ On-Demand, cần đủ capacity trên Outpost)",
+          "EMR on EKS dùng Fargate",
+          "EMR trên EC2 với Spot ở region gần nhất"
+        ],
+        "answer": [1],
+        "explain": "EMR trên Outposts là kiến trúc EC2 chạy trong Outpost subnet tại cơ sở khách hàng, dữ liệu không rời on-prem. Lưu ý chỉ On-Demand, không có Spot."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về các cách chạy Amazon EMR? (Chọn 2)",
+        "options": [
+          "EMR Serverless không có cluster: tạo application Spark hoặc Hive rồi submit job, worker tự scale tới max",
+          "EMR on EKS tự tạo và quản lý EKS cluster cho bạn",
+          "EMR trên EC2 trải cluster qua nhiều AZ mặc định",
+          "Mỗi job có thể mang runtime role IAM riêng, không chia chung cho cả cluster",
+          "EMR Serverless có HDFS bền vững giữa các job"
+        ],
+        "answer": [0, 3],
+        "explain": "Serverless không có cluster, tự scale, không SSH, không HDFS. Job ở mọi cách chạy đều có runtime role riêng. EMR on EKS dùng EKS cluster bạn đã có và tự quản; EMR trên EC2 chạy trong một AZ."
+      }
+    ],
+    "Amazon QuickSight": [
+      {
+        "type": "single",
+        "q": "Ban giám đốc muốn dashboard và biểu đồ tương tác trên dữ liệu bán hàng nằm trong Amazon Redshift và kết quả query Athena, không muốn mua hay tự dựng BI server, trả tiền theo người dùng. Dịch vụ nào phù hợp?",
+        "options": [
+          "Amazon QuickSight",
+          "Amazon OpenSearch Dashboards",
+          "Amazon CloudWatch dashboards",
+          "AWS Glue DataBrew"
+        ],
+        "answer": [0],
+        "explain": "Dashboard, visualization, BI trên nguồn như Redshift, Athena là dấu hiệu của QuickSight, tính tiền theo user và không phải dựng hạ tầng BI."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có vài nghìn người chỉ xem dashboard QuickSight, số người xem mỗi tháng khó đoán. Mô hình giá nào phù hợp cho nhóm này?",
+        "options": [
+          "Mua QuickSight theo node-giờ",
+          "Capacity pricing cho reader, mua theo khối session 30 phút",
+          "Trả theo dữ liệu quét như Athena",
+          "Reserved Instance 3 năm"
+        ],
+        "answer": [1],
+        "explain": "QuickSight tính theo user, có reader giá thấp; khán giả lớn hoặc khó đoán thì reader dùng capacity pricing với session theo khối, mỗi session 30 phút."
+      },
+      {
+        "type": "single",
+        "q": "Dashboard QuickSight cần load nhanh cho rất nhiều người xem mà không truy vấn nguồn mỗi lần. QuickSight dùng gì cho việc này?",
+        "options": [
+          "DAX",
+          "ElastiCache",
+          "SPICE, engine in-memory của QuickSight",
+          "Redshift Spectrum"
+        ],
+        "answer": [2],
+        "explain": "SPICE là engine in-memory của QuickSight: import dữ liệu vào để dashboard nhanh ở quy mô lớn. QuickSight cũng có thể query thẳng nguồn."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về Amazon QuickSight? (Chọn 2)",
+        "options": [
+          "Dashboard mặc định public cho mọi người trong account",
+          "QuickSight kết nối được cả nguồn AWS (Athena, RDS, Aurora, Redshift, OpenSearch, S3) lẫn nguồn ngoài như Salesforce, Jira, Snowflake",
+          "Dashboard private mặc định, phải share cho user hoặc group với vai trò viewer hoặc co-owner",
+          "QuickSight chỉ đọc được dữ liệu trong S3",
+          "QuickSight là dịch vụ ETL"
+        ],
+        "answer": [1, 2],
+        "explain": "QuickSight tích hợp sẵn nhiều nguồn AWS và nguồn ngoài. Dashboard private mặc định, cần share cho user / group cụ thể. QuickSight là BI, không phải ETL."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty SaaS muốn nhúng dashboard phân tích vào ứng dụng web của họ cho khách hàng, tận dụng dịch vụ AWS managed. Lựa chọn nào phù hợp?",
+        "options": [
+          "Amazon Athena",
+          "Amazon Redshift Serverless",
+          "AWS Data Exchange",
+          "Amazon QuickSight với dashboard embed vào ứng dụng"
+        ],
+        "answer": [3],
+        "explain": "QuickSight cho phép embed dashboard vào ứng dụng và website. Athena và Redshift là nơi truy vấn / lưu dữ liệu, không phải công cụ dashboard; Data Exchange dùng để lấy hoặc cung cấp dataset."
+      }
+    ],
+    "AWS Data Exchange": [
+      {
+        "type": "single",
+        "q": "Một chuỗi bán lẻ cần dữ liệu thời tiết và dân số theo khu vực từ nhà cung cấp bên thứ ba để dự báo nhu cầu, muốn subscribe và nhận dữ liệu thẳng vào AWS. Dịch vụ nào phù hợp?",
+        "options": [
+          "AWS Data Exchange",
+          "AWS DataSync",
+          "AWS Glue",
+          "Amazon AppFlow"
+        ],
+        "answer": [0],
+        "explain": "Data Exchange để tìm, subscribe và dùng dataset bên thứ ba (data grant hoặc AWS Marketplace data product, miễn phí hoặc trả phí)."
+      },
+      {
+        "type": "single",
+        "q": "Một provider bán dataset qua AWS Data Exchange muốn có thể thu hồi quyền ngay khi hợp đồng kết thúc và subscriber luôn thấy dữ liệu mới nhất. Cách giao dữ liệu nào KHÔNG đáp ứng?",
+        "options": [
+          "Redshift datashare",
+          "S3 access point read-only",
+          "Files export vào S3 của subscriber",
+          "API qua endpoint của Data Exchange"
+        ],
+        "answer": [2],
+        "explain": "Files cho subscriber một bản sao: họ giữ dữ liệu cả sau khi grant hết hạn và chỉ mới khi có revision mới. API, S3, Redshift, Lake Formation là truy cập tại chỗ, thu hồi được và luôn mới nhất."
+      },
+      {
+        "type": "single",
+        "q": "Provider share dữ liệu S3 qua AWS Data Exchange và muốn subscriber trả chi phí request và data transfer. Cấu hình nào phù hợp?",
+        "options": [
+          "Bật S3 Transfer Acceleration",
+          "Bật Requester Pays",
+          "Bật S3 Object Lock",
+          "Dùng CloudFront signed URL"
+        ],
+        "answer": [1],
+        "explain": "Với giao dữ liệu qua S3, provider có thể bật Requester Pays để subscriber trả phí request và transfer."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về AWS Data Exchange? (Chọn 2)",
+        "options": [
+          "Chỉ dành cho người dùng dữ liệu, không thể dùng để bán dataset",
+          "Có thể giao dữ liệu qua file, API, S3, Redshift datashare và Lake Formation",
+          "Mọi cách giao đều tạo bản sao dữ liệu trong account của subscriber",
+          "Open Data on AWS cung cấp dữ liệu hoàn toàn miễn phí từ nhiều publisher",
+          "Data Exchange chỉ hỗ trợ dataset trả phí"
+        ],
+        "answer": [1, 3],
+        "explain": "Data Exchange phục vụ cả provider lẫn subscriber, giao qua năm cách (chỉ Files tạo bản sao), có cả dataset miễn phí và Open Data on AWS."
+      },
+      {
+        "type": "single",
+        "q": "Một subscriber nhận dataset qua Redshift datashare từ AWS Data Exchange. Ai trả tiền compute khi họ chạy SQL trên dữ liệu đó?",
+        "options": [
+          "Provider trả toàn bộ",
+          "AWS Data Exchange miễn phí compute",
+          "Không ai, datashare không tốn compute",
+          "Subscriber trả compute trên cluster của chính họ"
+        ],
+        "answer": [3],
+        "explain": "Với Redshift datashare, subscriber query dữ liệu read-only bằng compute trên cluster của mình nên họ trả compute."
+      }
+    ],
+    "Amazon MSK": [
+      {
+        "type": "single",
+        "q": "Một công ty có ứng dụng event-driven on-premises đã tích hợp các service bằng Apache Kafka (Kafka client, Kafka API). Họ muốn chuyển lên AWS mà không phải tự vận hành Kafka broker. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "Amazon Kinesis Data Streams",
+          "Amazon SQS",
+          "Amazon MSK",
+          "Amazon MQ"
+        ],
+        "answer": [2],
+        "explain": "Đã dùng Kafka mà không muốn quản hạ tầng thì chọn MSK: đúng Kafka mã nguồn mở, AWS lo control plane (broker, patch, thay broker hỏng, scale). Kinesis Data Streams hợp khi xây mới với dịch vụ native."
+      },
+      {
+        "type": "single",
+        "q": "Topic orders trong MSK được đọc bởi fraud service và recommendation service. Recommendation service muốn đọc lại toàn bộ event từ đầu mà không ảnh hưởng fraud service. Điều gì cho phép việc này?",
+        "options": [
+          "Mỗi consumer group có offset riêng, record không bị xóa khi đọc nên replay được",
+          "Phải tạo bản sao topic cho mỗi consumer",
+          "Dùng visibility timeout như SQS",
+          "MSK xóa record ngay khi đọc nên không replay được"
+        ],
+        "answer": [0],
+        "explain": "Kafka giữ record theo retention, không xóa khi đọc. Mỗi consumer group có offset (bookmark) riêng, đọc độc lập và replay được mà không cần nhân bản topic."
+      },
+      {
+        "type": "single",
+        "q": "Một startup chưa biết trước throughput Kafka, không muốn chọn số broker hay size. Lựa chọn MSK nào phù hợp?",
+        "options": [
+          "MSK provisioned với Standard broker",
+          "MSK Serverless, trả theo throughput và storage",
+          "MSK provisioned với Express broker và public access",
+          "Tự chạy Kafka trên EC2"
+        ],
+        "answer": [1],
+        "explain": "MSK Serverless không phải quản broker, trả theo throughput và storage, hợp workload biến động hoặc chưa biết trước. Provisioned hợp workload dự đoán được, trả cả khi rảnh."
+      },
+      {
+        "type": "multi",
+        "q": "Đội cần client bên ngoài AWS kết nối tới MSK cluster qua Internet. Phát biểu nào đúng? (Chọn 2)",
+        "options": [
+          "Public access chỉ hỗ trợ cluster provisioned và bật sau khi tạo cluster",
+          "MSK cluster public mặc định",
+          "Khi bật public access bắt buộc authentication: IAM, SCRAM hoặc mutual TLS",
+          "Public access chỉ có ở MSK Serverless",
+          "Không cần cấu hình gì thêm trong VPC"
+        ],
+        "answer": [0, 2],
+        "explain": "MSK private mặc định. Public chỉ có ở provisioned, bật sau khi tạo, phải cấu hình subnet public, Internet Gateway và bắt buộc authentication (IAM, SCRAM, mutual TLS)."
+      },
+      {
+        "type": "single",
+        "q": "Đội muốn chạy query ad-hoc bằng Athena trên dữ liệu topic shipping của MSK mà không viết consumer Kafka. Cách nào phù hợp?",
+        "options": [
+          "Athena đọc thẳng topic Kafka mặc định",
+          "Bật DynamoDB Streams",
+          "Dùng S3 Lifecycle",
+          "Dùng MSK Connect (hoặc data delivery của Express broker, hoặc Amazon Data Firehose) đưa dữ liệu ra S3 rồi Athena query trên S3"
+        ],
+        "answer": [3],
+        "explain": "Athena không đọc Kafka native (chỉ qua connector). MSK Connect, Firehose hoặc data delivery native của Express broker đưa dữ liệu ra S3 mà không cần Kafka client, sau đó Athena query trên S3."
       }
     ]
   }

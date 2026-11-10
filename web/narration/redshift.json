@@ -1,24 +1,24 @@
 {
  "Redshift": {
-  "sig": "7-1nstywz",
+  "sig": "7-1mi3ddu",
   "steps": [
-   "Sơ đồ này nói về Redshift, data warehouse kiểu OLAP lưu theo cột. Đây là provisioned cluster nằm gọn trong một AZ, gồm leader node điều phối và các compute node xử lý song song.",
-   "Mọi thứ bên ngoài chỉ nói chuyện với leader node. Công cụ BI hoặc SQL Workbench kết nối qua JDBC hoặc ODBC, còn dữ liệu được nạp vào từ Kinesis Data Firehose, DMS, DynamoDB và S3 bằng lệnh COPY.",
-   "Leader node lập execution plan rồi chia việc xuống các compute node. Mỗi node chia thành 2, 4, 16 hoặc 32 slice chạy song song, và dữ liệu ghi được replicate sang một node khác để chịu lỗi phần cứng.",
-   "Hai tính năng nâng cao: Redshift Spectrum query dữ liệu trên S3 mà không cần load, nhưng vẫn cần cluster. Federated Query thì query thẳng database bên ngoài như RDS hoặc Aurora PostgreSQL.",
-   "Redshift là VPC service, nên dùng Security Group và NACL để kiểm soát mạng, IAM để phân quyền, KMS mã hóa at rest và CloudWatch để giám sát.",
-   "Mặc định Redshift đi public route khi gọi S3 hay dịch vụ ngoài. Bật Enhanced VPC Routing thì traffic đi theo cấu hình VPC, chịu Security Group, NACL, custom DNS và phải qua gateway hoặc VPC endpoint.",
-   "Khi đi thi nhớ: Redshift chỉ ở một AZ, không HA by design. Thấy data warehouse, petabyte, OLAP, columnar thì chọn Redshift; ad-hoc query serverless trên S3 là Athena; ép traffic đi trong VPC thì bật Enhanced VPC Routing."
+   "Sơ đồ này nói về Redshift, data warehouse MPP kiểu OLAP lưu theo cột. Đây là provisioned cluster, mặc định nằm trong một AZ, gồm leader node điều phối và các compute node xử lý song song. Ngoài ra còn mode Serverless dùng workgroup và RPU.",
+   "Mọi thứ bên ngoài chỉ nói chuyện với leader node. Công cụ BI hoặc SQL Workbench kết nối qua JDBC hoặc ODBC, còn dữ liệu được nạp từ Amazon Data Firehose, DMS, DynamoDB, S3 bằng lệnh COPY, hoặc qua job ETL của Glue.",
+   "Leader node lập execution plan, chia việc xuống các compute node rồi tổng hợp kết quả, và bản thân leader không bị tính tiền. Mỗi node chia thành 2, 4, 8 hoặc 16 slice chạy song song, đó là phần MPP. Có từ hai compute node trở lên thì dữ liệu được mirror sang node khác.",
+   "Hai tính năng nâng cao: Redshift Spectrum query dữ liệu trên S3 mà không cần load, nhưng vẫn cần một cluster hoặc serverless workgroup. Federated Query thì query thẳng database bên ngoài như RDS hoặc Aurora.",
+   "Redshift là VPC service, private mặc định: dùng Security Group và NACL để kiểm soát mạng, IAM để phân quyền, KMS mã hóa at rest mặc định với data warehouse mới, và CloudWatch để giám sát.",
+   "Mặc định traffic của Redshift đi qua Internet, kể cả tới S3. Bật Enhanced VPC Routing thì traffic COPY và UNLOAD đi theo cấu hình VPC, chịu Security Group, NACL, DNS và qua gateway hoặc VPC endpoint. Provisioned mặc định một AZ, muốn Multi-AZ thì dùng node RG hoặc RA3.",
+   "Khi đi thi nhớ: data warehouse, petabyte, OLAP, columnar thì chọn Redshift; tải biến động, không muốn quản capacity thì Redshift Serverless; query ad-hoc trên S3 là Athena; muốn kiểm soát traffic Redshift trong VPC thì bật Enhanced VPC Routing."
   ]
  },
  "Redshift - resilience": {
-  "sig": "5-8d8ubw",
+  "sig": "5-uqpzmv",
   "steps": [
-   "Sơ đồ này nói về cách bảo vệ dữ liệu Redshift. Cluster chỉ ở một AZ, nhưng snapshot nằm trên S3 được nhân bản qua ít nhất ba AZ, và có thể copy sang Region khác để làm DR.",
+   "Sơ đồ này nói về cách bảo vệ dữ liệu Redshift. Cluster mặc định chỉ ở một AZ, nhưng snapshot nằm trên S3 được nhân bản qua nhiều AZ, và có thể copy sang Region khác để làm DR. Với Serverless, backup tự động gọi là recovery point.",
    "Cluster tạo hai loại snapshot. Automatic snapshot chạy khoảng mỗi 8 giờ hoặc mỗi 5 GB thay đổi, giữ mặc định 1 ngày, tối đa 35 ngày. Manual snapshot thì không hết hạn cho tới khi admin xóa.",
    "Nếu AZ-A gặp sự cố, ta restore từ snapshot để tạo cluster mới ở AZ còn hoạt động. Đồng thời snapshot có thể tự động copy sang Region khác, với retention cấu hình riêng để tiết kiệm chi phí.",
    "Khi mất cả Region nguồn, ta dùng snapshot đã copy để dựng nhanh một cluster mới ở Region DR.",
-   "Nhắc khi đi thi: lỗi AZ thì snapshot vào S3 rồi restore sang AZ khác, DR Region thì cross-region snapshot copy. Nhớ số automatic khoảng 8 giờ hoặc 5 GB, giữ 1 tới 35 ngày, còn manual không tự xóa."
+   "Nhắc khi đi thi: lỗi AZ thì snapshot vào S3 rồi restore sang AZ khác, hoặc dùng provisioned Multi-AZ với node RG hay RA3. DR Region thì cross-region snapshot copy. Nhớ automatic khoảng 8 giờ hoặc 5 GB, mặc định giữ 1 ngày, còn manual không tự xóa."
   ]
  }
 }
