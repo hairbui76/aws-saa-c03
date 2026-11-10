@@ -2,6 +2,7 @@
 tags: [saa-c03, s05-s3, s3, security, encryption, kms]
 aliases: [Key Management Service, AWS KMS, KMS key, CMK, Customer Master Key, DEK, Data Encryption Key]
 lessons: ["0094 Key Management Service KMS", "0095 DEMO KMS Encrypting the battleplans with KMS"]
+videos: ["079 [ASSOCIATESHARED] Key Management Service (KMS)", "080 [SHAREDALL] [DEMO] KMS - Encrypting a Secret with KMS"]
 ---
 # KMS
 
@@ -19,7 +20,7 @@ lessons: ["0094 Key Management Service KMS", "0095 DEMO KMS Encrypting the battl
 - Hỗ trợ **symmetric** và **asymmetric** key (xem [[Encryption Fundamentals]]); bài này mặc định nói về symmetric.
 - Thực hiện thao tác mật mã: Encrypt, Decrypt, ReEncrypt, GenerateDataKey...
 - **Key không bao giờ rời KMS**: KMS tạo key hoặc cho import key, dùng key để thực hiện thao tác, nhưng không cho export key ra ngoài. Key không bao giờ lưu dạng plaintext trên đĩa (chỉ plaintext tạm trong bộ nhớ).
-- Chuẩn tuân thủ: khóa học nói **FIPS 140-2 Level 2** (một số tính năng đạt Level 3). Đây là điểm phân biệt kinh điển với [[CloudHSM]] (Level 3). (Hiện nay HSM của KMS đã được chứng nhận FIPS 140-2/140-3 **Level 3**; nhưng trong đề, khi yêu cầu "Level 3, single-tenant, tự quản HSM" thì đáp án vẫn là CloudHSM.)
+- Chuẩn tuân thủ: KMS đạt **FIPS 140-3 Level 3** (chuẩn bảo mật của Mỹ, gặp rất nhiều khi làm với các sản phẩm bảo mật). Bản khóa cũ nói KMS chỉ Level 2 và dùng Level 3 làm điểm phân biệt với [[CloudHSM]]; nay mốc Level 3 không còn tách được hai dịch vụ. (Bổ sung, bài không nói: khi đề yêu cầu **HSM riêng, single-tenant, khách hàng tự quản HSM** thì đáp án vẫn là CloudHSM.)
 
 ### KMS key
 - Tên cũ: **CMK (Customer Master Key)**, nay gọi là **KMS key**.
@@ -70,7 +71,7 @@ flowchart LR
 | **Customer managed keys** (customer owned) | Bạn tạo tường minh | Cấu hình được nhiều hơn: sửa key policy, **cho phép cross-account**, bật/tắt rotation, import material... |
 
 - **Rotation**: thay physical backing material. KMS key giữ cả **backing key hiện tại và mọi backing key cũ**, nên dữ liệu mã hóa bằng bản cũ vẫn giải mã được.
-  - Khóa học nói rotation của customer managed key "optional, enabled by default"; demo trên console cho thấy **mặc định tắt**. Đúng theo AWS: customer managed key rotation **mặc định tắt**, bật lên thì mặc định 1 năm (hiện nay tùy chỉnh được 90–2560 ngày và rotate on-demand).
+  - Customer managed key: rotation **tùy chọn, mặc định tắt**; bật lên thì khoảng 1 năm một lần, và console cho **chọn chu kỳ rotate**. (Bổ sung, bài không nói: chu kỳ chọn được 90–2560 ngày, có thể rotate on-demand.)
 - **Alias**: tên tắt trỏ tới key (vd. `alias/cat-robot`), cho phép đổi key phía sau mà không đổi ứng dụng. **Alias cũng là per-region**: cùng tên alias ở mỗi region trỏ tới key khác nhau.
 - **Multi-region keys**: có tồn tại (key được replicate sang region khác), nhưng mặc định key là single-region.
 
@@ -82,18 +83,26 @@ flowchart LR
 - Ba cách cấp quyền: **Key policy**, **Key policy + IAM policy**, **Key policy + Grants**.
 
 ## Demo / Lab
-1. KMS console (us-east-1) → Create key → **Symmetric**; Advanced: key material origin = **KMS** (khác: External/import, Custom key store → liên quan [[CloudHSM]]); **Single-Region key**.
-2. Alias `catrobot`. Chọn **key administrators** (iamadmin, cho phép xóa key) và **key users** (iamadmin được encrypt/decrypt/GenerateDataKey...). Có thể thêm account khác làm key user.
-3. Xem key policy wizard sinh ra: statement trust account root, statement cho admin, statement cho user dùng key.
-4. Tab key rotation: customer managed **mặc định tắt**; AWS managed keys **luôn bật**, khoảng mỗi năm. Mỗi dịch vụ lần đầu dùng KMS sẽ tạo một AWS managed key.
-5. CloudShell: tạo `battleplans.txt` → `aws kms encrypt --key-id alias/catrobot --plaintext fileb://battleplans.txt --output text --query CiphertextBlob | base64 --decode > not_battleplans.enc` (output KMS là base64 nên phải decode thành binary).
-6. `aws kms decrypt --ciphertext-blob fileb://not_battleplans.enc --output text --query Plaintext | base64 --decode > decryptedplans.txt` → **không cần chỉ key**.
-7. Dọn dẹp: **Schedule key deletion**, waiting period **7–30 ngày** (chọn 7) → trạng thái Pending deletion.
+Kịch bản: Aus-E-Mart cần mã hóa **Stripe webhook secret** mà web app dùng để nói chuyện với cổng thanh toán Stripe.
+1. KMS console (us-east-1) → Create key. Chi phí: khoảng **1 USD mỗi key mỗi tháng**, cộng vài cent cho mỗi **10.000 API call**.
+2. Key type **Symmetric**; key usage **Encrypt and decrypt** (lựa chọn khác: **Generate and verify MAC** cho HMAC). Asymmetric dùng khi cần cặp public/private key giữa nhiều bên.
+3. Advanced: key material origin = **KMS** (lựa chọn khác: **External key manager** bên ngoài AWS, hoặc **AWS CloudHSM**, xem [[CloudHSM]]); **Single-Region key** (Multi-Region key nếu cần dùng ở region khác).
+4. Alias kiểu `aussiemart/stripe-webhook-key` (ID của key dài, khó nhớ). Chọn **key administrators** (quản lý key) và **key users** (dùng key để encrypt/decrypt); demo cho iamadmin cả hai vai trò dù trái best practice.
+5. Đọc key policy wizard sinh ra:
+   - Statement đầu có Principal là account root **không** nói về root user; nó cho phép **dùng IAM identity policy** để cấp quyền trên key cho identity trong account. Xóa statement này thì chỉ còn các quyền ghi thẳng trong key policy.
+   - Statement cho admin (create, describe, list, delete, tag...) và statement cho user dùng key (encrypt, decrypt...).
+   - Statement cho phép tạo, liệt kê, thu hồi **grant** cho AWS service: để dịch vụ như RDS hay S3 dùng key thay mặt user.
+   - Sau khi tạo, phần lớn cấu hình của key không đổi được, nên xem kỹ ở bước review.
+6. Tab key rotation: customer managed **mặc định tắt**, bật được và **chọn chu kỳ**; AWS managed keys **luôn bật**, khoảng mỗi năm.
+7. CloudShell: tạo file chứa secret → `aws kms encrypt --key-id alias/<alias> --plaintext fileb://<file> --output text --query CiphertextBlob | base64 --decode > <file>.enc` (output KMS là base64 nên phải decode thành binary). Ứng dụng thật sẽ gọi KMS qua SDK.
+8. `aws kms decrypt --ciphertext-blob fileb://<file>.enc --output text --query Plaintext | base64 --decode` → lấy lại secret, **không cần chỉ key**. Có thể tách identity: admin tạo secret, identity của ứng dụng chỉ được decrypt.
+9. Dọn dẹp: xóa file, **Schedule key deletion**, waiting period **7–30 ngày** (chọn 7) → Pending deletion. Xóa key không đảo ngược được: ứng dụng còn dùng key sẽ hỏng.
 
 ## 🎯 Mẹo thi SAA-C03
 - KMS **regional**, key **không rời region và không rời KMS** (trừ multi-region keys). Cần dùng ở region khác → multi-region key hoặc re-encrypt.
 - KMS key mã hóa trực tiếp tối đa **4 KB**; lớn hơn → **GenerateDataKey** / envelope encryption.
-- **FIPS 140-2 Level 2 → KMS; Level 3, HSM riêng, single-tenant, tự quản key → [[CloudHSM]]**.
+- KMS đạt **FIPS 140-3 Level 3** theo bài mới, nên "Level 3" một mình không còn là dấu hiệu chọn CloudHSM. Dấu hiệu chọn **[[CloudHSM]]**: HSM **riêng, single-tenant**, khách hàng **tự quản** HSM (bổ sung, bài KMS không nói).
+- KMS tính phí theo key (khoảng 1 USD/tháng) và theo số API call; key policy luôn có, statement trust account là thứ cho phép dùng IAM policy.
 - Cần **cross-account** dùng key, sửa key policy, kiểm soát rotation → **customer managed key** (AWS managed key không làm được).
 - Cần **role separation** (admin không đọc được dữ liệu) → KMS với quyền tách biệt, hoặc SSE-KMS trên S3 (xem [[S3 Encryption]]).
 - Key policy phải trust account thì IAM policy mới có tác dụng; xóa nhầm statement này có thể khóa luôn quyền truy cập key.

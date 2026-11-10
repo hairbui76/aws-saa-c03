@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s05-s3, s3, storage, cost-optimization, resilience]
-aliases: [S3 Standard, S3 Standard-IA, S3 One Zone-IA, S3 Glacier Instant Retrieval, S3 Glacier Flexible Retrieval, S3 Glacier Deep Archive, S3 Intelligent-Tiering, Glacier]
+aliases: [S3 Standard, S3 Standard-IA, S3 One Zone-IA, S3 Glacier Instant Retrieval, S3 Glacier Flexible Retrieval, S3 Glacier Deep Archive, S3 Intelligent-Tiering, Glacier, S3 Express One Zone, Directory bucket]
 lessons: ["0099 S3 Object Storage Classes PART1", "0100 S3 Object Storage Classes PART2"]
+videos: ["086 [ASSOCIATESHARED] S3 Object Storage Classes - PART1", "087 [ASSOCIATESHARED] S3 Object Storage Classes - PART2"]
 ---
 # S3 Storage Classes
 
@@ -50,21 +51,23 @@ lessons: ["0099 S3 Object Storage Classes PART1", "0100 S3 Object Storage Classe
 ### S3 Glacier Flexible Retrieval (tên cũ: S3 Glacier)
 - ≥3 AZ, 11 nines. Giá lưu khoảng **1/6 Standard** (lúc quay bài).
 - Hình dung là object **"lạnh" (cold)**: không sẵn sàng ngay, **không public được**. Trong bucket chỉ thấy object/metadata như một con trỏ.
-- Muốn đọc phải chạy **retrieval job** (có phí). Dữ liệu được khôi phục **tạm thời vào Standard-IA**, dùng xong thì bị xóa. Muốn lấy lại vĩnh viễn thì đổi storage class (thao tác khác).
+- Muốn đọc phải chạy **retrieval job** (có phí). Dữ liệu được khôi phục thành **bản sao tạm**, dùng xong thì bị xóa. Muốn lấy lại vĩnh viễn thì đổi storage class về class truy cập tức thì (thao tác khác). (Bản khóa cũ nói bản tạm nằm ở Standard-IA.)
 - Ba loại job:
 
 | Job | Thời gian | Giá |
 |---|---|---|
 | Expedited | **1–5 phút** | Đắt nhất |
 | Standard | **3–5 giờ** | Trung bình |
-| Bulk | **5–12 giờ** | Rẻ nhất (hiện nay miễn phí) |
+| Bulk | **5–12 giờ** | Rẻ nhất (**miễn phí**) |
 
-- First byte latency: **phút đến giờ**. Minimum billable size **40 KB**, minimum duration **90 ngày**.
+- First byte latency: **phút đến giờ** (dữ liệu nằm ở hệ thống lưu trữ chậm, giá rẻ; AWS phải mang về trước khi đọc được).
+- **Mỗi object bị thêm 40 KB metadata** (như "con tem bưu điện" S3 cần để quản lý class Glacier). Khác với 128 KB của các class IA: object nhỏ **không bị làm tròn lên**, mà bị **cộng thêm** 40 KB → lưu nhiều object rất nhỏ thì chi phí metadata đáng kể.
+- Minimum duration **90 ngày** (để 1 ngày rồi đổi class vẫn trả đủ 90 ngày).
 - Dùng cho: **dữ liệu lưu trữ (archival)** không cần truy cập thường xuyên/realtime (vd. mỗi năm một lần), chấp nhận chờ phút–giờ.
 
 ### S3 Glacier Deep Archive
 - **Rẻ nhất**. Hình dung là dữ liệu **"đóng băng" (frozen)**.
-- Minimum **40 KB**, minimum duration **180 ngày**. Không public được, cần retrieval job, khôi phục tạm vào Standard-IA.
+- Cũng **thêm 40 KB metadata** mỗi object, minimum duration **180 ngày**. Không public được, cần retrieval job, khôi phục thành bản sao tạm.
 - Job: **Standard ~12 giờ**, **Bulk tới 48 giờ**.
 - Dùng cho: dữ liệu lưu trữ **hiếm khi hoặc không bao giờ** cần đọc, chấp nhận chờ giờ–ngày: backup dài hạn thứ cấp, dữ liệu phải giữ theo **quy định pháp lý/compliance**. **Không** hợp với backup chính (restore quá lâu).
 
@@ -76,15 +79,21 @@ lessons: ["0099 S3 Object Storage Classes PART1", "0100 S3 Object Storage Classe
 | Frequent Access | S3 Standard | Mặc định, khi được truy cập | Tức thì |
 | Infrequent Access | Standard-IA | Không truy cập **30 ngày** | Tức thì |
 | Archive Instant Access | Glacier Instant Retrieval | Không truy cập **90 ngày** (tự động) | Tức thì |
-| Archive Access (tùy chọn) | Glacier Flexible Retrieval | Cấu hình 90–270 ngày theo khóa học (hiện nay 90–730) | Cần retrieval, bất đồng bộ |
-| Deep Archive Access (tùy chọn) | Glacier Deep Archive | Cấu hình 180–730 ngày | Cần retrieval, bất đồng bộ |
+| Archive Access (tùy chọn) | Glacier Flexible Retrieval | Cấu hình **90–730 ngày** không truy cập | Cần retrieval, bất đồng bộ |
+| Deep Archive Access (tùy chọn) | Glacier Deep Archive | Cấu hình **183–730 ngày** không truy cập | Cần retrieval, bất đồng bộ |
 
 - Archive configuration đặt theo bucket, prefix hoặc object tag.
 - Hai tier archive tùy chọn yêu cầu ứng dụng **chấp nhận truy cập bất đồng bộ** và gọi API restore. Archive Instant Access thì không cần thay đổi gì ở ứng dụng.
-- Object ở IA/Archive Instant Access mà lại được truy cập (vd. ảnh "whiskers" bỗng viral) → tự chuyển về Frequent Access, **không có retrieval fee**.
+- Object ở IA/Archive Instant Access mà lại được truy cập (vd. ảnh koala bỗng viral) → tự chuyển về Frequent Access, **không có retrieval fee**.
 - Thay vì retrieval fee, có **phí monitoring & automation theo mỗi 1.000 object**. Giá các tier bằng class tương ứng, cộng phí quản lý.
 - Dùng cho: dữ liệu **sống lâu với pattern truy cập thay đổi hoặc không biết trước**. Nếu pattern ổn định (luôn nhiều hoặc luôn ít) thì dùng thẳng Standard hoặc Standard-IA sẽ rẻ hơn.
-- (Bổ sung: object < 128 KB không được giám sát/tự chuyển tier, luôn ở Frequent Access.)
+
+### S3 Express One Zone
+- Class đặc biệt thứ hai, **tối ưu hiệu năng**: nhanh hơn cả S3 Standard (Standard là mili giây), cho workload **cần độ trễ thấp, ổn định**: ML training, interactive analytics, media editing. Thường là **compute truy cập object** với rất nhiều request, không phải người xem ảnh.
+- Chỉ **1 AZ, do bạn chọn**; nên đặt compute **cùng AZ** đó. Mất AZ là mất truy cập dữ liệu → chỉ dùng cho **bản sao**, dữ liệu gốc nằm chỗ khác.
+- Giá: **storage đắt hơn Standard** theo GB, nhưng **request rẻ hơn khoảng 50%** → hợp với workload request cực nhiều trên cùng dữ liệu.
+- Dùng loại bucket riêng: **directory bucket**, có cách đặt tên và endpoint khác, **ít tính năng hơn** general purpose bucket.
+- Object **< 128 KB** không được giám sát và không tự chuyển tier: luôn ở Frequent Access và **không chịu phí monitoring**. Bucket nhiều object nhỏ không bị phạt, nhưng cũng không được lợi.
 
 ## Bảng so sánh / số liệu
 | Class | Số AZ | Min duration | Min size | Retrieval fee | First byte latency | Public được |
@@ -93,9 +102,12 @@ lessons: ["0099 S3 Object Storage Classes PART1", "0100 S3 Object Storage Classe
 | Standard-IA | ≥3 | 30 ngày | 128 KB | Có (/GB) | ms | Có |
 | One Zone-IA | **1** | 30 ngày | 128 KB | Có (/GB) | ms | Có |
 | Glacier Instant Retrieval | ≥3 | 90 ngày | 128 KB | Có (cao hơn) | ms | Có |
-| Glacier Flexible Retrieval | ≥3 | 90 ngày | 40 KB | Có (job) | phút–giờ | **Không** |
-| Glacier Deep Archive | ≥3 | 180 ngày | 40 KB | Có (job) | giờ–ngày (12h/48h) | **Không** |
+| Glacier Flexible Retrieval | ≥3 | 90 ngày | +40 KB metadata | Có (job) | phút–giờ | **Không** |
+| Glacier Deep Archive | ≥3 | 180 ngày | +40 KB metadata | Có (job) | giờ–ngày (12h/48h) | **Không** |
 | Intelligent-Tiering | ≥3 | Không | Không (<128 KB không tiering) | Không (thay bằng phí monitoring) | ms (tier archive tùy chọn: chậm) | Có |
+| Express One Zone | **1 (bạn chọn)** | — | — | Không; storage đắt hơn, request rẻ hơn ~50% | nhanh hơn Standard | — (directory bucket) |
+
+- Cột "Min size" của hai class Glacier Flexible / Deep Archive: thực chất là **40 KB metadata cộng thêm** vào mỗi object, không phải làm tròn lên như 128 KB.
 
 ```mermaid
 flowchart LR
@@ -106,7 +118,6 @@ flowchart LR
   IA -.->|"dữ liệu tạo lại được"| OZ["One Zone-IA (1 AZ)"]
   S -.->|"pattern không biết trước"| IT["Intelligent-Tiering (tự động)"]
 ```
-- (Bổ sung ngoài khóa: **S3 Express One Zone** — class 1 AZ, độ trễ một chữ số mili giây, dùng "directory bucket", cho workload hiệu năng cao như ML/analytics.)
 
 ## 🎯 Mẹo thi SAA-C03
 - Mặc định chọn **Standard**; chỉ đổi khi đề có lý do (truy cập ít, dữ liệu tạo lại được, archive...).
@@ -114,7 +125,9 @@ flowchart LR
 - **Dữ liệu tạo lại được / bản replica / không quan trọng**, truy cập ít → **One Zone-IA**. Bẫy: dữ liệu quan trọng duy nhất mà chọn One Zone-IA là sai.
 - **Archive, chấp nhận phút–giờ** → **Glacier Flexible Retrieval** (cần trong vài phút → Expedited). **Archive rẻ nhất, chấp nhận 12–48 giờ, compliance giữ nhiều năm** → **Glacier Deep Archive**.
 - **Pattern truy cập không biết/thay đổi** → **Intelligent-Tiering** (không retrieval fee, có phí monitoring).
-- Nhiều **file nhỏ** hoặc **dữ liệu tạm/ngắn hạn** → tránh IA/Glacier vì minimum size (128 KB / 40 KB) và minimum duration (30/90/180 ngày).
+- Nhiều **file nhỏ** hoặc **dữ liệu tạm/ngắn hạn** → tránh IA/Glacier vì minimum size 128 KB (IA), 40 KB metadata cộng thêm mỗi object (Glacier) và minimum duration (30/90/180 ngày).
+- **Hiệu năng cao nhất, độ trễ thấp cho ML/analytics**, compute đặt cùng AZ, request rất nhiều → **S3 Express One Zone** (directory bucket, 1 AZ, chỉ cho bản sao).
+- Intelligent-Tiering: Archive Access 90–730 ngày, Deep Archive Access 183–730 ngày (tùy chọn, cần restore); object < 128 KB không tiering và không tính phí monitoring.
 - Object ở Glacier Flexible/Deep Archive **không public được**, không dùng làm nguồn website trực tiếp.
 - Ghi nhớ minimum duration: **30 (IA, One Zone-IA) / 90 (Glacier IR, Flexible) / 180 (Deep Archive)**.
 - HTTP **200 OK** từ S3 = đã lưu durable.

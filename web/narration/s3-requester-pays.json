@@ -1,0 +1,14 @@
+{
+ "S3 Requester Pays": {
+  "sig": "7-135v8ew",
+  "steps": [
+   "Sơ đồ này so sánh bucket thường với bucket Requester Pays. Requester Pays là cấu hình theo bucket, đổi người trả tiền từ owner sang requester; owner vẫn trả phí lưu trữ, còn người tải trả phí request và transfer ra.",
+   "Julie upload dataset ảnh thú Úc vào bucket thường. Data transfer vào S3 miễn phí, còn Julie trả phí lưu trữ theo GB mỗi tháng.",
+   "Dataset nổi tiếng nên rất nhiều người tải về. Với bucket thường, mọi phí transfer ra Internet đều tính cho Julie, có thể rất lớn khi có hàng triệu lượt tải.",
+   "Mike cũng upload dataset tương tự vào bucket Requester Pays. Transfer vào vẫn miễn phí, và Mike vẫn trả phí lưu trữ như bình thường.",
+   "Khi người khác tải từ bucket của Mike, họ phải là identity AWS đã xác thực và gửi header x-amz-request-payer. Phí request và transfer ra tính cho chính họ, Mike không mất phí transfer.",
+   "Vì AWS cần biết tính tiền cho ai, truy cập anonymous không được hỗ trợ, nên bucket Requester Pays không dùng được static website hosting.",
+   "Lời nhắc khi đi thi: thiếu header thì S3 trả 403 và Mike trả phí request đó; presigned URL do Mike tạo thì Mike trả. Chia sẻ dataset lớn mà không muốn trả phí transfer thì chọn Requester Pays."
+  ]
+ }
+}

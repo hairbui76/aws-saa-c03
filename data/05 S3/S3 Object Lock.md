@@ -2,6 +2,7 @@
 tags: [saa-c03, s05-s3, s3, storage, security, compliance, worm]
 aliases: [Object Lock, WORM, Legal Hold, Governance Mode, Compliance Mode, S3 Retention]
 lessons: ["0109 S3 Object Lock"]
+videos: ["100 [ASSOCIATESHARED] S3 Object Lock"]
 ---
 # S3 Object Lock
 
@@ -12,14 +13,15 @@ lessons: ["0109 S3 Object Lock"]
 *Mở bằng plugin Excalidraw để chỉnh sửa · ảnh tĩnh: [[S3 Object Lock.svg]]*
 
 ## Khái niệm cốt lõi
-- **Bật trên bucket**: khóa học nói chỉ bật được khi **tạo bucket mới**, bucket cũ phải liên hệ AWS Support. (Từ 11/2023, AWS đã cho phép bật Object Lock trên bucket **đã có** bằng console/API, với điều kiện bucket đã bật versioning.)
-- Bật Object Lock thì **versioning tự động được bật**. Sau khi bật, **không thể tắt Object Lock và không thể suspend versioning** trên bucket đó.
+- **Bật trên bucket**: bật được cho **bucket mới hoặc bucket đã có**. (Bản khóa cũ nói chỉ bật được khi tạo bucket mới, bucket cũ phải liên hệ AWS Support.)
+- Object Lock **bắt buộc versioning**. (Bổ sung, bài không nói: sau khi bật, **không thể tắt Object Lock và không thể suspend versioning** trên bucket đó.)
 - Vì phụ thuộc versioning nên **cái bị khóa là từng object version**, không phải "object" nói chung (xem [[S3 Versioning and MFA Delete]]).
-- Cả Retention lẫn Legal Hold đều có thể đặt **trên từng object version** hoặc đặt **bucket default** (giống bucket default encryption).
+- Cả Retention lẫn Legal Hold đều đặt được **trên từng object version**. **Bucket default** (giống bucket default encryption) **chỉ áp cho Retention** (Governance / Compliance), **không áp cho Legal Hold**.
+- Cần quyền: **`s3:PutObjectRetention`** để đặt retention, **`s3:PutObjectLegalHold`** để bật/tắt legal hold.
 - Retention và Legal Hold **dùng chung được** và hiệu lực **chồng lên nhau**: version bị khóa chừng nào còn ít nhất một cơ chế đang có hiệu lực.
 
 ## Retention Period
-Khi khóa, bạn chỉ định thời hạn theo **ngày và/hoặc năm**. Ví dụ "1 năm" nghĩa là hết hạn 1 năm sau thời điểm áp dụng. Có hai mode:
+Khi khóa, bạn chỉ định thời hạn theo **ngày hoặc năm**. Đồng hồ chạy từ lúc **object version được tạo**, không phải lúc cấu hình bucket: bucket default 1 năm, object upload ngày 1/1 thì được bảo vệ tới 1/1 năm sau. Có hai mode:
 
 ### Compliance mode (nghiêm nhất)
 - Trong thời hạn retention: object version **không xóa và không ghi đè được**.
@@ -66,6 +68,7 @@ flowchart TB
 
 ## 🎯 Mẹo thi SAA-C03
 - "WORM", "không ai, **kể cả root user**, được xóa hoặc sửa trong N năm", "quy định pháp lý" → **Object Lock, Compliance mode**.
+- Bucket default chỉ đặt được cho **Retention**; Legal Hold phải đặt trên từng object version.
 - "Ngăn xóa nhưng **một số admin đặc biệt** vẫn được phép xóa hoặc chỉnh" → **Governance mode** + `s3:BypassGovernanceRetention`.
 - "Giữ object cho vụ kiện, **không biết thời hạn**" → **Legal Hold**.
 - Object Lock **cần versioning**, và khóa ở mức **object version**.

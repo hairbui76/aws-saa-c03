@@ -10,13 +10,13 @@
   ]
  },
  "S3 Performance Optimization - acceleration": {
-  "sig": "5-19jcn1",
+  "sig": "5-vnq30u",
   "steps": [
-   "Sơ đồ này nói về S3 Transfer Acceleration: thay vì đi public internet suốt chặng dài, dữ liệu vào edge location gần nhất rồi chạy trên AWS global network tới bucket.",
+   "Sơ đồ này nói về S3 Transfer Acceleration: thay vì đi public internet suốt chặng dài, dữ liệu vào edge location gần nhất của mạng CloudFront rồi chạy trên AWS global network tới bucket.",
    "Team ở Úc upload dataset, chặng đầu chỉ đi public internet một quãng ngắn tới edge location ở Sydney, ít mạng trung gian.",
    "Nếu không có acceleration, dữ liệu phải đi qua ISP và nhiều router tới tận London, đường đi do ISP quyết định nên chậm và chập chờn. Lưu ý: download có cache thì dùng CloudFront, app TCP hoặc UDP thì dùng Global Accelerator.",
    "Từ edge location, dữ liệu chạy trên mạng riêng của AWS như tàu tốc hành, ít hop, độ trễ thấp và ổn định tới bucket.",
-   "Khi đi thi nhớ: tính năng mặc định tắt, bật ở mức bucket, tên bucket không được có dấu chấm, và phải gọi đúng accelerate endpoint. Càng xa, mạng càng kém thì càng có lợi."
+   "Khi đi thi nhớ: tính năng mặc định tắt, bật ở mức bucket và có thể mất tới khoảng 20 phút mới có hiệu lực. Tên bucket phải DNS-compliant, phải gọi đúng accelerate endpoint, và chỉ trả phí khi transfer thực sự được tăng tốc."
   ]
  }
 }

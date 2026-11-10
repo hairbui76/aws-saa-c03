@@ -2,10 +2,11 @@
 tags: [saa-c03, s05-s3, s3, security, storage, iam]
 aliases: [S3 Bucket Policy, Bucket Policy, S3 ACL, Block Public Access, S3 permissions]
 lessons: ["0086 S3 Security Resource Policies ACLs"]
+videos: ["071 [ASSOCIATESHARED] S3 Security (Resource Policies & ACLs)"]
 ---
 # S3 Security
 
-> **TL;DR:** S3 **private by default**: ban đầu chỉ root user của account sở hữu bucket có quyền. Mọi quyền khác phải cấp tường minh qua **identity policy** (IAM), **bucket policy** (resource policy) hoặc **ACL** (legacy). **Block Public Access** là lớp fail-safe cuối cùng chặn truy cập public/anonymous bất kể policy nói gì.
+> **TL;DR:** S3 **private by default**: ban đầu chỉ root user của account sở hữu bucket có quyền. Mọi quyền khác phải cấp tường minh qua **identity policy** (IAM), **bucket policy** (resource policy) hoặc **ACL** (legacy, nay **tắt mặc định**). **Block Public Access** là lớp fail-safe cuối cùng chặn truy cập public/anonymous bất kể policy nói gì, đặt được ở mức bucket, account hoặc cả AWS Organization.
 
 ## 🖼️ Sơ đồ
 ![[S3 Security.excalidraw]]
@@ -36,7 +37,7 @@ lessons: ["0086 S3 Security Resource Policies ACLs"]
 - Ví dụ trong bài (bucket `secretcatproject`):
   - **Public read**: `Effect: Allow`, `Principal: "*"`, `Action: s3:GetObject`, `Resource: arn:aws:s3:::secretcatproject/*` → bất kỳ ai (cùng account, account khác, kể cả anonymous) đọc được mọi object. Lưu ý `/*` ở cuối ARN nghĩa là "mọi object trong bucket", khác với ARN của chính bucket.
   - **Chặn theo IP**: statement `Deny` với điều kiện `NotIpAddress` `aws:SourceIp` = `1.3.3.7` → ai không đến từ IP đó bị từ chối; đến từ đúng IP thì statement deny không khớp, quyền khác vẫn áp dụng.
-  - **Bảo vệ một prefix bằng MFA**: statement 1 `Deny s3:*` trên `secretcatproject/boris/*` khi `"Null": {"aws:MultiFactorAuthAge": true}` (tức là không đăng nhập bằng [[MFA]]); statement 2 `Allow s3:GetObject` trên cả bucket. Vì **explicit Deny thắng Allow**, prefix `boris/` chỉ đọc được khi có MFA, phần còn lại đọc tự do.
+  - **Bảo vệ một prefix bằng MFA**: statement 1 `Deny s3:*` trên `secretcatproject/willow/*` khi `"Null": {"aws:MultiFactorAuthAge": true}` (tức là không đăng nhập bằng [[MFA]]); statement 2 `Allow s3:GetObject` trên cả bucket. Vì **explicit Deny thắng Allow**, prefix `willow/` chỉ đọc được khi có MFA, phần còn lại đọc tự do.
 - Bucket policy còn dùng để đặt **quyền mặc định** cho mọi người trên bucket, rồi cộng/trừ quyền cho từng identity.
 
 ### Quyền hiệu lực (effective access)
@@ -57,7 +58,9 @@ flowchart TB
 - Chỉ có **5 permission**: `READ`, `WRITE`, `READ_ACP`, `WRITE_ACP`, `FULL_CONTROL`. Không có condition.
   - `READ` trên bucket = list object; `WRITE` trên bucket = ghi đè/xóa mọi object.
   - `READ` trên object = đọc object và metadata; `READ_ACP`/`WRITE_ACP` = đọc/ghi chính ACL.
-- AWS khuyến nghị dùng bucket policy hoặc identity policy thay thế. (Hiện nay từ 04/2023 bucket mới mặc định **Object Ownership = Bucket owner enforced**, tức ACL bị **tắt**; khóa học chưa nhắc chi tiết này.)
+- AWS khuyến nghị dùng bucket policy hoặc identity policy thay thế.
+- **ACL nay bị tắt mặc định**: S3 dùng **Object Ownership = Bucket owner enforced**, chế độ tắt hẳn ACL. Lý do: policy linh hoạt hơn nhiều (nhiều statement, có condition), còn ACL chỉ cho quyền rất thô. (Bổ sung, bài không nói: mặc định này áp cho bucket mới từ 04/2023.)
+- Dù tắt mặc định, ACL vẫn tồn tại và vẫn có thể làm lộ dữ liệu, nên Block Public Access vẫn giữ hai setting dành cho ACL.
 
 ## Block Public Access
 - Ra đời sau hàng loạt sự cố lộ dữ liệu do cấu hình bucket public nhầm hoặc hiểu sai mô hình quyền S3.
@@ -72,8 +75,10 @@ flowchart TB
 | Block public access qua **new** bucket/access point policies | Giữ policy public đã có, chặn policy public mới |
 | Block public **và cross-account** access qua **any** bucket/access point policies | Bỏ qua mọi policy cấp public, cũ hay mới |
 
-- Hiện nay Block Public Access **bật mặc định** cho bucket mới, và có thể đặt ở **mức account** (áp cho mọi bucket); khóa học chỉ mô tả mức bucket.
-- Nếu đã cấp public qua bucket policy mà vẫn bị **403 Access Denied**, nghi ngay Block Public Access còn bật (xem [[S3 Static Website Hosting]]).
+- Đặt được ở **ba mức**: **bucket**, **account**, hoặc cả **AWS Organization** (bài nói qua SCP, xem [[Service Control Policies]]).
+- Các mức chồng lên nhau: tắt Block Public Access trên một bucket mà mức **account** vẫn bật thì bucket **vẫn được bảo vệ**.
+- Nếu đã cấp public qua bucket policy mà vẫn bị **403 Access Denied**, nghi ngay Block Public Access còn bật, và **kiểm tra ở mọi mức** (bucket, account, organization), không chỉ ở bucket (xem [[S3 Static Website Hosting]]).
+- (Bổ sung, bài không nói: Block Public Access **bật mặc định** cho bucket mới.)
 
 ## Khi nào dùng gì (Exam PowerUp)
 | Tình huống | Chọn |
@@ -91,11 +96,11 @@ flowchart TB
 - Cross-account cần **cả hai phía** cho phép: identity policy ở account nguồn + bucket policy ở account đích. Thiếu một bên → bị từ chối. (Với cross-account còn có thể dùng [[IAM Roles]] để assume role vào account sở hữu bucket.)
 - Thấy `Principal` trong policy → resource policy; IAM identity policy không có `Principal`.
 - Explicit Deny luôn thắng: dùng Deny + Condition (`aws:SourceIp`, `aws:MultiFactorAuthAge`, `aws:SecureTransport`...) để siết quyền.
-- ACL là đáp án sai trong hầu hết câu hỏi thiết kế mới; chỉ đúng khi đề nói rõ cần quyền ở mức **từng object** theo kiểu legacy.
-- Cấp public rồi mà vẫn bị chặn → **Block Public Access**.
+- ACL là đáp án sai trong hầu hết câu hỏi thiết kế mới (nay tắt mặc định qua Object Ownership = Bucket owner enforced); chỉ đúng khi đề nói rõ cần quyền ở mức **từng object** theo kiểu legacy.
+- Cấp public rồi mà vẫn bị chặn → **Block Public Access**; nhớ kiểm tra cả mức **account** và **organization**, vì bật ở mức trên thì bucket vẫn bị chặn dù đã tắt ở bucket.
 - Bucket chỉ có **một** bucket policy (nhiều statement).
 
 ## Liên kết
 - Tiên quyết: [[S3 Basics]], [[IAM Identity Policies]], [[IAM Users and ARNs]]
-- Liên quan: [[S3 Static Website Hosting]], [[S3 Versioning and MFA Delete]], [[S3 Encryption]], [[S3 Presigned URLs]], [[S3 Access Points]], [[CloudFront OAI and OAC]], [[MFA]]
+- Liên quan: [[S3 Static Website Hosting]], [[S3 Versioning and MFA Delete]], [[S3 Encryption]], [[S3 Presigned URLs]], [[S3 Access Points]], [[CORS]], [[S3 Requester Pays]], [[CloudFront OAI and OAC]], [[MFA]]
 - Phân biệt với: [[Service Control Policies]] (giới hạn quyền tối đa ở mức account, không cấp quyền)

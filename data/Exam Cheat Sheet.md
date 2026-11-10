@@ -25,7 +25,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Báo cáo compliance của AWS (SOC, PCI, ISO) cho auditor | **AWS Artifact** | [[AWS Artifact and License Manager]] |
 | Secret + **rotation tự động** (nhất là mật khẩu RDS) | **Secrets Manager** | [[Secrets Manager]] |
 | Cấu hình phân cấp, rẻ, SecureString, AMI mới nhất | **SSM Parameter Store** | [[SSM Parameter Store]] |
-| FIPS 140-2 **Level 3**, single-tenant, PKCS#11/JCE/CNG | **CloudHSM** | [[CloudHSM]] |
+| HSM riêng **single-tenant**, khách hàng tự quản, PKCS#11/JCE/CNG (KMS nay cũng FIPS 140-3 Level 3 nên "Level 3" một mình không đủ) | **CloudHSM** | [[CloudHSM]] |
 | SQL injection, XSS, geo match, rate limit HTTP | **WAF** (ALB, CloudFront, API Gateway) | [[WAF]] |
 | DDoS 24/7 response team, bồi hoàn chi phí scale | **Shield Advanced** | [[Shield]] |
 | PII/dữ liệu nhạy cảm trong **S3** | **Macie** | [[Macie]] |
@@ -69,7 +69,12 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Shared file system cho nhiều EC2 Linux, NFS, multi-AZ | **EFS** | [[EFS]] |
 | Windows, SMB, AD, DFS, VSS | **FSx for Windows** | [[FSx for Windows]] |
 | HPC/ML, Lustre, xử lý nhanh dữ liệu S3 | **FSx for Lustre** | [[FSx for Lustre]] |
-| User ở xa region upload chậm | **S3 Transfer Acceleration** | [[S3 Performance Optimization]] |
+| User ở xa region upload chậm | **S3 Transfer Acceleration** (accelerate endpoint, chỉ trả phí khi được tăng tốc) | [[S3 Performance Optimization]] |
+| Quy định bắt buộc mã hóa **2 lớp** at rest trên S3 | **DSSE-KMS** | [[S3 Encryption]] |
+| Web ở domain A đọc object / gọi API ở domain B bị chặn | **CORS configuration** ở phía B | [[CORS]] |
+| Chia sẻ dataset lớn, người tải trả phí transfer | **S3 Requester Pays** (requester đã xác thực + `x-amz-request-payer`) | [[S3 Requester Pays]] |
+| Danh sách object định kỳ + trạng thái mã hóa / replication / storage class | **S3 Inventory** (daily/weekly, CSV/ORC/Parquet) | [[S3 Inventory]] |
+| Hiệu năng S3 cao nhất, độ trễ thấp cho ML/analytics, compute cùng AZ | **S3 Express One Zone** (directory bucket) | [[S3 Storage Classes]] |
 | WORM, kể cả root không xóa được | **Object Lock Compliance mode** | [[S3 Object Lock]] |
 | Người không có account AWS tải/up 1 object private, có hạn | **Presigned URL** | [[S3 Presigned URLs]] |
 | Replicate có SLA 15 phút | **S3 RTC** | [[S3 Replication]] |
@@ -217,12 +222,13 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Class | AZ | Min duration | Min size | Truy xuất | Dùng khi |
 |---|---|---|---|---|---|
 | Standard | ≥3 | – | – | ms, không phí | Mặc định, truy cập thường xuyên |
-| Intelligent-Tiering | ≥3 | – | (< 128 KB không tự chuyển) | ms, phí monitoring | Pattern không biết trước |
+| Intelligent-Tiering | ≥3 | – | (< 128 KB không tự chuyển, không phí monitoring) | ms, phí monitoring; Archive Access 90–730 ngày, Deep Archive Access 183–730 ngày (tùy chọn) | Pattern không biết trước |
 | Standard-IA | ≥3 | 30 ngày | 128 KB | ms, phí/GB | Ít truy cập (~tháng), quan trọng |
 | One Zone-IA | **1** | 30 ngày | 128 KB | ms, phí/GB | Dữ liệu tạo lại được, bản replica |
 | Glacier Instant Retrieval | ≥3 | 90 ngày | 128 KB | ms, phí cao hơn | Ít truy cập (~quý), cần ngay |
-| Glacier Flexible Retrieval | ≥3 | 90 ngày | 40 KB | Expedited 1–5 phút, Standard 3–5 h, Bulk 5–12 h | Archive, chờ phút–giờ |
-| Glacier Deep Archive | ≥3 | 180 ngày | 40 KB | Standard ~12 h, Bulk ≤ 48 h | Compliance nhiều năm, rẻ nhất |
+| Glacier Flexible Retrieval | ≥3 | 90 ngày | +40 KB metadata / object | Expedited 1–5 phút, Standard 3–5 h, Bulk 5–12 h (miễn phí) | Archive, chờ phút–giờ |
+| Glacier Deep Archive | ≥3 | 180 ngày | +40 KB metadata / object | Standard ~12 h, Bulk ≤ 48 h | Compliance nhiều năm, rẻ nhất |
+| Express One Zone | **1 (bạn chọn)** | – | – | nhanh hơn Standard; storage đắt hơn, request rẻ hơn ~50% | ML / analytics cần độ trễ thấp, chỉ cho bản sao (directory bucket) |
 
 ### EBS volume types → [[EBS Volume Types]]
 | Loại | Max IOPS/volume | Max throughput | Boot | Dùng khi |
@@ -271,7 +277,7 @@ Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và 
 | | KMS | CloudHSM |
 |---|---|---|
 | Tenancy | Shared | **Single-tenant** |
-| FIPS 140-2 | Khóa học: Level 2; nay: HSM đạt Level 3 | **Level 3** (đề: L3 → CloudHSM) |
+| FIPS | **140-3 Level 3** (bài KMS mới; khóa cũ nói 140-2 Level 2) | 140-2 **Level 3** (theo bài CloudHSM) |
 | Kiểm soát key | AWS vận hành, IAM + key policy | **Chỉ khách hàng**, AWS không truy cập được |
 | API | AWS API | PKCS#11, JCE, CNG |
 | Tích hợp S3/EBS/RDS | **Native** | Không (trừ KMS custom key store) |
@@ -308,10 +314,13 @@ Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và 
 | EBS | gp2/gp3 16K IOPS → io1/io2 64K → Block Express 256K → Instance Store hàng trăm nghìn+ |
 | S3 | Object 0–50 TB (khóa cũ: 5 TB); single PUT ≤ 5 GB; multipart nên dùng từ 100 MB; RTC 15 phút; 200 OK = đã lưu durable |
 | S3 bucket | Khóa cũ: 100 soft / 1.000 hard (khóa mới không nêu); nay: 10.000 mặc định (từ 11/2024) |
-| S3 lifecycle | ≥ 30 ngày ở Standard trước khi sang IA; min duration 30/90/180 ngày |
-| S3 Object Lock | Khóa học: chỉ bật khi tạo bucket; nay (11/2023): bật được cho bucket có sẵn đã bật versioning |
-| S3 encryption | Khóa học: không header thì không mã hóa; nay (01/2023): mặc định SSE-S3 |
-| KMS | Mã hóa trực tiếp ≤ 4 KB; xóa key chờ 7–30 ngày; rotation CMK: mặc định tắt, 1 năm (nay chỉnh 90–2560 ngày) |
+| S3 lifecycle | ≥ 30 ngày ở Standard trước khi sang IA; một rule qua Glacier IR phải ≥ 90 ngày mới sang Glacier Flexible; object < 128 KB mặc định không transition; min duration 30/90/180 ngày |
+| S3 Object Lock | Bật được cho bucket mới hoặc có sẵn (khóa cũ: chỉ bucket mới); bucket default chỉ cho Retention, không cho Legal Hold |
+| S3 encryption | SSE bắt buộc, mặc định SSE-S3 (khóa cũ: không header thì không mã hóa); 4 kiểu SSE: SSE-C (legacy, chặn mặc định), SSE-S3, SSE-KMS, DSSE-KMS |
+| S3 Inventory | Daily / weekly; lần đầu tới 48 giờ, không ép chạy; target bucket cùng region |
+| S3 Transfer Acceleration | Bật xong tới ~20 phút mới hiệu lực |
+| S3 presigned URL bằng IAM role | Hết hiệu lực khi token role hết hạn: mặc định 1 h, tối đa 12 h |
+| KMS | Mã hóa trực tiếp ≤ 4 KB; xóa key chờ 7–30 ngày; rotation CMK: mặc định tắt, ~1 năm (chọn được chu kỳ); ~1 USD/key/tháng; FIPS 140-3 Level 3 |
 | CloudTrail | Event History 90 ngày; không real-time, log giao khoảng 5 phút một lần (khóa cũ: trong vòng 15 phút) |
 | CloudWatch Logs | Retention mặc định vô thời hạn; log class Infrequent Access không có metric filter / Live Tail / subscription filter, không đổi log class sau khi tạo |
 | SAML federation | Credentials tạm thời mặc định 1 h, tối đa 12 h |
@@ -381,6 +390,10 @@ Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và 
 **Storage**
 - Versioning không tắt được, chỉ suspend; Replication và Object Lock đều cần versioning ([[S3 Versioning and MFA Delete]]).
 - Bật replication không copy object cũ. Dùng S3 Batch Replication ([[S3 Replication]]).
+- Block Public Access bật ở mức account (hoặc organization) thì tắt ở bucket vẫn bị chặn ([[S3 Security]]).
+- S3 Event Notifications gửi được thẳng tới EventBridge (cùng SNS, SQS, Lambda) ([[S3 Events]]).
+- Requester Pays không dùng với static website hosting / anonymous; thiếu `x-amz-request-payer` → 403 ([[S3 Requester Pays]]).
+- CORS không phải permission: bucket private vẫn cần bucket policy / presigned URL ([[CORS]]).
 - One Zone-IA cho dữ liệu quan trọng duy nhất là sai ([[S3 Storage Classes]]).
 - Lifecycle sang IA sau 7 ngày là sai (cần ≥ 30 ngày) ([[S3 Lifecycle Configuration]]).
 - EFS chỉ dùng cho Linux; Windows/SMB dùng FSx for Windows ([[EFS]]).

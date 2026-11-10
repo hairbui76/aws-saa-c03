@@ -8,7 +8,9 @@
     "Exam Cheat Sheet: object S3 tối đa 50 TB, Local Zone / Wavelength Zone / Outposts, Service Quotas (xin tăng theo region, quota request template, 5.000 IAM user là hard limit), alarm CloudWatch M of N",
     "Top mẹo thi và concept map chương 03: thêm Wavelength Zone, Outposts, Service Quotas, S3 50 TB, alarm M of N",
     "Exam Cheat Sheet: thêm IAM Identity Center, SAML 2.0 federation, PassRole, Service Catalog, Cost Explorer / CUR / cost allocation tags, RAM, Artifact, License Manager; SCP allow phải có ở mọi tầng; CloudTrail giao log khoảng 5 phút một lần; log class của CloudWatch Logs",
-    "Top mẹo thi và concept map chương 04: thêm 6 bài mới (Service Catalog, Cost Management, SAML 2.0, Identity Center, RAM, Artifact và License Manager), SCP allow ở mọi tầng, controls proactive của Control Tower"
+    "Top mẹo thi và concept map chương 04: thêm 6 bài mới (Service Catalog, Cost Management, SAML 2.0, Identity Center, RAM, Artifact và License Manager), SCP allow ở mọi tầng, controls proactive của Control Tower",
+    "Exam Cheat Sheet: KMS nay FIPS 140-3 Level 3 (CloudHSM chọn theo single-tenant), DSSE-KMS và SSE-C legacy, S3 Express One Zone, Glacier +40 KB metadata, Intelligent-Tiering 90–730 / 183–730 ngày, CORS, Requester Pays, S3 Inventory, Block Public Access mức account/organization, S3 Events tới EventBridge, presigned URL bằng role",
+    "Top mẹo thi và concept map chương 05: thêm CORS, S3 Requester Pays, S3 Inventory; SSE bắt buộc (mặc định SSE-S3), DSSE-KMS; KMS FIPS 140-3 Level 3; lifecycle qua Glacier IR ≥ 90 ngày; replication hai chiều tùy chọn"
   ],
   "missing": [],
   "lessons": {
@@ -331,6 +333,183 @@
     "AWS Artifact and License Manager": {
       "kind": "new",
       "summary": "Bài mới: Artifact tải báo cáo compliance của AWS (ISO, PCI, FedRAMP, SOC); License Manager theo dõi license, self-managed license gắn AMI chặn được launch vượt license, license asset groups, Linux và user-based subscriptions chỉ báo cáo"
+    },
+    "S3 Security": {
+      "kind": "updated",
+      "summary": "ACL nay tắt mặc định (Object Ownership = Bucket owner enforced); Block Public Access đặt được ở mức bucket, account và cả AWS Organization, bật ở mức trên thì bucket vẫn bị chặn nên phải kiểm tra mọi mức; phần Exam PowerUp chọn identity/bucket policy/ACL không còn trong khóa mới.",
+      "changed": [
+        "ACL (legacy)",
+        "Block Public Access",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Khi nào dùng gì (Exam PowerUp)"
+      ]
+    },
+    "S3 Static Website Hosting": {
+      "dropped": [
+        "Bảng so sánh / số liệu"
+      ]
+    },
+    "S3 Versioning and MFA Delete": {
+      "kind": "updated",
+      "summary": "MFA Delete: với virtual MFA, serial number gửi kèm là ARN của thiết bị MFA; chỉ bucket owner (thường là root) bật được, và chỉ qua CLI/API.",
+      "changed": [
+        "MFA Delete"
+      ],
+      "dropped": []
+    },
+    "S3 Performance Optimization": {
+      "kind": "updated",
+      "summary": "Transfer Acceleration: dùng mạng edge location của CloudFront và tối ưu thêm giao thức, bật xong có thể mất tới ~20 phút, có endpoint dual-stack cho IPv6, chỉ trả phí khi transfer thực sự được tăng tốc.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "KMS": {
+      "kind": "updated",
+      "summary": "KMS nay đạt FIPS 140-3 Level 3 (bản cũ: 140-2 Level 2), nên Level 3 không còn là dấu hiệu chọn CloudHSM; demo thêm giá ~1 USD/key/tháng, key usage HMAC, key material từ External key manager / CloudHSM, statement grant cho AWS service, chọn chu kỳ rotation.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Encryption": {
+      "kind": "updated",
+      "summary": "Server-side encryption nay bắt buộc (mặc định SSE-S3, AES-256 GCM), có 4 kiểu SSE: thêm DSSE-KMS (thêm lớp mã hóa thứ hai của S3, cho compliance đòi 2 lớp); SSE-C thành legacy, bị AWS chặn mặc định; demo không còn object không mã hóa.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bốn kiểu server-side encryption",
+        "Bảng so sánh / số liệu",
+        "Bucket default encryption",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Storage Classes": {
+      "kind": "updated",
+      "summary": "Glacier Flexible / Deep Archive cộng thêm 40 KB metadata vào mỗi object (không phải làm tròn lên); Intelligent-Tiering Archive Access 90–730 ngày, Deep Archive Access 183–730 ngày, object < 128 KB không chịu phí monitoring; thêm S3 Express One Zone (1 AZ, directory bucket, request rẻ hơn ~50%).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Bucket Keys": {
+      "kind": "updated",
+      "summary": "Quota KMS tính theo account, theo region; object cũ có thể áp bucket key bằng UpdateObjectEncryption (không di chuyển dữ liệu) hoặc CopyObject; không áp cho DSSE-KMS; policy dùng ARN object phải đổi sang ARN bucket.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Lưu ý vận hành",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Lifecycle Configuration": {
+      "kind": "updated",
+      "summary": "Thêm ràng buộc: một rule đưa object vào Glacier Instant Retrieval phải chờ ít nhất 90 ngày mới sang Glacier Flexible Retrieval; object < 128 KB mặc định không được transition.",
+      "changed": [
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Replication": {
+      "kind": "updated",
+      "summary": "SSE-C nay được hỗ trợ replicate (bản cũ: không), DSSE-KMS cần cấu hình thêm như SSE-KMS; replication hai chiều là tùy chọn bật thêm; CRR replicate tới một hoặc nhiều bucket đích.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Presigned URLs": {
+      "kind": "updated",
+      "summary": "Tạo presigned URL bằng IAM role được xem là cách an toàn, chỉ cần nhớ URL hết hiệu lực khi token của role hết hạn (mặc định 1 giờ, tối đa 12 giờ); bản cũ khuyên không dùng role.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cách hoạt động / Kiến trúc",
+        "Exam PowerUp: các hành vi \"lạ\" cần nhớ",
+        "Bảng số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CORS": {
+      "kind": "new",
+      "summary": "Bài mới: origin, same-origin và cross-origin request, CORS configuration của S3 (JSON/XML, rule khớp đầu tiên thắng, không phải permission), preflight và các response header Access-Control-*."
+    },
+    "S3 Access Points": {
+      "kind": "updated",
+      "summary": "Access point hỗ trợ cross-account: chủ bucket tạo access point và delegate quyền cho identity ở account khác, không cần bucket policy phức tạp.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Inventory": {
+      "kind": "new",
+      "summary": "Bài mới: báo cáo daily/weekly danh sách object của bucket kèm encryption, replication, storage class, Object Lock…; lần đầu tới 48 giờ, không ép chạy; CSV/ORC/Parquet; target bucket cùng region, cần bucket policy."
+    },
+    "S3 Events": {
+      "kind": "updated",
+      "summary": "EventBridge nay là một đích trực tiếp của S3 Event Notifications (cùng SNS, SQS, Lambda), không chỉ là lựa chọn thay thế; restore event có thêm lúc bản sao tạm hết hạn; console tự cấu hình Lambda resource policy.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Access Logs": {
+      "kind": "updated",
+      "summary": "Quyền ghi vào target nay cấp bằng bucket policy cho service principal logging.s3.amazonaws.com (bản cũ: ACL); target phải cùng region, cùng account; best effort, có thể có log không bao giờ được giao.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Object Lock": {
+      "kind": "updated",
+      "summary": "Bật được cho bucket mới hoặc bucket có sẵn; bucket default chỉ áp cho Retention, không áp cho Legal Hold; cần s3:PutObjectRetention để đặt retention; retention tính từ lúc tạo object version.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Retention Period",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "S3 Requester Pays": {
+      "kind": "new",
+      "summary": "Bài mới: bucket Requester Pays để người tải (identity đã xác thực, gửi header x-amz-request-payer) trả phí request và transfer ra, owner vẫn trả lưu trữ; không dùng với static website hosting."
+    },
+    "S3 Multi-Region Access Points": {
+      "kind": "removed",
+      "summary": "khóa mới không còn bài Multi-Region Access Points"
+    },
+    "S3 Select and Glacier Select": {
+      "kind": "removed",
+      "summary": "khóa mới không còn bài S3 Select / Glacier Select"
     }
   }
 }

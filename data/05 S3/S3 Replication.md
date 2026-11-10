@@ -2,6 +2,7 @@
 tags: [saa-c03, s05-s3, s3, storage, replication, resilience, dr]
 aliases: [CRR, SRR, Cross-Region Replication, Same-Region Replication, S3 RTC, Replication Time Control]
 lessons: ["0102 S3 Replication", "0103 DEMO Cross Region Replication of an S3 Static Website"]
+videos: ["090 [SHAREDALL] S3 Replication", "091 [SHAREDALL] [DEMO] Cross-Region Replication of an S3 Static Website"]
 ---
 # S3 Replication
 
@@ -16,7 +17,7 @@ lessons: ["0102 S3 Replication", "0103 DEMO Cross Region Replication of an S3 St
 
 ## Khái niệm cốt lõi
 - **Hai loại replication:**
-  - **CRR (Cross-Region Replication)**: source và destination ở **hai region khác nhau**. Đây là loại có từ lâu.
+  - **CRR (Cross-Region Replication)**: từ source sang **một hoặc nhiều** destination ở **region khác**. Đây là loại có từ lâu.
   - **SRR (Same-Region Replication)**: cả hai bucket ở **cùng một region**. Ra đời sau.
   - Cả hai loại đều chạy được **trong cùng account** lẫn **giữa hai account khác nhau**.
 - **Replication configuration** gắn trên **source bucket**, gồm:
@@ -61,15 +62,15 @@ flowchart LR
 
 ### Những điểm cần nhớ (considerations)
 - **Không retroactive**: chỉ object được ghi **sau khi** bật replication mới được copy. Object có sẵn trước đó không tự replicate. (Khóa học có nhắc console giờ hỏi có muốn replicate existing objects không; việc này chạy bằng **S3 Batch Replication**.)
-- **Một chiều**: source → destination. Object thêm tay vào destination **không** chảy ngược về source. Muốn hai chiều thì phải cấu hình hai rule ngược nhau (như trong demo MRAP).
+- **Một chiều theo mặc định**: source → destination. Object thêm tay vào destination **không** chảy ngược về source. **Hai chiều (bidirectional)** là một tùy chọn phải bật và cấu hình thêm (bổ sung, bài không nói chi tiết: tạo rule theo cả hai hướng, kèm replica modification sync).
 - **Mã hóa**:
   - Unencrypted: OK.
   - **SSE-S3**: OK.
-  - **SSE-KMS**: OK nhưng cần **cấu hình thêm** và thêm quyền KMS cho role (xem [[KMS]], [[S3 Encryption]]).
-  - **SSE-C**: khóa học nói **không** replicate được vì S3 không giữ key. (Từ 10/2022 AWS đã hỗ trợ replicate object SSE-C. Khi đi thi, nếu đáp án dựa trên kiến thức cũ "SSE-C không replicate" thì hiểu ý đề hỏi gì.)
+  - **SSE-KMS** và **DSSE-KMS**: OK nhưng cần **cấu hình thêm** (có KMS là có cấu hình thêm; bổ sung: quyền KMS cho role). Xem [[KMS]], [[S3 Encryption]].
+  - **SSE-C**: **được hỗ trợ**, nhưng SSE-C nay **mặc định bị tắt** trên bucket. (Bản khóa cũ nói SSE-C không replicate được vì S3 không giữ key.)
 - **Source bucket owner phải có quyền trên object**. Nếu bucket cho account khác upload và account nguồn không sở hữu object đó, object có thể không được replicate.
 - **Không replicate system events**: thay đổi do [[S3 Lifecycle Configuration]] gây ra không được replicate, chỉ **user events** mới được replicate.
-- **Không replicate object ở Glacier / Glacier Deep Archive** (nay là Glacier Flexible Retrieval / Deep Archive). Hãy coi chúng như sản phẩm lưu trữ riêng.
+- **Không replicate object ở Glacier / Glacier Deep Archive** (nay là Glacier Flexible Retrieval / Deep Archive). Hãy coi chúng như sản phẩm lưu trữ riêng. (Bản khóa cũ nêu, bài mới không nhắc.)
 - **Delete mặc định không replicate**: delete marker không được copy trừ khi bật tùy chọn. Việc xóa hẳn một version cụ thể thì không bao giờ được replicate (để chống xóa độc hại).
 
 ## Use case (Why use replication?)
@@ -82,11 +83,11 @@ flowchart LR
 | CRR | **Giảm latency**: đặt bản sao gần người dùng ở region xa |
 
 ## Demo / Lab
-Demo 0103: CRR cho một static website (xem [[S3 Static Website Hosting]]) để làm DR.
-1. Tạo source bucket ở `us-east-1` và destination bucket ở `us-west-1`, bật static website hosting (index và error document đều là `index.html`), tắt Block Public Access, gắn bucket policy cho phép `s3:GetObject` công khai trên `arn:aws:s3:::<bucket>/*`.
+Demo: CRR cho một static website Aus-E-Mart (xem [[S3 Static Website Hosting]]) để làm DR.
+1. Tạo source bucket ở `us-east-1` và destination bucket ở `us-west-1`, bật static website hosting (`index.html`, `error.html`), tắt Block Public Access, gắn bucket policy cho phép `s3:GetObject` công khai trên `arn:aws:s3:::<bucket>/*`.
 2. Ở source bucket → tab **Management** → **Create replication rule**: bật versioning cho source, đặt tên rule, phạm vi "all objects", chọn destination (cùng account) và bật versioning cho destination, chọn **create new IAM role**.
 3. Không bật SSE-KMS, RTC, delete marker replication. Chọn **không** replicate existing objects.
-4. Upload `index.html` và ảnh vào source, sau vài phút chúng xuất hiện ở destination và website ở destination hiển thị y hệt. Upload bản mới cùng tên thì destination cập nhật sau khoảng 3–4 phút. **Không có RTC thì thời gian replicate thay đổi nhiều.**
+4. Upload website mẫu Aus-E-Mart vào source, sau vài phút (có thể 5–10 phút) chúng xuất hiện ở destination và website ở destination hiển thị y hệt. Upload bản mới của ảnh "product of the week" thì destination cập nhật sau một lúc. **Không có RTC thì thời gian replicate thay đổi nhiều.**
 5. Dọn dẹp: empty và delete cả hai bucket, xóa IAM role tự tạo có tên bắt đầu bằng `s3crr_...`.
 
 Rút ra: replication cho phép làm DR đơn giản cho static website. Độ trễ không được đảm bảo nếu thiếu RTC.
@@ -95,15 +96,15 @@ Rút ra: replication cho phép làm DR đơn giản cho static website. Độ tr
 - Đề nhắc **"15 phút"** hoặc cần **SLA/thời gian replicate dự đoán được** → **S3 Replication Time Control (RTC)**.
 - **Versioning bắt buộc ở cả hai bucket.** Đáp án nào replicate mà không bật versioning là sai.
 - Bật replication **không** copy object cũ. Muốn copy dữ liệu sẵn có thì dùng **S3 Batch Replication** (hoặc copy thủ công).
-- Replication **một chiều**, **không replicate delete marker** theo mặc định, **không replicate thay đổi do lifecycle**.
+- Replication **một chiều** theo mặc định (hai chiều là tùy chọn bật thêm), **không replicate delete marker** theo mặc định, **không replicate thay đổi do lifecycle**.
 - Cross-account: cần **bucket policy ở destination** và nên đổi **ownership** sang destination account.
 - Muốn giảm chi phí bản sao DR → đổi **storage class ở destination** (ví dụ One Zone-IA).
 - Dữ liệu **không được rời region** nhưng vẫn cần bản sao cô lập → **SRR sang account khác**.
-- SSE-KMS replicate được nhưng cần cấu hình KMS và quyền thêm. Gặp câu hỏi kiểu cũ thì SSE-C là "không replicate".
+- SSE-KMS / DSSE-KMS replicate được nhưng cần cấu hình thêm. SSE-C cũng được hỗ trợ (nhưng SSE-C mặc định bị tắt); bản khóa cũ nói SSE-C "không replicate", gặp câu hỏi kiểu cũ thì hiểu ý đề.
 
 ## Liên kết
 - Tiên quyết: [[S3 Basics]], [[S3 Versioning and MFA Delete]], [[IAM Roles]]
-- Liên quan: [[S3 Storage Classes]], [[S3 Encryption]], [[KMS]], [[S3 Lifecycle Configuration]], [[S3 Events]], [[S3 Multi-Region Access Points]], [[S3 Static Website Hosting]]
+- Liên quan: [[S3 Storage Classes]], [[S3 Encryption]], [[KMS]], [[S3 Lifecycle Configuration]], [[S3 Events]], [[S3 Multi-Region Access Points]], [[S3 Static Website Hosting]], [[S3 Inventory]] (báo cáo replication status của từng object)
 - Kiến trúc: [[HA vs FT vs DR]], [[RPO and RTO]], [[AWS Backup]]
 - Phân biệt với: [[DynamoDB Global Tables]], [[Aurora Global Database]] (replication ở tầng database)
 - Tổng quan: [[_MOC 05 S3]]

@@ -2,6 +2,7 @@
 tags: [saa-c03, s05-s3, s3, security, encryption, kms, cost-optimization]
 aliases: [Bucket Key, S3 Bucket Key]
 lessons: ["0380 S3 Bucket Keys"]
+videos: ["088 S3 Bucket Keys"]
 ---
 # S3 Bucket Keys
 
@@ -16,14 +17,15 @@ lessons: ["0380 S3 Bucket Keys"]
 - Ví dụ: Bob PUT object với SSE-KMS, key `aws/s3`. Mỗi object cần **một DEK riêng**, tức **một lệnh `GenerateDataKey` tới KMS**; S3 mã hóa object rồi lưu object + DEK đã mã hóa cạnh nhau (xem [[KMS]]).
 - 3 PUT thì không sao, nhưng 30 / 300 / 300.000 PUT mỗi giây thì:
   - **Chi phí**: phí request KMS tăng theo số object.
-  - **Throttling**: `GenerateDataKey` bị giới hạn khoảng **5.500, 10.000 hoặc 50.000 request/giây** tùy region. Đây là trần số PUT/giây mà bucket SSE-KMS đạt được với một KMS key.
-  - (Khóa học nói giới hạn này "shared across regions"; chính xác theo AWS: quota KMS tính **theo account, theo từng region**, dùng chung cho mọi key trong region đó.)
+  - **Throttling**: thao tác sinh DEK chỉ được gọi tới một mức nhất định. Mọi lần đọc/ghi object SSE-KMS đều ăn vào **KMS quota**, tính **theo account, theo từng region** (mức mặc định khác nhau giữa các region). Quota này thành trần số PUT/giây vào S3.
+  - (Số liệu từ bản khóa cũ, bài mới không nêu: khoảng **5.500, 10.000 hoặc 50.000 request/giây** tùy region.)
 
 ### Cách bucket key giải quyết
 - KMS key không sinh từng DEK nữa mà sinh một **bucket key giới hạn thời gian**, gắn (về mặt khái niệm) cho bucket.
 - Trong thời gian đó, **S3 dùng bucket key để tự sinh DEK** cho từng object → chuyển phần việc từ KMS sang S3.
 - Kết quả: **ít KMS API call hơn nhiều** → **giảm chi phí** (AWS công bố tới ~99%) và **tăng scalability**.
-- **Không hồi tố (not retroactive)**: chỉ áp dụng cho object được mã hóa **sau khi** bật trên bucket.
+- **Không hồi tố (not retroactive)**: chỉ áp dụng cho object được mã hóa **sau khi** bật trên bucket. Muốn áp cho object cũ: gọi **UpdateObjectEncryption** (không di chuyển dữ liệu, giữ nguyên metadata) hoặc **CopyObject**.
+- Chỉ dành cho **SSE-KMS**; không áp cho **DSSE-KMS** hay các kiểu mã hóa khác.
 
 ```mermaid
 flowchart LR
@@ -40,16 +42,17 @@ flowchart LR
 
 ## Lưu ý vận hành
 - **[[CloudTrail]]**: sau khi bật, log KMS hiển thị **ARN của bucket** thay vì ARN của object, và **số event KMS ít đi** (vì KMS chỉ được gọi để sinh bucket key).
-  - Hệ quả: nếu key policy/IAM policy dùng **encryption context** là ARN object thì phải đổi sang ARN bucket (bổ sung).
+  - Hệ quả: nếu policy cấp quyền cho các thao tác mã hóa đang trỏ tới **ARN object** (encryption context) thì phải **đổi sang ARN bucket**, vì encryption context giờ xoay quanh bucket.
 - **Replication** ([[S3 Replication]], SRR và CRR): bucket key hoạt động được.
   - Object đã mã hóa khi replicate thường **giữ nguyên thiết lập mã hóa** ở bucket đích.
-  - Object **plaintext** replicate sang bucket đích có default encryption/bucket key → S3 **mã hóa ở phía đích** theo cấu hình bucket đích → **ETag có thể khác** giữa nguồn và đích.
+  - Object **plaintext** replicate sang bucket đích có default encryption/bucket key → S3 **mã hóa ở phía đích** theo cấu hình bucket đích → **ETag có thể khác** giữa nguồn và đích. ETag thường dùng để kiểm tra toàn vẹn, nên giải pháp phải tính tới chuyện này kẻo tưởng object bị hỏng.
 
 ## 🎯 Mẹo thi SAA-C03
 - Đề nói "dùng SSE-KMS, chi phí KMS quá cao" hoặc "bị **KMS throttling** / `ThrottlingException` khi upload số lượng lớn" → **bật S3 Bucket Key**.
-- Bucket key **không áp dụng ngược** cho object cũ; muốn áp cho object cũ phải copy/re-encrypt chúng.
+- Bucket key **không áp dụng ngược** cho object cũ; muốn áp cho object cũ dùng **UpdateObjectEncryption** (không di chuyển dữ liệu) hoặc **CopyObject**.
 - Sau khi bật, CloudTrail thấy **bucket ARN**, không thấy object ARN; ít event KMS hơn.
-- Bucket key chỉ liên quan **SSE-KMS** (không liên quan SSE-S3 hay SSE-C).
+- Bucket key chỉ liên quan **SSE-KMS** (không áp cho DSSE-KMS, không liên quan SSE-S3 hay SSE-C).
+- Bật bucket key mà policy đang dùng ARN object cho encryption context → đổi policy sang **ARN bucket**.
 - Vẫn giữ được lợi ích của SSE-KMS (kiểm soát key, role separation) trong khi giảm chi phí.
 
 ## Liên kết

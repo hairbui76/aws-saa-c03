@@ -1,0 +1,13 @@
+{
+ "CORS": {
+  "sig": "6-g7kpnq",
+  "steps": [
+   "Sơ đồ này giải thích CORS. Trang web bạn mở đầu tiên xác định origin, gồm protocol, domain và port; request cùng origin luôn được phép, còn request sang origin khác bị hạn chế trừ khi phía được gọi cho phép.",
+   "Trình duyệt mở kangagram.io nên origin là https kangagram.io. Các file index.html, serverless.js và kangagram.png cũng nằm ở kangagram.io, đây là same-origin request nên luôn được phép.",
+   "Tiếp theo, trang tải ảnh Willow and Snowy từ bucket kangagram-img.io, một domain khác. Đây là cross-origin request, mặc định bị hạn chế.",
+   "File serverless.js còn gọi API Gateway ở domain amazonaws.com để lấy metadata ảnh. Đây cũng là cross-origin, nên API Gateway cũng phải cho phép origin kangagram.io.",
+   "Bucket kangagram-img.io có CORS configuration viết bằng JSON hoặc XML: rule một cho kangagram.io gửi PUT, POST, DELETE, rule hai cho mọi origin được GET. Rule xét theo thứ tự, rule khớp đầu tiên được dùng, và đây không phải permission.",
+   "Request phức tạp thì trình duyệt gửi preflight trước, phía kia trả các header Access-Control như Allow-Origin, Allow-Methods, Allow-Headers và Max-Age. Khi đi thi, lỗi CORS khi web ở domain A đọc object ở bucket B thì bật CORS config trên bucket B."
+  ]
+ }
+}

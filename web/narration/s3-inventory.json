@@ -1,0 +1,13 @@
+{
+ "S3 Inventory": {
+  "sig": "6-8shw5y",
+  "steps": [
+   "Sơ đồ này nói về S3 Inventory, báo cáo định kỳ về các object trong một bucket. Bạn cấu hình theo bucket, cho cả bucket hoặc một prefix, và S3 tự ghi báo cáo vào target bucket cùng region.",
+   "Đầu tiên, gắn inventory configuration vào source bucket: chọn field cần báo cáo, chỉ current version hay mọi version, tần suất daily hoặc weekly và định dạng CSV, ORC hoặc Parquet. Một bucket có thể có nhiều configuration.",
+   "S3 tự tạo báo cáo theo lịch daily hoặc weekly. Lần đầu có thể mất tới 48 giờ, và bạn không thể ép nó chạy ngay.",
+   "Báo cáo được ghi vào target bucket, cùng account hoặc account khác nhưng bắt buộc cùng region. Target cần bucket policy cho phép S3 ghi vào bằng s3 PutObject.",
+   "Trong target có thư mục theo ngày chứa manifest.json mô tả báo cáo, và thư mục data chứa file CSV nén gzip, mỗi object version một dòng với size, storage class, encryption, replication hay Object Lock.",
+   "Lời nhắc khi đi thi: cần danh sách object kèm trạng thái mã hóa, replication, storage class của bucket lớn thì chọn S3 Inventory, nhớ nó không real-time. Còn log từng request thì là S3 Access Logs."
+  ]
+ }
+}

@@ -249,5 +249,11 @@
   "SOC": "System and Organization Controls",
   "DBA": "Database Administrator",
   "PPL": "Piped Processing Language",
-  "SKU": "Stock Keeping Unit"
+  "SKU": "Stock Keeping Unit",
+  "HMAC": "Hash-based Message Authentication Code",
+  "GCM": "Galois/Counter Mode",
+  "ORC": "Optimized Row Columnar",
+  "CSV": "Comma-Separated Values",
+  "NSA": "National Security Agency",
+  "CNSSP": "Committee on National Security Systems Policy"
 }

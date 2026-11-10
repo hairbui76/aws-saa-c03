@@ -2,6 +2,7 @@
 tags: [saa-c03, s05-s3, s3, storage, data-protection, security]
 aliases: [S3 Versioning, Object Versioning, MFA Delete, Delete Marker]
 lessons: ["0090 Object Versioning MFA Delete", "0091 DEMO S3 Versioning"]
+videos: ["074 [ASSOCIATESHARED] Object Versioning & MFA Delete", "075 [SHAREDALL] [DEMO] - S3 Versioning"]
 ---
 # S3 Versioning and MFA Delete
 
@@ -52,18 +53,20 @@ flowchart LR
 - Khi bật, cần MFA để:
   1. **Đổi trạng thái versioning** (Enabled ↔ Suspended).
   2. **Xóa vĩnh viễn bất kỳ version nào** của object.
-- Cách dùng: gửi kèm API call **serial number của thiết bị MFA + mã MFA hiện tại** (nối lại với nhau).
-- (Bổ sung, đúng với AWS hiện tại: chỉ **root user** của account sở hữu bucket mới bật/tắt được MFA Delete, và phải làm bằng **CLI/API**, không bật được trên console.)
+- Cách dùng: gửi kèm API call **serial number của thiết bị MFA + mã MFA hiện tại** (nối lại với nhau). Với **virtual MFA** (phổ biến hiện nay), serial number chính là **ARN của thiết bị MFA**.
+- Chỉ **bucket owner** (thường là **root user** của account) mới bật được MFA Delete, và chỉ bật được qua **AWS CLI hoặc API**, không bật trên console.
+- MFA nay là yêu cầu mặc định với root user, nên giảng viên gợi ý cân nhắc bật MFA Delete như một lớp bảo vệ thêm.
 
 ## Demo / Lab
 1. Tạo bucket, bỏ Block all public access, **Enable Bucket Versioning** ngay lúc tạo.
 2. Bật static website hosting (`index.html`, `error.html`), thêm bucket policy public read (như [[S3 Static Website Hosting]]).
-3. Upload `index.html` và `img/winky.jpg` → web hiện ảnh Winky. Bật toggle **Show versions** để thấy version ID.
-4. Upload "nhầm" một `winky.jpg` khác (ảnh Truffles) cùng key → giao diện mặc định trông như bị ghi đè, web hiện Truffles; Show versions thấy **2 version**.
+3. Upload website mẫu Aus-E-Mart (`index.html` và ảnh "product of the week" `potw.png`: áo thun koala) → web hiện ảnh. Bật toggle **Show versions** để thấy version ID.
+4. Upload `potw.png` phiên bản 2 (áo thun drop bear) cùng key → giao diện mặc định trông như bị ghi đè, web hiện ảnh mới; Show versions thấy **2 version**.
 5. Delete object (không bật Show versions) → console cảnh báo "adds delete markers"; Show versions thấy delete marker trên cùng.
 6. Xóa delete marker (thao tác trên version → phải gõ `permanently delete`) → object trở lại.
-7. Xóa version Truffles (current) → version Winky gốc thành current, web hiện đúng ảnh.
-8. Dọn dẹp: Empty rồi Delete bucket.
+7. Xóa version drop bear (current) → version koala gốc thành current, web hiện lại ảnh cũ.
+8. Mở Properties → Bucket versioning → Suspend để xem cảnh báo của console: mọi version cũ vẫn giữ, chỉ dừng tạo version mới (demo bấm Cancel, không suspend thật).
+9. Dọn dẹp: Empty rồi Delete bucket.
 - Rút ra: thao tác trên **object** → tạo version mới / delete marker (không mất gì). Thao tác trên **version cụ thể** → **vĩnh viễn**.
 
 ## 🎯 Mẹo thi SAA-C03

@@ -18,7 +18,7 @@
       },
       {
         "type": "single",
-        "q": "Một công ty tài chính yêu cầu lưu khóa mã hóa trong HSM chuyên dụng single-tenant, đạt chuẩn FIPS 140-2 Level 3 và do chính công ty quản lý. Dịch vụ nào đáp ứng yêu cầu?",
+        "q": "Một công ty tài chính yêu cầu lưu khóa mã hóa trong HSM chuyên dụng single-tenant do chính công ty quản lý. Dịch vụ nào đáp ứng yêu cầu?",
         "options": [
           "AWS KMS với customer managed key",
           "AWS KMS với AWS managed key",
@@ -28,7 +28,7 @@
         "answer": [
           2
         ],
-        "explain": "Theo khóa học, KMS là FIPS 140-2 Level 2 và là dịch vụ dùng chung; yêu cầu Level 3, HSM riêng, single-tenant, tự quản key là dấu hiệu kinh điển của CloudHSM. Customer managed key vẫn nằm trong hạ tầng KMS dùng chung."
+        "explain": "Bài KMS mới nói KMS đạt FIPS 140-3 Level 3, nên mốc Level 3 không còn tách KMS với CloudHSM; dấu hiệu quyết định là HSM chuyên dụng single-tenant do chính công ty quản lý, đó là CloudHSM. Customer managed key vẫn nằm trong hạ tầng KMS dùng chung."
       },
       {
         "type": "single",
@@ -180,7 +180,7 @@
       },
       {
         "type": "single",
-        "q": "Vet staff đã được cấp quyền GetObject trong access point policy nhưng vẫn bị Access Denied khi đọc object qua access point. Nguyên nhân có khả năng nhất là gì?",
+        "q": "HR staff đã được cấp quyền GetObject trong access point policy nhưng vẫn bị Access Denied khi đọc object qua access point. Nguyên nhân có khả năng nhất là gì?",
         "options": [
           "Access point chỉ hoạt động với network origin là Internet",
           "Bucket policy không cho phép (hoặc không delegate quyền cho access point)",
@@ -242,13 +242,13 @@
         "options": [
           "Toàn bộ object cũ tự động được re-encrypt bằng bucket key",
           "Object cũ bị chuyển sang SSE-S3",
-          "Bucket Key chỉ áp dụng cho object mã hóa sau khi bật; object cũ phải copy/re-encrypt nếu muốn hưởng lợi",
+          "Bucket Key chỉ áp dụng cho object mã hóa sau khi bật; object cũ phải xử lý lại (UpdateObjectEncryption hoặc CopyObject) nếu muốn hưởng lợi",
           "Object cũ không còn đọc được cho đến khi re-encrypt"
         ],
         "answer": [
           2
         ],
-        "explain": "Bucket Key không hồi tố, chỉ áp dụng cho object được mã hóa sau khi bật. Object cũ vẫn đọc bình thường với DEK riêng của chúng, muốn áp dụng thì phải copy/re-encrypt."
+        "explain": "Bucket Key không hồi tố, chỉ áp dụng cho object được mã hóa sau khi bật. Object cũ vẫn đọc bình thường với DEK riêng của chúng; muốn áp dụng thì gọi UpdateObjectEncryption (không di chuyển dữ liệu, giữ metadata) hoặc CopyObject."
       },
       {
         "type": "single",
@@ -320,7 +320,7 @@
         "answer": [
           1
         ],
-        "explain": "Với SSE-C, khách hàng cung cấp key kèm request còn S3 thực hiện mã hóa/giải mã, nên offload được CPU. Client-side encryption cũng giữ key nhưng phải tự tốn CPU mã hóa."
+        "explain": "Với SSE-C, khách hàng cung cấp key kèm request còn S3 thực hiện mã hóa/giải mã, nên offload được CPU. Client-side encryption cũng giữ key nhưng phải tự tốn CPU mã hóa. Lưu ý SSE-C nay là tùy chọn legacy, AWS chặn mặc định; muốn dùng phải bỏ chặn trong cài đặt encryption của bucket."
       },
       {
         "type": "single",
@@ -351,20 +351,18 @@
         "explain": "AES256 tương ứng SSE-S3 (S3 managed keys, AES-256). aws:kms là SSE-KMS và aws:kms:dsse là DSSE-KMS mã hóa hai lớp."
       },
       {
-        "type": "multi",
-        "q": "Một IAM admin có full quyền S3 nhưng bị gắn inline policy Deny kms:* trên mọi resource. Admin này vẫn mở (GET) được những object nào? (Chọn 2)",
+        "type": "single",
+        "q": "Một IAM admin có full quyền S3 nhưng bị gắn inline policy Deny kms:* trên mọi resource. Admin này vẫn mở (GET) được object nào?",
         "options": [
-          "Object không mã hóa",
           "Object SSE-KMS dùng AWS managed key aws/s3",
           "Object SSE-S3",
           "Object SSE-KMS dùng customer managed key",
           "Object SSE-KMS đã bật S3 Bucket Key"
         ],
         "answer": [
-          0,
-          2
+          1
         ],
-        "explain": "Object không mã hóa và SSE-S3 không cần quyền KMS nên vẫn đọc được. Mọi object SSE-KMS (kể cả có Bucket Key) đều cần KMS decrypt DEK, nên explicit deny kms:* gây Access Denied – đây chính là role separation."
+        "explain": "SSE-S3 dùng key do S3 quản lý, không cần quyền KMS nên vẫn đọc được. Mọi object SSE-KMS (kể cả có Bucket Key) đều cần KMS decrypt DEK, nên explicit deny kms:* gây Access Denied – đây chính là role separation. S3 nay luôn mã hóa object nên không còn object không mã hóa."
       }
     ],
     "S3 Events": [
@@ -412,7 +410,7 @@
       },
       {
         "type": "multi",
-        "q": "Những dịch vụ nào là đích hợp lệ của S3 Event Notifications (không qua EventBridge)? (Chọn 2)",
+        "q": "Những dịch vụ nào là đích hợp lệ của S3 Event Notifications? (Chọn 2)",
         "options": [
           "Amazon SNS topic",
           "Amazon Kinesis Data Streams",
@@ -424,7 +422,7 @@
           0,
           2
         ],
-        "explain": "S3 Event Notifications chỉ gửi trực tiếp tới SNS topic, SQS Standard queue và Lambda. Muốn dùng nhiều loại đích hơn như Step Functions hay Kinesis thì dùng EventBridge."
+        "explain": "S3 Event Notifications gửi tới SNS topic, SQS Standard queue, Lambda và EventBridge event bus. Muốn tới nhiều loại đích hơn như Step Functions hay Kinesis thì cho event đi qua EventBridge."
       },
       {
         "type": "single",
@@ -774,7 +772,7 @@
         "answer": [
           3
         ],
-        "explain": "Presigned URL tạo bằng role ngừng hoạt động khi credential tạm hết hạn, dù expiry của URL dài hơn. Nên dùng identity dài hạn như IAM user để tạo URL có thời hạn dài."
+        "explain": "Presigned URL tạo bằng role ngừng hoạt động khi token tạm của role hết hạn (mặc định 1 giờ, tối đa 12 giờ), dù expiry của URL dài hơn. Role vẫn dùng được cho URL ngắn hạn; cần URL hạn nhiều ngày thì dùng IAM user."
       },
       {
         "type": "single",
@@ -1245,6 +1243,228 @@
           4
         ],
         "explain": "Trạng thái đi Disabled → Enabled ↔ Suspended, không bao giờ quay lại Disabled; object chưa từng có versioning có version ID null. Xóa không chỉ định version ID chỉ tạo delete marker."
+      }
+    ],
+    "CORS": [
+      {
+        "type": "single",
+        "q": "Website tĩnh ở https://www.example.com dùng JavaScript tải ảnh từ một S3 bucket khác domain. Trình duyệt báo lỗi CORS dù bucket policy đã cho phép đọc. Cần làm gì?",
+        "options": [
+          "Tắt Block Public Access trên bucket ảnh",
+          "Thêm CORS configuration trên bucket ảnh cho phép origin https://www.example.com",
+          "Bật S3 Transfer Acceleration cho bucket ảnh",
+          "Chuyển bucket ảnh sang cùng region với website"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Request tới domain khác origin là cross-origin và mặc định bị hạn chế; phía được gọi (bucket ảnh) phải có CORS configuration cho phép origin đó hoặc *. Bucket policy là quyền truy cập, không thay CORS."
+      },
+      {
+        "type": "single",
+        "q": "Theo định nghĩa của CORS, origin gồm những thành phần nào?",
+        "options": [
+          "Chỉ domain",
+          "Domain và đường dẫn trang",
+          "Protocol, domain và port",
+          "Account ID và region của bucket"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Origin là cả URI gốc như https://kangagram.io: protocol, domain và port. Khác protocol hoặc port cũng là origin khác, không chỉ domain."
+      },
+      {
+        "type": "single",
+        "q": "Một S3 bucket có CORS configuration gồm hai rule. Rule 1 cho phép PUT, POST, DELETE từ http://kangagram.io; rule 2 cho phép GET từ *. S3 xử lý các rule thế nào?",
+        "options": [
+          "Gộp tất cả rule lại rồi áp dụng quyền rộng nhất",
+          "Xét theo thứ tự, rule khớp đầu tiên được dùng",
+          "Rule cuối cùng luôn ghi đè các rule trước",
+          "Chỉ rule có AllowedOrigins là * mới có hiệu lực"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "CORS configuration được xử lý theo thứ tự và rule khớp đầu tiên được dùng. Rule viết bằng JSON hoặc XML trên bucket."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về CORS là đúng? (Chọn 2)",
+        "options": [
+          "Same-origin request luôn được phép",
+          "CORS configuration cấp quyền đọc object thay cho bucket policy",
+          "Cross-origin request mặc định bị hạn chế và cần CORS configuration ở phía được gọi",
+          "CORS là khái niệm riêng của AWS, chỉ có ở S3",
+          "Cross-origin request luôn được phép nếu dùng HTTPS"
+        ],
+        "answer": [
+          0,
+          2
+        ],
+        "explain": "Same-origin luôn được phép, cross-origin mặc định bị hạn chế và phía được gọi phải cho phép qua CORS configuration. CORS không phải permission và là chuẩn web, dùng ở nhiều dịch vụ như S3 và API Gateway."
+      },
+      {
+        "type": "single",
+        "q": "Với preflighted request, response header nào cho biết kết quả preflight được cache bao lâu trước khi phải preflight lại?",
+        "options": [
+          "Access-Control-Allow-Origin",
+          "Access-Control-Allow-Methods",
+          "Access-Control-Max-Age",
+          "Access-Control-Allow-Headers"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Access-Control-Max-Age cho biết kết quả preflight được cache bao lâu. Allow-Origin là origin được phép, Allow-Methods là các method, Allow-Headers là các header được dùng trong request thật."
+      }
+    ],
+    "S3 Inventory": [
+      {
+        "type": "single",
+        "q": "Đội bảo mật cần một danh sách định kỳ mọi object trong một bucket chứa hàng tỷ object, kèm trạng thái mã hóa và replication của từng object, với ít công sức nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Viết script gọi ListObjects và HeadObject hằng ngày",
+          "Bật S3 Server Access Logging",
+          "Cấu hình S3 Inventory với các field encryption và replication status",
+          "Bật S3 Event Notifications cho mọi sự kiện"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "S3 Inventory tự động tạo báo cáo object của bucket kèm field chọn như encryption, replication status, storage class. Access Logs ghi từng request, Event Notifications phản ứng theo sự kiện, đều không phải danh sách object."
+      },
+      {
+        "type": "single",
+        "q": "Kỹ sư vừa tạo inventory configuration daily cho một bucket và cần báo cáo ngay trong 1 giờ tới. Điều gì đúng?",
+        "options": [
+          "Bấm Run now trong console để ép tạo báo cáo",
+          "Không ép chạy được; báo cáo đầu tiên có thể mất tới 48 giờ",
+          "Đổi sang weekly để có báo cáo ngay",
+          "Báo cáo luôn có sau đúng 24 giờ"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "S3 Inventory chạy daily hoặc weekly, không ép chạy được, và lần đầu có thể mất tới 48 giờ. Vì vậy nên bật sớm nếu nghĩ sẽ cần."
+      },
+      {
+        "type": "single",
+        "q": "Yêu cầu nào về target bucket của S3 Inventory là đúng?",
+        "options": [
+          "Phải cùng account và cùng region với source bucket",
+          "Có thể khác account nhưng phải cùng region, và cần bucket policy cho phép S3 ghi vào",
+          "Có thể khác region nhưng phải cùng account",
+          "Phải là bucket bật Object Lock"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Target bucket phải cùng region với source, có thể cùng hoặc khác account, và cần bucket policy cho phép S3 PutObject vào. Console tự thêm policy này khi cấu hình."
+      },
+      {
+        "type": "multi",
+        "q": "S3 Inventory xuất báo cáo được ở những định dạng nào? (Chọn 2)",
+        "options": [
+          "Apache Parquet",
+          "JSON Lines",
+          "CSV",
+          "XML",
+          "Microsoft Excel (XLSX)"
+        ],
+        "answer": [
+          0,
+          2
+        ],
+        "explain": "S3 Inventory hỗ trợ CSV, Apache ORC và Apache Parquet. CSV mở đơn giản bằng Excel, ORC và Parquet hợp với công cụ analytics."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn biết ai đã truy cập object nào trong bucket, lúc nào, kết quả ra sao. S3 Inventory có phù hợp không?",
+        "options": [
+          "Có, S3 Inventory ghi lại từng request truy cập",
+          "Không, S3 Inventory chỉ liệt kê object và thuộc tính; cần S3 Server Access Logs hoặc CloudTrail data events",
+          "Có, nếu chọn tần suất daily",
+          "Không, phải dùng S3 Replication"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Inventory là danh sách object kèm thuộc tính (size, storage class, encryption…), không ghi lại request. Log từng request là việc của Server Access Logs hoặc CloudTrail data events."
+      }
+    ],
+    "S3 Requester Pays": [
+      {
+        "type": "single",
+        "q": "Một viện nghiên cứu chia sẻ dataset vài trăm TB trên S3 cho nhiều tổ chức khác tải về và không muốn trả phí data transfer cho các lượt tải đó. Giải pháp nào phù hợp?",
+        "options": [
+          "Bật S3 Transfer Acceleration",
+          "Bật S3 Requester Pays trên bucket",
+          "Chuyển dataset sang S3 Glacier Deep Archive",
+          "Tạo presigned URL cho từng tổ chức bằng credential của viện"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Requester Pays chuyển phí request và data transfer ra sang identity đi tải. Presigned URL do viện tạo thì các lượt tải vẫn tính cho viện."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi bật Requester Pays, ai trả phí lưu trữ (GB-tháng) của dữ liệu trong bucket?",
+        "options": [
+          "Requester đầu tiên tải dữ liệu",
+          "Chia đều cho các requester",
+          "Bucket owner",
+          "AWS miễn phí lưu trữ cho bucket Requester Pays"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Phí lưu trữ GB-tháng luôn là trách nhiệm của bucket owner. Requester Pays chỉ chuyển phí request và data transfer khi tải sang người tải."
+      },
+      {
+        "type": "multi",
+        "q": "Để một lượt tải object từ bucket Requester Pays được tính phí cho người tải, cần những điều kiện nào? (Chọn 2)",
+        "options": [
+          "Người tải là identity AWS đã xác thực",
+          "Bucket bật static website hosting",
+          "Request kèm header x-amz-request-payer",
+          "Object dùng storage class Standard-IA",
+          "Bucket bật Versioning"
+        ],
+        "answer": [
+          0,
+          2
+        ],
+        "explain": "AWS phải biết tính tiền cho ai nên người tải phải xác thực, và request phải có header x-amz-request-payer để xác nhận chịu phí. Requester Pays không dùng được với static website hosting vì truy cập anonymous."
+      },
+      {
+        "type": "single",
+        "q": "Một user đã xác thực tải object từ bucket Requester Pays nhưng quên header x-amz-request-payer. Kết quả là gì?",
+        "options": [
+          "Request thành công và user vẫn trả phí",
+          "Request thành công và bucket owner trả phí",
+          "S3 trả 403 và bucket owner bị tính phí cho request đó",
+          "S3 tự thêm header và tính phí cho user"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Thiếu header x-amz-request-payer thì S3 trả 403, và bucket owner chịu phí cho request đó."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào về S3 Requester Pays là đúng?",
+        "options": [
+          "Có thể bật Requester Pays riêng cho từng object",
+          "Requester Pays là cấu hình theo bucket và không dùng được với static website hosting",
+          "Requester Pays cho phép người dùng anonymous tải miễn phí",
+          "Requester Pays giảm phí lưu trữ cho bucket owner"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Requester Pays là thuộc tính của bucket, không đặt theo object. Vì cần identity đã xác thực nên truy cập anonymous, bao gồm static website hosting, không được hỗ trợ."
       }
     ]
   }

@@ -2,6 +2,7 @@
 tags: [saa-c03, s05-s3, s3, storage, cost-optimization, automation]
 aliases: [S3 Lifecycle, Lifecycle Rules, Lifecycle Policy, Transition Actions, Expiration Actions]
 lessons: ["0101 S3 Lifecycle Configuration"]
+videos: ["089 [ASSOCIATESHARED] S3 Lifecycle Configuration"]
 ---
 # S3 Lifecycle Configuration
 
@@ -22,7 +23,7 @@ lessons: ["0101 S3 Lifecycle Configuration"]
   - **Expiration actions**: xóa object hoặc **object version** sau một khoảng thời gian, giữ bucket gọn.
 - Cả hai đều áp dụng được cho **version** trong bucket bật versioning (current và noncurrent versions), nhưng phức tạp nên phải lên kế hoạch kỹ. Xem [[S3 Versioning and MFA Delete]].
 - **Không dựa trên truy cập**: không thể nói "object nào ít đọc thì chuyển". Muốn tự động theo truy cập → **S3 Intelligent-Tiering** (xem [[S3 Storage Classes]]).
-- Ví dụ vòng đời trọn vẹn: 30 ngày đầu truy cập nhiều → transition sang Intelligent-Tiering / Standard-IA / One Zone-IA → sau 90 ngày sang một class Glacier để archive → expiration khi chắc chắn không cần nữa.
+- Ví dụ vòng đời trọn vẹn (hệ thống lưu tài liệu của một văn phòng luật): 30 ngày đầu tài liệu được đọc nhiều → transition sang Intelligent-Tiering / Standard-IA / One Zone-IA → tới 90 ngày tuổi sang một class Glacier để archive → expiration khi chắc chắn không cần nữa. Mỗi bước dùng class rẻ nhất khớp với nhu cầu truy cập theo **tuổi** của object.
 
 ## Cách hoạt động / Kiến trúc
 ### Mô hình "thác nước" (waterfall)
@@ -62,9 +63,10 @@ flowchart TB
 - **Không bao giờ transition ngược lên** bằng lifecycle. Thực tế thường đi nhiều bước theo access pattern, nhưng đi thẳng giữa hầu hết các class cũng được.
 
 ### Các ràng buộc quan trọng
-1. **Object nhỏ**: chuyển nhiều object nhỏ từ Standard sang Standard-IA / Intelligent-Tiering / One Zone-IA có thể **tốn bằng hoặc hơn** vì minimum billable size (128 KB). (Hiện nay AWS mặc định **không transition object < 128 KB** trừ khi cấu hình lọc kích thước.)
+1. **Object nhỏ**: object **< 128 KB mặc định không được transition**. Đây là mặc định AWS thêm sau này, vì chuyển nhiều object nhỏ sang các class IA có thể **tốn bằng hoặc hơn** để nguyên ở Standard (minimum billable size 128 KB). (Bổ sung, bài không nói: có thể đổi bằng bộ lọc kích thước trong rule.)
 2. **30 ngày ở Standard trước khi lifecycle sang Standard-IA hoặc One Zone-IA**. Upload thẳng vào Standard-IA/One Zone-IA thì được; đổi class thủ công qua CLI/console cũng được; nhưng **lifecycle rule** thì object phải ở Standard đủ 30 ngày.
 3. **Một rule duy nhất** đi Standard → IA/One Zone-IA → Glacier: object phải nằm ở IA/One Zone-IA **thêm ít nhất 30 ngày** trước khi rule đó chuyển tiếp sang Glacier. Dùng **hai rule riêng** thì không bị khoảng 30 ngày này.
+4. **Glacier Instant Retrieval có minimum storage duration 90 ngày**: một rule duy nhất không thể đưa object vào Glacier Instant Retrieval rồi chuyển tiếp sang Glacier Flexible Retrieval trong **dưới 90 ngày**.
 
 ## 🎯 Mẹo thi SAA-C03
 - "Tự động chuyển dữ liệu cũ sang class rẻ hơn sau N ngày", "xóa log sau 365 ngày" → **lifecycle rule** (transition + expiration).
@@ -72,6 +74,8 @@ flowchart TB
 - Transition chỉ đi **xuống**; **One Zone-IA không sang được Glacier Instant Retrieval**.
 - Lifecycle Standard → Standard-IA/One Zone-IA cần **tối thiểu 30 ngày** ở Standard; đáp án có "transition sang IA sau 7 ngày bằng lifecycle" là bẫy.
 - Một rule: IA → Glacier phải chờ thêm 30 ngày; hai rule thì không.
+- Một rule: Glacier Instant Retrieval → Glacier Flexible Retrieval phải chờ **ít nhất 90 ngày** (minimum duration của Glacier IR).
+- Object **< 128 KB** mặc định không được transition.
 - Bucket bật versioning tốn tiền vì noncurrent version → dùng lifecycle để **expire/transition noncurrent versions** (và dọn expired delete markers, incomplete multipart uploads — bổ sung).
 - Nhiều object nhỏ → transition có thể làm **tăng** chi phí.
 

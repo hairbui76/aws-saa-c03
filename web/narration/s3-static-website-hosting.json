@@ -1,6 +1,6 @@
 {
  "S3 Static Website Hosting": {
-  "sig": "8-nur3fl",
+  "sig": "8-8plyab",
   "steps": [
    "Sơ đồ này nói về S3 static website hosting, nơi S3 phục vụ object qua HTTP thông thường cho trình duyệt một cách anonymous. Nhớ nhé, bật hosting chưa phải là cấp quyền, ta còn cần tắt Block Public Access và thêm bucket policy public read.",
    "Đầu tiên là use case offloading. Trình duyệt gửi request tới EC2, app sinh HTML động có dùng database, nhưng các link ảnh trong HTML lại trỏ về S3, vì S3 rẻ hơn compute nhiều cho việc lưu và phân phối media.",

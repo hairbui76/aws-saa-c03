@@ -2,6 +2,7 @@
 tags: [saa-c03, s05-s3, s3, storage, web, networking]
 aliases: [S3 Static Hosting, S3 website endpoint, Static website]
 lessons: ["0087 S3 Static Hosting", "0088 Demo Creating a static website with S3 PART1", "0089 Demo Creating a static website with S3 PART2"]
+videos: ["072 [ASSOCIATESHARED] S3 Static Hosting", "073 [SHAREDALL] [Demo] Create a Static Website with S3"]
 ---
 # S3 Static Website Hosting
 
@@ -22,8 +23,8 @@ lessons: ["0087 S3 Static Hosting", "0088 Demo Creating a static website with S3
 - Một kiểu cấu hình khác: **Redirect requests for an object** — chuyển hướng request sang bucket/domain khác.
 
 ### Custom domain
-- Muốn dùng custom domain (vd. `top10.animals4life.org`) thì **tên bucket phải trùng đúng với FQDN** đó (host + domain).
-- Vì tên bucket là duy nhất toàn cầu, Adrian khuyên **đặt trước tên bucket** trùng với các tên miền website bạn định dùng.
+- Muốn dùng custom domain (vd. `top10.ausemart.net`) thì **tên bucket phải trùng đúng với FQDN** đó (host + domain).
+- Vì tên bucket là duy nhất toàn cầu, giảng viên khuyên **đặt trước tên bucket** trùng với các tên miền website bạn định dùng.
 - Trong [[Route 53 Fundamentals|Route 53]]: tạo record trong hosted zone (simple routing) kiểu **Alias → S3 website endpoint**, chọn đúng region; bucket chỉ hiện trong dropdown khi tên record khớp tên bucket và đúng region. Xem [[CNAME vs Alias]], [[R53 Public Hosted Zones]].
 
 ## Cách hoạt động / Kiến trúc
@@ -57,10 +58,10 @@ flowchart LR
 - Blog cá nhân của Adrian chạy trên S3 static hosting, tháng cao nhất chỉ tốn khoảng 17 cent.
 
 ## Demo / Lab
-1. Tạo bucket ở us-east-1. Nếu dùng custom domain thì đặt tên dạng DNS, vd. `top10.animalsforlife.org` (nếu tên đã bị người khác dùng → lỗi, phải chọn tên khác).
+1. Tạo bucket ở us-east-1. Nếu dùng custom domain thì đặt tên dạng DNS, vd. `top10.ausemart.net` (nếu tên đã bị người khác dùng → lỗi, phải chọn tên khác).
 2. **Bỏ tick Block all public access** (và xác nhận hiểu rủi ro). Bỏ tick **không** tự cấp quyền public, chỉ cho phép cấp sau đó.
 3. Properties → Static website hosting → Enable, "Host a static website", index `index.html`, error `error.html`. Ghi lại URL endpoint.
-4. Upload `index.html`, `error.html` và thư mục `img/`.
+4. Upload `index.html`, `error.html` và thư mục ảnh (website mẫu "top 10 sản phẩm Aus-E-Mart").
 5. Mở endpoint → **403 Forbidden**: S3 vẫn private; truy cập qua website endpoint là **anonymous**, không có cách gửi credential.
 6. Permissions → Bucket policy: `Allow`, `Principal: "*"`, `s3:GetObject`, Resource = ARN bucket + `/*` → refresh thấy trang. Gõ object không tồn tại → hiện error document.
 7. (Tùy chọn) Route 53: hosted zone → Create record → simple routing → **Alias to S3 website endpoint** → region us-east-1 → chọn bucket. Truy cập bằng custom domain.
@@ -77,5 +78,5 @@ flowchart LR
 
 ## Liên kết
 - Tiên quyết: [[S3 Basics]], [[S3 Security]], [[DNS Fundamentals]]
-- Liên quan: [[Route 53 Fundamentals]], [[CNAME vs Alias]], [[R53 Failover Routing]], [[CloudFront Architecture]], [[CloudFront Origins]], [[S3 Versioning and MFA Delete]]
+- Liên quan: [[Route 53 Fundamentals]], [[CNAME vs Alias]], [[R53 Failover Routing]], [[CloudFront Architecture]], [[CloudFront Origins]], [[S3 Versioning and MFA Delete]], [[CORS]] (website gọi tài nguyên ở domain khác), [[S3 Requester Pays]] (không dùng chung với static website hosting)
 - Phân biệt với: website động chạy trên [[EC2 Basics]] (cần compute, database)
