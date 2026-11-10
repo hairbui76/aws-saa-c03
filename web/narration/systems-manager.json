@@ -1,0 +1,16 @@
+{
+ "Systems Manager": {
+  "sig": "9-1uvfx5w",
+  "steps": [
+   "Sơ đồ này cho thấy cách một máy chủ trở thành managed node của Systems Manager. Mỗi máy cần ba thứ: SSM Agent, quyền, và kết nối đi ra tới Systems Manager endpoint, vốn là một public service.",
+   "Bên trong VPC, instance EC2 thường đã có sẵn agent trên các AMI mới. Quyền đến từ instance role, hoặc Default Host Management Configuration, bật một lần cho mỗi account và region, khi đó không cần gắn role.",
+   "Tiếp theo, agent cần một đường đi ra ngoài VPC, qua Internet Gateway hoặc qua VPC endpoint.",
+   "Qua đường đó, agent kết nối outbound tới Systems Manager endpoint trong AWS public zone. Không cần mở bất kỳ cổng inbound nào trên instance.",
+   "Với server ở on-premises, bạn tạo hybrid activation gồm một IAM role, một activation code và một activation ID, rồi nhập chúng khi cấu hình agent trên server.",
+   "Sau khi đăng ký, server vật lý hoặc máy ảo nói chuyện với endpoint qua Internet công cộng, và cũng chỉ cần chiều đi ra.",
+   "Khi đã kết nối, máy trở thành managed node và dùng được các tính năng như inventory, Patch Manager, Run Command, State Manager, Parameter Store và Session Manager.",
+   "Máy ở cloud khác như Azure cũng có thể được quản lý thông qua cloud connector, tùy từng nhà cung cấp.",
+   "Khi đi thi, nếu instance không hiện là managed instance, hãy kiểm tra agent, quyền và đường tới endpoint. Còn server on-premises thì luôn nghĩ tới hybrid activation."
+  ]
+ }
+}

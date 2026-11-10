@@ -40,6 +40,8 @@ aliases: [Home, Trang chủ]
 | 19 | [[_MOC 19 CloudFormation\|CloudFormation]] | Section đi sâu vào CloudFormation sau phần nhập môn ở CloudFormation Basics: cấu trúc template (parameters, mappings, conditions, outputs), intrinsic functions, kiểm soát thứ tự và bootstrapping EC2 (DependsOn, cfn-init, | 17 |
 | 20 | [[_MOC 20 NoSQL and Analytics\|NoSQL and Analytics]] | Section này bổ sung mảng dữ liệu phi quan hệ và phân tích sau phần RDS/Aurora ở _MOC 11 Databases: DynamoDB từ kiến trúc, capacity, index, streams, global tables, DAX, TTL; tiếp theo là truy vấn serverless trên S3 bằng A | 10 |
 | 21 | [[_MOC 21 Machine Learning\|Machine Learning]] | Section cuối về nội dung kỹ thuật giới thiệu các dịch vụ AI/ML managed của AWS: nhóm ngôn ngữ (Comprehend, Kendra, Lex, Polly, Transcribe, Translate), nhóm thị giác và tài liệu (Rekognition, Textract), nhóm dự báo và gia | 11 |
+| 22 | [[_MOC 22 Systems Manager\|Systems Manager]] | Chương mới theo bản khóa mới, về AWS Systems Manager (SSM): cách EC2, server on-premises và VM ở cloud khác thành managed node (SSM Agent, instance role hoặc DHMC, hybrid activation, kết nối outbound tới endpoint), chạy  | 4 |
+| 23 | [[_MOC 23 Elastic Beanstalk\|Elastic Beanstalk]] | Chương mới theo bản khóa mới, về AWS Elastic Beanstalk (EB), nền tảng PaaS cho developer: chỉ đưa code, EB dựng và quản lý môi trường bằng CloudFormation phía sau. Gồm kiến trúc hai chế độ Standard (EC2, ASG, web/worker  | 5 |
 
 ## Bản đồ tổng quan
 
@@ -67,6 +69,8 @@ flowchart LR
   S19["19 CloudFormation"]
   S20["20 NoSQL and Analytics"]
   S21["21 Machine Learning"]
+  S22["22 Systems Manager"]
+  S23["23 Elastic Beanstalk"]
   S00 --> S01
   S01 --> S02
   S02 --> S03
@@ -94,6 +98,8 @@ flowchart LR
   S14 --> S21
   S02 --> S06
   S02 --> S10
+  S07 --> S22
+  S13 --> S23
 ```
 
 ## Trang ôn thi

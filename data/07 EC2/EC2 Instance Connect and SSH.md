@@ -74,3 +74,4 @@ flowchart LR
 - Tiên quyết: [[EC2 Basics]], [[Security Groups]], [[IAM Basics]]
 - Liên quan: [[Bastion Host]], [[IAM Identity Policies]], [[EC2 Instance Roles]], [[AMI]], [[Site-to-Site VPN]]
 - Phân biệt với: [[Bastion Host]] (jump box truyền thống, phải quản lý key và instance riêng)
+- Session Manager và managed instance: [[Systems Manager]]

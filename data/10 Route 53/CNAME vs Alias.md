@@ -57,4 +57,5 @@ flowchart TB
 ## Liên kết
 - Tiên quyết: [[DNS Record Types]], [[R53 Public Hosted Zones]]
 - Liên quan: [[Elastic Load Balancer]], [[CloudFront Architecture]], [[S3 Static Website Hosting]], [[API Gateway]], [[Global Accelerator]], [[R53 Failover Routing]]
+- CNAME của environment Elastic Beanstalk và CNAME swap: [[Elastic Beanstalk]], [[Elastic Beanstalk Cloning and Blue-Green]]
 - Section: [[_MOC 10 Route 53]]

@@ -1,0 +1,16 @@
+{
+ "Elastic Beanstalk": {
+  "sig": "9-1tcfgo",
+  "steps": [
+   "Sơ đồ này cho thấy kiến trúc Elastic Beanstalk ở chế độ Standard. Application là thư mục chứa mọi thứ, version là code có nhãn, còn environment là hạ tầng chạy một version, và phía sau tất cả là CloudFormation.",
+   "Developer chỉ cần đưa code dạng zip hoặc WAR. Mỗi version được lưu thành source bundle trong bucket S3 mà Elastic Beanstalk tạo, mỗi region một bucket.",
+   "Từ đó, version được deploy lên các environment, ở đây là PROD và TEST. Mỗi web environment có Auto Scaling Group, load balancer trải nhiều AZ và một CNAME riêng.",
+   "Environment TEST cũng có thể đặt việc vào hàng đợi SQS do Elastic Beanstalk quản lý.",
+   "Người dùng truy cập tên miền như rootube chấm net, trỏ tới CNAME của environment PROD.",
+   "Khi có việc nặng như encode video, web tier đặt message vào SQS queue thay vì xử lý ngay trong request.",
+   "Environment PROCESSING ở worker tier đọc queue và xử lý, scale độc lập với web tier và không cần CNAME.",
+   "Khi muốn đổi phiên bản, bạn có thể hoán đổi CNAME giữa hai environment, tức là blue green, và nếu lỗi thì chỉ cần hoán đổi lại.",
+   "Chế độ Cluster thì chạy container trên EKS do Elastic Beanstalk quản lý, không có platform hay tier. Khi đi thi, developer muốn deploy web app nhanh mà không quản lý hạ tầng thì chọn Elastic Beanstalk, và nhớ để database ngoài environment."
+  ]
+ }
+}

@@ -1,0 +1,14 @@
+{
+ "Elastic Beanstalk and RDS": {
+  "sig": "7-ff3n74",
+  "steps": [
+   "Sơ đồ này so sánh hai cách dùng RDS với Elastic Beanstalk: đặt RDS trong environment, gắn với vòng đời environment, hoặc đặt RDS bên ngoài với vòng đời riêng.",
+   "Khi RDS nằm trong environment, ứng dụng kết nối bằng các environment property mà Elastic Beanstalk tự tạo sẵn.",
+   "Nếu xóa environment, RDS bị xử lý theo deletion policy: Delete thì mất dữ liệu, Snapshot thì chụp rồi xóa, Retain thì giữ lại chạy bên ngoài. Muốn tách RDS ra, bạn đặt Retain, apply và đợi xong.",
+   "Với RDS tạo ngoài Elastic Beanstalk, bạn phải tự tạo các environment property và mở security group của RDS cho instance của environment.",
+   "Chỉ khi Retain đã có hiệu lực mới chọn Decouple database. Sau khoảng năm phút, RDS trở thành database bên ngoài, health của environment không bị ảnh hưởng.",
+   "Các property đó gồm RDS HOSTNAME, RDS PORT, RDS DB NAME, RDS USERNAME và RDS PASSWORD.",
+   "Clone environment có RDS sẽ tạo RDS mới không có dữ liệu. Khi đi thi, production nên để RDS ngoài Elastic Beanstalk, và tách RDS thì phải Retain trước rồi mới Decouple, làm cùng lúc có thể mất database."
+  ]
+ }
+}

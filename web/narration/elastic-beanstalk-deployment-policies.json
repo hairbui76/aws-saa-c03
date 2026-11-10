@@ -1,0 +1,14 @@
+{
+ "Elastic Beanstalk Deployment Policies": {
+  "sig": "7-yfjjup",
+  "steps": [
+   "Bảng này so sánh các deployment policy của Elastic Beanstalk, tức cách một version mới được đưa lên các instance trong cùng environment. Blue green thì khác, vì dùng hai environment.",
+   "All at once là mặc định khi tạo bằng console: deploy lên mọi instance cùng lúc, nhanh, không tốn thêm, nhưng có outage và lỗi thì phải deploy lại bằng tay. Phù hợp dev và test.",
+   "Rolling nâng từng batch: rút batch khỏi load balancer, deploy, qua health check rồi trả lại. Không tốn thêm nhưng giảm capacity, và nếu batch lỗi thì dừng, không tự rollback.",
+   "Rolling with additional batch thêm một batch mới trước khi bắt đầu, nên luôn giữ đủ trăm phần trăm capacity. Tốn thêm một chút, hợp với production có tải thật.",
+   "Immutable dựng một Auto Scaling Group tạm với đủ bộ instance mới, qua health check mới chuyển vào nhóm gốc. Chi phí gấp đôi tạm thời nhưng rollback nhanh và an toàn nhất.",
+   "Traffic splitting giống immutable nhưng chia một phần traffic, ví dụ mười phần trăm, sang bản mới để canary test. Healthy hết thời gian đánh giá thì chuyển toàn bộ, còn lỗi thì trả traffic về. Policy này cần Application Load Balancer.",
+   "Blue green dùng clone và hoán đổi CNAME giữa hai environment. Khi đi thi, nhớ: giữ nguyên capacity chọn rolling with additional batch, an toàn nhất chọn immutable, canary chọn traffic splitting."
+  ]
+ }
+}

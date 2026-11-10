@@ -1,0 +1,15 @@
+{
+ "Elastic Beanstalk Cloning and Blue-Green": {
+  "sig": "8-hl5xr9",
+  "steps": [
+   "Sơ đồ này ghép hai tính năng thành blue green: clone sao chép cấu hình và resource của một environment, còn swap environment domain hoán đổi CNAME giữa hai environment, thông qua Route 53 do Elastic Beanstalk quản lý.",
+   "Đầu tiên, environment prod màu xanh dương đang chạy version hai được clone thành một environment mới màu xanh lá.",
+   "Tiếp theo, bạn upload source bundle version ba và deploy lên bản clone. Vì chưa có người dùng nên chọn all at once cho nhanh.",
+   "Trong lúc đó, người dùng vẫn vào tên miền quen thuộc, đi qua CNAME do Elastic Beanstalk quản lý.",
+   "Khi bản mới đã được kiểm tra, bạn dùng swap environment domain. CNAME của prod giờ trỏ sang environment xanh lá, người dùng không phải đổi tên miền và không có downtime.",
+   "Nếu bản mới có lỗi, chỉ cần swap lại để quay về environment cũ. Vì đây là thay đổi DNS, hãy giữ environment cũ chạy tới khi bản ghi cũ hết hạn.",
+   "Clone sao chép option setting, biến môi trường và resource, chỉ cho đổi tên, URL prefix, mô tả, platform version cùng branch và service role. RDS được tạo mới nhưng không có dữ liệu. Khi dọn dẹp, lifecycle policy giúp xóa version cũ.",
+   "Khi đi thi, bản mới không chạy chung được với bản cũ thì chọn blue green bằng clone và swap CNAME. Nhớ rằng clone không copy dữ liệu RDS và không mang theo thay đổi làm ngoài Elastic Beanstalk."
+  ]
+ }
+}

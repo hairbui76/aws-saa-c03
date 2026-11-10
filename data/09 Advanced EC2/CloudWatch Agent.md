@@ -69,3 +69,4 @@ Stack 1-click `CWLogs` dựng web store Aus-E-Mart trên instance `aem-aza-insta
 - Tiên quyết: [[CloudWatch Basics]], [[CloudWatch Logs]], [[EC2 Instance Roles]]
 - Liên quan: [[SSM Parameter Store]], [[EC2 User Data Bootstrapping]], [[Auto Scaling Groups]], [[CloudFormation Basics]], [[VPC Flow Logs]]
 - Phân biệt với: [[CloudTrail]] (ghi API call, không phải log trong OS)
+- Cài agent cho cả fleet bằng Systems Manager: [[SSM Run Command]], [[SSM Documents]] (AWS-ConfigureAWSPackage, AmazonCloudWatch-ManageAgent)

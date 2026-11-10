@@ -20,7 +20,9 @@
     "Exam Cheat Sheet: ELB 4 loại (CLB, ALB, NLB, GWLB); NLB có QUIC, stickiness theo source IP, health check TCP hoặc HTTP/HTTPS; ALB có JWT validation; cooldown chỉ cho simple scaling (step/target tracking dùng instance warmup); lifecycle hook gia hạn bằng heartbeat tới 48 giờ; ASG có EBS health check",
     "Top mẹo thi và concept map chương 13: EBS health check cho ASG, LT trỏ version Default/Latest và account mới không tạo được Launch Configuration, heartbeat của lifecycle hook, NLB QUIC và health check HTTP/HTTPS",
     "Exam Cheat Sheet: thêm Route 53 Resolver DNS Firewall (chặn domain độc hại tại VPC Resolver, fail closed mặc định); multivalue không dùng cho NS/CNAME/Alias, weight 0–255",
-    "Top mẹo thi và concept map chương 10: thêm Resolver DNS Firewall; multivalue/weighted khi mọi record unhealthy, geolocation trong private hosted zone"
+    "Top mẹo thi và concept map chương 10: thêm Resolver DNS Firewall; multivalue/weighted khi mọi record unhealthy, geolocation trong private hosted zone",
+    "Trang chủ và các chỗ liệt kê chương: thêm hai chương mới 22 Systems Manager và 23 Elastic Beanstalk",
+    "Exam Cheat Sheet: thêm Systems Manager (managed node, DHMC, hybrid activation, Session Manager, Run Command, Patch Manager) và Elastic Beanstalk (Standard/Cluster, deployment policy, clone và blue/green, RDS, .ebextensions)"
   ],
   "missing": [],
   "lessons": {
@@ -1052,6 +1054,42 @@
     "R53 Resolver DNS Firewall": {
       "kind": "new",
       "summary": "Route 53 Resolver DNS Firewall: lọc DNS query tại VPC Resolver theo domain bằng rule group (domain list + ALLOW/BLOCK/ALERT), fail closed mặc định, walled garden, advanced rules chống DGA và DNS tunneling."
+    },
+    "Systems Manager": {
+      "kind": "new",
+      "summary": "Bài mới (chương mới 22): Systems Manager quản lý managed node ở AWS, on-prem và cloud khác qua SSM Agent; quyền bằng instance role hoặc Default Host Management Configuration (DHMC), kết nối outbound qua IGW hoặc VPC endpoint; server on-prem tham gia bằng hybrid activation (activation code + ID); các tính năng inventory, patch, Run Command, desired state, Parameter Store, Session Manager."
+    },
+    "SSM Run Command": {
+      "kind": "new",
+      "summary": "Bài mới: Run Command chạy command document trên managed node không cần SSH/RDP, chọn node theo node/tag/resource group, rate control (concurrency, error threshold), output tới CloudWatch Logs/S3, thông báo SNS, làm target của EventBridge rule."
+    },
+    "SSM Documents": {
+      "kind": "new",
+      "summary": "Bài mới: SSM document JSON/YAML theo region, giống template CloudFormation; các loại Command, Automation runbook, Package (Distributor), Session (Session Manager), Policy (Inventory) và tính năng dùng từng loại."
+    },
+    "SSM Patch Manager": {
+      "kind": "new",
+      "summary": "Bài mới: Patch Manager với patch baseline (tự duyệt sau 7 ngày, Ubuntu/Debian ngay), patch group theo tag, maintenance window, Run Command AWS-RunPatchBaseline, concurrency/error threshold, compliance và tên các baseline predefined."
+    },
+    "Elastic Beanstalk": {
+      "kind": "new",
+      "summary": "Bài mới (chương mới 23): Elastic Beanstalk là PaaS cho developer, hai chế độ Standard (EC2, platform, web/worker tier + SQS) và Cluster (container trên EKS); application, version (source bundle trên S3), environment, CNAME swap; database để ngoài environment."
+    },
+    "Elastic Beanstalk Deployment Policies": {
+      "kind": "new",
+      "summary": "Bài mới: các deployment policy All at once, Rolling, Rolling with additional batch, Immutable, Traffic splitting (canary, cần ALB) và blue/green bằng hai environment."
+    },
+    "Elastic Beanstalk Cloning and Blue-Green": {
+      "kind": "new",
+      "summary": "Bài mới: clone environment (copy cấu hình và resource, RDS không có dữ liệu, chỉ đổi platform version cùng branch, không copy unmanaged change), blue/green bằng swap environment domain, lifecycle policy cho application version."
+    },
+    "Elastic Beanstalk and RDS": {
+      "kind": "new",
+      "summary": "Bài mới: RDS trong environment (deletion policy Delete/Snapshot/Retain, environment property RDS_*) hay ngoài EB (tự tạo property, mở security group); tách RDS bằng Retain rồi mới Decouple database."
+    },
+    "Elastic Beanstalk ebextensions": {
+      "kind": "new",
+      "summary": "Bài mới: tùy biến environment Standard bằng thư mục .ebextensions ở gốc source bundle, file .config định dạng CloudFormation với option_settings, Resources và các mục kiểu cfn-init."
     }
   }
 }

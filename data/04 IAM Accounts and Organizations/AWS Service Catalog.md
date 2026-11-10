@@ -78,4 +78,5 @@ flowchart LR
 ## Liên kết
 - Tiên quyết: [[CloudFormation Basics]], [[IAM Roles]]
 - Liên quan: [[CFN Stack Roles]], [[Service-linked Roles and PassRole]] (cùng ý tưởng: người dùng không cần quyền trực tiếp, service dùng quyền được cấp), [[AWS Control Tower]] (Account Factory qua Service Catalog), [[AWS Organizations]]
+- Systems Manager Automation (runbook): [[SSM Documents]], [[Systems Manager]]
 - MOC: [[_MOC 04 IAM Accounts and Organizations]]

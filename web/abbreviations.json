@@ -260,5 +260,8 @@
   "CRI": "Container Runtime Interface",
   "STIG": "Security Technical Implementation Guide",
   "CIS": "Center for Internet Security",
-  "DGA": "Domain Generation Algorithm"
+  "DGA": "Domain Generation Algorithm",
+  "EB": "Elastic Beanstalk",
+  "PaaS": "Platform as a Service",
+  "DHMC": "Default Host Management Configuration"
 }

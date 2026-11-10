@@ -1,0 +1,14 @@
+{
+ "SSM Patch Manager": {
+  "sig": "7-ghzh35",
+  "steps": [
+   "Sơ đồ này mô tả Patch Manager, cách Systems Manager patch Windows, Linux, macOS, EC2 và server on-premises. Baseline quyết định patch nào được duyệt, maintenance window quyết định khi nào, Run Command làm việc thật, compliance kiểm tra kết quả.",
+   "Bước một là patch baseline. Mỗi hệ điều hành có baseline mặc định tự áp dụng, và đa số chỉ duyệt patch sau bảy ngày kể từ khi phát hành, riêng Ubuntu và Debian duyệt ngay.",
+   "Bước hai, không bắt buộc, là patch group, định nghĩa bằng tag key Patch Group. Mỗi node chỉ thuộc một patch group, để dùng baseline khác với mặc định.",
+   "Bước ba là maintenance window, nơi khai báo schedule, duration, targets và tasks. Đây là chất keo nối mọi thành phần lại với nhau.",
+   "Khi window kích hoạt, Run Command AWS RunPatchBaseline chạy trên các node theo concurrency và error threshold. Mỗi node tự hỏi baseline nào áp cho mình, nhận danh sách patch đã duyệt rồi cài những patch còn thiếu.",
+   "Sau khi patch, mỗi node báo dữ liệu compliance về Systems Manager, để biết node nào đủ patch và node nào còn thiếu. Bên dưới là tên các baseline predefined cho Amazon Linux 2023, Ubuntu và Windows.",
+   "Windows có thêm baseline OS Applications để patch cả ứng dụng Microsoft. Khi đi thi, patch tự động cả fleet EC2 và on-premises theo lịch, có báo cáo, thì chọn Patch Manager."
+  ]
+ }
+}

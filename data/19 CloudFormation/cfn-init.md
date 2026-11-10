@@ -110,4 +110,5 @@ flowchart LR
 - Tiên quyết: [[CloudFormation Basics]], [[EC2 User Data Bootstrapping]], [[CFN Physical and Logical Resources]]
 - Dùng cùng: [[cfn-hup]], [[CFN Wait Conditions and cfn-signal]], [[CFN Template and Pseudo Parameters]], [[CFN Intrinsic Functions]]
 - Liên quan: [[Auto Scaling Groups]], [[Launch Templates]], [[AMI]], [[EC2 Instance Metadata]]
+- Elastic Beanstalk dùng lại các mục packages, files, commands, services trong `.ebextensions`: [[Elastic Beanstalk ebextensions]]
 - Section: [[_MOC 19 CloudFormation]]

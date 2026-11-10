@@ -1,0 +1,14 @@
+{
+ "SSM Run Command": {
+  "sig": "7-4addl1",
+  "steps": [
+   "Sơ đồ này giải thích Run Command, tính năng chạy lệnh trên managed node mà không cần SSH hay RDP. Mỗi lần chạy gồm một command document, danh sách target và các parameter.",
+   "Lệnh được khởi chạy từ Systems Manager, từ EventBridge theo lịch hoặc theo event, từ console hay từ CLI. Yêu cầu gồm document, target và parameter được gửi tới Systems Manager endpoint.",
+   "Systems Manager nạp command document tương ứng từ document store để xử lý.",
+   "Rồi nó gửi document tới SSM Agent trên các node được chọn, theo resource group dựng từ query, theo tag, hoặc chọn từng node. Agent thực thi lệnh ngay trên máy.",
+   "Kết quả chạy lệnh có thể ghi vào CloudWatch Logs hoặc S3, và trạng thái được báo qua SNS.",
+   "Khi chạy trên nhiều node, rate control giúp kiểm soát: concurrency là số node chạy cùng lúc, còn error threshold là số lỗi tối đa trước khi cả lệnh bị coi là thất bại.",
+   "Khi đi thi, chạy script trên nhiều EC2 và server on-premises mà không mở cổng inbound thì chọn Run Command. Cần chạy theo lịch hoặc theo event thì đặt Run Command làm target của EventBridge rule."
+  ]
+ }
+}

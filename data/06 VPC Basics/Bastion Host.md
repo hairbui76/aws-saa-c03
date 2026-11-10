@@ -76,4 +76,5 @@ Các cách truy cập quản trị instance private (phần ngoài khóa học b
 - Dùng cùng: [[Security Groups]], [[NACL]], [[EC2 Instance Connect and SSH]]
 - Thay thế: [[EC2 Instance Roles]] (nền tảng cho Session Manager), [[Site-to-Site VPN]], [[Direct Connect]]
 - Liên quan: [[NAT Gateway]] (instance private đi ra internet, ngược chiều với bastion)
+- Cách thay bastion hiện nay: [[Systems Manager]] (Session Manager: vào instance private, không mở port inbound)
 - MOC: [[_MOC 06 VPC Basics]]

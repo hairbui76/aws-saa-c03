@@ -1,0 +1,14 @@
+{
+ "Elastic Beanstalk ebextensions": {
+  "sig": "7-1wjeok7",
+  "steps": [
+   "Sơ đồ này giải thích ebextensions. Elastic Beanstalk quản lý CloudFormation stack của environment thay bạn, nên muốn chỉnh stack đó thì đặt file config trong thư mục chấm ebextensions ở gốc source bundle.",
+   "Các file config viết bằng YAML hoặc JSON theo định dạng CloudFormation, gồm ba nhóm chính: option settings, Resources và các mục kiểu cfn init. Vì nằm cùng code nên cấu hình được version và deploy cùng ứng dụng.",
+   "Mục Resources tạo resource hoàn toàn mới, ví dụ một ElastiCache cluster, và được đưa vào stack của environment.",
+   "Mục option settings đặt option cho các resource sẵn có, cũng bằng cách chỉnh CloudFormation stack mà Elastic Beanstalk quản lý.",
+   "Các mục như packages, files, users, groups, commands và services thì tác động trực tiếp lên EC2 instance: cài gói, tạo file, chạy lệnh.",
+   "Phần code ứng dụng vẫn nằm cạnh thư mục ebextensions trong cùng một source bundle.",
+   "Khi đi thi, cần tùy biến environment hoặc thêm resource cùng với code thì chọn ebextensions, nhớ thư mục ở gốc source bundle, file đuôi config, và chỉ dùng cho Elastic Beanstalk Standard."
+  ]
+ }
+}

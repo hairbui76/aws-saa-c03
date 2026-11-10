@@ -1,0 +1,303 @@
+{
+  "chapter": "22 Systems Manager",
+  "lessons": {
+    "Systems Manager": [
+      {
+        "type": "single",
+        "q": "Một công ty có 300 EC2 instance và 150 server vật lý trong data center. Họ muốn một công cụ tập trung để thu thập inventory, patch và chạy lệnh trên toàn bộ fleet với ít vận hành nhất. Chọn gì?",
+        "options": [
+          "AWS Config",
+          "AWS Systems Manager",
+          "Amazon Inspector",
+          "AWS CloudFormation StackSets"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Systems Manager quản lý và điều khiển máy ở AWS, on-premises và cloud khác qua SSM Agent: inventory, patching, Run Command, desired state, Parameter Store, Session Manager. Config ghi lịch sử cấu hình resource, không chạy lệnh trong OS."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 instance chạy Amazon Linux mới nhất trong private subnet không hiện là managed instance trong Systems Manager. Instance đã có SSM Agent và IAM role đúng. Nguyên nhân khả dĩ nhất?",
+        "options": [
+          "Security group chưa mở inbound port 443",
+          "Instance không có đường ra Systems Manager endpoint (không Internet Gateway, không VPC endpoint)",
+          "Phải tạo hybrid activation cho mọi EC2",
+          "Systems Manager chỉ hỗ trợ instance trong public subnet"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Ba điều kiện để thành managed instance: agent, quyền (instance role hoặc DHMC) và kết nối outbound tới endpoint qua Internet Gateway hoặc VPC endpoint. Systems Manager không cần inbound; hybrid activation chỉ dành cho máy ngoài AWS."
+      },
+      {
+        "type": "single",
+        "q": "Một account muốn mọi EC2 mới tự động thành managed instance mà không phải gắn instance role cho từng instance. Cách nào?",
+        "options": [
+          "Bật Default Host Management Configuration (DHMC) cho account và region; instance cần IMDSv2 và agent bản hiện tại",
+          "Tạo hybrid activation và nhập activation code vào user data",
+          "Gắn SCP cho phép ssm:* ở Organization",
+          "Bật Session Manager trong từng VPC"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "DHMC bật một lần cho mỗi account, mỗi region; từ đó instance có IMDSv2 và agent mới tự thành managed, không cần instance role. Hybrid activation là cách cho server on-prem."
+      },
+      {
+        "type": "multi",
+        "q": "Đưa server on-premises vào Systems Manager cần những gì? (Chọn 2)",
+        "options": [
+          "Tạo hybrid activation, chọn một IAM role mà server dùng gián tiếp",
+          "Nhập activation code và activation ID khi cấu hình SSM Agent trên server",
+          "Mở inbound từ Internet tới server để Systems Manager kết nối vào",
+          "Bắt buộc có Direct Connect tới AWS",
+          "Gắn EC2 instance profile cho server"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "explain": "Server on-prem tham gia bằng hybrid activation: chọn IAM role, nhận activation code và activation ID rồi cấu hình agent. Kết nối đi qua public internet và chỉ cần outbound, không cần inbound hay Direct Connect."
+      },
+      {
+        "type": "single",
+        "q": "Đội vận hành cần vào shell của EC2 trong private subnet mà không mở port inbound nào, không dùng bastion host và không phân phối SSH key. Chọn gì?",
+        "options": [
+          "EC2 Instance Connect qua public IP",
+          "Systems Manager Session Manager",
+          "NAT Gateway và SSH client",
+          "Site-to-Site VPN"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Session Manager kết nối an toàn vào instance, kể cả instance private, miễn là máy được Systems Manager quản lý và có kết nối outbound tới endpoint. Không cần port inbound, bastion hay key."
+      }
+    ],
+    "SSM Run Command": [
+      {
+        "type": "single",
+        "q": "Cần chạy một script cập nhật cấu hình trên 200 EC2 và server on-prem đang được Systems Manager quản lý, không mở SSH hay RDP. Dùng tính năng nào?",
+        "options": [
+          "EC2 user data",
+          "Systems Manager Run Command",
+          "CloudFormation cfn-init",
+          "AWS Batch"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Run Command lấy command document và để SSM Agent trên các managed node thực thi, không cần SSH hay RDP. User data chỉ chạy lúc launch."
+      },
+      {
+        "type": "single",
+        "q": "Khi chạy Run Command trên 500 node, đội vận hành muốn chỉ 10% node chạy cùng lúc và dừng cả lệnh nếu quá 5 node lỗi. Cấu hình gì?",
+        "options": [
+          "Concurrency và error threshold (rate control)",
+          "Maintenance window và patch baseline",
+          "Auto Scaling cooldown",
+          "Lifecycle hook"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Rate control của Run Command có concurrency (bao nhiêu node chạy cùng lúc) và error threshold (bao nhiêu lỗi thì cả command thất bại)."
+      },
+      {
+        "type": "multi",
+        "q": "Run Command chọn managed node để chạy lệnh theo những cách nào? (Chọn 3)",
+        "options": [
+          "Chọn trực tiếp node cụ thể",
+          "Theo tag gắn trên node",
+          "Theo resource group tạo từ query",
+          "Theo security group của node",
+          "Theo CIDR của subnet"
+        ],
+        "answer": [
+          0,
+          1,
+          2
+        ],
+        "explain": "Ba cách chọn target của Run Command: node cụ thể, tag, hoặc resource group định nghĩa bằng query (chạy được trên cả AWS lẫn on-prem)."
+      },
+      {
+        "type": "single",
+        "q": "Công ty muốn mỗi khi có một event nhất định trong account thì tự động chạy một lệnh trên nhóm EC2. Kiến trúc nào ít vận hành nhất?",
+        "options": [
+          "Cron job trên một EC2 riêng gọi SSH",
+          "EventBridge rule với target là Systems Manager Run Command",
+          "CloudTrail gửi log vào S3 rồi Lambda SSH vào từng máy",
+          "Step Functions gọi API EC2"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Run Command làm target được của EventBridge rule, nên chạy lệnh theo lịch hoặc phản ứng với event trong account mà không cần server hay SSH."
+      },
+      {
+        "type": "single",
+        "q": "Output của Run Command có thể được gửi tới đâu?",
+        "options": [
+          "CloudWatch Logs hoặc S3, và gửi thông báo trạng thái qua SNS",
+          "Chỉ hiển thị trên console, không lưu được",
+          "DynamoDB hoặc RDS",
+          "Kinesis Data Streams bắt buộc"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Run Command gửi output tới CloudWatch Logs hoặc S3 và có thể gửi notification qua SNS."
+      }
+    ],
+    "SSM Documents": [
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về SSM document?",
+        "options": [
+          "Là file JSON hoặc YAML, lưu theo region, có parameter và các bước, cấu trúc giống template CloudFormation",
+          "Là file XML lưu global, chỉ dùng cho Session Manager",
+          "Là script bash bắt buộc lưu trong S3",
+          "Là IAM policy gắn vào managed node"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "SSM document viết bằng JSON hoặc YAML, lưu theo region trong Systems Manager, nhận parameter và có steps (mainSteps), về khái niệm giống template CloudFormation."
+      },
+      {
+        "type": "single",
+        "q": "Loại SSM document nào được Distributor dùng để phân phối phần mềm (kèm file zip) lên managed node?",
+        "options": [
+          "Command document",
+          "Session document",
+          "Package document",
+          "Policy document"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Distributor dùng package document: package được biểu diễn bằng một SSM document có đính kèm file zip chứa phần mềm cần cài."
+      },
+      {
+        "type": "single",
+        "q": "Đội vận hành muốn tự động hóa việc bảo trì như tạo hoặc cập nhật AMI. Loại document phù hợp?",
+        "options": [
+          "Automation runbook",
+          "Session document",
+          "Package document",
+          "Policy document"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Automation runbook dùng cho các tác vụ bảo trì và triển khai thường gặp, ví dụ tạo hoặc cập nhật Amazon Machine Image; được Automation, State Manager và Maintenance Windows dùng."
+      },
+      {
+        "type": "multi",
+        "q": "Command document được những tính năng nào của Systems Manager dùng? (Chọn 3)",
+        "options": [
+          "Run Command",
+          "State Manager",
+          "Maintenance Windows",
+          "Distributor",
+          "Session Manager"
+        ],
+        "answer": [
+          0,
+          1,
+          2
+        ],
+        "explain": "Command document dùng bởi Run Command (chạy lệnh), State Manager (áp cấu hình, desired state) và Maintenance Windows (áp cấu hình theo lịch). Distributor dùng package document, Session Manager dùng session document."
+      },
+      {
+        "type": "single",
+        "q": "Inventory của Systems Manager thu thập dữ liệu bằng cách nào?",
+        "options": [
+          "Policy document AWS-GatherSoftwareInventory cùng một State Manager association",
+          "Session document mở shell vào từng node",
+          "CloudTrail ghi lại API của từng instance",
+          "Package document cài agent Inspector"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Inventory dùng policy document AWS-GatherSoftwareInventory với một State Manager association để thu thập dữ liệu inventory từ managed node."
+      }
+    ],
+    "SSM Patch Manager": [
+      {
+        "type": "single",
+        "q": "Trong Patch Manager, thành phần nào định nghĩa patch NÀO được duyệt để cài?",
+        "options": [
+          "Maintenance window",
+          "Patch baseline",
+          "Patch group",
+          "Compliance"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Patch baseline định nghĩa patch nào được duyệt (WHAT). Maintenance window định nghĩa khi nào (WHEN); patch group nhóm node để đổi baseline; compliance báo kết quả."
+      },
+      {
+        "type": "single",
+        "q": "Một bản vá bảo mật Critical cho Amazon Linux 2023 vừa phát hành hôm qua nhưng maintenance window đêm nay không cài nó. Node dùng default baseline. Lý do khả dĩ nhất?",
+        "options": [
+          "Patch Manager không hỗ trợ Amazon Linux",
+          "Default baseline có auto-approval delay: đa số patch chỉ được duyệt 7 ngày sau khi phát hành",
+          "Maintenance window chỉ cài patch Windows",
+          "Cần chạy AWS-ConfigureAWSPackage trước"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Phần lớn baseline predefined dùng auto-approval delay, patch chỉ được duyệt 7 ngày sau khi phát hành (Ubuntu và Debian là ngoại lệ, duyệt ngay). Đây là thời điểm duyệt, không phải lịch cài."
+      },
+      {
+        "type": "single",
+        "q": "Khi maintenance window kích hoạt việc patch, Run Command nào được chạy trên các node target?",
+        "options": [
+          "AWS-RunShellScript",
+          "AWS-RunPatchBaseline",
+          "AWS-ConfigureAWSPackage",
+          "AWS-GatherSoftwareInventory"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "AWS-RunPatchBaseline chạy trên node; mỗi node tự hỏi Patch Manager baseline nào áp cho mình (của patch group hoặc default của OS), nhận danh sách patch đã duyệt rồi tải và cài phần còn thiếu."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về patch group? (Chọn 2)",
+        "options": [
+          "Định nghĩa bằng tag key Patch Group",
+          "Một managed node chỉ thuộc một patch group",
+          "Một patch group đăng ký được nhiều baseline cho cùng một loại OS",
+          "Bắt buộc phải có patch group thì mới patch được",
+          "Patch group định nghĩa lịch cài patch"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "explain": "Patch group là tùy chọn, định nghĩa bằng tag Patch Group; mỗi node chỉ ở một group và mỗi group chỉ đăng ký một baseline cho mỗi loại OS. Không có patch group thì node dùng default baseline của OS; lịch cài là việc của maintenance window."
+      },
+      {
+        "type": "single",
+        "q": "Server Windows cần được patch cả bản cập nhật Critical/Security của OS lẫn bản vá cho ứng dụng Microsoft. Chọn baseline predefined nào?",
+        "options": [
+          "AWS-DefaultPatchBaseline",
+          "AWS-WindowsPredefinedPatchBaseline-OS",
+          "AWS-WindowsPredefinedPatchBaseline-OS-Applications",
+          "AWS-AmazonLinux2023DefaultPatchBaseline"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "AWS-WindowsPredefinedPatchBaseline-OS-Applications gồm các bản Critical và Security của OS cộng thêm patch cho ứng dụng Microsoft. Hai baseline Windows còn lại chỉ có Critical và Security của OS."
+      }
+    ]
+  }
+}
