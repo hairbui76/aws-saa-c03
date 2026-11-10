@@ -44,7 +44,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | IPv6 outbound-only | **Egress-Only IGW** | [[Egress-Only Internet Gateway]] |
 | Chặn một IP/dải IP độc hại | **NACL** deny rule | [[NACL]] |
 | Truy cập S3/DynamoDB private, rẻ nhất | **Gateway endpoint** | [[Gateway VPC Endpoints]] |
-| Truy cập service private từ on-prem/peer, expose service sang VPC khác | **Interface endpoint / PrivateLink** (+ NLB) | [[Interface VPC Endpoints]] |
+| Truy cập service AWS private từ on-prem / VPC peer (gateway endpoint không làm được) | **Interface endpoint** | [[Interface VPC Endpoints]] |
 | Cung cấp dịch vụ riêng tư cho VPC/account khác, không Internet, không nối cả mạng | **PrivateLink**: provider NLB (cross-zone) + endpoint service; consumer interface endpoint mỗi AZ | [[AWS PrivateLink]] |
 | Quản lý tập trung dải IP nhiều VPC/account/region, tránh CIDR trùng | **VPC IPAM** (pool theo cấp bậc; cross-account cần advanced tier + Organizations + **RAM** (AWS Resource Access Manager)) | [[VPC IPAM]] |
 | Nhiều VPC + on-prem, transitive, hub-and-spoke | **Transit Gateway** | [[Transit Gateway]] |
@@ -229,7 +229,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Security Group | Không | **Có** |
 | Từ on-prem/VPC peer | **Không** | **Có** |
 | Giá | Miễn phí | Theo giờ/AZ + GB |
-| Protocol | | **TCP và UDP**; IPv4, IPv6, dual-stack |
+| Protocol | – | **TCP và UDP**; IPv4, IPv6, dual-stack |
 
 ### Site-to-Site VPN vs Direct Connect → [[Compare - VPN vs Direct Connect]]
 | | Site-to-Site VPN | Direct Connect |
