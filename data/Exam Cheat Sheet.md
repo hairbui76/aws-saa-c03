@@ -183,10 +183,11 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Từ khóa trong đề | Chọn | Note |
 |---|---|---|
 | Sentiment, entity, key phrase trong text | **Comprehend** | [[Comprehend]] |
-| Phân tích ảnh/video, khuôn mặt, kiểm duyệt | **Rekognition** (live video: + Kinesis Video Streams) | [[Rekognition]] |
-| Trích text/bảng/form từ tài liệu scan | **Textract** | [[Textract]] |
-| Speech → text / text → speech / dịch | **Transcribe / Polly / Translate** | [[Transcribe]] |
-| Chatbot hội thoại / enterprise search | **Lex / Kendra** | [[Lex]] |
+| Phân tích ảnh/video, khuôn mặt, kiểm duyệt | **Rekognition** (pre-trained; text tối đa 100 từ/ảnh; live video: Kinesis Video Streams trích ảnh ra S3 → Lambda → Rekognition) | [[Rekognition]] |
+| Trích text/bảng/form từ tài liệu scan | **Textract** (1 trang: sync; nhiều trang tới 3.000: async) | [[Textract]] |
+| Speech → text / text → speech / dịch | **Transcribe / Polly / Translate** (Polly: Long-form cho nội dung dài, Generative cho hội thoại) | [[Transcribe]] |
+| Chatbot hội thoại / enterprise search | **Lex / Kendra** (Kendra: bản khóa cũ) | [[Lex]] |
+| Tự build/train/host model ML (kể cả LLM mã nguồn mở) | **SageMaker AI** (LLM có sẵn → Amazon Bedrock; chạy quanh năm → SageMaker AI Savings Plans) | [[SageMaker]] |
 
 ---
 

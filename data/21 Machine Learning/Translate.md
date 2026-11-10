@@ -2,6 +2,7 @@
 tags: [saa-c03, s21-machine-learning, machine-learning, translation, nlp, ai-services]
 aliases: [Amazon Translate, machine translation]
 lessons: ["0371 Amazon Translate"]
+videos: ["374 Amazon Translate"]
 ---
 # Translate
 
@@ -13,11 +14,13 @@ lessons: ["0371 Amazon Translate"]
 
 ## Khái niệm cốt lõi
 - Dịch text từ ngôn ngữ gốc sang ngôn ngữ khác.
+- **Purpose-built AI service**: chỉ làm một việc là dịch, dùng model do AWS huấn luyện và vận hành cho bạn. Khác với dùng một **general-purpose model trên Amazon Bedrock** (cũng dịch được và làm nhiều việc khác), hay tự build và train model trên [[SageMaker|SageMaker AI]].
 - **Hai phần của quá trình dịch**:
   - **Encoder**: đọc text nguồn → tạo **semantic representation** (biểu diễn ý nghĩa).
   - **Decoder**: đọc ý nghĩa đó → viết ra **ngôn ngữ đích**.
   - Lý do: cách diễn đạt một ý giữa các ngôn ngữ khác nhau, không phải lúc nào cũng dịch thẳng từ-sang-từ.
 - **Attention mechanism**: xác định từ nào trong câu nguồn quan trọng nhất cho từng phần của câu đích, giúp xử lý từ/cụm từ **mơ hồ** và bảo đảm **ý nghĩa** được dịch đúng.
+- Decoder và attention cũng chính là những **building block của LLM**.
 - **Auto-detect** ngôn ngữ nguồn, hoặc bạn chỉ định ngôn ngữ nguồn rõ ràng.
 
 ## Cách hoạt động / Kiến trúc
@@ -44,7 +47,7 @@ flowchart LR
 | Tích hợp | Với dịch vụ AWS, ứng dụng tự phát triển, nền tảng khác |
 
 ## 🎯 Mẹo thi SAA-C03
-- Bất kỳ kịch bản **dịch text sang text** → **Translate**.
+- Bất kỳ kịch bản **dịch text sang text** → **Translate**, dịch vụ chuyên dụng cho việc này; không cần dùng model đa năng trên Bedrock hay tự build/train model trên [[SageMaker|SageMaker AI]].
 - Nếu dịch là **một phần của quy trình** → Translate là một bước trong chuỗi:
   - dịch rồi **đọc lên** → Translate + [[Polly]];
   - audio ngôn ngữ A → text ngôn ngữ B → [[Transcribe]] + Translate.
@@ -54,5 +57,5 @@ flowchart LR
 ## Liên kết
 - Dùng cùng: [[Transcribe]], [[Polly]], [[Comprehend]], [[Lambda]]
 - Nguồn dữ liệu: [[S3 Basics]], [[RDS Architecture]], [[DynamoDB Architecture]]
-- Phân biệt với: [[Polly]], [[Transcribe]]
+- Phân biệt với: [[Polly]], [[Transcribe]], [[SageMaker]] (tự train model)
 - MOC: [[_MOC 21 Machine Learning]]

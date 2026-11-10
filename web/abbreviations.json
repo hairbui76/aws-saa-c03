@@ -274,5 +274,6 @@
   "KSP": "Key Storage Provider",
   "RUM": "Real User Monitoring",
   "NFC": "Near Field Communication",
-  "GPS": "Global Positioning System"
+  "GPS": "Global Positioning System",
+  "LLM": "Large Language Model"
 }

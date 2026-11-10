@@ -1,17 +1,17 @@
 {
  "Rekognition": {
-  "sig": "10-8etfih",
+  "sig": "10-upnitf",
   "steps": [
-   "Sơ đồ này nói về Amazon Rekognition, dịch vụ phân tích ảnh và video bằng deep learning. Ta sẽ xem hai luồng chính: event-driven khi upload ảnh, và phân tích video trực tiếp.",
-   "Bắt đầu luồng thứ nhất, người dùng upload ảnh, ví dụ ảnh chú mèo Whiskers và chú chó Woofy, lên một S3 bucket.",
+   "Sơ đồ này nói về Amazon Rekognition, dịch vụ pre-trained phân tích ảnh và video bằng deep learning: gọi API là có kết quả, không phải tự train model như trên SageMaker AI. Ta sẽ xem hai luồng: event-driven khi upload ảnh, và trích ảnh từ video live.",
+   "Bắt đầu luồng thứ nhất, người dùng upload ảnh, ví dụ một ảnh có cả Cool Croc và Qualified Koala, lên một S3 bucket.",
    "Khi ảnh vừa vào bucket, S3 Event tự động kích hoạt một hàm Lambda, nên không cần server nào phải ngồi chờ.",
-   "Lambda gọi API của Rekognition để phân tích ảnh, và Rekognition trả về các nhãn như cat hoặc dog kèm độ tin cậy.",
+   "Lambda gọi API của Rekognition để phân tích ảnh, và Rekognition trả về các nhãn như crocodile hoặc koala kèm độ tin cậy.",
    "Cuối cùng Lambda ghi metadata cùng link tới ảnh vào DynamoDB, để các xử lý nghiệp vụ phía sau dùng tiếp.",
-   "Luồng thứ hai dành cho video trực tiếp. Camera an ninh hoặc livestream đẩy luồng video vào Kinesis Video Streams.",
-   "Rekognition Video tích hợp với Kinesis Video Streams để phân tích ngay trên luồng, ví dụ nhận diện khuôn mặt để phân biệt chủ nhà với kẻ đột nhập.",
-   "Kết quả phân tích được đưa vào Kinesis Data Streams, từ đó các ứng dụng khác đọc ra và xử lý tiếp.",
-   "Rekognition nhận diện được đồ vật, người, người nổi tiếng, text trong ảnh, hoạt động, kiểm duyệt nội dung và phát hiện, phân tích, so sánh khuôn mặt. Giá trả theo ảnh hoặc theo phút video.",
-   "Khi đi thi nhớ nhé: text trong ảnh tự nhiên như biển số, biển hiệu thì chọn Rekognition; còn trích text kèm cấu trúc từ tài liệu như form, bảng, hóa đơn thì chọn Textract."
+   "Luồng thứ hai lấy từ bài Kinesis Video Streams. Mỗi camera đẩy video live vào một Kinesis Video Stream, và stream được bật image generation để trích frame thành ảnh JPEG đưa vào S3.",
+   "Mỗi ảnh mới vào bucket sinh ra một S3 event, và event này kích hoạt một hàm Lambda.",
+   "Lambda gọi Rekognition với một Custom Labels model, được train bằng vài trăm ảnh đã gắn nhãn, ví dụ để phân biệt koala với drop bear. Nếu kết quả vượt ngưỡng tin cậy, Lambda gửi cảnh báo qua SNS.",
+   "Rekognition nhận diện được đồ vật, người, người nổi tiếng, text trong ảnh với tối đa một trăm từ, hoạt động, kiểm duyệt nội dung và phát hiện, phân tích, so sánh khuôn mặt. Giá trả theo ảnh hoặc theo phút video.",
+   "Khi đi thi nhớ nhé: ít text trong ảnh như biển số thì chọn Rekognition; còn nhiều text, hoặc text kèm cấu trúc từ tài liệu như form, hóa đơn, PDF thì chọn Textract."
   ]
  }
 }

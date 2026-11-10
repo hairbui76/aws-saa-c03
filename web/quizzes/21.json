@@ -274,7 +274,7 @@
           "Neural machine translation và attention mechanism"
         ],
         "answer": [0],
-        "explain": "Lex cung cấp ASR (speech-to-text) và NLU (nhận intent, intent chaining). Text-to-speech/SSML là Polly; OCR là Textract; dịch máy là Translate."
+        "explain": "Lex cung cấp ASR (speech-to-text) và NLU (nhận intent, intent chaining); NLU có thể dùng thêm LLM của Amazon Bedrock nhưng vẫn chỉ chọn giữa các intent đã định nghĩa. Text-to-speech/SSML là Polly; OCR là Textract; dịch máy là Translate."
       },
       {
         "type": "single",
@@ -324,7 +324,7 @@
           "Amazon Translate"
         ],
         "answer": [1],
-        "explain": "Polly chuyển text thành speech lifelike, có cả plugin WordPress để đọc bài viết. Transcribe làm chiều ngược lại (speech-to-text)."
+        "explain": "Polly chuyển text thành speech lifelike, hợp để đọc bài viết thành audio. Transcribe làm chiều ngược lại (speech-to-text)."
       },
       {
         "type": "single",
@@ -352,15 +352,15 @@
       },
       {
         "type": "single",
-        "q": "Điểm khác biệt chính giữa Neural TTS (NTTS) và Standard TTS của Polly là gì?",
+        "q": "Một nền tảng đào tạo cần chuyển các bài viết và tài liệu đào tạo dài thành audio, với nhấn giọng, ngắt nghỉ và tone đúng trên toàn bài. Engine nào của Amazon Polly phù hợp nhất?",
         "options": [
-          "Standard TTS hỗ trợ dịch ngôn ngữ, còn NTTS thì không",
-          "NTTS chỉ xuất ra MP3, còn Standard xuất ra mọi định dạng",
-          "Standard TTS ghép các phoneme (concatenative), còn NTTS đi qua spectrogram và vocoder nên giọng tự nhiên hơn nhưng tính toán nặng hơn",
-          "NTTS chuyển speech thành text, còn Standard chuyển text thành speech"
+          "Standard TTS",
+          "Long-form TTS",
+          "Generative TTS",
+          "Neural TTS với output PCM"
         ],
-        "answer": [2],
-        "explain": "Standard TTS là kiến trúc concatenative ghép phoneme; NTTS chuyển phoneme sang spectrogram rồi qua vocoder để tạo audio giống người hơn. Không engine nào của Polly dịch ngôn ngữ."
+        "answer": [1],
+        "explain": "Long-form hiểu ý nghĩa của text để nhấn giọng, ngắt nghỉ và giữ tone đúng trên nội dung dài như bài viết, tài liệu đào tạo. Standard ghép mẩu giọng thu sẵn, rẻ nhất; Generative giống người nhất và thiết kế cho hội thoại; output format không quyết định cách đọc."
       },
       {
         "type": "single",
@@ -372,7 +372,7 @@
           "MP3, Ogg Vorbis, PCM"
         ],
         "answer": [3],
-        "explain": "Polly xuất audio dạng MP3, Ogg Vorbis hoặc PCM; PCM hợp khi cần đưa audio thô sang dịch vụ khác."
+        "explain": "Polly xuất audio dạng MP3, Ogg Vorbis hoặc PCM: MP3 hoặc Ogg Vorbis cho ứng dụng web, mobile; PCM cho thiết bị IoT và điện thoại."
       }
     ],
     "Rekognition": [
@@ -390,15 +390,15 @@
       },
       {
         "type": "single",
-        "q": "Một công ty an ninh muốn nhận diện khuôn mặt theo thời gian thực từ luồng video camera giám sát để phân biệt chủ nhà với người lạ. Giải pháp nào phù hợp nhất?",
+        "q": "Một trạm giám sát cạnh công viên quốc gia có ba camera. Đơn vị vận hành muốn phát hiện một loài thú mà Rekognition chưa biết sẵn và cảnh báo nhân viên, không đặt phần cứng xử lý tại trạm. Kiến trúc nào phù hợp nhất?",
         "options": [
-          "Lưu video vào S3 rồi chạy Amazon Textract",
+          "Mỗi camera đẩy vào một Kinesis Video Stream bật image generation ra S3; S3 event gọi Lambda, Lambda dùng Rekognition Custom Labels và gửi SNS khi vượt ngưỡng",
+          "Lưu video vào S3 rồi chạy Amazon Textract để tìm con vật",
           "Kinesis Data Firehose gửi video tới Amazon Comprehend",
-          "Amazon Kinesis Video Streams kết hợp Amazon Rekognition Video",
-          "Amazon Transcribe phân tích luồng video"
+          "Amazon Transcribe phân tích luồng video và gửi kết quả vào DynamoDB"
         ],
-        "answer": [2],
-        "explain": "Video trực tiếp/camera an ninh được phân tích bằng Kinesis Video Streams + Rekognition, kết quả có thể đưa vào Kinesis Data Streams. Textract, Comprehend và Transcribe không phân tích khuôn mặt trong video."
+        "answer": [0],
+        "explain": "Theo bài Kinesis Video Streams mới: KVS ingest video live, trích frame thành ảnh JPEG vào S3, S3 event gọi Lambda, Lambda dùng model Rekognition Custom Labels (train bằng vài trăm ảnh gắn nhãn) rồi gửi SNS. Textract, Comprehend và Transcribe không nhận diện con vật trong ảnh."
       },
       {
         "type": "single",
@@ -410,7 +410,7 @@
           "Amazon Rekognition"
         ],
         "answer": [3],
-        "explain": "Text trong ảnh hoặc video tự nhiên như biển số, biển hiệu thì dùng Rekognition. Textract dành cho trích text có cấu trúc từ tài liệu như form, bảng, hóa đơn."
+        "explain": "Text trong ảnh hoặc video tự nhiên như biển số, biển hiệu thì dùng Rekognition (tối đa 100 từ mỗi ảnh). Nhiều text hoặc text có cấu trúc từ tài liệu như form, bảng, hóa đơn thì dùng Textract."
       },
       {
         "type": "single",
@@ -446,58 +446,58 @@
           "Amazon Rekognition",
           "Amazon Comprehend",
           "Amazon Forecast",
-          "Amazon SageMaker"
+          "Amazon SageMaker AI"
         ],
         "answer": [3],
-        "explain": "SageMaker bao phủ toàn bộ vòng đời ML (fetch, clean, prepare, train, evaluate, deploy, monitor) cho model tùy chỉnh. Rekognition, Comprehend và Forecast là AI service có sẵn cho bài toán chuyên biệt."
+        "explain": "SageMaker AI bao phủ toàn bộ vòng đời ML (fetch, clean, prepare, train, evaluate, deploy, monitor) cho model tùy chỉnh. Rekognition, Comprehend và Forecast là AI service có sẵn cho bài toán chuyên biệt."
       },
       {
         "type": "single",
-        "q": "Trong SageMaker, thành phần nào là đơn vị cô lập cho một dự án, gồm EFS volume, users, apps, policies và cấu hình VPC?",
+        "q": "Trong SageMaker AI, thành phần nào là đơn vị cô lập cho một dự án, gồm EFS volume, users, apps, policies và cấu hình VPC?",
         "options": [
-          "SageMaker Studio",
-          "SageMaker Domain",
-          "SageMaker endpoint",
+          "SageMaker AI Studio",
+          "SageMaker AI Domain",
+          "SageMaker AI endpoint",
           "ML EC2 instance (ml.*)"
         ],
         "answer": [1],
-        "explain": "SageMaker Domain là vùng cô lập/nhóm cho một dự án, chứa EFS, users, apps, policies, VPC và phải tạo trước khi dùng Studio. SageMaker Studio là IDE cho vòng đời ML."
+        "explain": "SageMaker AI Domain là vùng cô lập/nhóm cho một dự án, chứa EFS, users, apps, policies, VPC, và phải tạo trước mới vào được hầu hết môi trường, kể cả Studio. SageMaker AI Studio là giao diện web với các IDE cho vòng đời ML."
       },
       {
         "type": "single",
-        "q": "Phát biểu nào đúng về chi phí khi dùng Amazon SageMaker?",
+        "q": "Một đội data science chạy notebook, training job và một model endpoint trên Amazon SageMaker AI suốt cả năm và muốn giảm chi phí. Lựa chọn nào phù hợp?",
         "options": [
-          "SageMaker tính phí cố định theo số user trong domain",
-          "SageMaker tính phí theo số model được tạo, bất kể tài nguyên",
-          "Bản thân SageMaker không thu phí riêng; bạn trả tiền cho tài nguyên nó tạo ra như compute training, endpoint, storage",
-          "SageMaker miễn phí hoàn toàn, kể cả instance training"
+          "Mua Compute Savings Plans",
+          "Xóa SageMaker AI Domain vì Domain tính phí theo giờ",
+          "Mua SageMaker AI Savings Plans",
+          "Không cần làm gì vì SageMaker AI miễn phí hoàn toàn, kể cả instance"
         ],
         "answer": [2],
-        "explain": "SageMaker không thu phí riêng nhưng tài nguyên thì có, và thường lớn, tốn kém. Khi tối ưu chi phí, cần chú ý endpoint chạy liên tục và instance ml.* lớn."
+        "explain": "SageMaker AI và Studio không thu phí riêng, nhưng mỗi notebook, training job, hosted model chạy trên ML instance riêng và tính tiền khi chạy, cộng storage. Chạy quanh năm thì cân nhắc SageMaker AI Savings Plans; Compute Savings Plans không áp dụng cho SageMaker AI."
       },
       {
         "type": "single",
-        "q": "Một ứng dụng cần phát hiện và so sánh khuôn mặt trong ảnh người dùng upload. Một kỹ sư đề xuất tự huấn luyện model nhận diện khuôn mặt trên SageMaker. Giải pháp nào có ít công sức vận hành nhất?",
+        "q": "Một ứng dụng cần phát hiện và so sánh khuôn mặt trong ảnh người dùng upload. Một kỹ sư đề xuất tự huấn luyện model nhận diện khuôn mặt trên SageMaker AI. Giải pháp nào có ít công sức vận hành nhất?",
         "options": [
           "Dùng Amazon Rekognition",
-          "Huấn luyện model trên SageMaker và deploy endpoint chạy liên tục",
-          "Dùng SageMaker Studio để xây pipeline training hằng tuần",
+          "Huấn luyện model trên SageMaker AI và deploy endpoint chạy liên tục",
+          "Dùng SageMaker AI Studio để xây pipeline training hằng tuần",
           "Chạy model mã nguồn mở trên EC2 GPU instance"
         ],
         "answer": [0],
-        "explain": "Khi đã có AI service chuyên dụng giải đúng bài toán (face detection/comparison), chọn dịch vụ đó (Rekognition) thay vì tự train trên SageMaker để giảm công sức vận hành."
+        "explain": "Khi đã có AI service pre-trained giải đúng bài toán (face detection/comparison), chọn dịch vụ đó (Rekognition) thay vì tự train trên SageMaker AI. SageMaker AI dành cho khi cần build, train, host model của riêng bạn; còn LLM có sẵn thì gọi qua Amazon Bedrock."
       },
       {
         "type": "single",
-        "q": "Sau khi huấn luyện xong model trên SageMaker, ứng dụng cần gửi inference request tới model. Cần triển khai gì?",
+        "q": "Sau khi huấn luyện xong model trên SageMaker AI, ứng dụng cần gửi inference request tới model. Cần triển khai gì?",
         "options": [
-          "Một SageMaker Domain mới",
+          "Một SageMaker AI Domain mới",
           "Một Lex bot gọi tới model",
           "Một Kendra index chứa model",
-          "Một SageMaker endpoint (hosting) cho model"
+          "Một SageMaker AI endpoint (hosting) cho model"
         ],
         "answer": [3],
-        "explain": "Model được triển khai thành endpoint để ứng dụng gọi, với kiến trúc hosting từ serverless đến compute chạy liên tục. Domain chỉ là vùng làm việc cho dự án, không phục vụ inference."
+        "explain": "Model được triển khai thành endpoint để ứng dụng gọi (kể cả LLM mã nguồn mở nếu tự host), với kiến trúc hosting từ serverless đến compute chạy liên tục. Domain chỉ là vùng làm việc cho dự án, không phục vụ inference."
       }
     ],
     "Textract": [
@@ -535,7 +535,7 @@
           "Upload từng file qua console Textract"
         ],
         "answer": [0],
-        "explain": "Tài liệu lớn nhiều trang dùng asynchronous API (start job rồi lấy kết quả khi xong, thường kèm SNS). Synchronous dành cho tài liệu cỡ thường; console demo chỉ cho tài liệu dưới 11 trang, dưới 5 MB."
+        "explain": "Tài liệu nhiều trang (PDF/TIFF, tới 3.000 trang) dùng asynchronous API: start job rồi lấy kết quả khi xong, thường kèm SNS. Synchronous chỉ dành cho tài liệu một trang; console demo chỉ nhận tài liệu dưới 11 trang, dưới 5 MB."
       },
       {
         "type": "single",
