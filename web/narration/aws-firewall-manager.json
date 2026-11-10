@@ -1,0 +1,13 @@
+{
+ "AWS Firewall Manager": {
+  "sig": "6-bepm6k",
+  "steps": [
+   "Sơ đồ này nói về AWS Firewall Manager. Nó không phải firewall, mà là dịch vụ quản lý tập trung WAF, Network Firewall, Security Group, NACL, Shield Advanced, DNS Firewall và firewall từ Marketplace, xuyên account và region trong một AWS Organization bật all features.",
+   "Từ management account, bạn chỉ định một Firewall Manager administrator account. Phía sau, account này trở thành delegated administrator, và mọi policy chỉ được tạo ở đây.",
+   "Firewall Manager áp policy xuống các member account như aem-prod-1 và aem-dev-1 thông qua service-linked role, bạn không cần đăng nhập vào từng account.",
+   "Mỗi member account phải bật AWS Config recording liên tục ở mọi region có policy. Config theo dõi resource và báo trạng thái về, còn Firewall Manager mới là bên quyết định.",
+   "Ví dụ có hai policy. Policy NACL ở us-east-1 áp cho mọi account, giữ rule đầu và rule cuối của mỗi NACL. Policy WAF ở phạm vi global cho CloudFront, chỉ áp cho aem-dev-1, loại trừ distribution có tag exempt và dùng AWS managed Core rule set.",
+   "Action mặc định là identify only, chỉ đánh dấu compliant hay không; bật auto remediation thì Firewall Manager tự sửa. Khi đi thi nhớ điều kiện: Organizations all features cộng AWS Config ở mọi member account, policy là regional trừ WAF cho CloudFront là global."
+  ]
+ }
+}

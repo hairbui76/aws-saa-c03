@@ -1,0 +1,15 @@
+{
+ "Amazon Managed Service for Prometheus": {
+  "sig": "8-1ldz30m",
+  "steps": [
+   "Sơ đồ này nói về Amazon Managed Service for Prometheus, gọi tắt là AMP. Ý quan trọng nhất: AMP chỉ lưu và truy vấn metric Prometheus, nó không tự thu thập dữ liệu.",
+   "Collector do bạn dựng và quản lý, như ADOT, Prometheus server hoặc agent, hay CloudWatch agent, sẽ chủ động scrape dữ liệu từ workload: EKS, ECS, Kubernetes on-premises hay ở cloud khác. Riêng EKS có AWS managed collector.",
+   "Sau khi scrape, collector push dữ liệu tới remote write endpoint của workspace. Request phải được ký SigV4.",
+   "Dữ liệu nằm trong workspace của một region, được replicate qua ba AZ, giữ mặc định 150 ngày và tăng được tới 1095 ngày, tức ba năm.",
+   "Bạn truy vấn bằng PromQL qua remote query endpoint. Song song, alert rule chạy một PromQL query theo lịch để kiểm tra điều kiện như CPU của cluster quá cao.",
+   "Kết quả truy vấn thường được vẽ bằng Managed Grafana hoặc ứng dụng riêng. Khi alert rule kích hoạt, alert đi vào Alert Manager để gom nhóm hoặc tạm ẩn trong maintenance window, trong khi rule vẫn tiếp tục chạy.",
+   "Nếu cần thông báo, Alert Manager gọi SNS.",
+   "Khi đi thi nhớ: AMP không thu thập dữ liệu, phải có collector. Đội đã quen Prometheus thì chọn AMP, còn nếu mọi thứ đã ở CloudWatch thì Container Insights hợp hơn. Chi phí tính theo dữ liệu thu vào, lưu trữ và truy vấn, không theo số host."
+  ]
+ }
+}

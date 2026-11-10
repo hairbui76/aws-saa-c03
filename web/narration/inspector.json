@@ -1,14 +1,16 @@
 {
  "Inspector": {
-  "sig": "7-jo1n94",
+  "sig": "9-1tfa70f",
   "steps": [
-   "Sơ đồ này nói về Amazon Inspector, dịch vụ tạo báo cáo lỗ hổng cho EC2 và container. Điểm mấu chốt là rules package quyết định kiểm tra gì: network assessment không cần agent, còn host assessment nhìn vào bên trong OS nên bắt buộc có agent.",
-   "Bên phía network là gói Network Reachability, phân tích đường đi từ Internet vào instance qua Security Group, NACL, route table và nhiều thành phần khác. Các finding cho biết port quen thuộc hay port lạ bị lộ, có listener không; nếu không có agent thì Inspector không biết OS có listen hay không.",
-   "Lưu ý cập nhật: Inspector v2 quét liên tục và tự động, dùng SSM Agent thay agent riêng, và phủ thêm container image trong ECR cùng Lambda function. Tuy vậy, từ khóa thi vẫn trỏ về Inspector.",
-   "Bên phía host có ba gói, đều cần agent. CVE liệt kê các lỗ hổng đã biết theo CVE ID, CIS Benchmarks đối chiếu cấu hình OS, còn Security best practices kiểm tra những thứ như root login qua SSH hay độ phức tạp mật khẩu.",
-   "Giờ ghép lại: assessment target là EC2, OS và container, đi vào một Inspector assessment chạy trong khoảng từ 15 phút tới 1 ngày. Các rules package network và host đều cấp vào assessment này để quyết định nội dung kiểm tra.",
-   "Kết thúc assessment, Inspector trả ra danh sách findings sắp xếp theo mức độ nghiêm trọng, chính là security report mà đề thi hay nhắc tới.",
-   "Khi đi thi, hãy nhớ: thấy CVE, CIS Benchmarks hoặc security report cho EC2 là chọn Inspector ngay. Còn câu hỏi instance lộ port nào ra Internet thì là Network Reachability, và nó không cần agent."
+   "Sơ đồ này nói về Amazon Inspector bản hiện tại. Nó không cần lên lịch: tự quét lại khi có thay đổi, xếp findings theo risk score rồi gửi sang Security Hub và EventBridge.",
+   "Bạn bật scan type theo từng account. Với EC2, Inspector quét bằng SSM Agent bên trong instance, hoặc agentless bằng cách chụp EBS snapshot để phân tích; mặc định dùng cả hai, gọi là hybrid.",
+   "Inspector chạy liên tục. Khi có package mới, bản vá mới hay một CVE mới được công bố, nó tự quét lại resource bị ảnh hưởng.",
+   "Bên dưới là CIS Benchmarks, bài quét có mục tiêu so hệ điều hành của EC2 với best practice của Center for Internet Security, chạy on-demand hoặc theo lịch.",
+   "Ngoài EC2, Inspector còn quét container image trong ECR và Lambda function. Network reachability chỉ áp cho EC2, không bao giờ cần agent, tự chạy mỗi 12 giờ để tìm đường TCP hoặc UDP đang mở từ rìa VPC.",
+   "Kết quả là findings xếp theo Inspector risk score đã điều chỉnh theo môi trường: lỗ hổng package kèm CVE ID, lỗ hổng code và network reachability chỉ ra cấu hình quá mở. Finding tự đóng khi bạn đã khắc phục.",
+   "Findings được publish sang Security Hub và thành event trên EventBridge.",
+   "Từ EventBridge, bạn tự cấu hình Lambda để khắc phục hoặc gửi thông báo. Bản thân Inspector chỉ phát hiện, không tự sửa lỗ hổng.",
+   "Khi đi thi, thấy CVE, CIS Benchmarks hay vulnerability findings là chọn Inspector, và nhớ network reachability không cần agent. Bản khóa cũ dạy Inspector Classic với assessment theo lịch và agent riêng, nay đã thay bằng quét liên tục."
   ]
  }
 }

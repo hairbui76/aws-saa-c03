@@ -2,10 +2,11 @@
 tags: [saa-c03, s18-security-deployment-and-operations, security, s3, data-privacy, compliance]
 aliases: [Amazon Macie, Macie]
 lessons: ["0323 Amazon Macie", "0385 DEMO Amazon Macie"]
+videos: ["297 Amazon Macie"]
 ---
 # Macie
 
-> **TL;DR:** Amazon Macie là dịch vụ **data security và data privacy** cho **S3**: dùng machine learning và pattern matching để **khám phá, phân loại, giám sát** dữ liệu nhạy cảm (PII, PHI, dữ liệu tài chính, credential) trong bucket, đồng thời cảnh báo khi cấu hình bucket bị nới lỏng. Findings đẩy sang EventBridge để thông báo hoặc remediation tự động.
+> **TL;DR:** Amazon Macie là dịch vụ **data security và data privacy** cho **S3**: dùng machine learning và pattern matching để **khám phá, phân loại, giám sát** dữ liệu nhạy cảm (PII, PHI, dữ liệu tài chính, credential) trong bucket, đồng thời cảnh báo khi cấu hình bucket bị nới lỏng. Mọi finding **tự động** được publish sang EventBridge để thông báo hoặc remediation tự động.
 
 ## 🖼️ Sơ đồ
 ![[Macie.excalidraw]]
@@ -37,16 +38,18 @@ Là các "rule" để đánh giá object và nội dung của nó:
 Hai loại:
 1. **Policy findings**: khi policy/setting của bucket bị thay đổi theo hướng **giảm bảo mật**, **sau khi** Macie được bật. Ví dụ:
    - `Policy:IAMUser/S3BlockPublicAccessDisabled`: tắt Block Public Access.
-   - `Policy:IAMUser/S3BucketEncryptionDisabled`: tắt default encryption.
-   - `Policy:IAMUser/S3BucketPublic`: bucket policy/ACL làm bucket public.
+   - `Policy:IAMUser/S3BucketEncryptionDisabled`: default encryption của bucket bị **đặt lại về mặc định SSE-S3** (ví dụ trước đó dùng KMS). Mọi bucket S3 đều mã hóa object mới, nên finding này nói về việc **rời khỏi mặc định mạnh hơn dựa trên KMS**, không phải tắt hẳn mã hóa.
+   - `Policy:IAMUser/S3BucketPublic`: bucket policy/ACL làm bucket public. "Public" ở đây là **anonymous access** hoặc cấp quyền cho **mọi IAM identity đã xác thực**.
    - `Policy:IAMUser/S3BucketSharedExternally`: bucket chia sẻ cho account ngoài Macie organization.
 2. **Sensitive data findings**: khi phát hiện dữ liệu nhạy cảm trong object. Ví dụ:
    - `SensitiveData:S3Object/Credentials`: SSH key, AWS access key bị lộ.
    - `SensitiveData:S3Object/CustomIdentifier`: khớp custom identifier.
    - `SensitiveData:S3Object/Financial`: thẻ tín dụng, tài khoản ngân hàng.
    - `SensitiveData:S3Object/Personal`: PII, PHI hoặc kết hợp.
-   - `SensitiveData:S3Object/Multiple`: nhiều loại cùng lúc.
-- Findings xem trực tiếp trên console, tích hợp với **AWS Security Hub**, hoặc thành **event gửi tới [[EventBridge]]** để remediation tự động.
+   - `SensitiveData:S3Object/Multiple`: nhiều loại cùng lúc trong **cùng một object** (ví dụ 50 số thẻ tín dụng vẫn chỉ là Financial; thẻ tín dụng + số hộ chiếu mới là Multiple).
+- Findings xem trực tiếp trên console, hoặc dùng để tích hợp:
+  - **Mọi finding tự động được publish lên [[EventBridge]]** thành event, **không cần bật**; từ đó route đi remediation tự động hướng sự kiện.
+  - Publish finding vào **[[AWS Security Hub]]** là **một setting bạn chọn cho từng account**.
 
 ### Multi-account
 - Một **administrator account** quản lý Macie ở các **member account**.
@@ -67,6 +70,8 @@ flowchart LR
 ```
 
 ## Demo / Lab
+(Bản khóa mới không còn video demo Macie trong section này; phần dưới theo demo của bản khóa cũ.)
+
 Mini project (us-east-1):
 1. Tạo bucket, upload dữ liệu mẫu: `cc.txt` (thẻ tín dụng), `employees.txt` (thông tin nhân viên), `keys.txt` (credential), `plates.txt` (biển số xe kiểu Úc), cùng một ảnh mèo (không nhạy cảm).
 2. Bật Macie → chọn bucket → tạo **one-time job**, managed identifiers = **All**, chưa dùng custom identifier. Job có thể mất tới khoảng **20 phút**.
@@ -82,10 +87,11 @@ Bài học: managed identifiers không phủ mọi định dạng riêng theo v�
 - "Phản ứng tự động khi phát hiện dữ liệu nhạy cảm" → Macie findings → **EventBridge** → Lambda/SNS.
 - Macie **chỉ cho S3**. Lỗ hổng phần mềm trên EC2 → [[Inspector]]; hoạt động độc hại trong account → [[GuardDuty]]; cấu hình resource có compliant không → [[AWS Config]].
 - Dữ liệu đặc thù tổ chức (mã nhân viên...) → **custom data identifier** (regex).
-- Policy findings chỉ phát hiện thay đổi **sau khi Macie được bật**.
+- Policy findings chỉ phát hiện thay đổi **sau khi Macie được bật**. `S3BucketEncryptionDisabled` = bucket rời KMS về mặc định SSE-S3, không phải tắt mã hóa.
+- Finding lên EventBridge **tự động**; lên Security Hub là **setting theo account**.
 - Multi-account: administrator account + member accounts (qua Organizations hoặc invitation).
 
 ## Liên kết
 - Tiên quyết: [[S3 Basics]], [[S3 Security]]
-- Liên quan: [[S3 Encryption]], [[EventBridge]], [[SNS]], [[Lambda]], [[AWS Organizations]], [[Event-Driven Architecture]]
+- Liên quan: [[S3 Encryption]], [[AWS Security Hub]], [[EventBridge]], [[SNS]], [[Lambda]], [[AWS Organizations]], [[Event-Driven Architecture]]
 - Phân biệt với: [[GuardDuty]], [[Inspector]], [[AWS Config]], [[Comprehend]]

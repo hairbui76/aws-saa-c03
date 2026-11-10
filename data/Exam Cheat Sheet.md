@@ -23,14 +23,17 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | IdP doanh nghiệp tương thích **SAML 2.0** (ADFS), cấu hình federation thủ công | **SAML 2.0 federation**: `AssumeRoleWithSAML` → credentials tạm thời (1 h mặc định, tối đa 12 h) | [[SAML 2.0 Identity Federation]] |
 | User cần pass role có sẵn cho service, không được tạo/sửa role | **`iam:PassRole`** (+ `iam:PassedToService`; role và user cùng account) | [[Service-linked Roles and PassRole]] |
 | Báo cáo compliance của AWS (SOC, PCI, ISO) cho auditor | **AWS Artifact** | [[AWS Artifact and License Manager]] |
-| Secret + **rotation tự động** (nhất là mật khẩu RDS) | **Secrets Manager** | [[Secrets Manager]] |
+| Secret + **rotation tự động** (nhất là mật khẩu RDS; master password RDS/Aurora có managed rotation, không cần Lambda) | **Secrets Manager** | [[Secrets Manager]] |
 | Cấu hình phân cấp, rẻ, SecureString, AMI mới nhất | **SSM Parameter Store** | [[SSM Parameter Store]] |
-| HSM riêng **single-tenant**, khách hàng tự quản, PKCS#11/JCE/CNG (KMS nay cũng FIPS 140-3 Level 3 nên "Level 3" một mình không đủ) | **CloudHSM** | [[CloudHSM]] |
+| HSM riêng **single-tenant**, khách hàng tự quản, thuật toán non-FIPS, PKCS#11/JCE/CNG/KSP/OpenSSL (KMS và CloudHSM đều FIPS 140-3 Level 3 nên "Level 3" một mình không đủ) | **CloudHSM** | [[CloudHSM]] |
 | SQL injection, XSS, geo match, rate limit HTTP | **WAF** (ALB, CloudFront, API Gateway) | [[WAF]] |
 | DDoS 24/7 response team, bồi hoàn chi phí scale | **Shield Advanced** | [[Shield]] |
 | PII/dữ liệu nhạy cảm trong **S3** | **Macie** | [[Macie]] |
-| CVE, CIS Benchmark, port lộ ra Internet | **Inspector** | [[Inspector]] |
+| CVE, CIS Benchmark, port lộ ra Internet; lỗ hổng EC2 / ECR image / Lambda (quét liên tục, EC2 agentless được) | **Inspector** | [[Inspector]] |
 | Threat detection từ CloudTrail + VPC Flow Logs + DNS logs | **GuardDuty** (→ EventBridge → Lambda) | [[GuardDuty]] |
+| Gom findings của GuardDuty / Inspector / Macie / Config, chấm theo CIS / PCI DSS | **Security Hub** (regional, không retroactive, cần Config) | [[AWS Security Hub]] |
+| Điều tra, lần theo login / API call / traffic quanh một finding | **Amazon Detective** | [[Amazon Detective]] |
+| Áp WAF / SG / NACL / Network Firewall / Shield Advanced cho mọi account trong org | **Firewall Manager** (all features + Config continuous) | [[AWS Firewall Manager]] |
 | "Ai đã gọi API / xóa resource?" | **CloudTrail** | [[CloudTrail]] |
 | Lịch sử cấu hình, resource có compliant không | **AWS Config** | [[AWS Config]] |
 
@@ -47,6 +50,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Latency ổn định, > 1.25 Gbps, không qua Internet | **Direct Connect** | [[Direct Connect]] |
 | Mã hóa traffic chạy trên DX | **IPsec VPN qua public VIF** | [[Direct Connect Public VIF and VPN]] |
 | Firewall/IDS/IPS bên thứ ba inline, GENEVE | **Gateway Load Balancer** | [[Gateway Load Balancer]] |
+| Firewall managed cho traffic vào / ra VPC: lọc domain, IPS Suricata, stateful | **AWS Network Firewall** (firewall subnet + ingress route table trên IGW) | [[AWS Network Firewall]] |
 | Path/host-based routing, nhiều domain HTTPS (SNI) | **ALB** | [[Compare - ALB vs NLB]] |
 | UDP, IP tĩnh, TLS end-to-end tới instance | **NLB** (TCP listener) | [[SSL Offload and Session Stickiness]] |
 | Trỏ apex domain tới ELB/CloudFront/S3 | **Alias record** | [[CNAME vs Alias]] |
@@ -134,6 +138,10 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Chạm giới hạn tài nguyên khi mở rộng / sang region mới | **Service Quotas** → Request increase (theo region; CloudWatch alarm khi gần chạm) | [[Service Quotas]] |
 | Account mới trong Organization cần sẵn quota cao | **Quota request template** | [[Service Quotas]] |
 | Alarm báo nhầm vì spike ngắn | **Evaluation periods + datapoints to alarm** (M of N) | [[CloudWatch Basics]] |
+| Rightsizing từng resource theo mức dùng thật (gợi ý type cụ thể, tự áp dụng EBS) | **Compute Optimizer** (14 ngày; 93 ngày với Enhanced Infrastructure Metrics) | [[AWS Compute Optimizer]] |
+| Check best practice; tự động mở case xin tăng service limit | **Trusted Advisor** + Support API (gói trả phí mới có mọi check, API) | [[AWS Trusted Advisor]] |
+| Dashboard Grafana không tự quản server, nhiều nguồn (CloudWatch, AMP, Azure…) | **Amazon Managed Grafana** | [[Amazon Managed Grafana]] |
+| Lưu và truy vấn metric Prometheus (PromQL) cho EKS / Kubernetes | **Amazon Managed Service for Prometheus** (cần collector) | [[Amazon Managed Service for Prometheus]] |
 
 ### Migration
 | Từ khóa trong đề | Chọn | Note |
@@ -278,9 +286,9 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | | KMS | CloudHSM |
 |---|---|---|
 | Tenancy | Shared | **Single-tenant** |
-| FIPS | **140-3 Level 3** (bài KMS mới; khóa cũ nói 140-2 Level 2) | 140-2 **Level 3** (theo bài CloudHSM) |
+| FIPS | **140-3 Level 3** (bài KMS mới; khóa cũ nói 140-2 Level 2) | **140-3 Level 3** + chạy được **non-FIPS mode** (bài CloudHSM mới; khóa cũ nói 140-2 Level 3) |
 | Kiểm soát key | AWS vận hành, IAM + key policy | **Chỉ khách hàng**, AWS không truy cập được |
-| API | AWS API | PKCS#11, JCE, CNG |
+| API | AWS API | PKCS#11, JCE, CNG/KSP, OpenSSL Dynamic Engine |
 | Tích hợp S3/EBS/RDS | **Native** | Không (trừ KMS custom key store) |
 | HA | Có sẵn, regional | Tự dựng cluster ≥ 2 HSM ở nhiều AZ |
 | Use case riêng | Mã hóa at rest dịch vụ AWS | SSL offload, Oracle TDE, private key của CA |
@@ -339,7 +347,8 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | Route 53 | 4 name server/zone; multivalue ≤ 8 record; health check 30 s (fast 10 s), ngưỡng 18%; string match 5.120 byte đầu |
 | CloudFront | Default TTL 24 h; cert ACM ở **us-east-1** |
 | ASG | Lifecycle hook timeout 3.600 s; health check grace 300 s (mặc định trên console; CLI/API là 0) |
-| WAF | Inspect body 8 KB đầu |
+| WAF | Web ACL 1500 WCU trong giá gốc, tối đa 5000; body inspect có giới hạn (khóa cũ nêu 8 KB đầu) |
+| Inspector / Compute Optimizer / AMP | Network reachability mỗi 12 giờ; Compute Optimizer 14 ngày (93 ngày trả phí); AMP retention 150 ngày (tối đa 3 năm) |
 | VPN / BGP | ~1.25 Gbps/tunnel (khóa học; nay TGW có tunnel băng thông lớn + ECMP); BGP TCP 179; private ASN 64512–65534 |
 | Direct Connect | Port 1/10/100 Gbps (nay thêm 400 Gbps) |
 | Snow | Snowball kinh tế 10 TB–10 PB; Snowmobile ≥ 10 PB (tới 100 PB), một site |
@@ -360,7 +369,9 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 - RAM **chia sẻ** chứ không sao chép (StackSets mới tạo bản sao); không re-share được ([[AWS Resource Access Manager]]).
 - Identity Center dành cho **workforce**; khách hàng đăng nhập Google/Facebook → Cognito ([[IAM Identity Center]]).
 - AWS Config chỉ **phát hiện**, không **ngăn**. Muốn ngăn thì dùng IAM/SCP ([[AWS Config]]).
-- GuardDuty phát hiện chứ không tự chặn; chặn L7 là việc của WAF, DDoS là Shield ([[GuardDuty]]).
+- GuardDuty phát hiện chứ không tự chặn; chặn L7 là việc của WAF, DDoS là Shield ([[GuardDuty]]). Điều tra finding là Detective ([[Amazon Detective]]).
+- Firewall Manager **không phải firewall**, chỉ quản lý tập trung; cần Organizations all features + AWS Config ở mọi member account ([[AWS Firewall Manager]]).
+- Security Hub **không retroactive**, regional; cần AWS Config recording ([[AWS Security Hub]]).
 - CloudTrail không real-time (log giao khoảng 5 phút một lần) ([[CloudTrail]]).
 - Metric filter của CloudWatch Logs **không áp ngược** cho log đã có ([[CloudWatch Logs]]).
 - AWS managed key (`aws/s3`) không dùng cross-account được. Cần customer managed key ([[S3 Encryption]]).

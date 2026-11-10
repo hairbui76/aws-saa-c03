@@ -14,7 +14,9 @@
     "Exam Cheat Sheet: NAT Gateway có chế độ zonal (mỗi AZ một cái, trong public subnet) và regional (một NATGW cho cả VPC, AWS trải qua các AZ); private NAT Gateway cho mạng private chồng lấn",
     "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64",
     "Exam Cheat Sheet: mốc EBS mới (gp2 16K, io1 64K, gp3 80K / 2,000 MiB/s, io2 Block Express 256K; io2 = Block Express), FSR tối đa 5/region, Spot cảnh báo 2 phút và terminate/stop/hibernate, RI Standard/Convertible, ODCR giá On-Demand (immediate/future, open/targeted), Savings Plans không giữ capacity, Scheduled RI đã deprecated",
-    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans"
+    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans",
+    "Exam Cheat Sheet: CloudHSM và KMS đều FIPS 140-3 Level 3 (CloudHSM chọn theo single-tenant, non-FIPS mode, KSP/OpenSSL), Secrets Manager managed rotation cho RDS/Aurora, Inspector quét liên tục EC2 / ECR / Lambda, WAF 1500–5000 WCU; thêm Security Hub, Detective, Firewall Manager, Network Firewall, Compute Optimizer, Trusted Advisor, Managed Grafana, Managed Service for Prometheus",
+    "Top mẹo thi và concept map chương 18: thêm 8 bài mới (Managed Grafana, Managed Service for Prometheus, Compute Optimizer, Network Firewall, Trusted Advisor, Security Hub, Firewall Manager, Detective); CloudHSM FIPS 140-3; WAF CHALLENGE và aggregation key; Config periodic recording, Guard, SSM Automation; Inspector bản mới"
   ],
   "missing": [],
   "lessons": {
@@ -792,6 +794,121 @@
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []
+    },
+    "Secrets Manager": {
+      "kind": "updated",
+      "summary": "Master password RDS/Aurora có managed rotation (không cần Lambda); AWS khuyên Parameter Store SecureString cho giá trị cấu hình mã hóa, Secrets Manager cho secret thật (password, API key, token); role separation áp khi dùng customer managed KMS key.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh: Secrets Manager vs SSM Parameter Store",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "WAF": {
+      "kind": "updated",
+      "summary": "Web ACL có 1500 WCU trong giá gốc, dùng tới 5000 (tính thêm theo bậc 500); WCU của rule group cố định khi tạo, tối đa 5000; thêm action CHALLENGE (kiểm tra JavaScript ngầm, token); rate-based đếm theo aggregation key; thêm managed rule group trả phí (ACFP, anti-DDoS); log tới Amazon Data Firehose; bài mới không nêu con số 8 KB và bảng giá.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CloudHSM": {
+      "kind": "updated",
+      "summary": "CloudHSM và KMS đều FIPS 140-3 Level 3 (bỏ cách phân biệt CloudHSM Level 3 / KMS Level 2); chọn CloudHSM khi cần HSM single-tenant tự kiểm soát hoặc thuật toán non-FIPS (non-FIPS mode); cluster backup tự động nhưng AWS không khôi phục được credential HSM user; crypto officer / crypto user trong HSM; thêm API KSP và OpenSSL Dynamic Engine.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh: KMS vs CloudHSM",
+        "Use cases",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "AWS Config": {
+      "kind": "updated",
+      "summary": "Recording continuous (mặc định) hoặc periodic 24 giờ một lần (rẻ hơn); custom rule viết bằng Guard (policy-as-code) hoặc Lambda; remediation native bằng SSM Automation documents; dịch vụ khác dùng Config để kiểm tra compliance chủ động trước khi deploy.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Macie": {
+      "kind": "updated",
+      "summary": "Mọi finding tự động lên EventBridge, còn publish sang Security Hub là setting theo account; S3BucketEncryptionDisabled nghĩa là bucket về mặc định SSE-S3 (rời KMS), không phải tắt mã hóa; 'public' gồm anonymous hoặc mọi IAM identity đã xác thực; bài mới không còn video demo.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Demo / Lab"
+      ]
+    },
+    "Inspector": {
+      "kind": "updated",
+      "summary": "Bài mới dạy Inspector hiện tại: quét liên tục (không lên lịch), phủ EC2, ECR image, Lambda; EC2 quét bằng SSM Agent hoặc agentless (EBS snapshot), mặc định hybrid; network reachability chỉ EC2, không agent, mỗi 12 giờ; risk score, finding tự đóng; CIS scan on-demand hoặc theo lịch. Inspector Classic chỉ còn để so sánh.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "GuardDuty": {
+      "kind": "updated",
+      "summary": "Multi-account khuyên dùng Organizations (management account chỉ định GuardDuty administrator, bật cho mọi member); CloudTrail S3 data events chỉ có khi bật S3 Protection plan; nguồn còn DNS logs, VPC Flow Logs, CloudTrail management events, S3 data events.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Amazon Managed Grafana": {
+      "kind": "new",
+      "summary": "Grafana do AWS quản lý: workspace chỉ lưu cấu hình, truy vấn dữ liệu tại nguồn (CloudWatch, AMP, X-Ray, Azure Monitor…); kết nối 1 VPC thì mọi traffic đi qua VPC; user qua Identity Center hoặc SAML."
+    },
+    "Amazon Managed Service for Prometheus": {
+      "kind": "new",
+      "summary": "AMP lưu và truy vấn metric Prometheus (PromQL) nhưng không thu thập: collector scrape workload rồi push vào remote write endpoint; SigV4, retention 150 ngày (tối đa 3 năm), Alert Manager → SNS."
+    },
+    "AWS Compute Optimizer": {
+      "kind": "new",
+      "summary": "Recommendation từng resource compute (under / over-provisioned, optimized) theo metric CloudWatch: 14 ngày miễn phí, 93 ngày với Enhanced Infrastructure Metrics; tự áp dụng một số loại (EBS), đảo ngược được."
+    },
+    "AWS Network Firewall": {
+      "kind": "new",
+      "summary": "Firewall managed cho traffic vào / ra VPC: firewall subnet + endpoint mỗi AZ, ingress route table trên IGW; firewall policy với rule group stateless (5-tuple) và stateful (Suricata, domain list, IPS)."
+    },
+    "AWS Trusted Advisor": {
+      "kind": "new",
+      "summary": "Check best practice theo 6 nhóm, gắn với support plan: Basic/Developer có 6 core check + service limit; gói trả phí có mọi check, Trusted Advisor API, Support API, event-driven."
+    },
+    "AWS Security Hub": {
+      "kind": "new",
+      "summary": "Security Hub CSPM gom findings (ASFF) từ Config, Macie, Inspector, GuardDuty… và chấm điểm theo CIS, PCI DSS, AWS Foundational Security Best Practices; regional, không retroactive, cần AWS Config; administrator + member, home region."
+    },
+    "AWS Firewall Manager": {
+      "kind": "new",
+      "summary": "Quản lý tập trung WAF, Network Firewall, SG, NACL, Shield Advanced, DNS Firewall cho mọi account trong Organization; cần all features + AWS Config continuous; policy ở administrator account, identify only hoặc auto remediation."
+    },
+    "Amazon Detective": {
+      "kind": "new",
+      "summary": "Dịch vụ điều tra bảo mật: gom sự kiện theo thời gian từ CloudTrail, VPC Flow Logs, GuardDuty findings thành graph để lần theo tương tác; administrator + member, hỗ trợ Organizations."
     }
   }
 }

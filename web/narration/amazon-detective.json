@@ -1,0 +1,12 @@
+{
+ "Amazon Detective": {
+  "sig": "5-1egzkt6",
+  "steps": [
+   "Sơ đồ này nói về Amazon Detective, dịch vụ điều tra bảo mật. Nó gom login, API call, network traffic và GuardDuty findings thành một nơi duy nhất, rồi cho bạn lần theo quan hệ giống như nhảy giữa các bài liên quan trên Wikipedia.",
+   "Detective tích hợp với dịch vụ khác để gom sự kiện theo thời gian thành graph quan hệ; một nguồn quan trọng là GuardDuty findings.",
+   "Các nguồn khác gồm CloudTrail cho login attempt và API call, VPC Flow Logs cho network traffic. Detective administrator account là nơi quản lý graph này, qua lời mời hoặc do Organizations ủy quyền.",
+   "Từ graph, bạn điều tra tương tác: thấy một lần login thất bại thì lần theo entity đó còn làm gì, tìm sự kiện bất thường, resource liên quan, và xem visualization cho biết điều gì là bình thường hay bất thường.",
+   "Member account đóng góp dữ liệu vào graph; với Organizations có thể tự thêm account mới. Khi đi thi nhớ: GuardDuty phát hiện, Detective điều tra."
+  ]
+ }
+}
