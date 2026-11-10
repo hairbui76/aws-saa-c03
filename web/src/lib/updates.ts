@@ -50,3 +50,14 @@ export function updateCountParts(counts: Record<UpdateKind, number>): { kind: Up
   if (counts.removed) parts.push({ kind: 'removed', text: `${counts.removed} không còn trong khóa` });
   return parts;
 }
+
+/** 2026-11-10 -> 10/11/2026 */
+export const viDate = (iso: string) => iso.split('-').reverse().join('/');
+
+/** Heading id -> how the section is marked: "changed" (red) or "dropped" (blue). Dropped wins if both list the id. */
+export function headingMarks(update?: Pick<LessonUpdate, 'changed' | 'dropped'>): Record<string, 'changed' | 'dropped'> {
+  const marks: Record<string, 'changed' | 'dropped'> = {};
+  for (const h of update?.changed ?? []) marks[h.id] = 'changed';
+  for (const h of update?.dropped ?? []) marks[h.id] = 'dropped';
+  return marks;
+}

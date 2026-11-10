@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { shouldShowWhatsNew, newerBatchId, chapterUpdateCounts, updateCountParts } from '../src/lib/updates.ts';
+import { shouldShowWhatsNew, newerBatchId, chapterUpdateCounts, updateCountParts, viDate, headingMarks } from '../src/lib/updates.ts';
 
 test('shouldShowWhatsNew: chỉ khi có đợt mà chưa xem đúng đợt đó', () => {
   assert.equal(shouldShowWhatsNew(null, '2026-11-10'), true);
@@ -34,4 +34,16 @@ test('updateCountParts: chỉ các phần khác 0, theo thứ tự mới, cập 
   ]);
   assert.deepEqual(updateCountParts({ new: 0, updated: 3, removed: 0 }), [{ kind: 'updated', text: '3 cập nhật' }]);
   assert.deepEqual(updateCountParts({ new: 0, updated: 0, removed: 0 }), []);
+});
+
+test('viDate: ISO -> dd/mm/yyyy', () => {
+  assert.equal(viDate('2026-11-10'), '10/11/2026');
+});
+
+test('headingMarks: id -> changed/dropped, không có update thì rỗng', () => {
+  assert.deepEqual(headingMarks(undefined), {});
+  assert.deepEqual(
+    headingMarks({ changed: [{ title: 'A b', id: 'a-b' }], dropped: [{ title: 'C', id: 'c' }] }),
+    { 'a-b': 'changed', c: 'dropped' },
+  );
 });

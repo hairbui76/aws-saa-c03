@@ -4094,3 +4094,64 @@ body.resizing-chat {
 .upd-ch .sep {
   color: var(--muted);
 }
+
+/* ---------- update banner under the lesson title, ❗ after changed headings ---------- */
+.upd-banner {
+  margin: 2px 0 14px;
+  padding: 10px 14px;
+  border: 2px solid var(--upd-changed);
+  border-radius: var(--wobble);
+  background: var(--upd-changed-soft);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.upd-banner.removed {
+  border-color: var(--upd-removed);
+  background: var(--upd-removed-soft);
+}
+.upd-banner.new {
+  border-color: var(--upd-new);
+  background: var(--card);
+}
+.upd-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+}
+.upd-row + .upd-row {
+  margin-top: 6px;
+}
+.upd-row > .upd-mark {
+  align-self: center;
+}
+.upd-lead {
+  color: var(--muted);
+  font-size: 14px;
+}
+.upd-jumps {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.upd-jump {
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.4;
+  padding: 1px 10px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1.5px solid var(--upd-changed);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.upd-row.dropped .upd-jump {
+  border-color: var(--upd-removed);
+}
+.upd-jump:hover {
+  background: var(--hover);
+}
+.section > h2 .upd-mark {
+  vertical-align: -2px;
+}

@@ -2,12 +2,9 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { updatesSeen } from '../lib/store';
-import type { UpdatesIndex } from '../lib/updates';
+import { viDate, type UpdatesIndex } from '../lib/updates';
 import { Sketch } from './Sketch';
 import { UpdateLegend, UpdateMark } from './UpdateMark';
-
-/** 2026-11-10 -> 10/11/2026 */
-const viDate = (iso: string) => iso.split('-').reverse().join('/');
 
 /**
  * "Có gì mới": what the latest update batch changed. Every way of closing it (button, Esc, backdrop, following

@@ -26,5 +26,28 @@ npm run build    # bản tĩnh trong dist/ (deploy lên host tĩnh nào cũng đ
 - Highlight: bôi đen chữ trong bài để tô màu (4 màu), ghi chú riêng cho đoạn đó hoặc trích vào ghi chú bài. Đoạn tô lưu dạng trích dẫn + ngữ cảnh rồi tìm lại khi mở bài, vẽ bằng CSS Custom Highlight API nên không sửa DOM của React (`src/lib/anchor.ts`, `src/components/LessonMarks.tsx`).
 - Vẽ trên sơ đồ: nút "Vẽ" ở tab Hình tĩnh (bút 4 màu, bút dạ quang, tẩy, hoàn tác). Nét vẽ lưu theo tọa độ của sơ đồ nên đúng chỗ khi zoom, đổi cỡ màn hình, toàn màn hình (`src/components/DiagramInk.tsx`). Ghi chú, highlight và nét vẽ đều nằm trong file export tiến độ.
 - Lộ trình: trang `#/roadmap` cho tải file mẫu JSON (sinh từ danh sách chương/bài hiện tại, xem `src/lib/roadmap.ts`), sửa rồi tải lên để theo dõi hạn từng giai đoạn.
-- Video bài giảng gốc (`../videos`) chỉ phát khi chạy `npm run dev` hoặc `npm run preview` trên máy, không nằm trong bản build.
+- Video bài giảng gốc chỉ phát khi chạy `npm run dev` hoặc `npm run preview` trên máy, không nằm trong bản build. Bản khóa cũ ở `../videos` (ghi chú dùng `lessons: ["0272 Tên"]`, số 4 chữ số); bản khóa mới ở `../videos-new`, một symlink ở thư mục gốc repo trỏ tới `../SAA-C03-newest/videos` (cả hai đều không nằm trong repo, `vite.config.ts` mount chúng ở `/videos/` và `/videos-new/`). Ghi chú nào có frontmatter `videos: ["249 Amazon AppFlow"]` (số đúng 3 chữ số, một dấu cách, rồi tiêu đề) thì mục "📺 Bài giảng gốc" lấy video từ bản khóa mới, bằng số `NNN` ở đầu tên file `NNN_*.mp4`; không có `videos:` thì vẫn dùng `lessons:` cũ. Thiếu symlink hoặc thiếu file thì bài vẫn hiện tên video nhưng không phát được.
+- Cập nhật theo bản khóa mới: `updates.json` (cạnh `package.json`) mô tả một đợt cập nhật, build đọc và kiểm tra rồi ghi `public/content/updates.json` (dùng cho popup "Có gì mới", mỗi đợt chỉ tự bật một lần, `saa.updates.v1`), thêm `u` vào danh sách bài trong `index.json`/`c/<chương>.json` và `update` vào `l/<bài>.json`. Giao diện dùng chúng để đánh dấu: ❗ đỏ = bài có cập nhật, ❗ xanh = bài không còn trong bản khóa mới (giữ lại để tham khảo), nhãn xanh lá "MỚI" = bài mới; ở danh sách bài, thanh bên, tiêu đề bài và thẻ chương trang chủ (`src/components/UpdateMark.tsx`). Đầu bài có khung `UpdateBanner` ghi ngày, tóm tắt, nút cuộn tới từng mục đã đổi; heading mục đã đổi có ❗ đỏ, mục không còn trong khóa có ❗ xanh (`src/components/UpdateBanner.tsx`, `Sections.tsx`).
+
+  ```json
+  {
+    "id": "2026-11-10",
+    "date": "2026-11-10",
+    "title": "Cập nhật theo bản khóa SAA-C03 mới (376 video)",
+    "pages": ["Trang tổng hợp nào được làm lại"],
+    "missing": ["Video mới chưa có ghi chú tương ứng"],
+    "lessons": {
+      "AppFlow": {
+        "kind": "updated",
+        "summary": "Một câu về điều đã đổi",
+        "changed": ["🎯 Mẹo thi SAA-C03"],
+        "dropped": ["Bảng so sánh / số liệu"]
+      }
+    }
+  }
+  ```
+
+  Key trong `lessons` là tên file note (không có `.md`); `changed`/`dropped` là chữ heading `## ` nguyên văn trong note. Luật kiểm tra (sai thì build dừng và in từng lỗi, không bỏ qua im lặng): `id` và `date` dạng `YYYY-MM-DD`; `title` không rỗng; `pages`, `missing` là mảng chuỗi; `lessons` là object; mỗi key phải là một note có thật; `kind` (nếu có) là `new`, `updated` hoặc `removed` và cần `summary`; `updated` phải có ít nhất một mục trong `changed` hoặc `dropped`; không có `kind` thì `dropped` không được rỗng (bài chỉ mất một phần, hiện khung xanh liệt kê phần đó); mọi heading phải có trong note và không nằm ở cả `changed` lẫn `dropped`; `new` cần đúng 5 câu quiz và ít nhất một sơ đồ; `new` và `updated` phải có `videos:` trỏ tới bản khóa mới; `removed` thì không được có `videos:`. Chưa có bài nào bị đánh dấu thì để `"lessons": {}`. Biến môi trường `SAA_UPDATES` trỏ build sang file khác (hoặc file không tồn tại để build không có đợt cập nhật).
+- Ra đợt cập nhật sau: sửa các note, ghi `videos:` cho bài mới hoặc bài đã đổi theo video mới, rồi thay nội dung `updates.json` bằng đợt mới (đổi `id` và `date` để người học thấy lại popup, vì popup nhớ `id` đã xem; đợt cũ không được giữ lại, xem lịch sử bằng git), chạy `npm test` và `npm run build` (build sẽ báo mọi chỗ sai), kiểm popup, dấu ❗ và khung đầu bài bằng `npm run dev`, rồi commit.
+- Kiểm thử: `npm test` chạy `node --test "tests/*.test.mjs"`: `updates.test.mjs` (kiểm tra và dựng dữ liệu đợt cập nhật), `videos.test.mjs` (đọc video bản mới), `build.test.mjs` (chạy build thật: có `updates.json`, không có, và key bài sai), `client-updates.test.mjs` (hàm thuần của giao diện: khi nào bật popup, đếm theo chương, ngày, dấu ở heading). Chưa có test cho component React, giao diện kiểm bằng mắt.
 - `public/CNAME` = `saa.hairbui76.id.vn` (dùng cho GitHub Pages; host khác thì bỏ qua).

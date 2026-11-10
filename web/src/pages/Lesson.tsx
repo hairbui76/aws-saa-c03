@@ -12,7 +12,9 @@ import LessonNotes from '../components/LessonNotes';
 import LessonMarks from '../components/LessonMarks';
 import ExamMark from '../components/ExamMark';
 import { UpdateMark } from '../components/UpdateMark';
+import UpdateBanner from '../components/UpdateBanner';
 import { BookmarkButton, BookmarkMark } from '../components/Bookmark';
+import { headingMarks, viDate } from '../lib/updates';
 import { useUi } from '../App';
 
 // The course videos are only served by the local dev/preview server (see vite.config.ts).
@@ -55,6 +57,7 @@ export default function LessonPage() {
     if (lesson && h) requestAnimationFrame(() => document.getElementById(slug(h))?.scrollIntoView({ behavior: 'smooth' }));
   }, [lesson, params]);
 
+  const marks = useMemo(() => headingMarks(lesson?.update), [lesson]);
   const toc = useMemo(() => (lesson ? splitSections(lesson.body).filter((s) => s.title) : []), [lesson]);
 
   if (error) return <div className="page">Không tìm thấy bài học.</div>;
@@ -120,6 +123,7 @@ export default function LessonPage() {
           </h1>
           <BookmarkButton lessonId={lesson.id} />
         </div>
+        <UpdateBanner update={lesson.update} />
         {examCount > 0 && (
           <button
             className="exam-jump"
@@ -147,7 +151,13 @@ export default function LessonPage() {
           </Sketch>
         )}
 
-        <Sections body={lesson.body} diagrams={lesson.diagrams} seed={lesson.id} />
+        <Sections
+          body={lesson.body}
+          diagrams={lesson.diagrams}
+          seed={lesson.id}
+          marks={marks}
+          markBatch={lesson.update ? viDate(lesson.update.date) : undefined}
+        />
 
         <LessonNotes key={`n${lesson.id}`} lessonId={lesson.id} />
         <LessonMarks key={`m${lesson.id}`} lessonId={lesson.id} scope={mainRef} focusId={params.get('hl')} />
