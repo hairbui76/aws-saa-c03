@@ -14,7 +14,9 @@
     "Exam Cheat Sheet: NAT Gateway có chế độ zonal (mỗi AZ một cái, trong public subnet) và regional (một NATGW cho cả VPC, AWS trải qua các AZ); private NAT Gateway cho mạng private chồng lấn",
     "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64",
     "Exam Cheat Sheet: mốc EBS mới (gp2 16K, io1 64K, gp3 80K / 2,000 MiB/s, io2 Block Express 256K; io2 = Block Express), FSR tối đa 5/region, Spot cảnh báo 2 phút và terminate/stop/hibernate, RI Standard/Convertible, ODCR giá On-Demand (immediate/future, open/targeted), Savings Plans không giữ capacity, Scheduled RI đã deprecated",
-    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans"
+    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans",
+    "Exam Cheat Sheet: Amazon Data Firehose buffer 5 MB / 300 s (S3), EventBridge Scheduler thay schedule rule, rule tối đa 5 target, SQS 1 MB, FIFO high-throughput, SNS FIFO topic, Lambda deployment package, Step Functions exactly-once / at-least-once, Amazon MQ private mặc định, thêm X-Ray, AWS Batch, Device Farm",
+    "Top mẹo thi và concept map chương 14: thêm X-Ray, Device Farm, AWS Batch; EventBridge Scheduler, FIFO high-throughput, Firehose buffer mới, KVS trích ảnh ra S3, Glue CSV → Parquet, MQ RabbitMQ"
   ],
   "missing": [],
   "lessons": {
@@ -792,6 +794,178 @@
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []
+    },
+    "Lambda": {
+      "kind": "updated",
+      "summary": "Tính tiền theo thời gian chạy và số request; hai kiểu deployment package (ZIP 50/250 MB, container image ≤ 10 GB trên ECR); Go/Rust dùng OS-only runtime provided.al2023; Hyperplane ENI do Lambda tự quản lý; function URL; destination S3 chỉ khi failure; event source mapping thêm MQ, DocumentDB và dùng on-failure destination (SQS, SNS, S3, Kafka) thay vì DLQ; cold start ~100 ms–1 s.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Networking: Public vs VPC",
+        "Bảo mật: hai lớp permission",
+        "Ba kiểu invocation",
+        "Cold start, warm start, provisioned concurrency",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "EventBridge": {
+      "kind": "updated",
+      "summary": "Schedule rule nay là legacy (chỉ UTC), thay bằng EventBridge Scheduler (rate / cron / at, có time zone, không gắn event bus); rule gắn một event bus, tối đa 5 target, có input transformer; dịch vụ AWS luôn gửi vào default bus (S3 phải bật tích hợp), SaaS partner chỉ vào bus tự tạo; demo mới dùng Scheduler + input transformer.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab: tự động hóa EC2 bằng Lambda + EventBridge",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "SNS": {
+      "kind": "updated",
+      "summary": "Thêm Standard topic vs FIFO topic (thứ tự + dedup, chỉ giao tới SQS), subscriber Amazon Data Firehose, filter policy khớp attribute hoặc body, delivery status log vào CloudWatch Logs, SSE mã hóa body bằng symmetric KMS key.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Step Functions": {
+      "kind": "updated",
+      "summary": "Loại workflow (Standard / Express) chọn lúc tạo và không đổi được; Standard exactly-once (an toàn cho thanh toán), Express at-least-once; thêm Pass state; ví dụ đổi sang Croc Snack Bot, lab chưa có video.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc: Croc Snack Bot",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "SQS": {
+      "kind": "updated",
+      "summary": "Message tối đa 1 MB (trước 256 KB) và mỗi request tối đa 1 MB; FIFO có high-throughput mode; S3 event có thể gửi tới EventBridge để định tuyến nhiều target thay cho SNS fan-out; mã hóa SSE-SQS hoặc SSE-KMS, client bắt buộc HTTPS.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "SQS Standard vs FIFO": {
+      "kind": "updated",
+      "summary": "FIFO high-throughput mode: ít nhất 2.400 TPS, tới 70.000 TPS tùy region (×10 khi batching); thứ tự đảm bảo theo message group ID; exactly-once nhờ deduplication ID (hoặc hash body) trong cửa sổ 5 phút; đuôi .fifo chỉ đặt lúc tạo.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "SQS Dead Letter Queues": {
+      "kind": "updated",
+      "summary": "Enqueue timestamp chỉ giữ nguyên với queue Standard, FIFO thì reset khi sang DLQ; thêm DLQ redrive thủ công về source hoặc queue cùng loại, reset timestamp.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Kinesis Data Streams": {
+      "kind": "updated",
+      "summary": "Bài mới dạy capacity mode: provisioned (tự chọn số shard) và on-demand (Kinesis tự quản lý shard, trả theo GB ghi/đọc); Firehose đổi tên Amazon Data Firehose; retention của SQS chỉ là hạn chót giao, không phải cửa sổ replay.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Kinesis Data Firehose": {
+      "kind": "updated",
+      "summary": "Đổi tên Amazon Data Firehose; buffer theo size hoặc interval, với S3 mặc định 5 MB / 300 s, cấu hình 1–128 MB và 0–900 s (0 = bỏ buffering, không áp dụng cho mọi đích), near real-time = vài chục giây tới vài phút (trước: 1 MB / 60 s); thêm đích Iceberg, Snowflake.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc"
+      ]
+    },
+    "Kinesis Video Streams": {
+      "kind": "updated",
+      "summary": "Ví dụ mới: KVS trích frame JPEG vào S3 (image generation) → S3 event → Lambda → Rekognition custom labels (koala / drop bear, confidence) → SNS; không còn luồng Rekognition Video + face collection → Kinesis Data Stream.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Cognito": {
+      "kind": "updated",
+      "summary": "Identity pool cần ít nhất một role cho authenticated, role cho unauthenticated (guest) là tùy chọn; web UI dựng sẵn gọi là managed login; compromised credentials check và account takeover protection cần Plus plan; API Gateway nhận JWT trực tiếp hoặc qua Lambda authorizer.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Glue": {
+      "kind": "updated",
+      "summary": "Crawler dùng IAM role cho S3/DynamoDB, Glue connection cho JDBC và không crawl stream (Kinesis, Kafka); DynamoDB cũng là target; script tự viết hoặc Glue sinh; ví dụ CSV đơn hàng → Parquet → crawler → Athena; kích hoạt qua EventBridge hoặc EventBridge Scheduler.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Bảng so sánh: Glue vs Data Pipeline"
+      ]
+    },
+    "Amazon MQ": {
+      "kind": "updated",
+      "summary": "Hai engine ActiveMQ và RabbitMQ (production RabbitMQ là cluster 3 node qua các AZ); broker private mặc định nhưng có public accessibility mode nếu bật lúc tạo; tích hợp AWS hạn chế (CloudWatch, IAM, Lambda).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Compare - SQS vs SNS vs Kinesis": {
+      "kind": "updated",
+      "summary": "Cập nhật số liệu theo bài mới: SQS message và request tối đa 1 MB, FIFO high-throughput, SNS FIFO topic chỉ tới SQS, Kinesis provisioned / on-demand (trả theo GB), SQS retention không phải cửa sổ replay, S3 event → EventBridge là cách thay fan-out, Amazon MQ private mặc định.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Bảng so sánh nhiều chiều",
+        "Khi nào chọn cái nào",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "X-Ray": {
+      "kind": "new",
+      "summary": "Distributed tracing: tracing header (trace ID), segment / subsegment, service graph và service map; bật theo API Gateway stage, từng Lambda function, daemon trên EC2/ECS/Beanstalk; S3/DynamoDB hiện qua inferred segment; không đo phía trình duyệt (CloudWatch RUM)."
+    },
+    "Device Farm": {
+      "kind": "new",
+      "summary": "Kiểm thử app web và mobile trên thiết bị và trình duyệt thật: run trong project, phân tích binary, test fuzz / Appium / Instrumentation / XCTest, chọn thiết bị và trạng thái thiết bị, báo cáo và remote access."
+    },
+    "AWS Batch": {
+      "kind": "new",
+      "summary": "Batch processing được quản lý: job (container), job definition, job queue có ưu tiên, compute environment managed (EC2 On-Demand / Spot, ECS Managed Instances, Fargate) hoặc unmanaged (ECS / EKS); không phí riêng; khi nào chọn Lambda, ECS/Fargate hay Batch."
+    },
+    "Serverless Architecture": {
+      "kind": "removed",
+      "summary": "khóa mới không còn bài Serverless Architecture riêng; serverless chỉ được nhắc trong bài Lambda và Architecture Deep Dive"
+    },
+    "Kinesis Data Analytics": {
+      "kind": "removed",
+      "summary": "khóa mới không còn bài Kinesis Data Analytics (nay là Managed Service for Apache Flink)"
+    },
+    "Lab - Serverless App Pet-Cuddle-o-Tron": {
+      "kind": "removed",
+      "summary": "khóa mới chỉ còn mục (Coming Soon) Build A Serverless App - Croc Snack Bot, chưa có video"
     }
   }
 }

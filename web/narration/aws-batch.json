@@ -1,0 +1,16 @@
+{
+ "AWS Batch": {
+  "sig": "9-1i54085",
+  "steps": [
+   "Sơ đồ này nói về AWS Batch, dịch vụ batch processing được quản lý. Bạn chỉ định nghĩa job, còn Batch lo queue, compute và orchestration; job chạy trong container, compute scale về 0, và Batch không tính phí riêng.",
+   "Job được gửi vào từ nhiều nguồn: một lần upload lên S3 sinh event, một EventBridge rule nhận Batch làm target, hoặc Step Functions và Lambda gọi API. Job definition mô tả tài nguyên, quyền IAM và storage mà job cần.",
+   "Job được xếp vào job queue. Queue có độ ưu tiên, ví dụ một queue ưu tiên cao và một queue ưu tiên thấp, để quyết định job nào chạy trước.",
+   "Queue phân job sang compute environment gắn với nó: On-Demand cho job không được gián đoạn, Spot hoặc Fargate Spot cho job chịu được gián đoạn, kèm retry để job bị ngắt được xếp lại.",
+   "Để chạy, Batch kéo container image từ ECR. Image này do bạn chuẩn bị, chứa phần mềm và công cụ mà job cần.",
+   "Job chạy xong ghi kết quả ra S3, lưu metadata vào DynamoDB, hoặc báo hoàn tất để Step Functions chạy tiếp các bước sau.",
+   "Batch còn phát event stream vào EventBridge, nên khi job kết thúc bạn có thể kích hoạt thêm dịch vụ khác theo kiểu event-driven.",
+   "Có hai loại compute environment. Managed thì Batch tự provision và scale, kể cả về 0, với EC2 On-Demand hoặc Spot, ECS Managed Instances hay Fargate. Unmanaged thì bạn tự lo ECS hoặc EKS và không dùng được Fargate. Việc ngắn dưới 15 phút dùng Lambda, một job dài dùng ECS task trên Fargate, còn nhiều job song song dùng Batch.",
+   "Khi đi thi, nhớ nhé: hàng nghìn job tính toán song song, không cần người tương tác, có queue và độ ưu tiên thì chọn AWS Batch. AWS khuyến nghị Fargate cho đa số trường hợp, EC2 khi cần GPU, và compute ở private subnet cần NAT Gateway hoặc VPC endpoint."
+  ]
+ }
+}

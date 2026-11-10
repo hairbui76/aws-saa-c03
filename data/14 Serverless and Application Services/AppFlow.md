@@ -2,6 +2,7 @@
 tags: [saa-c03, s14-serverless-and-application-services, integration, saas, data-transfer, analytics]
 aliases: [Amazon AppFlow, App Flow]
 lessons: ["0272 Amazon AppFlow"]
+videos: ["249 Amazon AppFlow"]
 ---
 # AppFlow
 
@@ -26,7 +27,7 @@ lessons: ["0272 Amazon AppFlow"]
   - Đồng bộ **contact record từ Salesforce sang [[Redshift]]** để phân tích.
   - Sao chép **support ticket từ Zendesk vào S3** để lưu trữ/phân tích.
   - Gom dữ liệu từ nhiều nguồn về một chỗ để tránh **data silo**.
-- (Bổ sung theo AWS hiện tại, bài không nói: flow có thể chạy **on-demand**, **theo lịch (schedule)** hoặc **theo event** từ SaaS; dữ liệu được mã hóa in-transit và at rest bằng [[KMS]].)
+- Flow có thể chạy **on-demand**, **theo lịch (schedule)** hoặc **theo event** trong ứng dụng nguồn. (Bổ sung, bài không nói: dữ liệu được mã hóa in-transit và at rest bằng [[KMS]].)
 
 ## Cách hoạt động / Kiến trúc
 Ví dụ trong slide: lấy dữ liệu từ **Slack** đổ vào **Redshift**.
@@ -62,7 +63,7 @@ flowchart LR
 | [[Kinesis Data Firehose]] | Giao **dữ liệu streaming** tới S3/Redshift... | Stream liên tục, không đọc API của SaaS |
 
 ## 🎯 Mẹo thi SAA-C03
-- Chỉ cần hiểu kiến trúc ở mức cơ bản (Adrian: một video này là đủ cho kỳ thi).
+- Chỉ cần hiểu kiến trúc ở mức cơ bản (giảng viên: một video này là đủ cho kỳ thi).
 - Đề nói **"chuyển/đồng bộ dữ liệu từ ứng dụng SaaS (Salesforce, Zendesk, Slack, ServiceNow, SAP...) vào S3/Redshift"**, **ít/không viết code** → **AppFlow**.
 - Từ khóa: **SaaS integration**, **data silo**, **sync records between applications**, **no-code integration**.
 - SaaS nguồn cần đi đường riêng, không qua Internet công cộng → AppFlow + **PrivateLink**.

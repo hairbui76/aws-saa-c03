@@ -1,0 +1,15 @@
+{
+ "X-Ray": {
+  "sig": "8-1lt6c1t",
+  "steps": [
+   "Sơ đồ này nói về AWS X-Ray, dịch vụ distributed tracing giúp lần theo từng request khi nó đi qua nhiều dịch vụ của một ứng dụng phân tán, ví dụ web store serverless của Aus-E-Mart.",
+   "Người dùng gửi request tới API Gateway. Đây là dịch vụ có tích hợp X-Ray đầu tiên trong chuỗi, nên nó sinh trace ID và chèn vào tracing header của request.",
+   "Request đi tiếp tới các Lambda function, một hàm lấy thông tin sản phẩm và một hàm xử lý ảnh review. Tracing header đi kèm nên X-Ray biết đây vẫn là cùng một request.",
+   "Lambda gọi DynamoDB và S3. Hai dịch vụ này không tự gửi dữ liệu cho X-Ray, nhưng vẫn hiện trên bản đồ nhờ inferred segment do Lambda ghi lại.",
+   "Mỗi thành phần hỗ trợ X-Ray gửi segment về X-Ray, có thể kèm subsegment cho các lời gọi HTTP hay database bên trong. X-Ray ghép các segment cùng trace ID thành service graph.",
+   "X-Ray console hiển thị service graph thành service map, còn gọi là trace map, cho thấy luồng đi, latency, số request và lỗi ở từng chặng.",
+   "Để có dữ liệu, bạn bật X-Ray theo từng dịch vụ: API Gateway bật theo stage, Lambda bật cho từng function và cần quyền trong execution role, EC2 và ECS dùng X-Ray daemon, Elastic Beanstalk có sẵn daemon, còn SNS và SQS cấu hình được để gửi dữ liệu.",
+   "Khi đi thi, nhớ nhé: distributed tracing, tìm chặng chậm hay lỗi qua nhiều dịch vụ thì chọn X-Ray. Đo trải nghiệm trong trình duyệt như thời gian tải trang thì dùng CloudWatch RUM, còn ai gọi API nào thì là CloudTrail."
+  ]
+ }
+}

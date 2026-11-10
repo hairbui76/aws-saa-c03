@@ -2,6 +2,7 @@
 tags: [saa-c03, s14-serverless-and-application-services, serverless, api, networking]
 aliases: [Amazon API Gateway, APIGW, API GW]
 lessons: ["0254 API Gateway 101"]
+videos: ["237 [SHAREDALL] API Gateway 101 - PART1", "238 [SHAREDALL] API Gateway 101 - PART2"]
 ---
 # API Gateway
 

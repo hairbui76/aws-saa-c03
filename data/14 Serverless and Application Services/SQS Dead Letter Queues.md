@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s14-serverless-and-application-services, messaging, reliability]
-aliases: [DLQ, Dead-Letter Queue, Redrive Policy]
+aliases: [DLQ, Dead-Letter Queue, Redrive Policy, DLQ redrive]
 lessons: ["0264 SQS Dead Letter Queues"]
+videos: ["242 SQS Dead-Letter Queues"]
 ---
 # SQS Dead Letter Queues
 
@@ -37,15 +38,23 @@ flowchart LR
 - **Xử lý riêng** cho message khó: workload khác, logic khác, hoặc redrive về source queue sau khi sửa lỗi.
 
 ### ⚠️ Retention và enqueue timestamp
-- Mỗi message có **enqueue timestamp** (thời điểm lần đầu vào queue).
-- Khi chuyển sang DLQ, **timestamp này giữ nguyên**, không reset.
-- Ví dụ: message đã ở source queue **1 ngày**, DLQ có retention **2 ngày** → message chỉ còn sống thêm **1 ngày** trong DLQ.
-- ⇒ **Retention của DLQ nên dài hơn retention của source queue** (tối đa 14 ngày).
+- Queue có **retention period**: message quá hạn mà chưa xử lý thì bị bỏ. Mỗi message có **enqueue timestamp** (thời điểm được gửi vào queue).
+- Khi chuyển sang DLQ:
+  - **Standard queue**: timestamp **giữ nguyên**, không reset.
+  - **FIFO queue**: timestamp được **reset** về thời điểm message được chuyển sang DLQ.
+- Ví dụ (Standard): message đã ở source queue **1 ngày**, DLQ có retention **2 ngày** → message chỉ còn sống thêm **1 ngày** trong DLQ.
+- ⇒ **Retention của DLQ nên dài hơn retention của source queue** Standard (tối đa 14 ngày), nếu bằng nhau message có thể hết hạn trước khi kịp sửa lỗi.
+
+### DLQ redrive: đưa message về xử lý lại
+- Sửa xong nguyên nhân (vá consumer, thêm xử lý...) thì dùng **dead-letter queue redrive** để chuyển message từ DLQ **về source queue** (mặc định), hoặc sang **một queue khác cùng loại** (FIFO hoặc Standard).
+- Đây là **thao tác thủ công**, không tự chạy.
+- Redrive **reset enqueue timestamp** cho cả Standard lẫn FIFO.
 
 ## 🎯 Mẹo thi SAA-C03
 - Đề: "message lỗi cứ bị xử lý lại liên tục, làm nghẽn/tốn tài nguyên" → cấu hình **DLQ + redrive policy (`maxReceiveCount`)**.
 - Đề: "cần cô lập và phân tích message xử lý thất bại" → **DLQ**.
-- Đặt **retention DLQ > retention source queue**, vì enqueue timestamp không đổi.
+- Đặt **retention DLQ > retention source queue**, vì với queue Standard enqueue timestamp không đổi khi sang DLQ (FIFO thì reset).
+- Sửa lỗi xong muốn xử lý lại message trong DLQ → **DLQ redrive** (thủ công) về source queue hoặc queue khác cùng loại.
 - DLQ cũng xuất hiện ở các dịch vụ khác (Lambda async invocation, SNS subscription) với ý tương tự: nơi đổ sự kiện thất bại.
 
 ## Liên kết

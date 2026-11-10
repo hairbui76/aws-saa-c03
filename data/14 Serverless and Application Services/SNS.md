@@ -1,11 +1,12 @@
 ---
 tags: [saa-c03, s14-serverless-and-application-services, serverless, messaging, pub-sub, decoupling]
-aliases: [Simple Notification Service, Amazon SNS, SNS Topic, Fan-out]
+aliases: [Simple Notification Service, Amazon SNS, SNS Topic, Fan-out, SNS FIFO topic]
 lessons: ["0252 Simple Notification Service"]
+videos: ["235 [ASSOCIATESHARED] Simple Notification Service (SNS)"]
 ---
 # SNS
 
-> **TL;DR:** Simple Notification Service (SNS) là dịch vụ **pub/sub messaging** highly available, durable, bảo mật. **Publisher** gửi message vào **topic**, và mọi **subscriber** của topic nhận message đó. SNS là nền tảng để decouple ứng dụng và là kênh thông báo mà rất nhiều dịch vụ AWS dùng.
+> **TL;DR:** Simple Notification Service (SNS) là dịch vụ **pub/sub messaging** highly available, durable, bảo mật. **Publisher** gửi message vào **topic**, và mọi **subscriber** của topic nhận message đó. SNS là nền tảng để decouple ứng dụng và là kênh thông báo mà rất nhiều dịch vụ AWS dùng. Có hai loại topic: **Standard** (best-effort ordering, at-least-once, mọi loại subscriber) và **FIFO** (thứ tự nghiêm ngặt + loại trùng, **chỉ giao tới SQS queue**).
 
 ## 🖼️ Sơ đồ
 ![[SNS.excalidraw]]
@@ -22,6 +23,7 @@ lessons: ["0252 Simple Notification Service"]
   - [[SQS]] queue (mỗi message được thêm vào queue)
   - Mobile push notification, SMS
   - [[Lambda]] function (mỗi message invoke function)
+  - **Amazon Data Firehose** ([[Kinesis Data Firehose]]) khi cần đưa message sang **S3, Redshift hoặc OpenSearch**
 - Một thực thể có thể vừa là publisher vừa là subscriber (vd. một API bên ngoài).
 - **Dịch vụ AWS publish vào SNS**: [[CloudWatch Basics|CloudWatch]] alarm khi đổi trạng thái, [[CloudFormation Basics|CloudFormation]] stack khi đổi trạng thái, [[Auto Scaling Groups]] khi có scaling event, EC2 và nhiều dịch vụ khác.
 
@@ -38,17 +40,18 @@ flowchart LR
   T -. "filter policy" .-> S4["Subscriber chỉ nhận message liên quan"]
 ```
 
-- **Subscription filter**: gắn filter lên subscriber để nó chỉ nhận message liên quan tới chức năng của nó, thay vì nhận tất cả.
-- **Fan-out**: **một SNS topic, nhiều [[SQS]] queue subscribe**. Một message (vd. "có job xử lý video mới") được nhân ra nhiều queue; mỗi queue xử lý cùng workload theo **biến thể khác nhau và tách biệt** (bitrate/kích thước khác nhau trong ví dụ PetTube).
+- **Subscription filter**: gắn **filter policy** lên subscription để subscriber chỉ nhận message liên quan tới chức năng của nó, thay vì nhận tất cả. Filter khớp được theo **message attribute** hoặc theo **message body**.
+- **Fan-out**: **một SNS topic, nhiều [[SQS]] queue subscribe**. Một message (vd. "có job xử lý video mới") được nhân ra nhiều queue; mỗi queue xử lý cùng workload theo **biến thể khác nhau và tách biệt** (bitrate/kích thước khác nhau trong ví dụ RooTube).
 
 ### Tính năng (slide)
 | Tính năng | Ý nghĩa |
 |---|---|
-| **Delivery status** | Xác nhận trạng thái gửi tới subscriber; hỗ trợ HTTP/HTTPS, Lambda, SQS... |
+| **Delivery status** | Xác nhận trạng thái gửi tới subscriber; **log delivery status ghi vào CloudWatch Logs**; hỗ trợ HTTP/HTTPS, Lambda, SQS... |
 | **Delivery retries** | Thử gửi lại → **reliable delivery** |
 | **HA và scalable (Region)** | **Regionally resilient**: dữ liệu replicate trong region, chịu được mất AZ, scale từ 0 tới tải rất lớn |
-| **Server-side encryption (SSE)** | Dữ liệu lưu trên đĩa được mã hóa (qua [[KMS]]) khi có yêu cầu compliance |
+| **Server-side encryption (SSE)** | Mã hóa **phần body của message** khi lưu (at rest) bằng **symmetric KMS key** ([[KMS]]), cho môi trường có yêu cầu compliance |
 | **Cross-account qua topic policy** | **Topic policy** là resource policy (giống [[S3 Security\|bucket policy]]) quy định identity nào được truy cập topic |
+| **Standard vs FIFO topic** | **Standard**: best-effort ordering, **at-least-once**, giao tới mọi loại subscriber. **FIFO**: **thứ tự nghiêm ngặt + deduplication**, nhưng **chỉ giao tới SQS queue** |
 
 ## 🎯 Mẹo thi SAA-C03
 - "Gửi **một** message tới **nhiều** consumer/hệ thống cùng lúc" → **SNS**. "Mỗi consumer xử lý độc lập với buffer riêng" → **fan-out SNS → nhiều SQS**.
@@ -57,7 +60,9 @@ flowchart LR
 - Account khác cần publish/subscribe → **topic policy** (resource policy).
 - Cần mã hóa at rest → SNS **SSE**.
 - Message lớn (file, video) → **không** đẩy qua SNS; lưu ở S3 và gửi tham chiếu.
-- Subscriber chỉ muốn một phần message → **subscription filter policy** chứ không cần tạo nhiều topic.
+- Subscriber chỉ muốn một phần message → **subscription filter policy** (khớp attribute hoặc body) chứ không cần tạo nhiều topic.
+- Cần pub/sub **giữ thứ tự và không trùng** → **SNS FIFO topic**, subscriber phải là **SQS** (thường là SQS FIFO, xem [[SQS Standard vs FIFO]]).
+- Đẩy message sang S3/Redshift/OpenSearch → subscription **Data Firehose**.
 
 ## Liên kết
 - Tiên quyết: [[Event-Driven Architecture]], [[AWS Public vs Private Services]]

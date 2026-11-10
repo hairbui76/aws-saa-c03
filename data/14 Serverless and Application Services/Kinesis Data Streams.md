@@ -2,6 +2,7 @@
 tags: [saa-c03, s14-serverless-and-application-services, streaming, analytics, kinesis]
 aliases: [KDS, Kinesis Streams, Amazon Kinesis Data Streams]
 lessons: ["0265 Kinesis Data Streams"]
+videos: ["243 [ASSOCIATESHARED] Kinesis Data Streams"]
 ---
 # Kinesis Data Streams
 
@@ -17,15 +18,19 @@ lessons: ["0265 Kinesis Data Streams"]
 - **Rolling window (persistence)**:
   - Mặc định **24 giờ**: dữ liệu cũ hơn 24 h 0 phút 1 giây bị bỏ.
   - Tăng được tới **365 ngày** (tốn thêm tiền). Dung lượng lưu trữ trong window **đã bao gồm** trong giá.
+- Stream scale từ throughput thấp tới **gần như vô hạn**.
 - **Nhiều producer + nhiều consumer** trên cùng stream; consumer đọc **bất kỳ đâu trong window**, mỗi consumer có thể đọc ở độ chi tiết khác nhau (mỗi giây, mỗi phút, mỗi giờ). Rất hợp cho **analytics và dashboard**.
 - **Producer**: EC2, server on-prem, mobile app, IoT sensor... **Consumer**: EC2, server on-prem, [[Lambda]] (invoke khi có dữ liệu mới).
 
-### Shard architecture
-- Stream bắt đầu với **1 shard**, cần scale thì **thêm shard**.
+### Capacity mode và shard architecture
+- Stream có **capacity mode**:
+  - **Provisioned**: **bạn chọn số shard**, thêm hoặc bớt shard khi nhu cầu throughput đổi; bạn kiểm soát hiệu năng.
+  - **On-demand**: **Kinesis tự quản lý shard**, tự scale; bạn **trả theo GB dữ liệu ghi và đọc**.
+- Stream scale bằng **shard**: càng nhiều shard càng nhiều throughput.
 - Mỗi shard: **1 MB/s ingest** (thêm giới hạn 1.000 record/s) và **2 MB/s consume**.
 - Càng nhiều shard → càng nhiều throughput → càng đắt. Window dài hơn cũng tăng giá.
 - Dữ liệu lưu dưới dạng **Kinesis data record**, tối đa **1 MB** mỗi record, phân bổ qua các shard ⇒ hiệu năng scale **tuyến tính** theo số shard.
-- (Hiện nay có thêm **on-demand capacity mode** tự quản lý shard, và **enhanced fan-out** cho mỗi consumer 2 MB/s/shard riêng. Khóa học chỉ nói provisioned shard.)
+- (Bổ sung, bài không nói: **enhanced fan-out** cho mỗi consumer 2 MB/s/shard riêng.)
 
 ## Cách hoạt động / Kiến trúc
 
@@ -45,10 +50,10 @@ flowchart LR
     Producers --> KDS
     KDS --> C1["Consumer: EC2 / on-prem"]
     KDS --> C2["Consumer: Lambda"]
-    KDS --> FH["Kinesis Data Firehose → S3 (lưu lâu dài)"]
+    KDS --> FH["Amazon Data Firehose → S3 (lưu lâu dài)"]
 ```
 
-- **[[Kinesis Data Firehose]]** nối vào stream để đẩy dữ liệu **hàng loạt** sang dịch vụ khác (ví dụ S3), giúp dữ liệu tồn tại **sau** rolling window, rồi phân tích bằng EMR/[[Athena]]/[[Redshift]].
+- **Amazon Data Firehose** ([[Kinesis Data Firehose]]) nối vào stream để đẩy dữ liệu **hàng loạt** sang dịch vụ khác (ví dụ S3), giúp dữ liệu tồn tại **sau** rolling window, rồi phân tích bằng [[Athena]] (truy vấn dữ liệu trên S3) hoặc sản phẩm khác.
 
 ## Bảng so sánh / số liệu
 
@@ -66,15 +71,15 @@ flowchart LR
 |---|---|---|
 | Mục đích | **Decoupling**, **asynchronous** communication, worker pool | **Ingest dữ liệu quy mô lớn**, analytics, monitoring, click stream |
 | Producer/consumer | Thường 1 nhóm gửi, 1 nhóm nhận (ví dụ web tier → worker tier) | Rất nhiều producer, **nhiều consumer** đọc độc lập |
-| Persistence | **Không** có window; xử lý xong là xóa | **Rolling window**, đọc lại được trong window |
+| Persistence | **Không** có window; xử lý xong là xóa. Retention của SQS chỉ là **hạn chót để giao**, không phải cửa sổ replay | **Rolling window**, đọc lại được trong window |
 | Tốc độ đọc | Mỗi message được một consumer xử lý | Mỗi consumer đọc toàn bộ stream ở tốc độ riêng |
 
 ## 🎯 Mẹo thi SAA-C03
 - Lăng kính đọc đề của Adrian: câu hỏi về **ingestion of data** → **Kinesis**. Câu hỏi về **worker pool, decoupling, asynchronous** → mặc định **SQS**, chỉ đổi khi có lý do mạnh.
 - Từ khóa Kinesis: **real-time**, **streaming**, **hàng nghìn sensor/IoT**, **click stream**, **nhiều consumer**, **đọc lại / replay**, **dashboard / analytics**.
-- Cần **lưu dữ liệu stream lâu dài** (sau window) → thêm **Kinesis Data Firehose → S3**.
+- Cần **lưu dữ liệu stream lâu dài** (sau window) → thêm **Amazon Data Firehose → S3**.
 - Cần **real-time** xử lý → Kinesis Data Streams + Lambda/consumer, **không** phải Firehose (near real-time).
-- Throughput không đủ → **thêm shard** (hoặc on-demand mode).
+- Throughput không đủ → **thêm shard** (provisioned mode), hoặc dùng **on-demand mode** để Kinesis tự quản lý shard (trả theo GB ghi/đọc).
 
 ## Liên kết
 - Liên quan: [[Kinesis Data Firehose]], [[Kinesis Data Analytics]], [[Kinesis Video Streams]], [[Lambda]], [[Glue]]

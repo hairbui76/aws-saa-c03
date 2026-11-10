@@ -102,11 +102,11 @@
         "answer": [
           2
         ],
-        "explain": "Amazon MQ chạy trong VPC, không phải public service như SNS/SQS, nên cần private networking (VPN/Direct Connect). Đáp án giả định MQ có public endpoint như SQS là bẫy thường gặp."
+        "explain": "Broker Amazon MQ mặc định là private, nằm trong VPC (khác SNS/SQS là public service), nên cần private networking như VPN hoặc Direct Connect. Chế độ public accessibility chỉ có nếu bật khi tạo broker; đáp án giả định MQ luôn có public endpoint như SQS là bẫy thường gặp."
       },
       {
         "type": "single",
-        "q": "Một công ty triển khai Amazon MQ cho môi trường production và cần khả năng chịu lỗi khi một AZ gặp sự cố. Nên chọn kiểu triển khai nào?",
+        "q": "Một công ty triển khai Amazon MQ (engine ActiveMQ) cho môi trường production và cần khả năng chịu lỗi khi một AZ gặp sự cố. Nên chọn kiểu triển khai nào?",
         "options": [
           "Single-instance broker với EBS snapshot định kỳ",
           "Hai single-instance broker ở hai region khác nhau",
@@ -116,7 +116,7 @@
         "answer": [
           3
         ],
-        "explain": "Active/standby HA pair trải trên hai AZ, mặc định dùng EFS làm shared storage để dữ liệu được replicate giữa hai broker. Single-instance chỉ dành cho dev/test hoặc tiết kiệm chi phí."
+        "explain": "Với ActiveMQ, active/standby HA pair trải trên hai AZ dùng EFS làm shared storage để dữ liệu lưu dư thừa giữa các AZ. (Với RabbitMQ, lựa chọn production là cluster 3 node trải qua các AZ.) Single-instance chỉ dành cho dev/test hoặc tiết kiệm chi phí."
       },
       {
         "type": "single",
@@ -372,13 +372,13 @@
         "options": [
           "Cài cron job trên một EC2 instance nhỏ để gọi Lambda",
           "Tạo CloudWatch alarm với ngưỡng thời gian để trigger Lambda",
-          "Tạo EventBridge schedule rule với cron expression, target là Lambda",
+          "Tạo schedule trong EventBridge Scheduler (cron expression), target là Lambda",
           "Dùng CloudTrail trail để kích hoạt Lambda theo giờ"
         ],
         "answer": [
           2
         ],
-        "explain": "EventBridge schedule rule (cron/rate) là \"serverless cron\" thay cho cron trên EC2. CloudWatch alarm phản ứng theo metric, không phải theo lịch."
+        "explain": "EventBridge Scheduler (rate, cron hoặc at, có time zone) là \"serverless cron\" thay cho cron trên EC2; schedule rule trên event bus là tùy chọn legacy. CloudWatch alarm phản ứng theo metric, không phải theo lịch."
       },
       {
         "type": "single",
@@ -396,7 +396,7 @@
       },
       {
         "type": "single",
-        "q": "Một EventBridge schedule rule dùng cron expression `50 8 * * ? *`. Rule sẽ chạy khi nào?",
+        "q": "Một EventBridge schedule rule (loại legacy gắn với event bus) dùng cron expression `50 8 * * ? *`. Rule sẽ chạy khi nào?",
         "options": [
           "08:50 theo giờ địa phương của region mỗi ngày",
           "08:50 UTC mỗi ngày",
@@ -406,7 +406,7 @@
         "answer": [
           1
         ],
-        "explain": "Cron của EventBridge có 6 trường (minutes, hours, day-of-month, month, day-of-week, year) và tính theo UTC. Vì vậy cần quy đổi giờ địa phương sang UTC khi đặt lịch."
+        "explain": "Cron có 6 trường (minutes, hours, day-of-month, month, day-of-week, year). Schedule rule legacy chỉ tính theo UTC, nên phải quy đổi giờ địa phương; EventBridge Scheduler thì cho chọn time zone."
       },
       {
         "type": "single",
@@ -420,21 +420,21 @@
         "answer": [
           3
         ],
-        "explain": "EventBridge là superset của CloudWatch Events: nhận event từ SaaS partner, ứng dụng custom và cho tạo thêm event bus. CloudWatch Events chỉ có một bus ngầm định."
+        "explain": "EventBridge nhận event từ SaaS partner và ứng dụng custom và cho tạo thêm event bus. Event của SaaS partner chỉ gửi được vào bus bạn tạo; ứng dụng custom gửi vào default bus hoặc bus custom. SNS hay CloudWatch Logs không phải event router."
       },
       {
         "type": "single",
-        "q": "Một EventBridge rule được cấu hình với ba target. Khi có event khớp rule, điều gì xảy ra?",
+        "q": "Một EventBridge rule khớp event EC2 Instance State-change Notification và gọi Lambda. Lambda chỉ cần instance ID và một trường `action` có giá trị `start`, không cần cả event gốc. Cách làm nào phù hợp mà không sửa nguồn event?",
         "options": [
-          "Event được gửi tới target đầu tiên; các target sau chỉ nhận nếu target trước lỗi",
-          "Event được gửi lần lượt theo thứ tự cấu hình",
-          "Cả ba target nhận event song song, không đảm bảo thứ tự",
-          "Rule chỉ cho phép một target nên cấu hình bị lỗi"
+          "Tạo thêm một event bus riêng cho Lambda",
+          "Dùng input transformer của target trong rule để lấy instance ID và dựng JSON mới có action = start",
+          "Chuyển sang EventBridge Scheduler với payload cố định",
+          "Thêm 5 target giống nhau cho rule"
         ],
         "answer": [
-          2
+          1
         ],
-        "explain": "Khi rule khớp, event được chuyển tới một hoặc nhiều target; nhiều target nhận song song và không có thứ tự. Không có cơ chế failover tuần tự giữa các target."
+        "explain": "Rule cho phép biến đổi event trước khi gửi tới target: bỏ field hoặc dựng lại JSON và thêm dữ liệu (input transformer), như demo thêm action = start. Scheduler không dựa vào event data; mỗi rule có tối đa 5 target nhưng điều đó không đổi nội dung event."
       }
     ],
     "Glue": [
@@ -482,17 +482,17 @@
       },
       {
         "type": "single",
-        "q": "Điểm khác biệt chính giữa AWS Glue và AWS Data Pipeline theo khóa học là gì?",
+        "q": "Một đội cấu hình Glue crawler để đưa metadata của nhiều nguồn vào Glue Data Catalog. Nguồn nào crawler KHÔNG hỗ trợ theo bài học?",
         "options": [
-          "Glue chỉ hỗ trợ dữ liệu streaming, Data Pipeline chỉ hỗ trợ batch",
-          "Data Pipeline có Data Catalog, Glue thì không",
-          "Glue dùng compute serverless do AWS quản lý, còn Data Pipeline tạo EMR cluster trong account của bạn",
-          "Glue chạy trên EC2 instance bạn tự quản lý"
+          "S3 bucket (crawler dùng IAM role)",
+          "DynamoDB table (crawler dùng IAM role)",
+          "Cơ sở dữ liệu JDBC như Redshift (qua Glue connection)",
+          "Kinesis Data Streams hoặc Apache Kafka"
         ],
         "answer": [
-          2
+          3
         ],
-        "explain": "Glue lấy tài nguyên từ warm resource pool của AWS và trả tiền theo dùng; Data Pipeline chạy task bằng EMR cluster trong account. Data Catalog là tính năng của Glue, không phải Data Pipeline."
+        "explain": "Crawler dùng IAM role để truy cập S3 và DynamoDB, dùng Glue connection cho cơ sở dữ liệu JDBC, nhưng không crawl stream như Kinesis hay Kafka. Stream vẫn có thể là nguồn của Glue job."
       },
       {
         "type": "single",
@@ -610,21 +610,21 @@
         "answer": [
           3
         ],
-        "explain": "Firehose là near real-time (khoảng 60 s) nên không đáp ứng yêu cầu real-time. Kinesis Data Streams (~200 ms) kết hợp Lambda tự giao tới đích giữ được real-time."
+        "explain": "Firehose là near real-time (giao theo buffer, vài chục giây tới vài phút; interval 0 không áp dụng cho mọi đích) nên không đáp ứng yêu cầu dưới 1 giây. Kinesis Data Streams (~200 ms) kết hợp Lambda tự giao tới đích giữ được real-time."
       },
       {
         "type": "single",
-        "q": "Theo khóa học, Kinesis Data Firehose giao dữ liệu tới đích theo cơ chế buffer nào?",
+        "q": "Với đích S3, Amazon Data Firehose giao dữ liệu theo buffer mặc định nào?",
         "options": [
-          "Khi đủ 1 MB hoặc sau 60 giây, tùy điều kiện nào tới trước",
+          "Khi đủ 5 MB hoặc sau 300 giây, tùy điều kiện nào tới trước",
           "Ngay lập tức từng record (~200 ms)",
-          "Khi đủ 5 MB hoặc sau 15 phút",
+          "Khi đủ 128 MB hoặc sau 15 phút",
           "Chỉ khi consumer gọi API để lấy dữ liệu"
         ],
         "answer": [
           0
         ],
-        "explain": "Firehose nhận dữ liệu real-time nhưng giao theo buffer 1 MB hoặc 60 s, nên là near real-time. ~200 ms là mức real-time của Kinesis Data Streams."
+        "explain": "Firehose nhận dữ liệu real-time nhưng giao khi đạt buffer size hoặc buffer interval; với S3 mặc định 5 MB hoặc 300 s, cấu hình được 1–128 MB và 0–900 s. Vì vậy Firehose là near real-time; ~200 ms là mức real-time của Kinesis Data Streams."
       },
       {
         "type": "single",
@@ -654,7 +654,7 @@
           1,
           4
         ],
-        "explain": "Đích của Firehose gồm S3, Redshift, OpenSearch/Elasticsearch, Splunk và HTTP endpoint. Firehose không giao trực tiếp vào DynamoDB, RDS hay SQS."
+        "explain": "Đích của Firehose gồm S3, Redshift, OpenSearch, Splunk, HTTP endpoint (và Apache Iceberg, Snowflake...). Firehose không giao trực tiếp vào DynamoDB, RDS hay SQS."
       }
     ],
     "Kinesis Data Streams": [
@@ -732,17 +732,17 @@
     "Kinesis Video Streams": [
       {
         "type": "single",
-        "q": "Một công ty an ninh muốn phân tích live video từ camera để nhận diện khuôn mặt lạ và gửi cảnh báo, không muốn đặt phần cứng xử lý video tại chỗ. Kiến trúc nào phù hợp nhất?",
+        "q": "Một trạm giám sát động vật hoang dã có 3 camera, muốn phát hiện một loài vật cụ thể trên video live và cảnh báo nhân viên, không đặt phần cứng phân tích tại trạm. Rekognition mặc định chưa nhận diện được loài này. Kiến trúc nào phù hợp nhất theo bài học?",
         "options": [
-          "Kinesis Video Streams + Rekognition Video, kết quả vào Kinesis Data Stream → Lambda → SNS",
-          "Camera upload clip lên S3, Lambda gọi Rekognition Image theo S3 event",
-          "Kinesis Data Firehose nhận video và giao tới OpenSearch",
-          "Camera gửi frame qua SQS cho worker EC2 chạy model tự viết"
+          "Mỗi camera một Kinesis Video Stream, bật image generation để trích frame JPEG vào S3; S3 event gọi Lambda, Lambda dùng Rekognition custom labels model (train bằng ảnh gán nhãn) rồi gửi SNS khi vượt ngưỡng tin cậy",
+          "Kinesis Data Firehose nhận video và giao tới OpenSearch để tìm kiếm",
+          "Camera gửi frame qua SQS cho worker EC2 tại trạm chạy model tự viết",
+          "Một Kinesis Data Stream chung cho 3 camera, Lambda đọc video gốc trực tiếp từ EBS"
         ],
         "answer": [
           0
         ],
-        "explain": "KVS ingest video live và tích hợp Rekognition Video để nhận diện khuôn mặt; kết quả ra Kinesis Data Stream để Lambda xử lý và SNS cảnh báo. Phương án S3 + upload clip không phân tích được luồng live."
+        "explain": "KVS ingest video live (1 stream mỗi camera) và trích được frame thành ảnh JPEG vào S3; S3 event → Lambda → Rekognition custom labels trả label + confidence → SNS cảnh báo. Firehose không xử lý video; dữ liệu KVS không đọc trực tiếp trên EBS."
       },
       {
         "type": "single",
@@ -788,17 +788,17 @@
       },
       {
         "type": "single",
-        "q": "Trong kiến trúc nhận diện khuôn mặt với Kinesis Video Streams và Rekognition Video, Rekognition ghi kết quả phân tích (detected/matched faces) vào đâu để Lambda xử lý từng record?",
+        "q": "Rekognition không nhận diện sẵn một loài vật (ví dụ phân biệt drop bear với koala). Trong kiến trúc Kinesis Video Streams của bài học, làm sao để Rekognition phân loại được?",
         "options": [
-          "Một S3 bucket",
-          "Một SQS queue",
-          "Một DynamoDB table",
-          "Một Kinesis Data Stream"
+          "Bật encryption at rest trên Kinesis Video Stream",
+          "Train một custom labels model bằng vài trăm ảnh đã gán nhãn của hai loài",
+          "Tăng số shard của Kinesis Data Stream",
+          "Dùng face collection chứa ảnh của loài vật"
         ],
         "answer": [
-          3
+          1
         ],
-        "explain": "Rekognition Video ghi kết quả vào Kinesis Data Stream, Lambda được invoke từ các record đó và dùng SNS để gửi thông báo khi gặp người lạ."
+        "explain": "Rekognition custom labels được train bằng ảnh gán nhãn (vài trăm ảnh koala và drop bear), sau đó trả label kèm confidence score cho mỗi ảnh. Lambda cũng có thể gọi model tự host trên SageMaker AI."
       }
     ],
     "Lab - Serverless App Pet-Cuddle-o-Tron": [
@@ -1020,7 +1020,7 @@
           2,
           4
         ],
-        "explain": "Subscriber của SNS gồm HTTP/HTTPS, email, SQS queue, Lambda function, SMS và mobile push. Amazon MQ không có tích hợp native kiểu này với SNS."
+        "explain": "Subscriber của SNS gồm HTTP/HTTPS, email, SQS queue, Lambda function, SMS, mobile push và Amazon Data Firehose (để đưa message sang S3, Redshift, OpenSearch). Amazon MQ không có tích hợp native kiểu này với SNS."
       }
     ],
     "SQS Dead Letter Queues": [
@@ -1054,7 +1054,7 @@
       },
       {
         "type": "single",
-        "q": "Source queue có retention 4 ngày và DLQ cũng có retention 4 ngày. Đội vận hành thấy nhiều message biến mất khỏi DLQ trước khi kịp phân tích. Nguyên nhân và cách khắc phục là gì?",
+        "q": "Source queue loại Standard có retention 4 ngày và DLQ cũng có retention 4 ngày. Đội vận hành thấy nhiều message biến mất khỏi DLQ trước khi kịp phân tích. Nguyên nhân và cách khắc phục?",
         "options": [
           "Enqueue timestamp được giữ nguyên khi chuyển sang DLQ; cần đặt retention của DLQ dài hơn source queue",
           "DLQ tự xóa message sau khi alarm kích hoạt; cần tắt alarm",
@@ -1064,7 +1064,7 @@
         "answer": [
           0
         ],
-        "explain": "Khi chuyển sang DLQ, enqueue timestamp không reset, nên thời gian đã ở source queue bị tính vào retention của DLQ. Vì vậy retention DLQ nên dài hơn source queue (tối đa 14 ngày)."
+        "explain": "Với queue Standard, enqueue timestamp không reset khi message sang DLQ, nên thời gian đã ở source queue bị tính vào retention của DLQ. Vì vậy retention DLQ nên dài hơn source queue (tối đa 14 ngày). Với FIFO thì timestamp được reset khi sang DLQ."
       },
       {
         "type": "single",
@@ -1212,7 +1212,7 @@
       },
       {
         "type": "single",
-        "q": "Throughput chuẩn của SQS FIFO queue theo khóa học là bao nhiêu?",
+        "q": "Throughput mặc định (chưa bật high-throughput mode) của SQS FIFO queue là bao nhiêu?",
         "options": [
           "Gần như không giới hạn",
           "1.000 TPS, 10.000 message/s với batching",
@@ -1222,7 +1222,7 @@
         "answer": [
           2
         ],
-        "explain": "FIFO đạt 300 transaction/giây tới SQS API; mỗi batch tối đa 10 message nên được 3.000 message/s. Throughput gần như không giới hạn là của Standard."
+        "explain": "Ở chế độ mặc định, FIFO đạt 300 transaction/giây tới SQS API; mỗi batch tối đa 10 message nên được 3.000 message/s. High-throughput mode nâng lên ít nhất 2.400 TPS (tới 70.000 TPS ở region lớn). Throughput gần như không giới hạn là của Standard."
       },
       {
         "type": "multi",
@@ -1457,6 +1457,224 @@
           3
         ],
         "explain": "State machine có thể được khởi chạy từ API Gateway, EventBridge, Lambda, IoT Rules hoặc thủ công. Route 53 health check, Direct Connect và EBS snapshot không phải nguồn khởi chạy."
+      }
+    ],
+    "X-Ray": [
+      {
+        "type": "single",
+        "q": "Một ứng dụng serverless gồm API Gateway, nhiều Lambda function và DynamoDB. Đội vận hành cần xem một request cụ thể đi qua những thành phần nào và chặng nào gây chậm. Dịch vụ nào phù hợp nhất?",
+        "options": [
+          "AWS CloudTrail",
+          "AWS X-Ray",
+          "Amazon CloudWatch Logs Insights",
+          "VPC Flow Logs"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "X-Ray là dịch vụ distributed tracing: tracing header mang trace ID đi theo request, mỗi dịch vụ gửi segment, X-Ray ghép thành service map có latency và lỗi từng chặng. CloudTrail ghi API call lên account, CloudWatch Logs chỉ có log từng tài nguyên, Flow Logs là metadata mạng."
+      },
+      {
+        "type": "single",
+        "q": "Trong X-Ray, thứ gì được gắn vào request ở dịch vụ tích hợp X-Ray đầu tiên mà request chạm tới, để các dịch vụ phía sau cùng nhận diện được request đó?",
+        "options": [
+          "Một subsegment",
+          "Một tracing header chứa trace ID",
+          "Một service map",
+          "Một CloudWatch metric"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Dịch vụ X-Ray đầu tiên trong chuỗi sinh trace ID và chèn vào tracing header; header đi theo request qua mọi dịch vụ. Segment và subsegment là dữ liệu mỗi dịch vụ gửi về; service map là hình ảnh của service graph."
+      },
+      {
+        "type": "single",
+        "q": "Ứng dụng dùng Lambda đọc DynamoDB và ghi S3. DynamoDB và S3 không tự gửi dữ liệu cho X-Ray. Trên service map của X-Ray, hai dịch vụ này xuất hiện như thế nào?",
+        "options": [
+          "Không xuất hiện, phải cài X-Ray daemon cho chúng",
+          "Xuất hiện qua inferred segment do Lambda phía trên ghi lại lời gọi",
+          "Chỉ xuất hiện khi bật CloudTrail data events",
+          "Xuất hiện như một subsegment của API Gateway"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Dịch vụ không gửi dữ liệu trực tiếp vẫn hiện trên map nhờ inferred segment từ dịch vụ upstream (ở đây là Lambda) đã gọi chúng."
+      },
+      {
+        "type": "multi",
+        "q": "Một team muốn gửi dữ liệu trace về X-Ray từ nhiều nền tảng. Những cách cấu hình nào ĐÚNG? (Chọn 2)",
+        "options": [
+          "Ứng dụng trên EC2: cài X-Ray daemon trên instance",
+          "Lambda: bật X-Ray ở mức function và cấp quyền X-Ray cho execution role",
+          "API Gateway: bật X-Ray ở mức account, áp cho mọi API",
+          "S3: bật X-Ray trong bucket properties để gửi segment trực tiếp"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "explain": "EC2 (và ECS) dùng X-Ray daemon; Lambda bật theo từng function và cần quyền trong execution role. API Gateway bật theo stage, không phải mức account. S3 không gửi dữ liệu trực tiếp cho X-Ray."
+      },
+      {
+        "type": "single",
+        "q": "Đội frontend muốn đo thời gian tải trang và latency người dùng cảm nhận trong trình duyệt của một web app. Nhận định nào đúng?",
+        "options": [
+          "Bật X-Ray trên API Gateway stage là đủ",
+          "X-Ray không cung cấp observability phía trình duyệt; dùng công cụ như CloudWatch RUM",
+          "Dùng X-Ray subsegment cho từng trang",
+          "Dùng CloudTrail Insights"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Phạm vi X-Ray bắt đầu từ dịch vụ AWS hỗ trợ X-Ray đầu tiên trong chuỗi (ví dụ API Gateway). Trải nghiệm phía trình duyệt như page load time là việc của công cụ khác như CloudWatch RUM."
+      }
+    ],
+    "Device Farm": [
+      {
+        "type": "single",
+        "q": "Một công ty phát triển app mobile cần kiểm thử trên hàng trăm mẫu điện thoại và tablet thật với nhiều phiên bản Android, iOS và kích thước màn hình, nhưng không muốn tự mua thiết bị. Dịch vụ nào phù hợp?",
+        "options": [
+          "Amazon WorkSpaces",
+          "AWS Device Farm",
+          "AWS Amplify",
+          "Amazon AppStream 2.0"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "AWS Device Farm cung cấp kiểm thử app web và mobile được quản lý trên trình duyệt và thiết bị thật, nhiều hệ điều hành, kích thước, ngôn ngữ, kèm báo cáo chi tiết."
+      },
+      {
+        "type": "single",
+        "q": "Nhận định nào về thiết bị dùng trong AWS Device Farm là đúng?",
+        "options": [
+          "Chỉ là emulator chạy trên EC2",
+          "Là thiết bị và trình duyệt thật, có thể kết nối từ xa vào thiết bị vật lý để tái hiện lỗi",
+          "Phải gửi thiết bị của mình tới AWS",
+          "Chỉ hỗ trợ Android"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Device Farm dùng thiết bị thật (không phải giả lập), hỗ trợ Android và iOS, và cho developer remote access vào thiết bị vật lý để xem và tái hiện lỗi."
+      },
+      {
+        "type": "single",
+        "q": "Trong Device Farm, đơn vị chứa cấu hình của một lần kiểm thử (app, test, thiết bị, trạng thái thiết bị) gọi là gì, và nó nằm trong đâu?",
+        "options": [
+          "Job, nằm trong job queue",
+          "Run, nằm trong project",
+          "Flow, nằm trong connection",
+          "Stage, nằm trong deployment"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Run là container cấu hình của Device Farm; mỗi run nằm trong một project dùng để gom các run liên quan."
+      },
+      {
+        "type": "multi",
+        "q": "Khi cấu hình một run trong Device Farm, những thứ nào bạn có thể đặt cho trạng thái thiết bị? (Chọn 2)",
+        "options": [
+          "Bật hoặc tắt Wi-Fi, Bluetooth, GPS, NFC",
+          "Vị trí thiết bị và ngôn ngữ hệ điều hành",
+          "Số vCPU và memory của thiết bị",
+          "Instance type EC2 chạy thiết bị"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "explain": "Device state gồm app cần cài thêm, các setting, radio state (Wi-Fi, Bluetooth, GPS, NFC), vị trí thiết bị và ngôn ngữ hệ điều hành. Thiết bị là thiết bị thật, không chọn vCPU hay instance type."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi upload binary của app mobile lên một run, Device Farm làm gì trước khi chạy test?",
+        "options": [
+          "Biên dịch lại app cho mọi hệ điều hành",
+          "Phân tích binary để xác định SDK, phiên bản hệ điều hành tối thiểu và yêu cầu thiết bị",
+          "Tự sinh test case bằng Appium",
+          "Ký lại app bằng certificate của AWS"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Device Farm phân tích binary để biết SDK và hệ điều hành tối thiểu cùng yêu cầu thiết bị, nhằm chỉ chạy test trên thiết bị thật sự hỗ trợ app."
+      }
+    ],
+    "AWS Batch": [
+      {
+        "type": "single",
+        "q": "Một viện nghiên cứu cần sàng lọc hàng triệu hợp chất: chia thành hàng nghìn job tính toán độc lập, mỗi job chạy 30–90 phút, cần xếp hàng theo độ ưu tiên và không cần người tương tác. Giải pháp nào ít công quản trị nhất?",
+        "options": [
+          "AWS Lambda với timeout tối đa",
+          "AWS Batch với managed compute environment",
+          "Một Auto Scaling Group EC2 tự viết scheduler",
+          "Step Functions Express workflow"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Batch processing nhiều job song song, có queue và ưu tiên là đúng việc của AWS Batch; Batch lo queue, compute và orchestration. Lambda giới hạn 15 phút; Express workflow tối đa 5 phút; tự xây scheduler tốn công."
+      },
+      {
+        "type": "single",
+        "q": "Chi phí khi dùng AWS Batch gồm những gì?",
+        "options": [
+          "Phí theo số job submit cộng phí compute",
+          "Không có phí riêng cho Batch, chỉ trả tiền compute mà job dùng",
+          "Phí cố định theo giờ cho mỗi job queue",
+          "Phí theo số compute environment"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Bản thân AWS Batch không tính phí thêm; bạn chỉ trả cho compute (EC2, Spot, Fargate...) mà job sử dụng."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty cần chạy job Batch trên compute do chính họ kiểm soát (ECS/EKS cluster sẵn có) vì lý do compliance. Họ nên dùng loại compute environment nào, và lưu ý gì?",
+        "options": [
+          "Managed, chọn Fargate",
+          "Unmanaged; Batch vẫn lập lịch job nhưng họ tự cung cấp và scale compute, và Fargate không phải lựa chọn",
+          "Managed, chọn EC2 Spot",
+          "Không thể, Batch luôn tự quản lý compute"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Unmanaged compute environment: Batch vẫn schedule job, còn bạn tự provision và scale compute qua ECS hoặc EKS; Fargate chỉ có ở managed."
+      },
+      {
+        "type": "single",
+        "q": "Các job Batch xử lý dữ liệu có thể chạy lại nếu bị gián đoạn, công ty muốn giảm chi phí compute nhiều nhất. Cấu hình nào phù hợp?",
+        "options": [
+          "Compute environment On-Demand với instance lớn nhất",
+          "Compute environment dùng Spot (đặt giá tối đa theo % On-Demand) kèm retry tự động để job bị gián đoạn được xếp lại",
+          "Dedicated Hosts",
+          "Chạy job trong Lambda"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Spot hợp với job chịu được gián đoạn; Batch cho đặt giá Spot tối đa theo phần trăm giá On-Demand, và retry tự động đưa job bị gián đoạn trở lại queue. Job dài không được gián đoạn mới cần On-Demand."
+      },
+      {
+        "type": "single",
+        "q": "Compute environment của AWS Batch đặt trong private subnet không có NAT Gateway. Job không khởi chạy được vì không kéo được container image và không gọi được ECS service. Cách khắc phục đúng?",
+        "options": [
+          "Chuyển sang Lambda",
+          "Thêm NAT Gateway hoặc VPC endpoint phù hợp để compute tới được ECS service và các dịch vụ public AWS mà job dùng",
+          "Bật public IP cho job queue",
+          "Tăng priority của job queue"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Compute environment chạy trong VPC; ở private subnet thì compute vẫn phải tới được ECS service và dịch vụ public AWS (ví dụ ECR, S3), nên cần NAT Gateway hoặc VPC endpoint và traffic control phù hợp."
       }
     ]
   }
