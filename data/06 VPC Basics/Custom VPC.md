@@ -28,7 +28,7 @@ videos: ["104 [SHAREDALL] Custom VPCs - PART1 - THEORY", "105 [SHAREDALL] [DEMO]
 ### IPv4
 - Mỗi VPC có **1 primary private IPv4 CIDR bắt buộc**, đặt lúc tạo VPC.
   - Nhỏ nhất **/28** (16 IP, một số IP không dùng được), lớn nhất **/16** (65,536 IP).
-- Có thể dùng **VPC IP Address Manager (IPAM)**, dịch vụ quản lý tập trung các dải IP của tổ chức, để cấp CIDR cho VPC từ một pool (cho cả IPv4 lẫn IPv6). IPAM có bài riêng ở phần mạng nâng cao.
+- Có thể dùng **VPC IP Address Manager (IPAM)**, dịch vụ quản lý tập trung các dải IP của tổ chức, để cấp CIDR cho VPC từ một pool (cho cả IPv4 lẫn IPv6). IPAM có bài riêng ở phần mạng nâng cao: [[VPC IPAM]].
 - Có thể thêm **secondary IPv4 CIDR** sau khi tạo: quota mặc định **5** CIDR IPv4 mỗi VPC **tính cả primary** (tức 1 primary + 4 secondary), tăng được qua **Service Quotas**, hiện tối đa **50**.
 - Ràng buộc khi thêm CIDR (demo): CIDR mới **không được chồng lấn** với CIDR đã có trong chính VPC đó (ví dụ VPC 10.16.0.0/16 không thêm được 10.16.1.0/24); và VPC đang dùng dải private 10.x thì **không thêm được** dải private chuẩn khác như 172.16.0.0/16 (hay 192.168.x). Còn trùng với VPC *khác* thì AWS vẫn cho tạo, vì mỗi VPC là một mạng cách ly; chỉ gặp vấn đề khi nối chúng với nhau (xem [[VPC Sizing and Structure]]).
 - Private IP là phương thức giao tiếp chính trong VPC. Public IP chỉ dùng khi tài nguyên cần nói chuyện với internet hoặc AWS public zone (xem [[AWS Public vs Private Services]]).

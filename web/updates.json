@@ -14,7 +14,9 @@
     "Exam Cheat Sheet: NAT Gateway có chế độ zonal (mỗi AZ một cái, trong public subnet) và regional (một NATGW cho cả VPC, AWS trải qua các AZ); private NAT Gateway cho mạng private chồng lấn",
     "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64",
     "Exam Cheat Sheet: mốc EBS mới (gp2 16K, io1 64K, gp3 80K / 2,000 MiB/s, io2 Block Express 256K; io2 = Block Express), FSR tối đa 5/region, Spot cảnh báo 2 phút và terminate/stop/hibernate, RI Standard/Convertible, ODCR giá On-Demand (immediate/future, open/targeted), Savings Plans không giữ capacity, Scheduled RI đã deprecated",
-    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans"
+    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans",
+    "Exam Cheat Sheet: AWS PrivateLink (NLB + endpoint service, interface endpoint mỗi AZ), VPC IPAM, interface endpoint TCP/UDP và IPv6, Global Accelerator dual-stack 4 IP, ACM exportable certificate, peering cross-region mới mã hóa",
+    "Top mẹo thi và concept map chương 15, 16: VPC origins, cache policy và s-maxage/max-age, dedicated IP theo certificate, OAC không phải identity, Flow Logs tới Data Firehose, EIGW drop inbound, AWS PrivateLink, VPC IPAM"
   ],
   "missing": [],
   "lessons": {
@@ -789,6 +791,167 @@
         "🖼️ Sơ đồ",
         "Khái niệm cốt lõi",
         "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "ACM": {
+      "kind": "updated",
+      "summary": "ACM cấp public cert (CA của AWS) hoặc private cert (AWS Private CA); chỉ deploy tới dịch vụ tích hợp (CloudFront, load balancer, API Gateway, EKS); exportable certificate để tự export và quản lý ở nơi không tích hợp như EC2.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Dịch vụ được hỗ trợ",
+        "Kiến trúc regional",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CloudFront Architecture": {
+      "kind": "updated",
+      "summary": "Custom origin không còn bắt buộc public: VPC origins cho ALB, NLB, EC2 trong private subnet làm origin; origin khai báo trên distribution nhưng behavior chọn origin.",
+      "changed": [
+        "Khái niệm cốt lõi (thuật ngữ phải thuộc)",
+        "Distribution, behavior và origin liên quan với nhau thế nào",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CloudFront TTL and Invalidations": {
+      "kind": "updated",
+      "summary": "TTL nằm trong cache policy của behavior; max-age cho mọi cache (cả trình duyệt), s-maxage cho CloudFront, có cả hai thì CloudFront dùng s-maxage; có Expires và max-age thì CloudFront dùng max-age; minimum TTL > 0 ép cache; demo invalidation không còn.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "TTL: default, min, max",
+        "Cache invalidation",
+        "Versioned file names (đáp án hay gặp trong đề)",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Demo / Lab"
+      ]
+    },
+    "CloudFront and SSL": {
+      "kind": "updated",
+      "summary": "Dedicated IP tính khoảng $600/tháng cho mỗi certificate (không phải mỗi distribution); custom origin EC2/on-prem có thể cài exportable public cert của ACM; demo thêm domain bằng wizard Add domain, CloudFront tự tạo cert ACM và bản ghi A/AAAA.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Hai chặng kết nối và yêu cầu certificate",
+        "SNI: vì sao có chuyện \"dedicated IP\"",
+        "Demo / Lab: thêm alternate CNAME và SSL",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CloudFront Origins": {
+      "kind": "updated",
+      "summary": "Loại origin mới VPC origin (ALB/NLB/EC2 trong private subnet); demo mới đặt CloudFront trước web store Aus-E-Mart trên EC2 + S3: pricing plan, origin protocol HTTP, behavior /static/*, cache policy theo origin, curl Miss/Hit, log tới CloudWatch Logs/Firehose/S3.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Demo / Lab: thêm CDN cho web store Aus-E-Mart",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "CloudFront OAI and OAC": {
+      "kind": "updated",
+      "summary": "OAC không phải identity, dùng cho S3 và Lambda function URL, một OAC dùng lại cho nhiều distribution, chạy được khi bật Block Public Access; OAI cho mọi distribution gắn nó vào bucket (không có SourceArn); custom origin sau SG dùng prefix list của CloudFront.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "OAI: Origin Access Identity (legacy)",
+        "OAC: Origin Access Control (mới, AWS khuyến nghị)",
+        "Bảo vệ custom origin (không dùng được OAI/OAC)",
+        "Bảng so sánh",
+        "Demo / Lab: dùng OAC",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Global Accelerator": {
+      "kind": "updated",
+      "summary": "Bài mới nêu endpoint (ALB, NLB, EC2, Elastic IP) ở một hoặc nhiều region; accelerator dual-stack có 4 IP tĩnh (2 IPv4 + 2 IPv6), hoặc BYOIP IPv4.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh: Global Accelerator vs CloudFront",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Lambda@Edge": {
+      "kind": "removed",
+      "summary": "mục Global Content Delivery của khóa mới không còn bài Lambda@Edge"
+    },
+    "VPC Flow Logs": {
+      "kind": "updated",
+      "summary": "Thêm đích Amazon Data Firehose; aggregation 1 hoặc 10 phút (Nitro mặc định 1 phút); custom format chọn trường và thứ tự, thêm trường như vpc-id, subnet-id, tcp-flags.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Egress-Only Internet Gateway": {
+      "kind": "updated",
+      "summary": "Kết nối từ ngoài bị drop ngay tại EIGW (SG không mở được inbound); EIGW chạy một mình không cần IGW, VPC dual-stack dùng cả IGW và EIGW; NAT64 không thay EIGW; NAT Gateway nay có zonal/regional.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "AWS PrivateLink": {
+      "kind": "new",
+      "summary": "Bài mới: provider đặt dịch vụ sau NLB (cross-zone) và tạo endpoint service cấp quyền cho account/IAM user/role; consumer tạo interface endpoint mỗi AZ; TCP/UDP, IPv4/IPv6, private DNS, dùng qua Direct Connect, VPN, peering, Transit Gateway."
+    },
+    "Gateway VPC Endpoints": {
+      "kind": "updated",
+      "summary": "Bài mới nói gateway endpoint không tốn phí, có endpoint riêng cho S3 Express One Zone; gắn theo route table nên muốn giới hạn subnet thì tạo route table riêng; demo mới là phần 2 của chuỗi web store Aus-E-Mart.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Interface VPC Endpoints": {
+      "kind": "updated",
+      "summary": "Interface endpoint nay hỗ trợ TCP và UDP, VPC IPv4, IPv6 hoặc dual-stack (bản cũ: chỉ TCP, chỉ IPv4); demo mới dùng interface endpoint cho S3 không bật Private DNS khiến ứng dụng dùng tên mặc định bị lỗi.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc: DNS",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "VPC Peering": {
+      "kind": "updated",
+      "summary": "Peering luôn đi trên backbone AWS, nhưng bài mới nói chỉ peering cross-region mới được AWS mã hóa; demo mới cho thấy lỗi route một chiều.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "VPC IPAM": {
+      "kind": "new",
+      "summary": "Bài mới: IPAM ở home region với private/public scope, pool theo cấp bậc (min/max/default netmask), VPC chọn pool là được cấp CIDR không trùng và thu hồi khi xóa; free tier vs advanced tier, cross-account qua Organizations + RAM, BYOIP hoặc Amazon-provided, private IPv6."
+    },
+    "Compare - Gateway vs Interface Endpoints": {
+      "kind": "updated",
+      "summary": "Interface endpoint hỗ trợ TCP và UDP, IPv4/IPv6/dual-stack; gateway endpoint miễn phí nay được bài nói rõ; ứng dụng viết cứng tên DNS mặc định cần gateway endpoint hoặc Private DNS.",
+      "changed": [
+        "Bảng so sánh",
+        "Khi nào chọn cái nào",
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []

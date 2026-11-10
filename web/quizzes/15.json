@@ -12,7 +12,7 @@
           "Dùng KMS key để tạo certificate và gắn vào Elastic IP của từng instance"
         ],
         "answer": [1],
-        "explain": "ACM không deploy được certificate lên EC2; cách chuẩn là đặt ALB phía trước và terminate TLS ở ALB, ACM tự gia hạn. Cài thủ công lên EC2 làm mất lợi ích tự gia hạn/quản lý của ACM và không phải đáp án đề thi mong đợi."
+        "explain": "ACM không tích hợp với EC2 nên không tự deploy và gia hạn cert trên instance; cách chuẩn là đặt ALB phía trước và terminate TLS ở ALB, ACM tự gia hạn. Exportable certificate thì export và cài tay lên EC2 được, nhưng bạn phải tự cài, tự gia hạn trên từng instance, nên không phải cách ít vận hành nhất."
       },
       {
         "type": "single",
@@ -61,7 +61,7 @@
           "Amazon S3 bucket"
         ],
         "answer": [1, 3],
-        "explain": "ACM chủ yếu hỗ trợ CloudFront và load balancer (ngoài ra API Gateway). EC2 và on-prem không được hỗ trợ vì ai có quyền root đều lấy được cert; S3 tự xử lý certificate của nó."
+        "explain": "ACM chỉ deploy tới dịch vụ tích hợp: CloudFront, load balancer, ngoài ra API Gateway, EKS. EC2 và on-prem không tích hợp vì bạn giữ quyền root nên AWS không bảo vệ được việc cài cert (muốn dùng ở đó thì phải export exportable cert và tự quản lý); S3 tự xử lý certificate của nó."
       }
     ],
     "CloudFront Architecture": [
@@ -387,7 +387,7 @@
           "24 giờ (86400 giây)"
         ],
         "answer": [3],
-        "explain": "Default TTL mặc định là 24 giờ, áp dụng cho object không có TTL riêng. Default TTL được đặt trên behavior."
+        "explain": "Default TTL mặc định là 24 giờ, áp dụng cho object không có TTL riêng. Default TTL nằm trong cache policy gắn với behavior."
       },
       {
         "type": "single",
@@ -426,17 +426,16 @@
         "explain": "Invalidation làm hết hạn mọi object khớp pattern trên mọi edge của distribution bất kể TTL (không tức thời, có phí). Giảm TTL chỉ ảnh hưởng object được cache sau đó, không xóa bản đang còn TTL."
       },
       {
-        "type": "multi",
-        "q": "Header nào được dùng để đặt TTL riêng cho từng object trong CloudFront? (Chọn 2)",
+        "type": "single",
+        "q": "Origin muốn CloudFront cache một object trong 1 ngày nhưng trình duyệt của người dùng chỉ được cache 60 giây. Header nào đáp ứng?",
         "options": [
-          "Cache-Control: max-age (hoặc s-maxage)",
-          "Expires",
-          "Last-Modified",
-          "ETag",
-          "Content-Type"
+          "Cache-Control: max-age=86400",
+          "Cache-Control: s-maxage=86400, max-age=60",
+          "Expires đặt sau 1 ngày, kèm Cache-Control: max-age=86400",
+          "Cache-Control: s-maxage=60, max-age=86400"
         ],
-        "answer": [0, 1],
-        "explain": "TTL per-object đặt qua Cache-Control max-age/s-maxage (giây) hoặc Expires (thời điểm cụ thể); với S3 origin thì set qua object metadata. Last-Modified và ETag dùng cho kiểm tra phiên bản, không đặt TTL."
+        "answer": [1],
+        "explain": "max-age áp dụng cho mọi cache (cả trình duyệt lẫn CloudFront), còn s-maxage chỉ dành cho shared cache như CloudFront. Đặt cả hai thì CloudFront dùng s-maxage (86400 giây), trình duyệt dùng max-age (60 giây). Có cả Expires và max-age thì CloudFront chỉ dùng max-age."
       }
     ],
     "CloudFront and SSL": [
@@ -444,7 +443,7 @@
         "type": "single",
         "q": "Một công ty dùng CloudFront với tên miền riêng và HTTPS. Một nhóm khách hàng dùng trình duyệt rất cũ không hỗ trợ SNI và vẫn phải truy cập được. Công ty cần làm gì, và điều này ảnh hưởng chi phí thế nào?",
         "options": [
-          "Chọn dedicated IP SSL cho distribution, có tính phí (khoảng $600/tháng/distribution theo khóa học)",
+          "Chọn dedicated IP SSL cho distribution, có tính phí (khoảng $600/tháng cho mỗi certificate theo khóa học)",
           "Giữ SNI-only, miễn phí, vì CloudFront tự fallback cho client cũ",
           "Chuyển viewer protocol policy sang HTTP and HTTPS",
           "Dùng self-signed certificate để tương thích với trình duyệt cũ"
@@ -462,7 +461,7 @@
           "Cài trên EC2 một certificate publicly trusted do CA bên ngoài cấp, khớp tên DNS mà CloudFront dùng để kết nối origin"
         ],
         "answer": [3],
-        "explain": "Chặng origin cũng cần certificate publicly trusted, không self-signed, khớp tên DNS của origin; ACM không deploy được lên EC2 nên phải dùng CA bên ngoài. Viewer protocol policy chỉ ảnh hưởng chặng viewer ↔ edge."
+        "explain": "Chặng origin cũng cần certificate publicly trusted, không self-signed, khớp tên DNS của origin. ACM không tự deploy được lên EC2, nên phải cài tay một cert public (từ CA bên ngoài, hoặc exportable public certificate của ACM). Viewer protocol policy chỉ ảnh hưởng chặng viewer ↔ edge."
       },
       {
         "type": "single",
@@ -528,7 +527,7 @@
       },
       {
         "type": "single",
-        "q": "Khi tạo một accelerator, AWS Global Accelerator cấp bao nhiêu anycast IP?",
+        "q": "Khi tạo một accelerator chỉ dùng IPv4 (mặc định), AWS Global Accelerator cấp bao nhiêu anycast IP tĩnh?",
         "options": [
           "1",
           "2",
@@ -536,7 +535,7 @@
           "Một IP cho mỗi region có endpoint"
         ],
         "answer": [1],
-        "explain": "Mỗi accelerator được cấp 2 anycast IP, và mọi edge location của Global Accelerator đều dùng cặp IP này. Người dùng ở các nơi khác nhau dùng cùng IP nhưng được định tuyến tới edge gần mình nhất."
+        "explain": "Mặc định mỗi accelerator có 2 anycast IP tĩnh, mọi edge location của Global Accelerator đều dùng bộ IP này; accelerator dual-stack thì có 4 (2 IPv4 + 2 IPv6). Người dùng ở các nơi khác nhau dùng cùng IP nhưng được định tuyến tới edge gần mình nhất."
       },
       {
         "type": "multi",

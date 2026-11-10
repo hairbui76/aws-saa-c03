@@ -1,0 +1,13 @@
+{
+ "VPC IPAM": {
+  "sig": "6-1d8ilye",
+  "steps": [
+   "Sơ đồ này nói về VPC IPAM. Bạn tạo IPAM ở một home region, nó có sẵn private scope và public scope. Tài nguyên chỉ cần chọn pool và kích thước, IPAM tự cấp dải còn trống và thu hồi khi xóa.",
+   "IPAM tạo một pool gốc trong mỗi scope: 10.16.0.0 trên 12 cho private, 203.0.113.0 trên 24 cho public. Free tier chỉ một account, một region, không có private IPv4; advanced tier mới có private IPv4, audit, cross-account và cross-region.",
+   "Pool được chia tiếp theo cấp bậc: Sydney và US ở private scope, Frontend và NAT ở public scope. Mỗi pool đặt minimum, maximum và default netmask.",
+   "Khi tạo VPC ở Sydney, bạn chọn Sydney pool và xin một dải trên 18; IPAM chọn dải còn trống như 10.16.128.0 trên 18. Xóa VPC thì dải này quay về pool để cấp cho VPC khác.",
+   "Tài nguyên dùng IP public cũng lấy từ pool: ALB nhận IP ngay lúc tạo, còn NAT Gateway dùng Elastic IP được cấp từ NAT pool.",
+   "Khi đi thi, nhớ: cross-account thì dùng AWS Organizations kèm Resource Access Manager để chia sẻ pool. Public pool đến từ BYOIP đã xác minh hoặc Amazon cung cấp, và private IPv6 chỉ có qua IPAM."
+  ]
+ }
+}

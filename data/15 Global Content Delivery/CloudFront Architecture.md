@@ -2,6 +2,7 @@
 tags: [saa-c03, s15-global-content-delivery, networking, cdn, caching, cloudfront]
 aliases: [CloudFront, Amazon CloudFront, CDN, CF, Edge Location, Regional Edge Cache, CloudFront Distribution]
 lessons: ["0273 CloudFront Architecture"]
+videos: ["254 [SHAREDALL] CloudFront (CF) - Architecture"]
 ---
 # CloudFront Architecture
 
@@ -18,13 +19,13 @@ lessons: ["0273 CloudFront Architecture"]
 ## Khái niệm cốt lõi (thuật ngữ phải thuộc)
 | Thuật ngữ | Ý nghĩa |
 |---|---|
-| **Origin** | Nơi chứa bản gốc của nội dung. Có 2 loại: **S3 origin** hoặc **custom origin** (bất cứ thứ gì chạy web server và có **public IPv4 routable**). Một distribution có thể có **một hoặc nhiều** origin. Chi tiết: [[CloudFront Origins]] |
+| **Origin** | Nơi chứa bản gốc của nội dung. Có 2 loại: **S3 origin** hoặc **custom origin** (gần như mọi thứ chạy web server mà CloudFront tới được). Trước đây custom origin phải là **endpoint public** (resolve và route được từ Internet); nay CloudFront hỗ trợ thêm **VPC origins**: **ALB, NLB, EC2 trong private subnet** cũng làm origin được. Một distribution có thể có **một hoặc nhiều** origin. Chi tiết: [[CloudFront Origins]] |
 | **Distribution** | **Đơn vị cấu hình** của CloudFront. Tạo distribution, rồi distribution được deploy ra mạng CloudFront. Hầu hết mọi thứ được cấu hình trong distribution, trực tiếp hoặc gián tiếp qua behavior |
-| **Edge location** | Hạ tầng toàn cầu nơi nội dung được cache. **Nhiều hơn và nhỏ hơn** region (lúc quay bài: hơn 200 edge location; hiện nay CloudFront có hơn 600 PoP). Thường là một hoặc vài rack trong data center bên thứ ba, chủ yếu là storage (khoảng 90%) và một ít compute cho một số dịch vụ. **Không thể deploy EC2** vào edge location |
+| **Edge location** | Hạ tầng toàn cầu nơi nội dung được cache. **Nhiều hơn và nhỏ hơn** region: bài mới nói **hàng trăm** edge location, rất có thể có một cái ở gần thành phố của bạn (bản khóa cũ nêu hơn 200; hiện nay CloudFront có hơn 600 PoP). Hình dung như một hoặc vài rack trong data center, hạ tầng dựng riêng để cache và phân phối nội dung (bản khóa cũ nêu: chủ yếu là storage, khoảng 90%, và một ít compute), **không phải môi trường compute đa dụng**: **không thể deploy EC2** vào edge location |
 | **Regional Edge Cache (REC)** | **Lớn hơn** edge location và **ít hơn** về số lượng. Phục vụ nhiều edge location trong cùng vùng địa lý, giữ được nhiều dữ liệu hơn, hợp với object ít được truy cập nhưng vẫn đáng cache gần khách hàng hơn origin |
 | **Behavior** | Cấu hình con trong distribution, chọn theo **path pattern**. Đây mới là nơi chứa phần lớn cấu hình quan trọng. Chi tiết: [[CloudFront Behaviors]] |
 
-- Mỗi distribution có một **domain name mặc định** dạng `d111111abcdef8.cloudfront.net` (duy nhất, luôn kết thúc bằng `cloudfront.net`). Có thể thêm **alternate domain name** (CNAME) như `animals4life.org` (xem [[CloudFront and SSL]]).
+- Mỗi distribution có một **domain name mặc định** dạng `d111111abcdef8.cloudfront.net` (duy nhất, luôn kết thúc bằng `cloudfront.net`). Có thể thêm **alternate domain name** (CNAME) như `chickenbros.com.au` trong ví dụ của bài (xem [[CloudFront and SSL]]).
 - Khi deploy, cấu hình distribution được đẩy tới **tất cả edge location được chọn** (theo price class).
 
 ## Cách hoạt động: luồng cache hit / cache miss
@@ -71,7 +72,7 @@ flowchart LR
     B1 --> O1["S3 origin: private images"]
     B0 --> O2["S3 origin: public content"]
 ```
-- Dễ tưởng origin gắn trực tiếp vào distribution, nhưng thật ra **origin gắn với behavior**, behavior nằm trong distribution. Behavior là lớp ở giữa.
+- Origin được **khai báo trên distribution** (tab Origins chỉ làm origin "có sẵn" cho distribution), nhưng request **không bao giờ đi thẳng** từ distribution tới origin: mỗi request được khớp với một **behavior**, và **behavior chọn origin** phục vụ request đó. Behavior là lớp ở giữa viewer và origin.
 - Mọi distribution có ít nhất **một behavior: default, path pattern `*`** (wildcard, khớp mọi thứ). Có thể thêm behavior cụ thể hơn (ví dụ `img/*`), và behavior cụ thể hơn được **ưu tiên**.
 - Những thứ hay bị nói là "set trên distribution" như **origin / origin group, TTL, protocol policy, restricted (private) access** thực ra được cấu hình **trên behavior**.
 
@@ -80,6 +81,7 @@ flowchart LR
 - Thuộc 4 thuật ngữ: origin, distribution, edge location, regional edge cache, cùng các khái niệm cache hit, cache miss, origin fetch.
 - Edge location **không chạy được EC2**. Muốn compute ở edge thì xem [[Lambda@Edge]].
 - Muốn HTTPS với tên miền riêng thì cần [[ACM]] (cert ở **us-east-1**).
+- Origin là ALB, NLB hay EC2 nằm trong **private subnet**, không muốn mở ra Internet → **VPC origins** của CloudFront (custom origin không còn bắt buộc phải public).
 - Cần tối ưu mạng cho TCP/UDP, không cache: đó là [[Global Accelerator]], không phải CloudFront.
 
 ## Liên kết

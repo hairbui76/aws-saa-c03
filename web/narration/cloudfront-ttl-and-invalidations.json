@@ -1,13 +1,13 @@
 {
  "CloudFront TTL and Invalidations": {
-  "sig": "6-1ds7k3b",
+  "sig": "6-1olmf3q",
   "steps": [
    "Sơ đồ này cho thấy edge location xử lý một request ra sao dựa vào TTL. Còn TTL thì trả thẳng từ cache, hết TTL thì edge phải hỏi lại origin.",
    "Mọi thứ bắt đầu khi request tới edge. Câu hỏi đầu tiên edge đặt ra là object này đã có trong cache của mình chưa.",
    "Có ba nhánh. Không có thì cache miss, edge fetch từ origin rồi lưu lại. Có và còn TTL thì trả ngay. Có nhưng stale thì edge gửi conditional request hỏi origin.",
    "Nếu origin trả 304 Not Modified, edge dùng tiếp bản cache và đánh dấu current, không truyền lại dữ liệu. Nếu trả 200 OK thì thay bằng object mới. Lưu ý, khi object còn TTL, user vẫn nhận bản cũ dù origin đã cập nhật.",
-   "TTL được đặt trên behavior. Default TTL là 24 giờ, tức 86400 giây, áp dụng cho object không có TTL riêng. Minimum và Maximum TTL tự thân không làm gì, chỉ chặn dưới và chặn trên TTL per-object.",
-   "Khi đi thi, nhớ ba header: Cache-Control max-age và s-maxage tính bằng giây, còn Expires là một ngày giờ cụ thể. Với S3 thì đặt qua object metadata, với custom origin thì ứng dụng hoặc web server chèn header."
+   "TTL nằm trong cache policy gắn với behavior. Default TTL là 24 giờ, tức 86400 giây, áp dụng cho object không có TTL riêng. Minimum và Maximum TTL chặn dưới và chặn trên TTL per-object, nên minimum lớn hơn 0 ép CloudFront cache ít nhất chừng đó.",
+   "Khi đi thi, nhớ ba header: max-age áp dụng cho mọi cache kể cả trình duyệt, s-maxage dành cho CloudFront, đều tính bằng giây; Expires là ngày giờ cụ thể và bị bỏ qua nếu có max-age. Với S3 thì đặt qua object metadata, với custom origin thì ứng dụng chèn header."
   ]
  },
  "CloudFront TTL and Invalidations - update": {

@@ -2,10 +2,11 @@
 tags: [saa-c03, s16-advanced-vpc-networking, networking, monitoring, logging, security]
 aliases: [Flow Logs, VPC Flow Log, Flowlogs]
 lessons: ["0287 VPC Flow Logs"]
+videos: ["264 [ASSOCIATESHARED] VPC Flow Logs"]
 ---
 # VPC Flow Logs
 
-> **TL;DR:** VPC Flow Logs ghi lại **metadata** của các luồng traffic đi qua network interface trong VPC: IP nguồn/đích, port, protocol, số packet/byte, ACCEPT hay REJECT. Nó **không ghi nội dung packet** và **không real-time**. Log được đẩy tới S3 hoặc CloudWatch Logs để phân tích, xử lý sự cố hoặc kiểm tra bảo mật.
+> **TL;DR:** VPC Flow Logs ghi lại **metadata** của các luồng traffic đi qua network interface trong VPC: IP nguồn/đích, port, protocol, số packet/byte, ACCEPT hay REJECT. Nó **không ghi nội dung packet** và **không real-time**. Log được đẩy tới **S3, CloudWatch Logs hoặc Amazon Data Firehose** để phân tích, xử lý sự cố hoặc kiểm tra bảo mật.
 
 ## 🖼️ Sơ đồ
 ![[VPC Flow Logs.excalidraw]]
@@ -17,20 +18,21 @@ lessons: ["0287 VPC Flow Logs"]
 ## Khái niệm cốt lõi
 - **Chỉ có metadata, không có payload.** Flow Logs cho biết những gì "nhìn được từ bên ngoài" một luồng: source/destination IP, source/destination port, protocol, kích thước, thời điểm, kết quả cho phép/chặn.
   - Muốn xem **nội dung packet** thì cần **packet sniffer** (ví dụ cài trên EC2), Flow Logs không làm được. (Ngoài khóa học: AWS có VPC Traffic Mirroring cho mục đích này.)
-- **Không real-time.** Traffic xảy ra rồi một lúc sau mới hiện trong Flow Logs. Adrian nhấn mạnh đây là câu hay ra thi: **không dùng Flow Logs làm telemetry thời gian thực**. (Hiện nay khoảng thời gian gom log, gọi là aggregation interval, là 1 phút hoặc 10 phút, cộng thêm độ trễ khi đẩy tới đích.)
+- **Không real-time.** Traffic xảy ra rồi một lúc sau mới hiện trong Flow Logs. Giảng viên nhấn mạnh đây là câu hay ra thi: **không dùng Flow Logs làm telemetry thời gian thực**.
+  - Có cấu hình **aggregation interval** (tần suất gom dữ liệu): **1 phút hoặc 10 phút**; với instance **Nitro** mặc định **1 phút**. Đây là mức "cố gắng", **không có bảo đảm** thời điểm dữ liệu xuất hiện.
 - **Ba mức gắn monitor**, mỗi mức bắt mọi thứ **từ điểm đó trở xuống**:
   - **VPC**: mọi ENI trong mọi subnet của VPC.
   - **Subnet**: mọi ENI trong subnet đó.
   - **ENI** (Elastic Network Interface): chỉ đúng interface đó. Xem [[EC2 Network Interfaces IPs and DNS]].
 - **Bộ lọc traffic**: chỉ ACCEPT, chỉ REJECT, hoặc ALL.
-- **Destination**:
-  - **S3**: truy cập file log trực tiếp, đưa vào công cụ giám sát bên thứ ba hoặc tự xây pipeline. Có thể truy vấn bằng [[Athena]] với cú pháp kiểu SQL. Athena là ad-hoc query engine kiểu **schema-on-read**, chỉ trả tiền cho lượng dữ liệu đọc (cộng phí lưu trữ S3). Hợp với đội data muốn review log bài bản.
-  - **[[CloudWatch Logs]]**: tích hợp với dịch vụ khác, stream dữ liệu đi nơi khác, xem bằng console hoặc truy cập qua API.
-  - (Khóa học chỉ nêu S3 và CloudWatch Logs; hiện nay còn gửi thẳng được tới [[Kinesis Data Firehose|Amazon Data Firehose]].)
+- **Destination** (chọn cái nào là tùy nhu cầu):
+  - **S3**: truy cập file log trực tiếp, đưa vào công cụ giám sát bên thứ ba hoặc tự xây pipeline. Có thể truy vấn bằng [[Athena]] với cú pháp kiểu SQL. Athena là ad-hoc query engine kiểu **schema-on-read**, chỉ trả tiền cho lượng dữ liệu đọc (cộng phí lưu trữ S3). Hợp với đội data đã quen SQL muốn review log bài bản.
+  - **[[CloudWatch Logs]]**: tích hợp với dịch vụ khác, stream dữ liệu đi nơi khác, hoặc phân tích ngay trong CloudWatch Logs; xem bằng console hoặc truy cập qua API.
+  - **[[Kinesis Data Firehose|Amazon Data Firehose]]**: khi cần **kiểm soát nhiều hơn** về dữ liệu và định dạng, cần biến đổi dữ liệu hoặc đưa vào công cụ data analytics nâng cao.
 
 ## Cách hoạt động / Kiến trúc
 
-Ví dụ của khóa học là ứng dụng Catagram: app server trong public subnet được Bob truy cập, database primary và standby nằm trong private subnet.
+Ví dụ của khóa học là VPC Aus-E-Mart chạy web store: instance front-end trong public subnet được Bob truy cập, database primary và standby (replicated) nằm trong private subnet.
 
 ```mermaid
 flowchart TB
@@ -43,7 +45,7 @@ flowchart TB
       DB2["DB standby ENI"]
     end
   end
-  APP --> DEST["Đích: S3 hoặc CloudWatch Logs"]
+  APP --> DEST["Đích: S3, CloudWatch Logs hoặc Data Firehose"]
   DB1 --> DEST
   DB2 --> DEST
   DEST --> ATH["Athena truy vấn log trong S3"]
@@ -53,11 +55,13 @@ flowchart TB
 - Flow Log đặt ở private subnet thì bắt cả hai DB instance.
 
 ### Cấu trúc một Flow Log record
-Mỗi dòng (record) có các trường theo thứ tự sau (format mặc định version 2):
+Mỗi dòng (record) có các trường theo thứ tự sau (format mặc định, **version 2**):
 
 `version  account-id  interface-id  srcaddr  dstaddr  srcport  dstport  protocol  packets  bytes  start  end  action  log-status`
 
-Các trường dùng nhiều nhất: **srcaddr, dstaddr, srcport, dstport, protocol, action**.
+Các trường dùng nhiều nhất: **srcaddr, dstaddr, srcport, dstport, protocol, action**. Thứ tự luôn là nguồn trước, đích sau (IP rồi port).
+
+- Khi tạo Flow Log có thể chọn format **Default** (chính là v2 ở trên) hoặc **custom format**: tự chọn **trường nào và thứ tự nào**, và có thêm các trường không có trong v2 (danh sách được bổ sung theo thời gian), ví dụ `tcp-flags`, `vpc-id`, `subnet-id`, `instance-id`, `type`, `pkt-srcaddr`, `pkt-dstaddr`, `traffic-path`.
 
 Ví dụ trên slide: Bob (`119.18.34.78`) ping một instance (`10.16.48.20`):
 ```
@@ -77,17 +81,19 @@ Ví dụ trên slide: Bob (`119.18.34.78`) ping một instance (`10.16.48.20`):
 
 ### Traffic KHÔNG được ghi
 - Truy cập **Instance Metadata Service** `169.254.169.254` (xem [[EC2 Instance Metadata]]).
-- **Time Sync Service** `169.254.169.123`.
+- **Time Sync Service** `169.254.169.123` (yêu cầu tới time server).
 - **DHCP** trong VPC.
-- Traffic tới **Amazon DNS server** (Route 53 Resolver của VPC).
 - Traffic **kích hoạt license Amazon Windows** (chỉ liên quan Windows instance).
+- Và một số loại khác. *(Bản khóa cũ nêu thêm, bài mới không nhắc: traffic tới **Amazon DNS server**, tức Route 53 Resolver của VPC.)*
 
 ## 🎯 Mẹo thi SAA-C03
 - "Cần xem **nội dung packet** / deep packet inspection" → **không phải** Flow Logs. Flow Logs chỉ có metadata.
 - "Giám sát traffic **real-time**" → Flow Logs không đáp ứng vì có độ trễ.
 - "Vì sao không thấy truy cập metadata / DNS / DHCP trong Flow Logs?" → các loại đó **bị loại trừ** khỏi Flow Logs.
 - Thấy ACCEPT inbound rồi REJECT outbound trong cùng một luồng → có **NACL** (stateless) chặn chiều trả lời. Một dòng ACCEPT duy nhất là dấu hiệu chỉ có SG (stateful).
-- Phân tích Flow Logs bằng SQL, trả tiền theo dữ liệu đọc → **S3 + Athena**. Cần tích hợp, stream, alarm, metric filter → **CloudWatch Logs**.
+- Phân tích Flow Logs bằng SQL, trả tiền theo dữ liệu đọc → **S3 + Athena**. Cần tích hợp, stream, alarm, metric filter → **CloudWatch Logs**. Cần biến đổi/định dạng lại dữ liệu cho công cụ analytics → **Amazon Data Firehose**.
+- Aggregation interval **1 phút hoặc 10 phút** (Nitro mặc định 1 phút), vẫn không real-time.
+- Cần thêm trường như `vpc-id`, `subnet-id`, `tcp-flags` → **custom format** (format mặc định v2 không có).
 - Phạm vi: VPC > subnet > ENI. Gắn ở mức cao thì bao luôn mọi ENI bên dưới.
 - Số protocol: ICMP 1, TCP 6, UDP 17.
 
