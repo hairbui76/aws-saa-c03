@@ -1,6 +1,6 @@
 {
  "SQS": {
-  "sig": "7-wmbu4e",
+  "sig": "7-i77p8p",
   "steps": [
    "Sơ đồ này cho thấy SQS đứng giữa để decouple web tier và worker tier. Web pool chỉ lưu file và gửi message, còn worker pool tự poll queue và scale theo độ dài queue, thậm chí về 0.",
    "Người dùng upload video vào web pool, là một Auto Scaling Group scale theo CPU. Tier này chỉ lo tiếp nhận request từ người dùng.",
@@ -8,7 +8,7 @@
    "Worker pool là một Auto Scaling Group khác, scale theo queue length. Worker đọc video gốc từ S3 Master bucket dựa vào link trong message.",
    "Worker chủ động poll queue để lấy việc. Queue dài thì worker scale out, queue ngắn thì scale in, nên hai tier scale hoàn toàn độc lập.",
    "Worker transcode video ra nhiều kích thước rồi lưu vào S3 Transcode bucket, để web tier lấy ra phục vụ người dùng.",
-   "Khi đi thi nhớ nhé: instance chết giữa chừng thì message không bị xóa, hết visibility timeout sẽ hiện lại cho worker khác. Message 256 KB theo khóa học, nay là 1 MiB, retention mặc định 4 ngày, tối đa 14 ngày. Tính tiền theo request, long polling tối đa 20 giây, cross-account thì dùng queue policy. Thấy từ khóa decouple, asynchronous, buffer, worker pool thì chọn SQS; một sự kiện cần nhiều xử lý độc lập thì dùng SNS fan-out tới nhiều SQS queue."
+   "Khi đi thi nhớ nhé: instance chết giữa chừng thì message không bị xóa, hết visibility timeout sẽ hiện lại cho worker khác. Message tối đa 1 MB, retention mặc định 4 ngày, tối đa 14 ngày. Tính tiền theo request, mỗi request tới 10 message và 1 MB, long polling tối đa 20 giây, cross-account thì dùng queue policy. Thấy từ khóa decouple, asynchronous, buffer, worker pool thì chọn SQS; một sự kiện cần nhiều xử lý độc lập thì dùng SNS fan-out tới nhiều SQS queue."
   ]
  },
  "SQS - lifecycle": {

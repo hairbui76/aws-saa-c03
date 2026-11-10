@@ -271,5 +271,8 @@
   "ASFF": "AWS Security Finding Format",
   "AMP": "Amazon Managed Service for Prometheus",
   "ADOT": "AWS Distro for OpenTelemetry",
-  "KSP": "Key Storage Provider"
+  "KSP": "Key Storage Provider",
+  "RUM": "Real User Monitoring",
+  "NFC": "Near Field Communication",
+  "GPS": "Global Positioning System"
 }

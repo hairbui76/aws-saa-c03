@@ -2,6 +2,7 @@
 tags: [saa-c03, s14-serverless-and-application-services, messaging, streaming, decoupling, comparison]
 aliases: [SQS vs SNS, SQS vs Kinesis, SNS vs SQS vs Kinesis, Queue vs Topic vs Stream]
 lessons: ["0252 Simple Notification Service", "0261 Simple Queue Service", "0265 Kinesis Data Streams"]
+videos: ["235 [ASSOCIATESHARED] Simple Notification Service (SNS)", "239 [ASSOCIATESHARED] Simple Queue Service (SQS)", "243 [ASSOCIATESHARED] Kinesis Data Streams"]
 ---
 # Compare - SQS vs SNS vs Kinesis
 
@@ -44,15 +45,15 @@ flowchart LR
 | Cách nhận | **Pull** (consumer poll; short/long polling) | **Push** tới subscriber | **Pull** (consumer đọc từ shard, tự theo dõi vị trí) |
 | Quan hệ gửi/nhận | 1 nhóm producer → 1 nhóm consumer (one-to-one về mặt khái niệm) | 1 publisher → **nhiều** subscriber, mỗi subscriber nhận bản sao | **Rất nhiều** producer → **nhiều** consumer, mỗi consumer đọc toàn bộ stream |
 | Sau khi đọc | Consumer **xóa** message; không xóa thì hiện lại sau **visibility timeout** | Không lưu lại để đọc sau; giao xong là xong (có **retry**) | Dữ liệu **vẫn nằm trong window**, đọc lại/replay được |
-| Persistence | Tạm thời: mặc định 4 ngày, tối đa **14 ngày**, **không có window** | Không persistence cho consumer | **Rolling window** mặc định **24 h**, tối đa **365 ngày** (thêm phí) |
-| Thứ tự / delivery | Standard: **at-least-once**, best-effort order. FIFO: **exactly-once**, giữ thứ tự (300 msg/s, 3.000 với batching) | At-least-once (hiện nay có thêm SNS FIFO topic) | Giữ thứ tự **trong mỗi shard** |
-| Kích thước | **256 KB**/message theo khóa học (SQS nay 1 MiB); lớn hơn → S3 + link | **256 KB**/message | **1 MB**/record |
-| Scaling | Tự động; Standard gần như vô hạn | Tự động trong region | Theo **shard**: mỗi shard **1 MB/s in, 2 MB/s out** (hoặc on-demand mode) |
-| Tính phí | Theo **request** (1 request = 0–10 message, tối đa 64 KB) | Theo publish + delivery | Theo **shard-giờ** + lượng dữ liệu đưa vào; window dài hơn đắt hơn |
+| Persistence | Tạm thời: mặc định 4 ngày, tối đa **14 ngày**; retention chỉ là **hạn chót để giao**, **không có window** để replay | Không persistence cho consumer | **Rolling window** mặc định **24 h**, tối đa **365 ngày** (thêm phí) |
+| Thứ tự / delivery | Standard: **at-least-once**, best-effort order. FIFO: **exactly-once**, giữ thứ tự (300 msg/s, 3.000 với batching; **high-throughput mode** cao hơn nhiều) | Standard topic: **at-least-once**, best-effort order. **FIFO topic**: thứ tự + loại trùng, **chỉ giao tới SQS** | Giữ thứ tự **trong mỗi shard** |
+| Kích thước | **1 MB**/message (bản khóa cũ: 256 KB); lớn hơn → S3 + link | **256 KB**/message | **1 MB**/record |
+| Scaling | Tự động; Standard gần như vô hạn | Tự động trong region | Theo **shard**: mỗi shard **1 MB/s in, 2 MB/s out**; **provisioned** (tự chọn số shard) hoặc **on-demand** (Kinesis tự quản lý shard) |
+| Tính phí | Theo **request** (1 request = 0–10 message, tối đa **1 MB**) | Theo publish + delivery | Provisioned: theo **shard** (càng nhiều shard càng đắt); on-demand: theo **GB ghi và đọc**; window dài hơn đắt hơn |
 | Mạng | Public AWS service | Public AWS service | Public AWS service |
 | Resilience | HA trong region | HA, regionally resilient | HA trong region |
 | Truy cập cross-account | **Queue policy** | **Topic policy** | IAM / resource policy |
-| Mã hóa at rest | SSE ([[KMS]]) | SSE | SSE ([[KMS]]) |
+| Mã hóa at rest | **SSE-SQS** hoặc **SSE-KMS** ([[KMS]]); in transit bắt buộc HTTPS | SSE bằng KMS key (mã hóa body message) | SSE ([[KMS]]) |
 | Use case kinh điển | Worker pool, buffer, decoupling, async | Thông báo, alert, **fan-out** | Ingest IoT/telemetry, click stream, log, analytics, dashboard real-time |
 
 ## Khi nào chọn cái nào
@@ -73,12 +74,12 @@ flowchart TB
 - **SQS**: một thành phần sinh việc, thành phần khác xử lý; hai bên không cần biết nhau, scale độc lập (ASG scale theo **độ dài queue**). Mỗi việc chỉ cần **một** worker làm.
 - **SNS**: một sự kiện cần **đẩy** tới nhiều nơi (email admin, Lambda, HTTP endpoint, queue). Nhiều dịch vụ AWS (CloudWatch alarm, CloudFormation, ASG) gửi thông báo qua SNS.
 - **Kinesis Data Streams**: hàng trăm/nghìn thiết bị đẩy dữ liệu liên tục, nhiều ứng dụng phân tích đọc cùng dữ liệu ở **độ chi tiết khác nhau** (mỗi giây, mỗi phút, mỗi giờ), cần giữ dữ liệu để đọc lại.
-- **Kết hợp SNS + SQS (fan-out)**: S3 event notification chỉ gửi một event tới một đích; muốn một upload kích hoạt nhiều job (480p, 720p, 1080p) thì đẩy vào **một SNS topic** có **nhiều SQS queue** subscribe, mỗi queue có ASG riêng. Adrian "nháy mắt" rất mạnh: dạng này **chắc chắn có trong đề**.
+- **Kết hợp SNS + SQS (fan-out)**: S3 event notification chỉ gửi một event tới một đích; muốn một upload kích hoạt nhiều job (480p, 720p, 1080p) thì đẩy vào **một SNS topic** có **nhiều SQS queue** subscribe, mỗi queue có ASG riêng. Adrian "nháy mắt" rất mạnh: dạng này **chắc chắn có trong đề**. Bài mới nêu thêm cách khác: bật **EventBridge làm đích của S3 event** rồi dùng **rule** định tuyến tới nhiều target.
 
 ### Các lựa chọn lân cận
 | Nếu đề nói... | Chọn | Ghi chú |
 |---|---|---|
-| Migrate broker on-prem, giữ **JMS/AMQP/MQTT/OpenWire/STOMP**, ít sửa code | [[Amazon MQ]] | Chạy trong VPC, cần private networking |
+| Migrate broker on-prem, giữ **JMS/AMQP/MQTT/OpenWire/STOMP**, ít sửa code | [[Amazon MQ]] | Broker private mặc định trong VPC, cần private networking |
 | Định tuyến **event** từ dịch vụ AWS/SaaS theo rule, lịch cron | [[EventBridge]] | Event bus + rule → target |
 | Đưa dữ liệu stream vào S3/Redshift/OpenSearch, **near real-time**, không quản lý consumer | [[Kinesis Data Firehose]] | Không phải real-time |
 | Phân tích SQL trên stream real-time | [[Kinesis Data Analytics]] | Đọc từ KDS/Firehose |
@@ -88,11 +89,11 @@ flowchart TB
 - Lăng kính của Adrian khi đọc câu hỏi SQS vs Kinesis: **"ingestion of data"** → **Kinesis**. **Worker pool / decoupling / asynchronous** → mặc định **SQS**, chỉ đổi khi có lý do mạnh. Đề luôn có 1–2 câu về hai dịch vụ này, thường có một câu bắt chọn giữa chúng.
 - **Nhiều consumer cùng đọc một dữ liệu** + **replay** → Kinesis (SQS: một message chỉ một consumer xử lý rồi xóa).
 - **Gửi tới nhiều subscriber** (email/SMS/HTTP/Lambda) → SNS; **nhiều job độc lập từ một event** → **SNS fan-out → SQS**.
-- **Giữ thứ tự + không trùng lặp** trong queue → **SQS FIFO** (nhớ giới hạn 300/3.000 msg/s). Throughput rất cao không cần thứ tự → SQS Standard.
+- **Giữ thứ tự + không trùng lặp** trong queue → **SQS FIFO** (mặc định 300/3.000 msg/s; cần hơn thì **high-throughput mode**). Throughput rất cao không cần thứ tự → SQS Standard. Pub/sub có thứ tự → **SNS FIFO topic** (chỉ tới SQS).
 - Cần **lưu dữ liệu stream lâu dài** sau window → Kinesis + **Firehose → S3**.
 - Payload lớn (video, file) → **không** đẩy qua SQS/SNS; lưu S3 rồi gửi link.
 - Giảm chi phí poll SQS / bớt response rỗng → **long polling** (`WaitTimeSeconds` tới 20 s).
-- Cả ba đều là **public service**; dịch vụ messaging nằm **trong VPC** cần private networking là [[Amazon MQ]], đừng nhầm.
+- Cả ba đều là **public service**; dịch vụ messaging **mặc định private trong VPC**, cần private networking, là [[Amazon MQ]], đừng nhầm.
 - Cross-account: SQS → **queue policy**, SNS → **topic policy**.
 
 ## Liên kết

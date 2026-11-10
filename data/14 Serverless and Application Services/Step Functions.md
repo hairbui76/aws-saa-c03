@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s14-serverless-and-application-services, serverless, workflow, orchestration]
-aliases: [AWS Step Functions, SFN, State Machine, Amazon States Language, ASL]
+aliases: [AWS Step Functions, SFN, State Machine, Amazon States Language, ASL, Croc Snack Bot]
 lessons: ["0253 Step Functions"]
+videos: ["236 [ASSOCIATESHARED] Step Functions"]
 ---
 # Step Functions
 
@@ -31,9 +32,10 @@ lessons: ["0253 Step Functions"]
 | Mặc định | Có | Không |
 | Thời gian tối đa | **1 năm** | **5 phút** |
 | Phù hợp | Workflow chạy dài, có trạng thái, cần audit | Xử lý event **khối lượng lớn**: IoT streaming, transform dữ liệu, mobile backend |
-| Ngữ nghĩa thực thi* | Exactly-once | At-least-once (async) / at-most-once (sync) |
+| Ngữ nghĩa thực thi | **Exactly-once**: an toàn cho việc **không bao giờ được lặp** (vd. thu tiền) | **At-least-once**: một phần việc có thể lặp lại, workload phải chịu được (at-most-once cho kiểu sync là bổ sung theo tài liệu AWS, bài không nói) |
+| Chọn khi | Việc chạy dài hoặc chỉ được xảy ra **một lần** | Việc **khối lượng lớn, ngắn**, kiểu transaction |
 
-\*Dòng ngữ nghĩa thực thi là bổ sung theo tài liệu AWS, khóa học chỉ yêu cầu nhớ thời lượng và loại workload.
+- Chọn loại workflow **khi tạo state machine**; lựa chọn này **cố định**, **không đổi được** sau khi tạo (ảnh hưởng tốc độ, thời lượng tối đa và một số tính năng).
 
 ### Các loại state
 | State | Chức năng |
@@ -43,13 +45,13 @@ lessons: ["0253 Step Functions"]
 | **Choice** | Rẽ nhánh theo input (vd. tồn kho khác nhau thì xử lý khác nhau) |
 | **Parallel** | Tạo các nhánh chạy **song song** |
 | **Map** | Nhận một **danh sách** (vd. các item trong đơn hàng) và chạy cùng tập hành động cho **từng phần tử** |
-| **Task** | **Một đơn vị công việc**: gọi dịch vụ khác như Lambda, AWS Batch, DynamoDB, ECS, SNS, SQS, Glue, SageMaker, EMR... |
-| (Pass) | Chuyển input sang output, có thể chèn dữ liệu; khóa học không nhắc |
+| **Task** | **Một đơn vị công việc**: gọi dịch vụ khác như Lambda, [[AWS Batch]], DynamoDB, ECS, SNS, SQS, Glue, SageMaker AI... |
+| **Pass** | Chuyển input thẳng sang output, **tùy chọn biến đổi hoặc chèn dữ liệu cố định**; hữu ích để test hoặc tái cấu trúc dữ liệu giữa các state |
 
 - State machine **không tự làm việc**: nó **điều phối (orchestrate)**. Các state luồng (Choice, Wait, Parallel, Map) điều khiển dòng chảy; **Task** state giao việc cho dịch vụ bên ngoài.
 
-## Cách hoạt động / Kiến trúc: Pet Cuddle-O-Tron
-Mèo Whiskers muốn nhắc Bob đến ôm nó; khoảng cách giữa các lần có thể **hơn 15 phút, thậm chí nhiều giờ** → không dùng Lambda đơn lẻ được → dùng Step Functions.
+## Cách hoạt động / Kiến trúc: Croc Snack Bot
+Cá sấu **CoolCrock** lúc nào cũng đói, muốn nhắc "người hầu" Bob mang snack tới; khoảng cách giữa các lần có thể vài phút, **hơn 15 phút, thậm chí nhiều giờ** → không dùng Lambda đơn lẻ được → dùng Step Functions. Bob không phải lúc nào cũng ở nhà nên cần nhắc qua **email** (khi ở máy tính) và **SMS** (khi ra ngoài).
 
 ```mermaid
 flowchart LR
@@ -67,14 +69,14 @@ flowchart LR
   S --> SL
 ```
 
-1. Bob tải web app (HTML + JS) từ S3; nhập số giây tới lần cuddle tiếp theo, message, email và/hoặc số điện thoại; bấm một trong 3 nút (email / SMS / cả hai).
+1. Bob tải web app phía client (HTML + JS) từ S3 bucket; đặt lời nhắc snack (thời gian chờ, kênh nhắc: email / SMS / cả hai).
 2. Request đi qua [[API Gateway]] → **API Lambda** → khởi chạy execution của state machine, truyền theo toàn bộ input.
 3. **Timer** (Wait) chờ đúng số giây → **Choice** chọn 1 trong 3 nhánh → **Task** gọi một hoặc cả hai Lambda: email qua **SES**, SMS qua [[SNS]].
-4. Toàn bộ ứng dụng là serverless; triển khai chi tiết trong [[Lab - Serverless App Pet-Cuddle-o-Tron]].
+4. Toàn bộ ứng dụng là serverless; state machine đóng vai **điều phối** cả giải pháp. Bài nói sẽ có demo, nhưng trong khóa mới mục này hiện chỉ là "(Coming Soon) Build A Serverless App - Croc Snack Bot", chưa có video; bản triển khai của khóa cũ: [[Lab - Serverless App Pet-Cuddle-o-Tron]].
 
 ## 🎯 Mẹo thi SAA-C03
 - Workflow **dài hơn 15 phút**, **nhiều bước**, có **rẽ nhánh/song song/chờ**, cần **giữ trạng thái**, hoặc có **bước phê duyệt của con người** → **Step Functions**, không xâu chuỗi Lambda.
-- **Standard = tối đa 1 năm**, mặc định, chạy dài. **Express = tối đa 5 phút**, cho khối lượng event lớn (IoT, streaming, mobile backend).
+- **Standard = tối đa 1 năm**, mặc định, chạy dài, **exactly-once** (việc không được lặp như thanh toán). **Express = tối đa 5 phút**, **at-least-once**, cho khối lượng event lớn (IoT, streaming, mobile backend). Loại workflow **không đổi được** sau khi tạo.
 - Từ khóa: "orchestrate", "state machine", "coordinate multiple AWS services", "visual workflow" → Step Functions.
 - Định nghĩa bằng **ASL (JSON)**; quyền qua **IAM role**.
 - Khởi chạy từ API Gateway, EventBridge, Lambda, IoT Rules.

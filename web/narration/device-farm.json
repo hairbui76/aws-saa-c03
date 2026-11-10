@@ -1,0 +1,17 @@
+{
+ "Device Farm": {
+  "sig": "10-152tlnj",
+  "steps": [
+   "Sơ đồ này nói về AWS Device Farm, dịch vụ kiểm thử ứng dụng web và mobile được quản lý, chạy test trên thiết bị và trình duyệt thật. Mọi cấu hình nằm trong một run, và run thuộc một project.",
+   "Đầu tiên developer tạo run và upload ứng dụng, ví dụ binary của app mobile. Device Farm phân tích binary để biết SDK, hệ điều hành tối thiểu và yêu cầu thiết bị.",
+   "Tiếp theo bạn chọn test: fuzz test có sẵn cho Android và iOS, hoặc framework được hỗ trợ như Appium, Instrumentation cho Android và XCTest cho iOS.",
+   "Sau đó chọn thiết bị muốn chạy test: Android hay iOS, điện thoại hay tablet, nhiều phiên bản hệ điều hành và kích thước màn hình.",
+   "Bạn còn đặt được trạng thái thiết bị: cài thêm app, bật hoặc tắt Wi-Fi, Bluetooth, GPS, NFC, chọn vị trí thiết bị và ngôn ngữ hệ điều hành.",
+   "Cấu hình xong thì test suite chạy, có thể là hàng trăm cấu hình, lặp lại nhiều lần theo quy trình của bạn.",
+   "Test chạy trên fleet thiết bị thật, gồm trình duyệt, điện thoại và tablet, không phải giả lập. Bạn không phải tự mua hay quản lý thiết bị nào.",
+   "Kết thúc, Device Farm trả về báo cáo chi tiết gồm kết quả test, log và các output khác cho từng thiết bị.",
+   "Nếu cần điều tra lỗi bằng tay, developer có thể kết nối từ xa vào thiết bị vật lý để xem và tái hiện lỗi, rồi thử cách sửa.",
+   "Khi đi thi, nhớ nhé: test app mobile hoặc web trên nhiều thiết bị thật, nhiều hệ điều hành và kích thước, không muốn tự mua thiết bị thì chọn AWS Device Farm."
+  ]
+ }
+}

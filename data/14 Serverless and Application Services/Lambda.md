@@ -2,10 +2,11 @@
 tags: [saa-c03, s14-serverless-and-application-services, serverless, compute, event-driven]
 aliases: [AWS Lambda, Lambda Function, FaaS, Function as a Service]
 lessons: ["0245 AWS Lambda PART1", "0246 AWS Lambda PART2", "0247 AWS Lambda PART3"]
+videos: ["229 [SHAREDALL] AWS Lambda - PART1", "230 [SHAREDALL] AWS Lambda - PART2", "231 [SHAREDALL] AWS Lambda - PART3"]
 ---
 # Lambda
 
-> **TL;DR:** Lambda là dịch vụ **Function as a Service (FaaS)**. Bạn đưa vào một đoạn code nhỏ, chạy ngắn và chỉ làm một việc; Lambda lo việc chạy nó và **chỉ tính tiền theo thời gian thực thi** (resource cấp × duration × số lần invoke). Đây là mảnh ghép compute trung tâm của [[Serverless Architecture]] và [[Event-Driven Architecture]] trên AWS.
+> **TL;DR:** Lambda là dịch vụ **Function as a Service (FaaS)**. Bạn đưa vào một đoạn code nhỏ, chạy ngắn và chỉ làm một việc; Lambda lo việc chạy nó và chỉ tính tiền cho **hai thứ**: **thời gian chạy** (resource cấp × duration của mỗi invocation) và **số request** gọi function. Đây là mảnh ghép compute trung tâm của [[Serverless Architecture]] và [[Event-Driven Architecture]] trên AWS.
 
 ## 🖼️ Sơ đồ
 ![[Lambda.excalidraw]]
@@ -18,12 +19,16 @@ lessons: ["0245 AWS Lambda PART1", "0246 AWS Lambda PART2", "0247 AWS Lambda PAR
 
 ### Function, runtime và runtime environment
 - **Lambda function** nên hiểu là một *đơn vị cấu hình*: code (deployment package) + runtime + resource + các cấu hình khác (environment variables, role, networking...).
-- Khi tạo function phải chọn **runtime** (ngôn ngữ + phiên bản), ví dụ Python, Node.js, Java, Go, Ruby, C#/.NET. Khóa học dùng ví dụ Python 3.8 (runtime này nay đã hết hỗ trợ; hiện dùng Python 3.12/3.13).
+- Khi tạo function phải chọn **runtime** (ngôn ngữ + phiên bản), ví dụ Python, Node.js, Java, .NET, Ruby. Bài dùng ví dụ **Python 3.14**. Mỗi function chỉ dùng **một runtime** tại một thời điểm.
 - Mỗi lần **invoke**, deployment package được tải về và chạy trong một **runtime environment** (còn gọi là **execution context**) được dựng riêng cho runtime đó (Python thì có sẵn Python + các module cần thiết).
-- **Custom runtime** (ví dụ Rust) có thể làm qua **Lambda layers**, nhiều cái do cộng đồng xây dựng.
+- Ngôn ngữ biên dịch (**Go, Rust**): dùng **OS-only runtime** `provided.al2023` (chỉ có Amazon Linux, không kèm language runtime vì binary đã biên dịch không cần). Biên dịch code thành binary, kèm **runtime interface client**, Lambda sẽ chạy nó. (Bản khóa cũ nêu custom runtime qua **Lambda layers**, bài mới không nói.)
+- **Hai kiểu deployment package**:
+  - **ZIP archive**: tối đa **50 MB (zipped)** và **250 MB (unzipped)**.
+  - **Container image** lưu trong **[[ECR]]**: tối đa **10 GB**. Dùng khi dependency không vừa 250 MB, ví dụ thư viện machine learning.
 - **Stateless**: về mặt kiến trúc phải **giả định mỗi lần invoke là một môi trường mới tinh**, không có dữ liệu sót lại từ lần trước. Code phải chạy đúng 100% trong môi trường sạch (môi trường có thể được tái sử dụng, xem phần cold/warm start bên dưới, nhưng không được trông vào điều đó).
 
 ### Docker và Lambda: bẫy thi
+(Bản khóa cũ nêu, bài mới không nói; bài mới chỉ dạy container image như một kiểu deployment package ở trên.)
 - Trong đề thi, nghe thấy **"Docker"** thì hiểu là **không phải Lambda**: Docker = containerized computing truyền thống (ví dụ [[ECS]], [[EKS]]). Docker là *anti-pattern* cho Lambda.
 - Lambda **có hỗ trợ container image**, nhưng đó là image được build riêng để chạy trong môi trường Lambda; điểm chung duy nhất là tận dụng được quy trình build image sẵn có. Đừng nhầm "Docker image cho ECS" với "container image cho Lambda". Xem [[Containers Fundamentals]].
 
@@ -36,7 +41,7 @@ lessons: ["0245 AWS Lambda PART1", "0246 AWS Lambda PART2", "0247 AWS Lambda PAR
 | Timeout tối đa | **900 giây = 15 phút** |
 
 - **15 phút** là con số *phải nhớ*. Việc cần chạy lâu hơn thì không dùng Lambda trực tiếp; dùng [[Step Functions]] để ghép workflow dài, hoặc dùng compute khác (ECS/Fargate, EC2, Batch).
-- Billing: theo memory cấp phát × thời gian chạy của từng invocation.
+- Billing: theo memory cấp phát × thời gian chạy của từng invocation, cộng **phí request** cho mỗi lần gọi function.
 
 ### Use case điển hình (slide)
 | Use case | Bộ dịch vụ |
@@ -44,15 +49,17 @@ lessons: ["0245 AWS Lambda PART1", "0246 AWS Lambda PART2", "0247 AWS Lambda PAR
 | Serverless application | S3 + [[API Gateway]] + Lambda |
 | File processing (vd. watermark ảnh) | S3 + [[S3 Events]] + Lambda |
 | Database trigger | DynamoDB + Streams + Lambda ([[DynamoDB Streams and Triggers]]) |
-| Serverless cron | [[EventBridge]] / CloudWatch Events + Lambda |
+| Serverless cron | **EventBridge Scheduler** + Lambda (xem [[EventBridge]]) |
 | Real-time stream processing | [[Kinesis Data Streams]] + Lambda |
 
 ## Networking: Public vs VPC
 Lambda có **2 chế độ mạng** và đề thi hỏi cả hai.
 
+- Về kỹ thuật, **mọi Lambda function đều chạy trong một VPC**; ở chế độ mặc định, VPC đó do **Lambda service sở hữu và quản lý**, bạn không bao giờ thấy. "VPC networking" thực chất là **gắn function vào VPC trong account của bạn**.
+
 ### Public (mặc định)
-- Function chạy trong mạng public của AWS → truy cập được **public AWS services** (SQS, DynamoDB...) và **Internet** (vd. gọi API IMDb), miễn có quyền.
-- **Hiệu năng tốt nhất**: không cần networking riêng cho từng khách hàng, chạy trên phần cứng/mạng dùng chung.
+- Function chạy trong mạng public của AWS → truy cập được **public AWS services** (SQS, DynamoDB...) và **Internet** (vd. lấy dự báo thời tiết từ BOM, Cục Khí tượng Úc), miễn có quyền.
+- **Đơn giản nhất, hiệu năng tốt nhất**: không cần networking riêng cho từng khách hàng, AWS không phải tạo network interface trong VPC của bạn, **không có độ trễ setup khi deploy function**; chạy trên mạng dùng chung do service quản lý.
 - **Giới hạn lớn**: **không truy cập được tài nguyên trong VPC** (Aurora, EC2, EFS ở private subnet) trừ khi chúng có địa chỉ public và security cho phép truy cập từ ngoài.
 
 ### VPC (private) Lambda
@@ -76,8 +83,9 @@ flowchart LR
   HP --> ENI
 ```
 
-- **Kiến trúc cũ**: mỗi function (mỗi lần invoke/mỗi concurrency) tạo một ENI trong VPC khách hàng → invoke chậm, scale kém, tốn IP trong subnet. Đây là lý do ngày xưa "đặt Lambda trong VPC là ý tồi".
-- **Kiến trúc mới** (giống Fargate): AWS gom các function trong account/region, mỗi **tổ hợp duy nhất security group + subnet** chỉ cần **một ENI**. ENI được tạo **khi cấu hình** function (~**90 giây**, chỉ một lần khi tạo hoặc đổi network config), **không gây trễ mỗi lần invoke**. Ví dụ: mọi function dùng cùng SG nhưng nhiều subnet → 1 ENI/subnet; cùng subnet + cùng SG → 1 ENI cho tất cả.
+- Function **không thực sự chạy trong subnet của bạn**: nó luôn chạy trong **AWS Lambda service VPC**. Ở VPC mode, một hoặc nhiều **Hyperplane ENI** được đưa vào VPC của bạn và map về function. ENI này **thấy được** trong account (trong một subnet cụ thể, chịu cùng security control) nhưng **bạn không quản lý trực tiếp**: muốn đổi SG hay subnet thì sửa **VPC config của function**, Lambda tự lo phần ENI.
+- Không phải mỗi function một ENI: mỗi **tổ hợp duy nhất security group + subnet** (trong account/region) chỉ cần **một ENI**, các function dùng chung. Ví dụ: mọi function dùng cùng SG nhưng nhiều subnet → 1 ENI/subnet; cùng subnet + cùng SG → 1 ENI cho tất cả.
+- (Bản khóa cũ nêu, bài mới không nói: kiến trúc cũ mỗi function/concurrency tạo một ENI → invoke chậm, tốn IP, nên ngày xưa "đặt Lambda trong VPC là ý tồi"; ENI kiểu mới được tạo một lần khi cấu hình, khoảng 90 giây, không gây trễ mỗi lần invoke.)
 
 ## Bảo mật: hai lớp permission
 | Lớp | Bản chất | Kiểm soát điều gì |
@@ -85,30 +93,30 @@ flowchart LR
 | **Execution role** | [[IAM Roles\|IAM role]] có trust policy tin Lambda; Lambda assume role để lấy temporary credentials | Function **được làm gì** với dịch vụ khác (đọc DynamoDB, ghi S3...). Tương tự [[EC2 Instance Roles]] |
 | **Resource policy** | Resource-based policy gắn vào function (giống bucket policy của S3) | **Ai được invoke/tương tác** với function: account khác, hoặc dịch vụ như SNS, S3 |
 
-- Resource policy được tự động sửa khi bạn tích hợp dịch vụ khác với Lambda; khóa học nói chỉ chỉnh được qua CLI/API (hiện nay console cũng cho xem và thêm permission statement trong mục Configuration → Permissions).
+- Resource policy thường được **tự động thêm statement** khi bạn thêm trigger trong console (nếu bạn có quyền); bạn cũng có thể **tự quản lý nó trong console hoặc qua CLI**.
 
 ## Logging và monitoring
 - **[[CloudWatch Logs]]**: output của function, log message, lỗi, thông tin duration. Mặc định log group tên `/aws/lambda/<tên function>`.
 - **CloudWatch (metrics)**: số invocation, success/failure, retry, latency... (xem [[CloudWatch Basics]]).
-- **X-Ray**: **distributed tracing**, lần theo đường đi của user/session qua ứng dụng serverless. Chỉ cần nhớ từ khóa "X-Ray = distributed tracing".
+- **[[X-Ray]]**: **distributed tracing**, lần theo đường đi của user/session qua ứng dụng serverless. Chỉ cần nhớ từ khóa "X-Ray = distributed tracing".
 - **Muốn ghi được CloudWatch Logs, execution role phải có quyền** (có sẵn managed policy kiểu `AWSLambdaBasicExecutionRole`). Kịch bản thi kinh điển: "Lambda không chạy, CloudWatch Logs trống trơn" → thiếu quyền logging trong execution role.
 
 ## Ba kiểu invocation
 | Kiểu | Ai dùng | Ai chờ kết quả | Ai xử lý lỗi/retry |
 |---|---|---|---|
-| **Synchronous** | CLI/API gọi trực tiếp; [[API Gateway]] → Lambda | Client chờ đến khi xong | **Client** tự retry |
+| **Synchronous** | CLI/API gọi trực tiếp, **function URL**; [[API Gateway]] → Lambda | Client chờ đến khi xong | **Client** tự retry |
 | **Asynchronous** | Dịch vụ AWS đẩy event: S3 events, SNS, EventBridge... | Không ai chờ, nguồn "gửi rồi quên" | **Lambda** tự retry (cấu hình **0–2 lần**) |
-| **Event source mapping** | Stream/queue không tự sinh event: SQS, Kinesis, DynamoDB Streams, Amazon MSK (Kafka) | Lambda poll nguồn | Batch lỗi → DLQ (SQS/SNS) |
+| **Event source mapping** | Stream/queue không tự sinh event: SQS, Kinesis, DynamoDB Streams, Amazon MQ, DocumentDB change streams, Amazon MSK (Kafka) | Lambda poll nguồn | Batch lỗi → **on-failure destination** (SQS, SNS, S3, Kafka topic) |
 
 ### Synchronous
-- Client gửi request và đợi; kết quả (thành công hay lỗi) trả về ngay trong request đó.
+- Client gửi request (CLI/API, hoặc gọi **function URL** của function) và đợi; kết quả (thành công hay lỗi) trả về ngay trong request đó.
 - Thường dùng khi **con người** gọi (trực tiếp hoặc qua API Gateway).
 
 ### Asynchronous
 - Ví dụ: upload ảnh lên S3 → S3 event → Lambda tạo thumbnail, ghi DynamoDB. S3 không đợi gì.
 - Code phải **idempotent**: chạy lại bao nhiêu lần kết quả vẫn như nhau. Ví dụ ngân hàng: "đặt số dư = 20$" là idempotent; "cộng thêm 10$" thì không (retry có thể thành 30$). Function nên kết thúc bằng việc *làm cho một trạng thái trở thành đúng*, không cộng dồn/trừ dồn.
 - Event không xử lý được sau các lần retry → **Dead Letter Queue** để chẩn đoán (xem [[SQS Dead Letter Queues]]).
-- **Destinations**: gửi kết quả xử lý tới SQS, SNS, Lambda khác hoặc EventBridge; cấu hình destination **riêng cho success và failure**.
+- **Destinations**: gửi event đã xử lý tới SQS, SNS, **S3**, Lambda khác hoặc EventBridge; cấu hình destination **riêng cho success và failure**. Riêng **S3 chỉ làm destination khi failure**.
 
 ### Event source mapping
 ```mermaid
@@ -116,9 +124,10 @@ flowchart LR
   P["Producers (telemetry)"] --> K["Kinesis Data Stream"]
   ESM["Event Source Mapping"] -- "poll, lấy source batch" --> K
   ESM -- "event batch" --> F["Lambda function"]
-  ESM -- "batch lỗi liên tục" --> DLQ["DLQ: SQS / SNS"]
+  ESM -- "batch lỗi" --> OFD["On-failure destination: SQS / SNS / S3 / Kafka"]
 ```
-- Thành phần ẩn **event source mapping** poll nguồn, lấy **source batch**, chia theo **batch size** thành **event batch** gửi cho function. Một invocation có thể nhận hàng trăm record → phải chỉnh batch size để không vượt timeout 15 phút.
+- Thành phần ẩn **event source mapping** poll nguồn, lấy **source batch**, chia theo **batch size** thành **event batch** gửi cho function. Một invocation có thể nhận hàng trăm record → phải chỉnh batch size để không vượt timeout 15 phút. Mặc định cả event batch được xử lý **thành công hoặc thất bại cùng nhau**.
+- Batch thất bại bị bỏ có thể gửi tới **on-failure destination**: **SQS, SNS, S3 hoặc Kafka topic** để phân tích tiếp. Đây **không phải** DLQ của async invocation; nhớ đúng tên.
 - **Điểm hay thi về permission**:
   - Async: nguồn *đẩy* event tới Lambda → function **không cần quyền với nguồn** (trừ khi muốn đọc thêm dữ liệu, ví dụ tải object S3 thật sự).
   - Event source mapping: mapping *đọc* từ nguồn **bằng quyền của execution role** → execution role **phải có quyền Kinesis/SQS/DynamoDB Streams**, dù code function không trực tiếp gọi nguồn.
@@ -131,7 +140,7 @@ flowchart LR
 ## Cold start, warm start, provisioned concurrency
 | Tình huống | Điều gì xảy ra | Thời gian (slide) |
 |---|---|---|
-| **Cold start** | Tạo execution context mới: cấp phần cứng, cài runtime, tải và cài deployment package rồi mới chạy code | **~100 ms trở lên** |
+| **Cold start** | Tạo execution context mới: cấp phần cứng, cài runtime, tải và cài deployment package rồi mới chạy code | **~100 ms – 1 s** |
 | **Warm start** | Invoke lại sau không lâu → dùng lại context cũ, chỉ nhận event mới | **~1–2 ms** |
 
 - Context lâu không dùng sẽ bị xóa → lần sau lại cold start.
@@ -143,18 +152,19 @@ flowchart LR
   - Nhưng code vẫn phải chạy đúng nếu môi trường hoàn toàn mới: **không bao giờ giả định** dữ liệu đã có sẵn.
 
 ## Demo / Lab
-Demo tự động hóa EC2 với Lambda + EventBridge: xem chi tiết ở [[EventBridge]]. Điểm rút ra cho Lambda: tạo execution role (trust Lambda, quyền CloudWatch Logs + `ec2:StartInstances/StopInstances`), truyền danh sách instance qua **environment variable** (`EC2_INSTANCES`), test function bằng test event (event chỉ là JSON), xem output trong log group `/aws/lambda/<function>`.
+Demo tự động hóa EC2 với Lambda + EventBridge: xem chi tiết ở [[EventBridge]]. Điểm rút ra cho Lambda: tạo execution role (trust Lambda, inline policy cho CloudWatch Logs + start/stop EC2), truyền danh sách instance qua **environment variable** (`EC2_INSTANCES`), test function bằng test event JSON (ví dụ `"action": "stop"`), xem output trong log group của function ở CloudWatch Logs.
 
 ## 🎯 Mẹo thi SAA-C03
-- **Timeout tối đa 15 phút (900 s)**. Đề nói job chạy lâu hơn → không phải Lambda; nghĩ tới [[Step Functions]], ECS/Fargate, EC2, Batch.
+- **Timeout tối đa 15 phút (900 s)**. Đề nói job chạy lâu hơn → không phải Lambda; nghĩ tới [[Step Functions]], ECS/Fargate, EC2, [[AWS Batch]].
+- Thư viện lớn (ML) không vừa ZIP **250 MB unzipped** → deployment package dạng **container image** (tối đa **10 GB**, lưu ở ECR).
 - **"Docker" trong đề ≈ ECS/EKS, không phải Lambda.**
 - Memory 128 MB–10 GB, vCPU tỉ lệ theo memory (không chọn trực tiếp); `/tmp` 512 MB–10 GB.
 - Lambda **public (mặc định) không vào được VPC**; Lambda **trong VPC không ra được Internet/AWS public** nếu không có [[NAT Gateway]] / VPC endpoint. "Hãy đối xử với Lambda trong VPC như mọi tài nguyên khác trong VPC".
 - VPC Lambda cần quyền EC2 networking trong execution role để tạo ENI.
 - **Execution role** = function làm được gì; **resource policy** = ai được gọi function (cross-account, SNS, S3).
 - Logs trống → kiểm tra quyền CloudWatch Logs của execution role. "Distributed tracing" → **X-Ray**.
-- Async invocation → Lambda retry (0–2) → code phải **idempotent**; dùng DLQ/destinations cho event lỗi.
-- **Event source mapping** (SQS, Kinesis, DynamoDB Streams, MSK) dùng **quyền của execution role** để đọc nguồn.
+- Async invocation → Lambda retry (0–2) → code phải **idempotent**; dùng DLQ/destinations cho event lỗi (S3 chỉ là destination khi failure).
+- **Event source mapping** (SQS, Kinesis, DynamoDB Streams, MQ, DocumentDB, MSK) dùng **quyền của execution role** để đọc nguồn; batch lỗi → **on-failure destination** (không gọi là DLQ).
 - Version immutable + có ARN riêng; alias đổi được; `$LATEST` không immutable.
 - Cold start → **provisioned concurrency**; tái sử dụng connection bằng cách khai báo ngoài handler.
 - Lambda đứng sau [[API Gateway]] phải trả lời trong **29 giây**, không phải 15 phút (quá → 504).
@@ -163,5 +173,6 @@ Demo tự động hóa EC2 với Lambda + EventBridge: xem chi tiết ở [[Even
 - Tiên quyết: [[Event-Driven Architecture]], [[IAM Roles]], [[Containers Fundamentals]]
 - Dùng cùng: [[API Gateway]], [[EventBridge]], [[SNS]], [[SQS]], [[Kinesis Data Streams]], [[S3 Events]], [[DynamoDB Streams and Triggers]], [[CloudWatch Logs]]
 - Kiến trúc: [[Serverless Architecture]], [[Step Functions]], [[Lab - Serverless App Pet-Cuddle-o-Tron]]
+- Giám sát và compute lân cận: [[X-Ray]], [[AWS Batch]], [[ECR]]
 - Mạng: [[NAT Gateway]], [[Gateway VPC Endpoints]], [[Security Groups]]
 - Phân biệt với: [[ECS Launch Types EC2 vs Fargate]], [[EC2 Basics]], [[Lambda@Edge]]

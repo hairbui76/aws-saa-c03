@@ -2,6 +2,7 @@
 tags: [saa-c03, s14-serverless-and-application-services, messaging]
 aliases: [Delay Queue, DelaySeconds, Message Timers]
 lessons: ["0263 SQS Delay Queues"]
+videos: ["241 SQS Delay Queues"]
 ---
 # SQS Delay Queues
 

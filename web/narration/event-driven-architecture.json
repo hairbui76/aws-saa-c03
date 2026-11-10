@@ -14,7 +14,7 @@
  "Event-Driven Architecture - flow": {
   "sig": "7-369a79",
   "steps": [
-   "Sơ đồ này có hai phần: worker fleet dựa trên queue của CatTube, và kiến trúc event-driven. Queue cắt đứt sự phụ thuộc đồng bộ, còn event router giúp không phải nối queue giữa mọi cặp.",
+   "Sơ đồ này có hai phần: worker fleet dựa trên queue của RooTube, và kiến trúc event-driven. Queue cắt đứt sự phụ thuộc đồng bộ, còn event router giúp không phải nối queue giữa mọi cặp.",
    "Bob upload video 4K về mèo Whiskers lên upload tier. Đây là điểm khởi đầu của cả luồng xử lý.",
    "Upload tier lưu video master vào S3, rồi gửi một message vào SQS chứa vị trí object và các kích thước cần render. Gửi xong là upload tier hết việc, không cần biết processing có chạy hay không.",
    "Worker EC2 poll queue, lấy message ở đầu, tải video từ S3 về transcode, ghi kết quả lại S3, rồi xóa message khỏi queue.",

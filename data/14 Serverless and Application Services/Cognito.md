@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s14-serverless-and-application-services, security, identity, federation]
-aliases: [Amazon Cognito, Cognito User Pools, Cognito Identity Pools, User Pool, Identity Pool, Web Identity Federation]
+aliases: [Amazon Cognito, Cognito User Pools, Cognito Identity Pools, User Pool, Identity Pool, Web Identity Federation, Managed login]
 lessons: ["0269 Amazon Cognito User and Identity Pools"]
+videos: ["246 Amazon Cognito - User and Identity Pools"]
 ---
 # Cognito
 
@@ -20,27 +21,27 @@ Ba chức năng tổng thể:
 - **Authorization**: quản lý quyền truy cập vào dịch vụ.
 - **User management**: tạo và quản lý một **user database serverless**.
 
-Adrian nhấn mạnh tên gọi trong Cognito "rất tệ", và đây là lý do phần lớn người học bị rối. Cần tách bạch hai thành phần dưới đây.
+Giảng viên nhấn mạnh tên gọi trong Cognito rất dễ gây rối, và đây là lý do phần lớn người học bị rối. Cần tách bạch hai thành phần dưới đây.
 
 ### User Pools: sign-in và nhận JWT
 - Mục tiêu cuối: user **đăng nhập** thành công và nhận về **JSON Web Token (JWT)**.
 - Tính năng:
   - **User directory** và **profile**, **sign-up / sign-in**.
-  - **Web UI dựng sẵn, tùy biến được** cho màn hình đăng nhập.
-  - Bảo mật: **MFA**, kiểm tra **compromised credentials**, **account takeover protection**, xác minh **phone/email**.
+  - **Web UI dựng sẵn, tùy biến được** cho màn hình đăng nhập, gọi là **managed login**.
+  - Bảo mật: **MFA**, kiểm tra **compromised credentials**, **account takeover protection**, xác minh **phone/email**. Hai tính năng compromised credentials check và account takeover protection **cần feature plan Plus**.
   - Workflow tùy biến và **user migration** qua **[[Lambda]] triggers**.
 - **Social sign-in và federation**: ngoài user nội bộ, cho phép đăng nhập bằng **Facebook, Google, Amazon, Apple**, OpenID Connect, và **SAML** IdP. Dù đăng nhập bằng cách nào, kết quả đều là **một user pool user** và **một loại token duy nhất** (user pool token).
 - JWT dùng được cho:
   - Ứng dụng tự quản (app chạy trên server của bạn, database bạn tự quản).
-  - **[[API Gateway]]**: chấp nhận user pool token (JWT) trực tiếp để xác thực.
+  - **[[API Gateway]]**: chấp nhận user pool token (JWT) **trực tiếp** để xác thực, hoặc qua **Lambda authorizer**.
 - **Điểm quan trọng nhất**: user pool **không cấp quyền truy cập dịch vụ AWS**. Hầu hết dịch vụ AWS **không** dùng JWT; chúng cần **AWS credentials** thật. Hãy hình dung user pool là "một database user (có thể gồm cả identity bên ngoài), đăng nhập xong thì nhận JWT, hết".
 
 ### Identity Pools: đổi identity lấy AWS credentials
 - Mục tiêu: **đổi (swap)** một loại identity lấy **temporary AWS credentials** để truy cập tài nguyên AWS (S3, DynamoDB, SQS...).
 - Hai loại identity:
   - **Unauthenticated identities (guest)**: cho khách truy cập có giới hạn mà không cần đăng ký. Ví dụ: game mobile lưu **high score/leaderboard vào [[DynamoDB Architecture|DynamoDB]]** mà không bắt user tạo tài khoản.
-  - **Authenticated / federated identities**: token từ **Google, Facebook, Twitter, Amazon, SAML 2.0** (đăng nhập doanh nghiệp), và cả **user pool identity**. Với identity pool, user pool chỉ là **thêm một loại identity provider**.
-- Cơ chế: identity pool được cấu hình **ít nhất hai [[IAM Roles|IAM role]]**: một **Authenticated Role** và một **Unauthenticated Role**. Cognito **assume role thay mặt identity**, tạo **temporary credentials** và trả về app. Quyền app có được = quyền của role.
+  - **Authenticated / federated identities**: token từ **Google, Facebook, X (Twitter), Amazon, SAML 2.0** (đăng nhập doanh nghiệp), và cả **user pool identity**. Với identity pool, user pool chỉ là **thêm một loại identity provider**.
+- Cơ chế: identity pool được cấu hình role: **ít nhất một [[IAM Roles|IAM role]] cho authenticated identity**, và **tùy chọn** một role cho **unauthenticated (guest) identity**. (Bản khóa cũ nói ít nhất hai role.) Mọi thứ dựa trên **trust**: IdP mà ta tin nói identity đã xác thực thì identity pool đổi nó lấy credentials. Cognito **assume role thay mặt identity**, tạo **temporary credentials** và trả về app. Quyền app có được = quyền của role.
 - Credentials hết hạn → app gọi lại Cognito để **làm mới**. App **không lưu credentials lâu dài** ở đâu cả.
 - Mỗi external IdP muốn hỗ trợ cần **một cấu hình riêng** trong identity pool (5 IdP → 5 cấu hình, 5 loại token).
 - Quá trình đổi token của external IdP lấy AWS credentials gọi là **Web Identity Federation** (thuật ngữ gặp cả trong đề thi lẫn thực tế).
@@ -95,7 +96,7 @@ sequenceDiagram
 | Nguồn identity | User nội bộ + social + SAML/OIDC | External IdP token, user pool token, hoặc guest |
 | Truy cập dịch vụ AWS trực tiếp | **Không** (trừ vài dịch vụ như API Gateway nhận JWT) | **Có**, theo quyền của role |
 | Guest access | Không | Có (**unauthenticated role**) |
-| Tính năng bảo mật | MFA, compromised credentials check, account takeover protection, verify phone/email | Phân quyền qua IAM role |
+| Tính năng bảo mật | Managed login, MFA, verify phone/email; compromised credentials check + account takeover protection (**Plus plan**) | Phân quyền qua IAM role |
 | Từ khóa | "sign-in", "user directory", "JWT" | "temporary credentials", "federation", "guest" |
 
 ## Quy mô
@@ -106,7 +107,8 @@ sequenceDiagram
 - Đáp án nói dùng **user pool token (JWT) để truy cập trực tiếp S3/DynamoDB** → sai; cần identity pool để đổi lấy AWS credentials.
 - **[[API Gateway]]** có thể dùng **Cognito User Pool authorizer** để xác thực bằng JWT trực tiếp.
 - App mobile/web có hàng triệu user cần truy cập tài nguyên AWS → **Cognito Identity Pool** (web identity federation), không tạo IAM user.
-- Cho người chưa đăng nhập truy cập giới hạn (guest) → **unauthenticated identities** của identity pool.
+- Cho người chưa đăng nhập truy cập giới hạn (guest) → **unauthenticated identities** của identity pool (role cho guest là **tùy chọn**, phải cấu hình mới có).
+- Cần kiểm tra **compromised credentials** / **account takeover protection** cho user pool → bật **feature plan Plus**.
 - Hỗ trợ nhiều social IdP mà muốn đơn giản hóa → **user pool làm IdP trung gian + identity pool**.
 - Đăng nhập social cho app với giao diện sẵn, MFA, xác minh email → **User Pool**.
 - Thuật ngữ **Web Identity Federation** = đổi token IdP bên ngoài lấy AWS credentials.
@@ -115,4 +117,5 @@ sequenceDiagram
 - Tiên quyết: [[IAM Roles]], [[IAM Users and ARNs]], [[JSON]]
 - Dùng cùng: [[API Gateway]], [[Lambda]], [[DynamoDB Architecture]], [[S3 Basics]], [[SQS]], [[Serverless Architecture]]
 - Liên quan: [[MFA]], [[Directory Service]], [[IAM Basics]]
+- Cùng section, cho app web/mobile: [[Device Farm]] (test app trên thiết bị thật)
 - Section: [[_MOC 14 Serverless and Application Services]]

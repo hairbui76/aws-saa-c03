@@ -2,6 +2,7 @@
 tags: [saa-c03, s13-ha-and-scaling, ha-and-scaling, architecture, serverless, decoupling]
 aliases: [EDA, Event Driven Architecture, Monolith vs Tiered vs Microservices, Queue-based decoupling, Worker fleet]
 lessons: ["0243 ASSOCIATESHARED Architecture Deep Dive PART1", "0244 ASSOCIATESHARED Architecture Deep Dive PART2"]
+videos: ["227 [ASSOCIATESHARED] Architecture Deep Dive - PART1", "228 [ASSOCIATESHARED] Architecture Deep Dive - PART2"]
 ---
 # Event-Driven Architecture
 
@@ -15,7 +16,7 @@ lessons: ["0243 ASSOCIATESHARED Architecture Deep Dive PART1", "0244 ASSOCIATESH
 *Mở bằng plugin Excalidraw để chỉnh sửa · ảnh tĩnh: [[Event-Driven Architecture - flow.svg]]*
 
 ## Khái niệm cốt lõi
-Ví dụ xuyên suốt là **CatTube**: Bob upload video 4K về mèo Whiskers đi nghỉ. Hệ thống phải transcode ra 1080p, 720p, 480p (phần tốn tài nguyên nhất), ngoài ra còn hiển thị video, quản lý playlist/channel, lưu và đọc database. Ba thành phần minh họa: **Upload**, **Processing**, **Store and Manage**.
+Ví dụ xuyên suốt là **RooTube** (nền tảng chia sẻ video): Bob upload video 4K về kỳ nghỉ ở Úc. Hệ thống phải transcode ra 1080p, 720p, 480p (phần tốn tài nguyên nhất), ngoài ra còn hiển thị video, quản lý playlist/channel, lưu và đọc database. Ba thành phần minh họa: **Upload**, **Processing**, **Store and Manage**.
 
 ### 1. Monolithic
 - Mọi thành phần nằm trong một "hộp đen", một code base.
@@ -37,7 +38,7 @@ Ví dụ xuyên suốt là **CatTube**: Bob upload video 4K về mèo Whiskers �
 
 ### 4. Queue-based decoupled (async)
 - **Queue**: hệ thống nhận message (send) và cho phép lấy message ra (receive/poll). Thường có thứ tự **FIFO**, nhưng không phải queue nào cũng đảm bảo điều đó (ví dụ [[SQS Standard vs FIFO|SQS Standard]] chỉ best-effort ordering).
-- Luồng xử lý của CatTube:
+- Luồng xử lý của RooTube:
   1. Upload tier lưu video master 4K vào [[S3 Basics|S3]] rồi gửi **message** vào queue. Message chứa vị trí object trong S3 và các kích thước cần render.
   2. Upload tier **xong việc**. Nó không gọi processing và không quan tâm processing có đang chạy hay không. Giao tiếp đổi từ **synchronous** sang **asynchronous**.
   3. Phía bên kia là [[Auto Scaling Groups|ASG]] **min 0 / desired 0 / max 1337**, có scaling policy theo **queue length** (số message trong queue, xem [[ASG Scaling Policies]]).

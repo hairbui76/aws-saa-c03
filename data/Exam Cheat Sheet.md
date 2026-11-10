@@ -121,9 +121,13 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Thứ tự + không trùng (exactly-once) | **SQS FIFO** | [[SQS Standard vs FIFO]] |
 | Một event → nhiều xử lý độc lập | **SNS fan-out → nhiều SQS** | [[SNS]] |
 | Ingest streaming real-time, nhiều consumer, replay | **Kinesis Data Streams** | [[Kinesis Data Streams]] |
-| Đổ stream vào S3/Redshift/OpenSearch, ít vận hành | **Kinesis Data Firehose** (near real-time) | [[Kinesis Data Firehose]] |
+| Đổ stream vào S3/Redshift/OpenSearch, ít vận hành | **Amazon Data Firehose** (near real-time) | [[Kinesis Data Firehose]] |
 | Workflow nhiều bước, > 15 phút, có phê duyệt | **Step Functions** | [[Step Functions]] |
-| Cron serverless, phản ứng thay đổi trạng thái | **EventBridge** | [[EventBridge]] |
+| Cron serverless (rate / cron / at, có time zone) | **EventBridge Scheduler** | [[EventBridge]] |
+| Phản ứng thay đổi trạng thái, đổi event trước khi tới target | **EventBridge rule** (+ input transformer) | [[EventBridge]] |
+| Hàng nghìn job tính toán song song, có queue + ưu tiên | **AWS Batch** | [[AWS Batch]] |
+| Distributed tracing qua nhiều dịch vụ, service map | **X-Ray** | [[X-Ray]] |
+| Test app mobile/web trên thiết bị thật | **AWS Device Farm** | [[Device Farm]] |
 | JMS/AMQP/MQTT, migrate broker on-prem | **Amazon MQ** | [[Amazon MQ]] |
 
 ### HA/DR & Global
@@ -236,7 +240,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Mô hình | Queue, **pull** | Pub/sub, **push** | Stream, pull, nhiều consumer |
 | Một message cho | **Một** consumer, xong thì xóa | **Mọi** subscriber | Mọi consumer, đọc lại được |
 | Lưu giữ | 4 ngày mặc định, tối đa 14 ngày | Không lưu | 24 h mặc định, tối đa 365 ngày |
-| Thứ tự | FIFO (300 msg/s, 3.000 với batching) | FIFO topic (nay có) | Trong mỗi shard |
+| Thứ tự | FIFO (300 msg/s, 3.000 với batching; high-throughput mode cao hơn) | FIFO topic (thứ tự + dedup, chỉ tới SQS) | Trong mỗi shard |
 | Scale | Tự động | Tự động | Thêm shard (1 MB/s vào, 2 MB/s ra mỗi shard) |
 | Dùng khi | Decouple, worker pool | Fan-out, thông báo | Ingest real-time, replay, analytics |
 
@@ -357,12 +361,13 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | CloudWatch Logs | Retention mặc định vô thời hạn; log class Infrequent Access không có metric filter / Live Tail / subscription filter, không đổi log class sau khi tạo |
 | SAML federation | Credentials tạm thời mặc định 1 h, tối đa 12 h |
 | Cost | Cost Explorer multi-year 38 tháng (miễn phí); CUR giao ≤ 1 lần/ngày; tối đa 500 cost allocation tag active |
-| SQS | Message: khóa học 256 KB; nay 1 MiB (08/2025). Retention 4 ngày (1 phút–14 ngày); visibility 30 s (0–12 h); long poll ≤ 20 s; delay ≤ 15 phút |
-| SQS FIFO | 300 msg/s, 3.000 với batching (nay có high-throughput FIFO) |
-| Kinesis | Shard 1 MB/s (1.000 record/s) vào, 2 MB/s ra; retention 24 h → 365 ngày; Firehose buffer 1 MB / 60 s |
-| Lambda | Timeout 15 phút; memory 128 MB–10 GB; /tmp 512 MB–10 GB |
+| SQS | Message ≤ 1 MB (khóa cũ: 256 KB); 1 request ≤ 10 message / 1 MB. Retention 4 ngày (1 phút–14 ngày); visibility 30 s (0–12 h); long poll ≤ 20 s; delay ≤ 15 phút |
+| SQS FIFO | 300 msg/s, 3.000 với batching; high-throughput: ≥ 2.400 TPS, tới 70.000 TPS tùy region (×10 với batching); dedup cửa sổ 5 phút |
+| Kinesis | Shard 1 MB/s (1.000 record/s) vào, 2 MB/s ra; retention 24 h → 365 ngày; provisioned hoặc on-demand. Firehose buffer S3 mặc định 5 MB / 300 s (1–128 MB, 0–900 s) |
+| Lambda | Timeout 15 phút; memory 128 MB–10 GB; /tmp 512 MB–10 GB; ZIP 50 MB zipped / 250 MB unzipped, container image ≤ 10 GB |
 | API Gateway | Timeout 29 s (504); cache 500 MB–237 GB, TTL 300 s (max 3.600 s); 429 = throttling |
-| Step Functions | Standard ≤ 1 năm; Express ≤ 5 phút |
+| Step Functions | Standard ≤ 1 năm, exactly-once; Express ≤ 5 phút, at-least-once; không đổi loại sau khi tạo |
+| EventBridge | Rule tối đa 5 target; schedule rule legacy chỉ UTC → EventBridge Scheduler có time zone |
 | DynamoDB | Item ≤ 400 KB; RCU 4 KB, WCU 1 KB; PITR 35 ngày; Streams 24 h |
 | RDS | Automated backup ≤ 35 ngày; PITR ~5 phút; Multi-AZ failover 60–120 s (Multi-AZ Cluster ~35 s); IAM DB auth token 15 phút |
 | Aurora | 6 bản sao / 3 AZ; 15 replica; 256 TiB (storage co giãn lên xuống); billing theo giây, tối thiểu 10 phút; I/O-Optimized khi I/O ≥ ~25% chi phí |
@@ -444,7 +449,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 - Firehose là **near real-time**. Đề đòi real-time thì chọn Kinesis Data Streams ([[Kinesis Data Firehose]]).
 - Standard queue không đổi sang FIFO tại chỗ. Phải tạo queue mới đuôi `.fifo` ([[SQS Standard vs FIFO]]).
 - Message xử lý trùng: tăng visibility timeout, không phải delay queue ([[SQS Delay Queues]]).
-- Amazon MQ cần private networking, không có public endpoint như SQS ([[Amazon MQ]]).
+- Amazon MQ mặc định private, cần private networking; không có public endpoint như SQS trừ khi bật public accessibility lúc tạo broker ([[Amazon MQ]]).
 
 **Khi làm bài**
 - Không để trống câu nào: câu bỏ trống bị chấm sai, đoán sai không bị trừ điểm. Hết giờ thì đoán, dùng màn hình review để lọc câu chưa trả lời ([[Exam Technique]]).

@@ -1,12 +1,12 @@
 {
  "Compare - SQS vs SNS vs Kinesis": {
-  "sig": "5-1wda640",
+  "sig": "5-e1hof",
   "steps": [
    "Sơ đồ này đặt ba dịch vụ cạnh nhau. SQS là queue để decouple, mỗi việc một worker; SNS là pub sub phát một message tới nhiều nơi; còn Kinesis là stream để ingest dữ liệu lớn cho nhiều consumer đọc lại.",
    "Phía gửi: web tier đẩy việc vào queue, publisher như ứng dụng, CloudWatch hay ASG publish vào topic, còn hàng nghìn sensor và click stream liên tục đổ dữ liệu vào stream chia theo shard.",
    "Phía nhận khác hẳn nhau. Worker tự poll queue rồi delete khi xong, ASG scale theo độ dài queue. Topic thì đẩy tới email, Lambda, SQS. Stream cho nhiều consumer cùng đọc, kể cả Firehose đưa vào S3.",
-   "Điểm khác cốt lõi: SQS giữ message tối đa 14 ngày, không delete thì hiện lại sau visibility timeout. SNS không lưu, chỉ retry. Kinesis giữ dữ liệu trong rolling window từ 24 giờ tới 365 ngày để replay, thứ tự giữ trong từng shard.",
-   "Khi đi thi, nhớ lăng kính này: thấy ingestion of data thì chọn Kinesis, worker pool hay decoupling thì chọn SQS, một event ra nhiều job độc lập thì SNS fan-out tới SQS. Cả ba là public service, chỉ Amazon MQ nằm trong VPC."
+   "Điểm khác cốt lõi: SQS giữ message tối đa 14 ngày, message tới 1 MB, không delete thì hiện lại sau visibility timeout. SNS không lưu, chỉ retry, và topic FIFO chỉ giao tới SQS. Kinesis giữ dữ liệu trong rolling window từ 24 giờ tới 365 ngày để replay, chạy ở chế độ provisioned hoặc on-demand.",
+   "Khi đi thi, nhớ lăng kính này: thấy ingestion of data thì chọn Kinesis, worker pool hay decoupling thì chọn SQS, một event ra nhiều job độc lập thì SNS fan-out tới SQS. Cả ba là public service, còn Amazon MQ mặc định private trong VPC."
   ]
  },
  "Compare - SQS vs SNS vs Kinesis - decision": {
