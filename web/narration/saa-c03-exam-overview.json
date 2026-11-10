@@ -1,16 +1,16 @@
 {
  "SAA-C03 Exam Overview": {
-  "sig": "9-1pq1jrz",
+  "sig": "9-xzy4oj",
   "steps": [
-   "Sơ đồ này là lộ trình chứng chỉ AWS mà Adrian khuyến nghị, chia theo bốn cấp Foundational, Associate, Professional và Specialty. Điểm mấu chốt là luôn bắt đầu bằng SA Associate.",
-   "Bước đầu tiên luôn là SA Associate, kể cả khi bạn là developer hay làm vận hành, vì kiến trúc là lõi của mọi thứ. Từ đây có thể sang Developer Associate, hoặc đi thẳng lên SA Professional theo hướng stream-based.",
-   "Theo hướng truyền thống, sau Developer Associate là SysOps Associate. Bài này khó nhất trong ba bài associate vì thiên về vận hành và tìm lỗi thay vì thiết kế.",
-   "Đậu cả ba bài associate, gọi là all three, bạn tiến lên SA Professional, cấp đòi hỏi kiến thức vừa sâu hơn vừa rộng hơn.",
-   "Ở cấp Professional, làm SA Pro trước rồi mới tới DevOps Pro. Đậu ba associate và hai professional gọi là all five.",
-   "Cloud Practitioner được để gần cuối, chỉ để đủ bộ. Đừng học riêng cho nó, vì học SAA đã đủ để thi đậu cả Cloud Practitioner.",
-   "Cuối cùng là các Specialty, chọn theo thế mạnh cá nhân. Chúng thi 170 phút, lệ phí 300 USD, phạm vi hẹp nhưng rất sâu.",
+   "Sơ đồ này là lộ trình chứng chỉ AWS được khuyến nghị, chia theo bốn cấp Foundational, Associate, Professional và Specialty. Điểm mấu chốt là luôn bắt đầu bằng SA Associate, không cần học riêng Cloud Practitioner.",
+   "Bước đầu tiên luôn là SA Associate, kể cả khi bạn là developer hay làm vận hành, vì nó cho bức tranh tổng thể về AWS. Theo cách truyền thống, sau đó có thể làm thêm Developer Associate.",
+   "Tiếp theo là CloudOps Engineer Associate, tên mới của SysOps Administrator. Đây cũng là bước tùy chọn trong lộ trình truyền thống trước khi lên Professional.",
+   "Từ các bài associate bạn tiến lên SA Professional, cấp đòi hỏi kiến thức vừa sâu hơn vừa rộng hơn. Khóa học hiện nay cho phép đi thẳng từ SA Associate lên SA Pro.",
+   "Ở cấp Professional, nên làm SA Pro trước rồi mới tới DevOps Engineer Professional, vì hai bài có phần trùng và cần hiểu AWS rất chi tiết.",
+   "Cloud Practitioner không cần học riêng. Học SAA đã đủ kiến thức, nên nếu muốn thì bạn chỉ việc đăng ký thi thêm.",
+   "Các Specialty chọn theo kinh nghiệm cá nhân và thường để sau SA Pro. Chúng thi 170 phút, lệ phí 300 USD, phạm vi hẹp nhưng rất sâu.",
    "Hãy hình dung một kho kiến thức: Cloud Practitioner và Associate dùng chung nội dung, Associate chỉ sâu hơn. Professional sâu hơn và rộng hơn, còn Specialty khoảng một nửa chuyên ngành, một nửa kỹ năng AWS.",
-   "Khi đi thi, nhớ rằng Associate chỉ khoảng 3 trên 10 về độ khó, còn Pro là 10 trên 10. Và lưu ý năm 2026, SysOps đã đổi thành CloudOps Engineer Associate, một số Specialty đã bị khai tử."
+   "Ghi nhớ: Associate chỉ khoảng 3 trên 10 về độ khó, còn Pro là 10 trên 10. Nếu theo hướng AI, đi từ SA Associate sang Machine Learning Engineer Associate rồi lên Generative AI Developer Professional."
   ]
  },
  "SAA-C03 Exam Overview - format": {

@@ -2,6 +2,7 @@
 tags: [saa-c03, s01-accounts-and-basics, security, identity]
 aliases: [Multi-factor Authentication, Virtual MFA, TOTP, xác thực đa yếu tố]
 lessons: ["0009 Multi factor Authentication MFA", "0010 DEMO Securing An AWS Account"]
+videos: ["006 Multi-factor Authentication (MFA)", "007 [DEMO] ACCOUNTS - STEP2 - Securing GENERAL AWS Account"]
 ---
 # MFA
 

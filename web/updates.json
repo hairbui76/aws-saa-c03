@@ -1,1 +1,150 @@
-{"id":"2026-11-10","date":"2026-11-10","title":"Cập nhật theo bản khóa SAA-C03 mới (376 video)","pages":[],"missing":[],"lessons":{}}
+{
+  "id": "2026-11-10",
+  "date": "2026-11-10",
+  "title": "Cập nhật theo bản khóa SAA-C03 mới (376 video)",
+  "pages": [
+    "Exam Cheat Sheet: thêm mẹo không để trống câu nào khi làm bài",
+    "Top mẹo thi chương 00 và 01: thêm mẹo không để trống câu, ưu tiên credential ngắn hạn (aws login) thay access key"
+  ],
+  "missing": [],
+  "lessons": {
+    "SAA-C03 Exam Overview": {
+      "kind": "updated",
+      "summary": "Danh mục chứng chỉ mới (CloudOps Engineer, Data Engineer, ML Engineer Associate, AI Practitioner, GenAI Developer Pro), lộ trình đi thẳng SAA → SA Pro và hướng AI qua ML Engineer Associate, đề Pro 75 câu; cấu trúc khóa mới (Aus-E-Mart/RooTube, không còn Tech Fundamentals) và cộng đồng chuyển sang Tech Study Discord.",
+      "changed": [
+        "Lộ trình chứng chỉ AWS",
+        "Cấu trúc khóa học",
+        "Cộng đồng và liên hệ"
+      ],
+      "dropped": [
+        "Tài nguyên khóa học (bài 0002, 0003, 0006)",
+        "Lời kết khóa học (bài 0379)"
+      ]
+    },
+    "Exam Technique": {
+      "kind": "updated",
+      "summary": "Thêm: không bao giờ để trống câu (bỏ trống bị chấm sai, đoán sai không bị trừ điểm), màn hình review lọc câu chưa trả lời/đã flag, đề Pro hơn 2 phút/câu, lần làm practice test đầu tiên là quan trọng nhất; phần question technique không còn trong khóa mới.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Question technique",
+        "Ví dụ minh họa"
+      ]
+    },
+    "Animals4life Scenario": {
+      "kind": "removed",
+      "summary": "khóa mới dùng kịch bản Aus-E-Mart và RooTube, không còn bài giới thiệu Animals4life"
+    },
+    "AWS Accounts": {
+      "kind": "updated",
+      "summary": "Khi đăng ký account giờ phải chọn Free plan (chỉ cho khách mới, hết credit hoặc 6 tháng thì account dừng, không bao giờ tính tiền) hoặc Paid plan; không còn bước chọn Basic support.",
+      "changed": [
+        "Demo / Lab"
+      ]
+    },
+    "AWS Budgets": {
+      "kind": "updated",
+      "summary": "Free Tier 12 tháng được thay bằng Free plan/Paid plan có credit (EC2 không còn miễn phí); budget tạo từ template Monthly cost budget với cảnh báo 85% actual, 100% actual, 100% forecasted.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab"
+      ]
+    },
+    "IAM Access Keys and AWS CLI": {
+      "kind": "updated",
+      "summary": "Access key được coi là cách cũ vì lưu dạng rõ trong ~/.aws/credentials; thêm lệnh aws login của AWS CLI v2 để đăng nhập qua trình duyệt (có MFA) bằng credential tạm thời.",
+      "changed": [
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Cloud Computing Definition": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Cloud Deployment Models": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Cloud Service Models": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "DDoS": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "DNS Fundamentals": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "DNSSEC": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Decimal and Binary Conversion": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Digital Signatures": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Encryption Fundamentals": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Hashing": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "JSON": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Layer 1 Physical": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Layer 2 Data Link": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Layer 3 Network": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Layer 4 Transport": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "NAT Fundamentals": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "OSI Model": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "RPO and RTO": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "SSL and TLS": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "Subnetting": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "YAML": {
+      "kind": "removed",
+      "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    }
+  }
+}

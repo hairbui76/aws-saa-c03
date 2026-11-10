@@ -69,10 +69,10 @@
       },
       {
         "type": "single",
-        "q": "Trong question technique, “word fluff” là gì?",
-        "options": ["Phần preamble mô tả tên công ty và bối cảnh", "Phần chữ lặp lại giống nhau giữa nhiều đáp án, có thể bỏ qua khi so sánh", "Các đáp án nhắc đến sản phẩm hoặc tính năng không tồn tại", "Những từ chỉ số lượng như one, any, all trong câu hỏi"],
+        "q": "Còn 3 phút trước khi hết giờ, một thí sinh vẫn còn 4 câu khó chưa trả lời. Theo phương pháp 3 phase, nên làm gì?",
+        "options": ["Để trống 4 câu vì đoán sai sẽ bị trừ điểm", "Chọn đáp án cho cả 4 câu, kể cả đoán ngẫu nhiên, vì câu bỏ trống bị chấm sai và đoán sai không bị trừ điểm", "Dùng 3 phút còn lại để làm thật kỹ một câu, bỏ trống các câu còn lại", "Quay lại kiểm tra các câu dễ ở Phase 1"],
         "answer": [1],
-        "explain": "Word fluff là phần đầu hoặc cuối lặp lại giữa các đáp án (ví dụ “The load balancer will...”), không giúp phân biệt nên có thể bỏ qua. Preamble cũng phần lớn không quan trọng, nhưng đó là phần mô tả tình huống chứ không phải word fluff."
+        "explain": "AWS chấm câu bỏ trống là sai và không trừ điểm khi đoán sai, nên không bao giờ để trống câu nào. Ở Phase 3, còn ít thời gian thì cứ đoán, thậm chí chọn ngẫu nhiên."
       }
     ],
     "SAA-C03 Exam Overview": [
@@ -99,10 +99,10 @@
       },
       {
         "type": "single",
-        "q": "Một lập trình viên mới bắt đầu với AWS muốn lấy chứng chỉ đầu tiên và đã có kế hoạch học tiếp các chứng chỉ khác. Theo lời khuyên của Adrian, nên bắt đầu bằng chứng chỉ nào?",
-        "options": ["AWS Certified Cloud Practitioner, rồi mới học SAA", "AWS Certified Developer – Associate vì phù hợp với vai trò developer", "AWS Certified Solutions Architect – Associate", "AWS Certified SysOps Administrator – Associate"],
+        "q": "Một lập trình viên mới bắt đầu với AWS muốn lấy chứng chỉ đầu tiên và đã có kế hoạch học tiếp các chứng chỉ khác. Theo lời khuyên của khóa học, nên bắt đầu bằng chứng chỉ nào?",
+        "options": ["AWS Certified Cloud Practitioner, rồi mới học SAA", "AWS Certified Developer – Associate vì phù hợp với vai trò developer", "AWS Certified Solutions Architect – Associate", "AWS Certified CloudOps Engineer – Associate"],
         "answer": [2],
-        "explain": "Adrian khuyên luôn bắt đầu bằng SA Associate, kể cả với developer: kiến trúc là lõi và đây là bài associate dễ nhất. Học Cloud Practitioner riêng trước là học trùng vì nội dung SAA đã bao trùm CLF."
+        "explain": "Khóa học khuyên luôn bắt đầu bằng SA Associate, kể cả với developer: nó cho bức tranh tổng thể về AWS, và các chứng chỉ khác trùng rất nhiều dịch vụ với SAA. Học Cloud Practitioner riêng trước là học trùng vì nội dung SAA đã bao trùm CLF."
       },
       {
         "type": "single",

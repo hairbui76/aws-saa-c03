@@ -2,6 +2,7 @@
 tags: [saa-c03, s01-accounts-and-basics, security, identity, iam]
 aliases: [IAM, Identity and Access Management, IAM Admin, iamadmin, Account Alias]
 lessons: ["0013 Identity and Access Management IAM Basics", "0014 Adding an IAM Admin GENERAL ACCOUNT", "0015 Adding an IAM Admin User PRODUCTION ACCOUNT"]
+videos: ["012 Identity and Access Management (IAM) Basics", "013 [DEMO] ACCOUNTS - STEP4A - Adding IAMADMIN to GENERAL Account", "014 [DOITYOURSELF] Add IAMADMIN to the PRODUCTION Account"]
 ---
 # IAM Basics
 

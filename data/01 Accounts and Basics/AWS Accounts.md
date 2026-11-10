@@ -2,6 +2,7 @@
 tags: [saa-c03, s01-accounts-and-basics, security, governance, billing]
 aliases: [AWS Account, Account Root User, Root User, tài khoản AWS]
 lessons: ["0007 AWS Accounts The basics", "0008 DEMO Creating the GENERAL AWS Account", "0012 DOITYOURSELF Creating the Production Account"]
+videos: ["004 AWS Accounts - The Basics", "005 [DEMO] ACCOUNTS - STEP1 - Creating GENERAL AWS Account", "011 [DOITYOURSELF] Creating the Production Account"]
 ---
 # AWS Accounts
 
@@ -59,15 +60,15 @@ flowchart LR
 - Region mặc định cho mọi demo: **us-east-1 (N. Virginia)**. Kiểm tra region selector thường xuyên; với dịch vụ global (như IAM) console hiển thị "Global" là bình thường.
 
 ## Demo / Lab
-**Tạo General account (0008)**
-1. Mẹo **Gmail plus addressing**: `user+aws-general@gmail.com`, `user+aws-prod@gmail.com`... đều là địa chỉ khác nhau với AWS nhưng thư đều về một hộp thư → tạo bao nhiêu account cũng được. Adrian khuyên coi account là **disposable**, mỗi khóa học nên tạo bộ account mới, không dùng account cũ/của công ty/sandbox.
-2. Nhập email root, tên account, verify email (code có thể mất ~5 phút, kiểm tra spam), đặt password mạnh (dùng password manager).
-3. Thông tin liên hệ (Personal), billing (có thể thấy khoản *pending charge* nhỏ để xác minh thẻ, tự biến mất sau vài ngày), xác minh danh tính qua SMS/voice.
-4. Chọn **Basic support (free)** — đủ cho vấn đề account/billing. Production thật thì cân nhắc Developer/Business.
+**Tạo General account**
+1. Mẹo **Gmail plus addressing**: `user+aws-general@gmail.com`, `user+aws-prod@gmail.com`... đều là địa chỉ khác nhau với AWS nhưng thư đều về một hộp thư → tạo bao nhiêu account cũng được. Khóa học khuyên coi account là **disposable**, mỗi khóa học nên tạo bộ account mới, không dùng account cũ/của công ty/sandbox.
+2. Nhập email root, tên account (nên có tiền tố riêng, ví dụ `...-training-aws-general`, để không nhầm với account thật của công ty), verify email (code có thể mất ~5 phút, kiểm tra spam), đặt password mạnh (dùng password manager).
+3. **Chọn plan: Free hoặc Paid.** Free plan chỉ dành cho **khách hàng mới**; dùng hết credit hoặc hết thời hạn **6 tháng** thì account dừng hẳn và không bao giờ bị trừ tiền vào thẻ. Paid plan ai cũng tạo được, vẫn có credit (nếu là khách mới) nhưng hết credit thì tính tiền thật. Demo chọn Free plan, sau đó nâng lên Paid (chi tiết ở [[AWS Budgets]]).
+4. Thông tin liên hệ, billing (chọn plan nào cũng phải nhập payment method để AWS xác minh; ngân hàng có thể yêu cầu xác thực giao dịch thêm), xác minh danh tính qua SMS. Bản khóa cũ có bước chọn **Basic support (free)**; video mới không còn bước này.
 5. Nếu báo lỗi billing: đăng nhập root vào Billing console, sửa payment info (hoặc gọi ngân hàng), rồi mở EC2 console để "kích" AWS hoàn tất kích hoạt; activation có thể tức thì hoặc tới ~1 giờ.
-6. Trong **Account settings**: (tuỳ chọn) điền *Alternate contacts* (Billing / Operations / Security); **bật "IAM user and role access to Billing information"**. Nếu không bật, kể cả IAM identity có AdministratorAccess cũng **không** vào được Billing console.
+6. Trong **Account** (menu account góc phải): (tuỳ chọn) điền *Alternate contacts* (Billing / Operations / Security); **bật "IAM user and role access to Billing information"**. Nếu không bật, kể cả IAM identity có AdministratorAccess cũng **không** vào được Billing console.
 
-**Tạo Production account (0012 — tự làm)**: lặp y hệt: email khác (plus trick), tên `...-production`, cùng thẻ, Basic support, thêm MFA root (entry MFA **riêng**), bật 3 billing preferences, tạo budget, bật IAM access to billing, (tuỳ chọn) alternate contacts.
+**Tạo Production account (tự làm)**: lặp y hệt: email khác (plus trick), tên `...-production`, cùng thẻ, thêm MFA root (entry MFA **riêng**), tạo budget và bật các billing/alert preferences, bật IAM access to billing, (tuỳ chọn) alternate contacts. Account thứ hai cần cho các bài nhiều account như AWS Organizations, truy cập storage cross-account.
 
 ## Bảng so sánh / số liệu
 

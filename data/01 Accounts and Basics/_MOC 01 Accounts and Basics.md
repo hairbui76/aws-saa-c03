@@ -4,23 +4,23 @@ aliases: [MOC Accounts and Basics]
 ---
 # 01 Accounts and Basics
 
-Section mở đầu phần thực hành: hiểu AWS account là container và ranh giới cô lập, rồi dựng hai account (General và Production) theo best practice: MFA cho root, budget và billing alert, IAM admin user có MFA, sau đó là access key và AWS CLI v2 với named profile. Đây là nền móng cho mọi demo về sau và được đào sâu ở [[_MOC 04 IAM Accounts and Organizations]].
+Section mở đầu phần thực hành: hiểu AWS account là container và ranh giới cô lập, rồi dựng hai account (General và Production) theo best practice: MFA cho root, Free/Paid plan, budget và billing alert, IAM admin user có MFA, sau đó là access key, AWS CLI v2 với named profile và `aws login` (credential tạm thời, không cần access key). Đây là nền móng cho mọi demo về sau và được đào sâu ở [[_MOC 04 IAM Accounts and Organizations]].
 
 ← [[00 Home]] · Section trước: [[_MOC 00 Course and Exam]] · Section tiếp theo: [[_MOC 02 Tech Fundamentals]] →
 
 ## Lộ trình học
 1. [[AWS Accounts]]: account là container chứa identities và resources, có một root user toàn quyền không giới hạn được, và là ranh giới cô lập (blast radius).
 2. [[MFA]]: buộc đăng nhập bằng nhiều loại factor khác nhau; trong AWS, MFA gán cho từng identity (root, IAM user), không phải cho cả account.
-3. [[AWS Budgets]]: theo dõi chi tiêu so với ngưỡng và gửi cảnh báo theo mốc %, cùng Free Tier, billing preferences và Cost Explorer để tránh hóa đơn bất ngờ.
+3. [[AWS Budgets]]: theo dõi chi tiêu so với ngưỡng và gửi cảnh báo theo mốc %, cùng Free/Paid plan, credit, Free Tier, billing preferences và Cost Explorer để tránh hóa đơn bất ngờ.
 4. [[IAM Basics]]: IAM global, miễn phí, mỗi account một instance; users/groups/roles/policies thay cho root; IAM đóng vai IdP, AuthN và AuthZ.
-5. [[IAM Access Keys and AWS CLI]]: access key là long-term credential cho CLI/API/SDK, tối đa 2 key/user, secret chỉ thấy một lần; CLI v2 dùng named profile.
+5. [[IAM Access Keys and AWS CLI]]: access key là long-term credential cho CLI/API/SDK, tối đa 2 key/user, secret chỉ thấy một lần; CLI v2 dùng named profile; `aws login` thay access key bằng credential tạm thời.
 
 ## Bản đồ khái niệm
 ```mermaid
 flowchart TB
   ACC["AWS Account (container, blast radius)"] --> ROOT["Account root user (không giới hạn được)"]
   ACC --> IAM["IAM (global, mỗi account một instance)"]
-  ACC --> BILL["Billing: Free Tier, Budgets, Cost Explorer"]
+  ACC --> BILL["Billing: Free/Paid plan, credit, Free Tier, Budgets, Cost Explorer"]
   ROOT -->|"bảo vệ bằng"| MFA["MFA"]
   IAM --> USR["IAM Users"]
   IAM --> GRP["IAM Groups"]
@@ -32,6 +32,7 @@ flowchart TB
   USR -->|"console"| PW["Password + MFA"]
   USR -->|"CLI/API"| AK["Access keys (tối đa 2)"]
   AK --> CLI["AWS CLI v2 named profiles"]
+  PW -->|"aws login (credential tạm thời)"| CLI
   ROLE -->|"temporary credentials"| STS["STS"]
   ACC -.->|"nhiều account"| ORG["AWS Organizations (section 04)"]
 ```
@@ -61,3 +62,4 @@ flowchart TB
 - Phân biệt **authentication** (bạn là ai) và **authorization** (được làm gì) ([[IAM Basics]]).
 - IAM user: **tối đa 2 access key** để rotate không downtime; secret chỉ thấy **một lần**, mất thì xóa và tạo mới ([[IAM Access Keys and AWS CLI]]).
 - Ứng dụng trên EC2/Lambda cần quyền → **IAM Role**; nhúng access key là đáp án sai kinh điển ([[IAM Access Keys and AWS CLI]]).
+- Access key là long-term credential lưu dạng rõ trong `~/.aws/credentials` → ưu tiên credential ngắn hạn: `aws login` cho CLI, role cho ứng dụng ([[IAM Access Keys and AWS CLI]]).

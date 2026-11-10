@@ -372,3 +372,6 @@ Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và 
 - Standard queue không đổi sang FIFO tại chỗ. Phải tạo queue mới đuôi `.fifo` ([[SQS Standard vs FIFO]]).
 - Message xử lý trùng: tăng visibility timeout, không phải delay queue ([[SQS Delay Queues]]).
 - Amazon MQ cần private networking, không có public endpoint như SQS ([[Amazon MQ]]).
+
+**Khi làm bài**
+- Không để trống câu nào: câu bỏ trống bị chấm sai, đoán sai không bị trừ điểm. Hết giờ thì đoán, dùng màn hình review để lọc câu chưa trả lời ([[Exam Technique]]).

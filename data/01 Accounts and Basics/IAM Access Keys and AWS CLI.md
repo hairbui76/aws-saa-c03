@@ -1,11 +1,12 @@
 ---
 tags: [saa-c03, s01-accounts-and-basics, security, identity, iam, cli]
-aliases: [Access Keys, Access Key ID, Secret Access Key, AWS CLI, AWS CLI v2, Named Profile, Key Rotation]
+aliases: [Access Keys, Access Key ID, Secret Access Key, AWS CLI, AWS CLI v2, Named Profile, Key Rotation, aws login]
 lessons: ["0016 IAM Access Keys", "0017 DEMO Creating Access keys and setting up AWS CLI v2 tools"]
+videos: ["015 IAM Access Keys", "016 [DEMO] Creating Access Keys and Setting Up AWS CLI", "017 [DEMO] Login with AWS CLI and IAMADMIN"]
 ---
 # IAM Access Keys and AWS CLI
 
-> **TL;DR:** Access key là **long-term credential** của IAM user, dùng cho truy cập lập trình (AWS CLI, API, SDK) thay cho username/password/MFA của console. Mỗi IAM user có **tối đa 2 access key**; secret chỉ hiển thị **một lần** lúc tạo. AWS CLI v2 lưu access key theo **named profile** để làm việc với nhiều account.
+> **TL;DR:** Access key là **long-term credential** của IAM user, dùng cho truy cập lập trình (AWS CLI, API, SDK) thay cho username/password/MFA của console. Mỗi IAM user có **tối đa 2 access key**; secret chỉ hiển thị **một lần** lúc tạo. AWS CLI v2 lưu access key theo **named profile** để làm việc với nhiều account. Khóa học coi access key là cách **cũ (legacy)**: với CLI, nên dùng **`aws login`** để đăng nhập qua trình duyệt (có MFA) và chỉ giữ credential tạm thời.
 
 ## 🖼️ Sơ đồ
 ![[IAM Access Keys and AWS CLI.excalidraw]]
@@ -54,17 +55,32 @@ flowchart LR
 - Dùng: `aws s3 ls --profile iamadmin-general`. Chạy không có `--profile` khi default chưa cấu hình → lỗi **"Unable to locate credentials"**.
 - Thông tin được lưu trong `~/.aws/credentials` và `~/.aws/config` (kiến thức bổ sung); có thể chọn profile bằng biến môi trường `AWS_PROFILE`.
 - Kiểm tra cài đặt: `aws --version` phải ra `aws-cli/2.x.x`. CLI v2 có nhiều cải tiến so với v1 và là bản khóa học dùng.
+- Rủi ro: `aws configure` ghi Access Key ID và Secret **dạng rõ** vào `~/.aws/credentials` (file `config` chỉ có profile và region). Ai đọc được file này là dùng được identity đó với toàn bộ quyền của nó → đây là lý do access key bị coi là kém an toàn.
+- CLI ký (sign) mỗi request bằng secret access key; secret không được gửi kèm request.
+
+**`aws login`: đăng nhập CLI không cần access key**
+- `aws login --profile <tên>` (AWS CLI v2) mở trình duyệt để đăng nhập bằng chính identity console của bạn (password + MFA hoặc phương thức xác thực khác), rồi **chia sẻ credential tạm thời** cho terminal. Lần đầu hỏi region nếu profile chưa có.
+- Sau đó dùng bình thường: `aws s3 ls --profile <tên>`.
+- `~/.aws/config` ghi profile có login session; **không có file `credentials`**. Token tạm thời được cache trong `~/.aws/login/cache` (vẫn không nên để lộ), tự quản lý và hết hạn; session hết hạn hoặc logout thì không còn gì nguy hiểm trên máy.
+- Màn hình **Create access key** trong console giờ hỏi use case và gợi ý các phương án tốt hơn; với CLI là `aws login` (phải tick "I understand the above recommendation" mới tạo tiếp được access key).
 
 ## Demo / Lab
-1. Đăng nhập `iamadmin` (General) → **Security credentials** → **Create access key**. Thử: tạo xong đóng hộp thoại là không xem lại secret được; có thể Make inactive / Make active; tạo cặp thứ 2 được, cặp thứ 3 thì không. Xóa hết các cặp thử nghiệm.
-2. Tạo cặp thật → **Download CSV**, đổi tên `iamadmin_accesskeys_general.csv`, lưu cục bộ (không đưa lên cloud storage).
-3. Sign out → đăng nhập `iamadmin` của Production qua sign-in URL Production + MFA → tạo key → `..._production.csv`.
-4. Cài **AWS CLI v2** (Windows/macOS/Linux, cài mặc định) → `aws --version`.
-5. `aws configure --profile iamadmin-general` → dán Access Key ID (phần trước dấu phẩy trong CSV), Secret (phần sau dấu phẩy), `us-east-1`, Enter.
-6. Kiểm tra `aws s3 ls --profile iamadmin-general` → kết quả rỗng (account mới chưa có bucket) là đúng; lỗi thì thường do copy thiếu ký tự → chạy lại `aws configure --profile ...`.
-7. Lặp lại với `iamadmin-production`.
-8. **Xóa 2 file CSV** sau khi cấu hình xong. Adrian xóa và tạo lại key ngay sau khi quay vì key đã hiện trên màn hình: ai có cặp key của `iamadmin` là có **toàn quyền admin** trên account.
-- (Console hiện nay hỏi use case khi tạo access key và gợi ý phương án tốt hơn như **CloudShell** hoặc `aws configure sso` với **IAM Identity Center** để dùng credential tạm thời.)
+**Access key và CLI profile (cách cũ)**
+1. Đăng nhập `iamadmin` (General) → **Security credentials** (lối tắt ở menu account, giống IAM → Users → iamadmin → tab Security credentials: access key gắn với **một IAM user**).
+2. **Create access key** → chọn use case **Command Line Interface (CLI)** → đọc phần gợi ý phương án thay thế → tick xác nhận vẫn muốn tạo → tạo.
+3. Thử: tạo xong bấm Done (không xem/tải) là không bao giờ xem lại secret được; tạo cặp thứ 2 được, cặp thứ 3 thì không. **Deactivate** một key → CLI dùng key đó ngừng chạy. Muốn **xóa** phải deactivate trước, rồi dán Access Key ID để xác nhận. Xóa hết các cặp thử nghiệm.
+4. Tạo cặp thật, đặt tag mô tả (ví dụ `local-cli-iamadmin-general`) → **Download .csv file**.
+5. Cài **AWS CLI v2** theo hướng dẫn chính thức cho hệ điều hành của bạn → `aws --version`.
+6. `aws configure --profile iamadmin-general` → dán Access Key ID (phần trước dấu phẩy ở dòng 2 của CSV), Secret, `us-east-1`, Enter.
+7. `aws s3 ls` (không có `--profile`) → lỗi **"Unable to locate credentials"** vì default profile chưa cấu hình; `aws s3 ls --profile iamadmin-general` → kết quả rỗng (account mới chưa có bucket) là đúng.
+8. `cat ~/.aws/credentials` → thấy rõ key và secret. Vì vậy demo **xóa file credentials**, xóa file CSV và **xóa access key** trong console (deactivate → delete). Không còn access key nào thì dù ai có bản sao cũ cũng không dùng được.
+
+**Đăng nhập CLI bằng `aws login` (cách khuyến nghị)**
+1. Đảm bảo `iamadmin` không còn access key (nếu có mà không dùng thì xóa). Đang đăng nhập console sẵn thì bước sau nhanh hơn.
+2. `aws login --profile iamadmin-general-mfa` (tên profile không trùng profile access key cũ) → nhập region `us-east-1` nếu được hỏi.
+3. Trình duyệt mở (hoặc tự dán URL được in ra) → đăng nhập hoặc xác nhận bằng session console có MFA → credential tạm thời được chuyển về terminal.
+4. `aws s3 ls --profile iamadmin-general-mfa` chạy được.
+5. Kiểm tra `~/.aws`: `config` có profile mới với login session, **không có `credentials`**; token tạm nằm trong `~/.aws/login/cache`.
 
 ## 🎯 Mẹo thi SAA-C03
 - Truy cập **CLI/API/SDK** bằng IAM user → **access keys**; console → username/password (+MFA).
@@ -72,6 +88,7 @@ flowchart LR
 - Secret access key **chỉ thấy một lần**; mất → xóa và tạo mới.
 - Đề hỏi ứng dụng **chạy trên EC2/Lambda** cần quyền AWS → **không** nhúng access key vào code/instance; dùng **IAM Role** ([[EC2 Instance Roles]]). Nhúng access key là đáp án sai kinh điển.
 - Không tạo access key cho **root user**.
+- Access key là **long-term credential**, lưu dạng rõ trên máy (`~/.aws/credentials`) → AWS khuyến nghị credential **ngắn hạn** khi có thể: `aws login` cho CLI của người dùng, IAM role cho ứng dụng và dịch vụ AWS.
 - Key bị lộ → vô hiệu hóa/xóa key ngay, tạo key mới; cân nhắc lưu secret trong [[Secrets Manager]] / [[SSM Parameter Store]] thay vì file cấu hình.
 
 ## Liên kết

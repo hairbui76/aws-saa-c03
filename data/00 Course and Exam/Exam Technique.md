@@ -2,6 +2,7 @@
 tags: [saa-c03, s00-course-and-exam, exam, exam-technique]
 aliases: [Question Technique, 3-Phase Approach, Kỹ thuật làm bài, Exam Strategy]
 lessons: ["0376 SHAREDALL General AWS Exam Technique 3 Phase Approach", "0377 SHAREDALL General AWS Question Technique PART1", "0378 SHAREDALL General AWS Question Technique PART2"]
+videos: ["376 [SHAREDALL] General AWS Exam Technique - 3 Phase Approach"]
 ---
 # Exam Technique
 
@@ -31,23 +32,26 @@ flowchart LR
 | Phase | Làm gì | Vì sao |
 |---|---|---|
 | 1. Easy (xanh) | Đi qua cả 65 câu, trả lời câu biết ngay (≤ ~10 giây hoặc chỉ cần nghĩ thêm vài giây) | Tốn rất ít thời gian, xác suất sai thấp, gom điểm chắc chắn |
-| 2. Medium (vàng) | Đi qua các câu còn lại, nhận diện câu khó → **Mark for Review** rồi bỏ qua; dồn sức vào câu trung bình | Câu trung bình chiếm phần lớn đề và quyết định đậu/trượt. Câu cần suy nghĩ nhưng không đáng sợ |
-| 3. Hard (đỏ) | Dùng thời gian còn lại cho câu khó; hết giờ thì đoán | Lúc này phần lớn điểm đã nằm trong tay, câu khó là "điểm thưởng" và không làm hỏng các câu trước |
+| 2. Medium (vàng) | Đi qua các câu còn lại, nhận diện câu khó → **Mark for Review** (flag for review) rồi bỏ qua; dồn sức vào câu trung bình | Câu trung bình chiếm phần lớn đề và quyết định đậu/trượt. Câu cần suy nghĩ nhưng không đáng sợ |
+| 3. Hard (đỏ) | Dùng thời gian còn lại cho câu khó: còn nhiều (ví dụ 40 phút) thì làm kỹ, còn ít (ví dụ 4 phút) thì đoán, thậm chí chọn ngẫu nhiên | Lúc này phần lớn điểm đã nằm trong tay, câu khó là "điểm thưởng" và không làm hỏng các câu trước |
+
+- Sau khi đi hết đề, công cụ thi có **màn hình review** lọc được: tất cả câu, câu **chưa trả lời** (incomplete) và câu **đã flag**. Nhờ vậy không phải lật lại từng câu để tìm câu khó đã bỏ qua.
+- **Không bao giờ để trống câu nào.** AWS chấm câu bỏ trống là sai và **không trừ điểm khi đoán sai**: đoán không mất gì, để trống chắc chắn mất điểm.
 
 Không theo quy trình, người ta thường sa vào câu khó ở đầu bài và hết giờ ở cuối, bỏ lỡ cả câu dễ lẫn câu trung bình.
 
 ### Các lời khuyên chung (slide)
-- Nếu đây là bài thi AWS đầu tiên, **hãy giả định bạn sẽ hết giờ**. Phần lớn người thi lần đầu, kể cả Adrian, đều hết giờ.
-- Cách thắng là **hiệu quả** và có quy trình. Quỹ thời gian mặc định là khoảng **2 phút/câu** cho cả việc đọc câu hỏi, đọc đáp án và quyết định (130 phút / 65 câu).
+- Nếu đây là bài thi AWS đầu tiên, **hãy giả định bạn sẽ hết giờ**. Phần lớn người thi lần đầu, kể cả giảng viên, đều hết giờ.
+- Cách thắng là **hiệu quả** và có quy trình, không sa vào một câu quá lâu. Quỹ thời gian mặc định là khoảng **2 phút/câu** ở đề associate cho cả việc đọc câu hỏi, đọc đáp án và quyết định (130 phút / 65 câu); đề Pro thường được hơn 2 phút/câu một chút.
 - **Không đoán cho đến cuối.** Câu phải đoán thì thuộc nhóm khó, để sang phase 3. Câu hỏi phía sau có thể gợi lại kiến thức giúp trả lời câu phía trước.
 - Dùng triệt để **Mark for Review**: đánh dấu câu còn nghi ngờ, cuối giờ (hoặc bất cứ lúc nào) xem lại danh sách các câu đã đánh dấu.
-- Làm **tất cả practice test** có thể, nhắm **trên 90%** trước khi thi thật.
+- Làm **tất cả practice test** có thể, nhắm **trên 90%** trước khi thi thật. **Lần làm đầu tiên của mỗi đề là quan trọng nhất**: làm đi làm lại cùng một đề thì rốt cuộc chỉ kiểm tra trí nhớ về đề đó, không phải mức hiểu.
 
-### Quy trình ôn đề Adrian gợi ý
+### Quy trình ôn đề được gợi ý
 1. Học hết khóa → làm practice test đi kèm khóa học.
-2. Làm practice test của Tutorials Dojo (tutorialsdojo.com). Adrian đánh giá đề của họ **khó hơn đề thật**, nên vào phòng thi sẽ thấy nhẹ hơn.
-3. Câu nào sai → xác định mảng cần học thêm → học lại → làm lại test.
-4. Lặp lại đến khi điểm thường xuyên trên 90% thì đi thi.
+2. Làm thêm practice test bên ngoài, ví dụ Tutorials Dojo hoặc bộ **official practice question set** của AWS Certification. Mỗi bộ đề có độ khó khác nhau.
+3. Đọc kỹ phần giải thích; câu nào sai → xác định mảng cần học thêm → học sâu lại → làm test khác.
+4. Khi thường xuyên đạt trên 90% (hoặc đã thấy tự tin) thì đi thi.
 
 ## Question technique
 
@@ -107,6 +111,7 @@ A) LB ngừng gửi request tới instance hỏng · B) LB terminate instance h�
 - Đã đủ 2 đáp án nên không cần xét E. **Đáp án: C và D.** (Chi tiết ở [[S3 Encryption]], [[KMS]].)
 
 ## 🎯 Mẹo thi SAA-C03
+- **Không để trống câu nào**: câu bỏ trống bị chấm sai, đoán sai không bị trừ điểm.
 - **DON'T PANIC.** Ai cũng cảm thấy mình sắp hết giờ. Bí thì Mark for Review và quay lại sau. Luôn theo dõi thời gian còn lại.
 - Thứ tự ưu tiên: câu dễ → câu trung bình → câu khó. Không đoán ở phase 1 và 2.
 - Thấy ELB mà không thấy ASG → không có khả năng tự thay thế instance. LB chỉ ngừng gửi traffic tới target unhealthy.
