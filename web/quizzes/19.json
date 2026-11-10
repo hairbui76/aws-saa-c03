@@ -337,8 +337,8 @@
     "CFN Outputs": [
       {
         "type": "single",
-        "q": "Sau khi stack WordPress tạo xong, đội vận hành muốn thấy ngay URL truy cập trang web trên tab Outputs của console. Khai báo nào phù hợp?",
-        "options": ["Thêm parameter WordpressURL với Default là DNS name", "Thêm metadata AWS::CloudFormation::Init chứa URL", "Thêm output WordpressURL với Value: !Join ['', ['https://', !GetAtt Instance.PublicDnsName]]", "Thêm mapping chứa URL theo region"],
+        "q": "Sau khi stack web store Aus-E-Mart tạo xong, đội vận hành muốn thấy ngay URL truy cập trang web trên tab Outputs của console. Khai báo nào phù hợp?",
+        "options": ["Thêm parameter WebStoreURL với Default là DNS name", "Thêm metadata AWS::CloudFormation::Init chứa URL", "Thêm output WebStoreURL với Value: !Join ['', ['https://', !GetAtt Instance.PublicDnsName]]", "Thêm mapping chứa URL theo region"],
         "answer": [2],
         "explain": "Outputs hiện giá trị trên console và CLI sau khi stack tạo xong; Join + GetAtt ghép thành URL động. Parameter là input, không thể biết trước DNS name của instance."
       },

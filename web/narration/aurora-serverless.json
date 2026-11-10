@@ -1,10 +1,10 @@
 {
  "Aurora Serverless": {
-  "sig": "7-zs0hrr",
+  "sig": "7-1bbee43",
   "steps": [
    "Sơ đồ này nói về Aurora Serverless v2. Vẫn là một Aurora cluster bình thường, nhưng instance được chọn kiểu serverless thay vì một cỡ cố định, và tự scale tại chỗ theo tải mà không gián đoạn ứng dụng.",
-   "Ứng dụng vẫn trỏ vào cluster endpoint như thường. Min và max ACU được đặt ở mức cluster, mỗi ACU khoảng 2 GB RAM cộng CPU và mạng, và đó là giới hạn scale của từng instance serverless. Tải thấp thì chạy gần min, tới peak thì tăng nhưng không vượt max.",
-   "Cluster trộn được instance serverless và provisioned: ở đây writer là serverless, một reader là db.t3.medium cỡ cố định, một reader khác là serverless. Nếu đặt min ACU bằng 0, instance serverless sẽ auto-pause và bạn chỉ trả tiền storage.",
+   "Ứng dụng đi vào cluster qua hai endpoint: ghi thì qua cluster endpoint, đọc thì qua reader endpoint. Min và max ACU được đặt ở mức cluster, mỗi ACU khoảng 2 GB RAM cộng CPU và mạng, và đó là giới hạn scale của từng instance serverless. Tải thấp thì chạy gần min, tới peak thì tăng nhưng không vượt max.",
+   "Cluster endpoint luôn trỏ vào writer, còn reader endpoint chia tải cho các reader; đây là điểm hay bị hỏi. Cluster trộn được instance serverless và provisioned: ở đây writer là serverless, một reader là db.t3.medium cỡ cố định, một reader khác là serverless. Nếu đặt min ACU bằng 0, instance serverless sẽ auto-pause và bạn chỉ trả tiền storage.",
    "Mọi instance cùng đọc ghi trên cluster volume 6 bản qua 3 AZ, giống hệt Aurora provisioned. Khi đang pause mà có kết nối mới, instance tự resume, nhưng kết nối đầu tiên sẽ chậm một chút.",
    "Aurora Serverless hợp với ứng dụng ít dùng hoặc mới chưa rõ tải, tải biến động hay khó đoán, môi trường dev test có thể pause khi rảnh, và mô hình multi-tenant nơi chi phí tăng theo doanh thu.",
    "Tải tăng thì instance serverless scale lên tại chỗ, tải giảm thì scale xuống dần, không cần scaling policy hay alarm. Lưu ý v1 đã hết hạn từ tháng 3 năm 2025, không tạo mới được, và v1 không trộn được serverless với provisioned như v2.",

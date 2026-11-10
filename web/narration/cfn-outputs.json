@@ -1,11 +1,11 @@
 {
  "CFN Outputs": {
-  "sig": "8-1cxpjki",
+  "sig": "8-1sih0s4",
   "steps": [
    "Sơ đồ này nói về section Outputs trong CloudFormation, phần tùy chọn giúp stack trả giá trị ra sau khi tạo xong. Ta sẽ xem giá trị đó đi tới những ai.",
-   "Bên trong stack, output WordpressURL dùng GetAtt lấy thuộc tính PublicDnsName của EC2 Instance, rồi dùng Join ghép thêm https phía trước để thành URL truy cập WordPress. Phần Export là tùy chọn.",
+   "Bên trong stack, output WebStoreURL dùng GetAtt lấy thuộc tính PublicDnsName của EC2 Instance, rồi dùng Join ghép thêm https phía trước để thành URL truy cập web store Aus-E-Mart. Phần Export là tùy chọn.",
    "Nơi nhận đầu tiên là console, ở tab Outputs, hoặc CLI. Người dùng mở ra là thấy ngay URL, IP hay endpoint mà không cần đọc template, nên Description cần viết rõ ràng.",
-   "Nơi thứ hai là stack cha khi dùng nested stack. Stack cha đọc giá trị bằng GetAtt WPStack chấm Outputs chấm WordpressURL, và trường hợp này không cần Export.",
+   "Nơi thứ hai là stack cha khi dùng nested stack. Stack cha đọc giá trị bằng GetAtt WebStack chấm Outputs chấm WebStoreURL, và trường hợp này không cần Export.",
    "Nơi thứ ba là một stack độc lập khác. Muốn vậy, output phải được Export với một tên trong region, rồi stack kia gọi ImportValue theo tên đó.",
    "Nhìn tổng thể vòng đời một stack: Parameters là đầu vào, cho phép truyền giá trị vào stack khi triển khai.",
    "Còn Outputs là đầu ra, phơi giá trị ra khỏi stack. Hai phần này là hai cửa vào và ra của một stack.",

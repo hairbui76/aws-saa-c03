@@ -76,7 +76,7 @@ flowchart LR
 - Dedicated Host: **bạn quản lý capacity** của host; Dedicated Instances: AWS lo placement.
 - Trả tiền theo **host**, không theo instance. Có On-Demand và Reserved (1/3 năm, All/Partial/No Upfront).
 - Không dùng được với **RDS** và **placement groups** (bản khóa cũ nêu, bài mới không nói).
-- Share qua **RAM** cho account, OU hoặc cả Organization: mỗi account chỉ điều khiển instance của mình.
+- Share qua **RAM** (Resource Access Manager) cho account, OU hoặc cả Organization: mỗi account chỉ điều khiển instance của mình.
 - Ngoài bài toán licensing, Dedicated Host thường **không phải** lựa chọn tối ưu: kém linh hoạt về family và size, và đắt.
 
 ## Liên kết

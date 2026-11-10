@@ -8,7 +8,7 @@
    "Cluster cho single-stream throughput 10 Gbps thay vì 5, latency thấp nhất và PPS cao nhất. Spread giúp một rack hỏng chỉ mất một instance. Partition cho tối đa 7 partition mỗi AZ, không giới hạn số instance, và cho biết instance nằm ở partition nào.",
    "Mỗi loại đều có điểm yếu. Cluster chỉ một AZ, hỏng rack có thể mất cả group. Spread giới hạn cứng 7 instance mỗi AZ và không hỗ trợ Dedicated. Partition hỏng thì mất mọi instance trong partition đó.",
    "Về use case, Cluster dành cho HPC và workload tightly coupled, nên launch cùng lúc và cùng instance type. Spread cho vài instance quan trọng như domain controller. Partition cho HDFS, HBase, Cassandra, Kafka.",
-   "Quay lại Cluster: i1 và i2 nằm cùng rack, thường cùng host, nên kết nối giữa chúng trực tiếp và cực nhanh.",
+   "Quay lại Cluster: i1 và i2 nằm cùng hardware segment, thường cùng host, nên kết nối giữa chúng trực tiếp và cực nhanh.",
    "Tương tự, i2 nối tới i3 với băng thông cao. Mọi instance trong cluster đều liên lạc nhanh với nhau, nhưng đổi lại gần như không có resilience.",
    "Lời nhắc khi đi thi: Dedicated Hosts không dùng được với placement group, đừng để bị đánh lừa bởi đáp án kết hợp hai thứ này."
   ]

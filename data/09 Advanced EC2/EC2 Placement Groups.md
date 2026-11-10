@@ -76,7 +76,7 @@ flowchart TB
 | Mục tiêu | Hiệu năng (băng thông, latency, PPS) | Resilience từng instance | Resilience theo nhóm, quy mô lớn |
 | Phạm vi AZ | **1 AZ** (khóa theo instance đầu tiên) | Nhiều AZ | Nhiều AZ |
 | Giới hạn | Theo capacity; nên launch cùng lúc, cùng type | **7 instance/AZ** | **7 partition/AZ**, không giới hạn instance/partition |
-| Phần cứng | Cùng rack, thường cùng host | Mỗi instance một rack riêng | Mỗi partition một nhóm rack riêng |
+| Phần cứng | Cùng hardware segment (hình dung như cùng rack, AWS không hứa), thường cùng host | Mỗi instance một rack riêng | Mỗi partition một nhóm rack riêng |
 | Ai quản lý việc đặt | AWS | AWS (tự động) | Bạn chọn partition hoặc để EC2 tự đặt; app topology-aware |
 | Resilience | Rất thấp | Cao nhất | Cao nếu app biết topology |
 | Use case | HPC, khoa học, node-to-node nhanh | Ít bản sao dự phòng quan trọng: download mirror, web app trùng lặp (bản cũ: DC, file server mirror) | HDFS, HBase, Cassandra, Kafka |

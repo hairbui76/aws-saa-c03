@@ -67,7 +67,7 @@ flowchart LR
 ## Demo / Lab
 Demo 3 của chuỗi RooTube: phát hành **v3** bằng blue/green.
 1. Environment prod đang chạy **v2**. Giả sử v3 là thay đổi lớn, không muốn dùng traffic splitting hay batch, cần environment riêng.
-2. Environments → chọn prod → **Actions → Clone environment**. Tên và domain name prefix dài `rootube-app-env-brandnewenvironment`. Có thể đổi **platform branch/version** (vd nâng platform cho v3); dùng lại **service role** `aws-elasticbeanstalk-service-role` mà EB tạo. Clone.
+2. Environments → chọn prod → **Actions → Clone environment**. Tên và domain name prefix dài `rootube-app-env-brandnewenvironment`. Form clone có ô chọn **platform branch/version** (vd nâng platform cho v3); dùng lại **service role** `aws-elasticbeanstalk-service-role` mà EB tạo. Clone. (Demo 364 cho chọn branch trong form clone; theo bài lý thuyết 363 chỉ **cùng branch** mới được đảm bảo tương thích, khi thi theo bài 363.)
 3. Bản clone chạy giống hệt prod, có cả environment variable đã cấu hình ở demo trước.
 4. Trên bản clone: **Upload and deploy** `rootube-version-3.zip`, đổi deployment policy (được copy là **traffic splitting**) sang **All at once** vì chưa có người dùng. v3 chạy trên domain dài.
 5. Environment prod → **Actions → Swap environment domain**, chọn environment kia → Swap (cảnh báo: sẽ sửa cấu hình DNS **Route 53**). Domain cũ giờ ra v3, domain dài ra v2.

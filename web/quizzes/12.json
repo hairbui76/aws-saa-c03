@@ -102,7 +102,7 @@
         "answer": [
           3
         ],
-        "explain": "Giống NAT Gateway, muốn HA thì cần một mount target ở mỗi AZ; instance ở AZ không có mount target phụ thuộc AZ khác. Performance hay throughput mode không ảnh hưởng tới khả năng chịu lỗi AZ."
+        "explain": "Giống NAT Gateway zonal, muốn HA thì cần một mount target ở mỗi AZ; instance ở AZ không có mount target phụ thuộc AZ khác. Performance hay throughput mode không ảnh hưởng tới khả năng chịu lỗi AZ."
       },
       {
         "type": "single",
