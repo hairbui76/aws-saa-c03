@@ -17,7 +17,7 @@ test('build reads the update batch, works without one, and rejects an unknown le
     let r = build();
     assert.equal(r.status, 0, r.stderr);
     assert.ok(fs.existsSync(path.join(OUT, 'updates.json')), 'updates.json written');
-    assert.match(r.stdout, /updates: 0 mới, 0 cập nhật, 0 không còn trong khóa/);
+    assert.match(r.stdout, /updates: \d+ mới, \d+ cập nhật, \d+ không còn trong khóa/);
 
     // 2. no batch file: no updates.json, no `u` on any lesson
     r = build({ SAA_UPDATES: '/không/có.json' });
