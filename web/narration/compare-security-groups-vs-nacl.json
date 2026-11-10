@@ -1,6 +1,6 @@
 {
  "Compare - Security Groups vs NACL": {
-  "sig": "8-ps21yh",
+  "sig": "8-rvkwvt",
   "steps": [
    "Sơ đồ này so sánh hai lớp lọc traffic trong VPC. Gói tin từ ngoài vào phải qua NACL ở biên subnet trước, rồi mới tới Security Group gắn trên ENI.",
    "Đầu tiên, traffic từ Internet đi vào VPC thông qua Internet Gateway, hay IGW.",
@@ -9,7 +9,7 @@
    "Còn khi EC2-A nói chuyện với EC2-B trong cùng subnet, traffic không băng qua ranh giới subnet nên NACL không ảnh hưởng, chỉ có Security Group lọc thôi.",
    "Security Group gắn vào ENI, là stateful nên response tự được cho qua. Nó chỉ có rule allow, xét mọi rule cùng lúc, và tham chiếu được Security Group khác.",
    "NACL gắn vào subnet, stateless, có cả allow lẫn deny, xét rule theo số thứ tự từ nhỏ đến lớn. Nó chỉ hiểu IP, CIDR, port và protocol, không tham chiếu logical resource.",
-   "Khi đi thi, nhớ mô hình chuẩn: dùng Security Group để allow, dùng NACL để deny bad actor. Và NAT Gateway không gắn được Security Group, nên muốn lọc nó thì chỉ có NACL."
+   "Khi đi thi, nhớ mô hình chuẩn: dùng Security Group để allow, dùng NACL để deny bad actor. Và NAT Gateway không gắn được Security Group; với NAT Gateway zonal thì lọc bằng NACL của subnet chứa nó."
   ]
  },
  "Compare - Security Groups vs NACL - rules": {

@@ -586,8 +586,10 @@
       "kind": "updated",
       "summary": "SG hỗ trợ prefix list và gộp rule khi ENI gắn nhiều SG; ghi rõ NACL áp dụng cho NAT Gateway kiểu zonal (nằm trong subnet).",
       "changed": [
+        "🖼️ Sơ đồ",
         "Bảng so sánh nhiều chiều",
-        "Khi nào chọn cái nào"
+        "Khi nào chọn cái nào",
+        "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []
     }

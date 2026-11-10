@@ -77,7 +77,7 @@ Packet vào phải qua **cả hai**: NACL ở biên subnet trước, sau đó t�
 - Gắn **custom NACL** mới tạo vào subnet thì **mọi traffic bị chặn** vì chỉ có implicit deny. Ngược lại, default NACL cho qua hết.
 - NACL xử lý theo thứ tự, gặp rule khớp đầu tiên thì dừng. Đề cho rule allow số 100 và deny số 200 với cùng IP thì kết quả là **allow**.
 - Mỗi subnet có đúng 1 NACL. Một NACL dùng cho nhiều subnet được.
-- NAT Gateway không gắn được SG, chỉ dùng NACL.
+- NAT Gateway không gắn được SG; NATGW zonal lọc bằng NACL của subnet chứa nó (bài không nói về NATGW regional).
 
 ## Liên kết
 - Tiên quyết: [[Stateful vs Stateless Firewalls]], [[Layer 4 Transport]], [[VPC Subnets]]
