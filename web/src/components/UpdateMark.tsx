@@ -7,7 +7,7 @@ const TITLES: Record<UpdateKind, string> = {
   removed: 'Bài không còn trong bản khóa mới, giữ lại để tham khảo',
 };
 
-/** ❗ (blue: changed, red: no longer in the new course) or a green MỚI chip, on a lesson touched by the update batch. */
+/** ❗ (red: changed, blue: no longer in the new course) or a green MỚI chip, on a lesson touched by the update batch. */
 export function UpdateMark({ kind, size = 15 }: { kind?: UpdateKind; size?: number }) {
   if (!kind) return null;
   const title = TITLES[kind];

@@ -16,11 +16,11 @@
   --green-soft: #d3f9d8;
   --red: #e03131;
   --red-soft: #ffe3e3;
-  /* update marks (UpdateMark): blue = changed, red = no longer in the new course, green chip = new lesson */
-  --upd-changed: #1971c2;
-  --upd-changed-soft: #d0ebff;
-  --upd-removed: #e03131;
-  --upd-removed-soft: #ffe3e3;
+  /* update marks (UpdateMark): red = changed, blue = no longer in the new course, green chip = new lesson */
+  --upd-changed: #e03131;
+  --upd-changed-soft: #ffe3e3;
+  --upd-removed: #1971c2;
+  --upd-removed-soft: #d0ebff;
   --upd-new: #2b8a3e;
   --violet-soft: #e5dbff;
   --hand: 'Patrick Hand', 'Be Vietnam Pro', cursive;
@@ -68,10 +68,10 @@
   --green-soft: #1f3b27;
   --red: #ff8787;
   --red-soft: #4a2526;
-  --upd-changed: #74c0fc;
-  --upd-changed-soft: #1e3a55;
-  --upd-removed: #ff8787;
-  --upd-removed-soft: #4a2526;
+  --upd-changed: #ff8787;
+  --upd-changed-soft: #4a2526;
+  --upd-removed: #74c0fc;
+  --upd-removed-soft: #1e3a55;
   --upd-new: #69db7c;
   --violet-soft: #352b52;
   --bg-2: #2a2b30;
