@@ -1,11 +1,12 @@
 ---
 tags: [saa-c03, s11-databases, database, migration, hybrid]
-aliases: [Database Migration Service, AWS DMS, SCT, Schema Conversion Tool, CDC]
+aliases: [Database Migration Service, AWS DMS, SCT, Schema Conversion Tool, CDC, DMS Serverless, DMS Schema Conversion]
 lessons: ["0216 Database Migration Service DMS"]
+videos: ["208 [ASSOCIATESHARED] Database Migration Service (DMS)"]
 ---
 # DMS
 
-> **TL;DR:** AWS Database Migration Service là dịch vụ migrate database có quản lý. Một **replication instance** chạy các **replication task** để chuyển dữ liệu từ **source endpoint** tới **target endpoint**, với 3 chế độ: **Full load**, **Full load + CDC**, **CDC only**. Điều kiện duy nhất: ít nhất một đầu phải nằm trong AWS. Đổi engine thì dùng thêm **SCT** để chuyển schema.
+> **TL;DR:** AWS Database Migration Service là dịch vụ migrate database có quản lý. Một **replication instance** (DMS Standard) chạy các **replication task**, hoặc **DMS Serverless** tự lo capacity theo min/max **DCU**, để chuyển dữ liệu từ **source endpoint** tới **target endpoint**, với 3 chế độ: **Full load**, **Full load + CDC**, **CDC only**. Điều kiện duy nhất: ít nhất một đầu phải nằm trong AWS. Đổi engine thì dùng thêm **DMS Schema Conversion** (tích hợp sẵn trong DMS; trước đây là công cụ riêng **SCT**) để chuyển schema.
 
 ## 🖼️ Sơ đồ
 ![[DMS.excalidraw]]
@@ -16,10 +17,10 @@ lessons: ["0216 Database Migration Service DMS"]
 
 ## Khái niệm cốt lõi
 - Migrate DB thủ công rất phức tạp: dựng replication, hoặc backup point-in-time rồi restore. Vấn đề là xử lý các thay đổi phát sinh giữa lúc backup và lúc DB mới chạy, và migrate giữa các engine khác nhau.
-- Thành phần:
-  - **Replication instance**: EC2 có phần mềm migration, giao tiếp với dịch vụ DMS. Một instance chạy được **nhiều replication task**.
-  - **Replication task**: chứa mọi tùy chọn của một lần migrate.
-  - **Source endpoint / target endpoint**: thông tin kết nối tới DB nguồn và đích.
+- Hai cách chạy:
+  - **DMS Standard**: **replication instance** là EC2 có phần mềm migration, giao tiếp với dịch vụ DMS. Một instance chạy được **nhiều replication task**; mỗi **task** chứa mọi tùy chọn của một lần migrate.
+  - **DMS Serverless**: không tạo instance. Bạn tạo một **replication** (chứa replication configuration, tương đương task, cũng là Full load / Full load + CDC / CDC only) và đặt **min/max DMS Capacity Unit (DCU)**; DMS tự lo compute, availability và scale. Lưu ý: **chưa hỗ trợ mọi loại database** như DMS Standard.
+  - Cả hai đều cần **source endpoint / target endpoint**: thông tin kết nối tới DB nguồn và đích.
 - **Ít nhất một endpoint phải ở trong AWS**. Không dùng DMS để migrate giữa hai DB on-premises.
 - Engine hỗ trợ rất rộng: MySQL, Aurora, Microsoft SQL Server, MariaDB, MongoDB, PostgreSQL, Oracle, Azure SQL và nhiều engine khác.
 
@@ -45,13 +46,15 @@ flowchart LR
 - Dữ liệu thường đi qua mạng: internet, [[Site-to-Site VPN|VPN]], [[Direct Connect]] hoặc [[VPC Peering]].
 
 ### Schema Conversion Tool (SCT)
-- DMS **không tự chuyển đổi schema**. SCT là **ứng dụng độc lập** chuyên chuyển schema giữa các engine/version khác nhau.
-- **Chỉ dùng khi engine thay đổi**. Ví dụ dùng SCT: MSSQL on-prem → RDS MySQL; Oracle on-prem → Aurora.
-- **Không dùng** khi engine giống nhau, dù sản phẩm khác: MySQL on-prem → RDS MySQL thì không cần SCT.
-- Hỗ trợ OLTP (MySQL, MSSQL, Oracle) và OLAP (Teradata, Oracle, Vertica, Greenplum); đích OLAP thường là [[Redshift]].
-- (Bổ sung) Hiện nay có thêm **DMS Schema Conversion** chạy ngay trong console DMS, cùng chức năng với SCT nhưng không cần cài ứng dụng.
+- Chuyển schema nay là tính năng có sẵn trong DMS: **DMS Schema Conversion**. Trước đây phải dùng **ứng dụng độc lập SCT** (Schema Conversion Tool); SCT vẫn còn, nhưng chức năng chính đã nằm trong DMS. (Bản khóa cũ dạy: DMS không tự chuyển schema, phải dùng SCT.)
+- Chỉ chuyển **schema** giữa các engine/version khác nhau; **chuyển dữ liệu vẫn là việc của DMS**.
+- **Chỉ dùng khi engine thay đổi**. Ví dụ: MSSQL on-prem → RDS MySQL; Oracle on-prem → Aurora.
+- **Không dùng** khi engine giống nhau, dù sản phẩm khác: MySQL on-prem → RDS MySQL thì không cần chuyển schema.
+- DMS Schema Conversion hỗ trợ OLTP (MySQL, MSSQL, Oracle) nhưng **không hỗ trợ mọi loại DB**: nhiều DB **OLAP** như **Teradata, Vertica, Greenplum** vẫn phải dùng **SCT riêng**; đích OLAP thường là [[Redshift]].
 
-### DMS + Snowball cho migration rất lớn
+## DMS + Snowball cho migration rất lớn
+(Phần này của bản khóa cũ; bài DMS mới không nói, và khóa mới không còn bài nào về Snowball.)
+
 Migration nhiều TB qua mạng thì chậm và chiếm băng thông của doanh nghiệp, nên DMS có thể dùng [[Snow Family|Snowball]]:
 1. Dùng **SCT** trích dữ liệu ra local, chép vào thiết bị Snowball.
 2. Gửi thiết bị về AWS; AWS nạp dữ liệu vào **S3 bucket**.
@@ -71,9 +74,10 @@ flowchart LR
 ## 🎯 Mẹo thi SAA-C03
 - Bất kỳ câu hỏi **migrate database** nào, chỉ cần một đầu ở AWS và engine được hỗ trợ → **mặc định chọn DMS**.
 - "**No downtime / minimal downtime** migration" → **DMS với Full load + CDC**.
-- "Đổi engine (heterogeneous), ví dụ Oracle/MSSQL → Aurora/MySQL/PostgreSQL" → **SCT + DMS**. Cùng engine (homogeneous) → **không cần SCT**.
+- "Đổi engine (heterogeneous), ví dụ Oracle/MSSQL → Aurora/MySQL/PostgreSQL" → **DMS + Schema Conversion** (DMS Schema Conversion, hoặc SCT riêng với DB OLAP như Teradata/Vertica/Greenplum). Cùng engine (homogeneous) → **không cần chuyển schema**.
+- "Không muốn quản lý replication instance / capacity" → **DMS Serverless** (min/max DCU), nếu DB được hỗ trợ.
 - "Đã bulk load bằng công cụ native, chỉ cần đồng bộ thay đổi" → **CDC only**.
-- "DB nhiều TB, đường mạng yếu hoặc không muốn chiếm băng thông" → **DMS + SCT + Snowball** (đi qua S3).
+- "DB nhiều TB, đường mạng yếu hoặc không muốn chiếm băng thông" → **DMS + SCT + Snowball** (đi qua S3; bản khóa cũ nêu, bài mới không nói).
 - Bẫy: DMS **không** migrate giữa hai DB đều on-prem.
 - Phân biệt [[DataSync]] (đồng bộ **file/object**, NFS/SMB/S3/EFS) với DMS (**database**).
 

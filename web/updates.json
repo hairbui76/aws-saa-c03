@@ -14,7 +14,9 @@
     "Exam Cheat Sheet: NAT Gateway có chế độ zonal (mỗi AZ một cái, trong public subnet) và regional (một NATGW cho cả VPC, AWS trải qua các AZ); private NAT Gateway cho mạng private chồng lấn",
     "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64",
     "Exam Cheat Sheet: mốc EBS mới (gp2 16K, io1 64K, gp3 80K / 2,000 MiB/s, io2 Block Express 256K; io2 = Block Express), FSR tối đa 5/region, Spot cảnh báo 2 phút và terminate/stop/hibernate, RI Standard/Convertible, ODCR giá On-Demand (immediate/future, open/targeted), Savings Plans không giữ capacity, Scheduled RI đã deprecated",
-    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans"
+    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans",
+    "Exam Cheat Sheet: Aurora 256 TiB và storage co giãn lên xuống, Aurora I/O-Optimized, read replica 15/5/3 theo engine, Multi-AZ cluster chỉ MySQL/PostgreSQL, Aurora Global 10 secondary region, DMS Serverless và DMS Schema Conversion, Vault Lock compliance mode và PITR 35 ngày, EFS Elastic mặc định, Max I/O legacy, EC2 Mac",
+    "Top mẹo thi và concept map chương 11 và 12: Aurora 256 TiB và I/O-Optimized, Serverless v2, RDS Custom Oracle tới 3/2027, TDE không còn CloudHSM, Multi-AZ cluster semi-synchronous, DMS Serverless và Schema Conversion; EFS Elastic, Max I/O legacy, Vault Lock governance/compliance"
   ],
   "missing": [],
   "lessons": {
@@ -789,6 +791,169 @@
         "🖼️ Sơ đồ",
         "Khái niệm cốt lõi",
         "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "ACID vs BASE": {
+      "kind": "removed",
+      "summary": "khóa mới không còn bài ACID vs BASE"
+    },
+    "Aurora Multi-Master": {
+      "kind": "removed",
+      "summary": "khóa mới không còn bài Aurora Multi-Master"
+    },
+    "RDS Architecture": {
+      "kind": "updated",
+      "summary": "Thêm engine thương mại IBM Db2; backup lấy từ standby vẫn có thể làm IO latency tăng nhẹ; demo console mới (template Sandbox, encryption bật sẵn, không đổi được VPC sau khi tạo).",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Chi phí RDS",
+        "Demo / Lab — Migrate DB từ EC2 sang RDS",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "RDS Multi-AZ": {
+      "kind": "updated",
+      "summary": "Multi-AZ cluster: replication semi-synchronous, chỉ hỗ trợ MySQL và PostgreSQL, reader endpoint chỉ trỏ reader; backup từ standby vẫn có thể tăng IO latency nhẹ.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Multi-AZ Instance deployment (kiểu \"classic\")",
+        "Multi-AZ Cluster deployment (kiểu mới)",
+        "Bảng so sánh",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "RDS Backups and Restore": {
+      "kind": "updated",
+      "summary": "Cross-region backup replication chỉ cho single-AZ và Multi-AZ instance, không hỗ trợ Multi-AZ DB cluster.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cross-region backup",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "RDS Read Replicas": {
+      "kind": "updated",
+      "summary": "Số read replica theo engine: 15 (MySQL, MariaDB, PostgreSQL), 5 (Oracle, SQL Server), 3 (Db2); replica của replica chỉ với MySQL, MariaDB, một số PostgreSQL.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Vì sao quan trọng",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "RDS Security": {
+      "kind": "updated",
+      "summary": "RDS không còn hỗ trợ CloudHSM cho TDE; KMS key là regional (replica, snapshot ở region khác dùng key region đích); mã hóa chỉ bật lúc tạo; ép TLS theo user hoặc cả instance tùy engine.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "RDS Custom": {
+      "kind": "updated",
+      "summary": "RDS Custom for Oracle hết hạn 31/3/2027; trong bảng trách nhiệm, HA của RDS Custom nay do AWS lo.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Aurora": {
+      "kind": "updated",
+      "summary": "Cluster volume tối đa 256 TiB; storage co giãn cả lên lẫn xuống (high watermark là hành vi legacy); thêm cấu hình Standard và I/O-Optimized (chuyển khi I/O từ ~25% chi phí).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Demo / Lab"
+      ]
+    },
+    "Aurora Serverless": {
+      "kind": "updated",
+      "summary": "Bài mới dạy Serverless v2 (v1 hết hạn 3/2025): instance serverless scale tại chỗ trong min/max ACU đặt ở mức cluster, trộn được với instance provisioned, auto-pause về 0 ACU.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Demo / Lab"
+      ]
+    },
+    "Aurora Global Database": {
+      "kind": "updated",
+      "summary": "Tối đa 10 secondary region; global database writer endpoint tự trỏ tới writer hiện tại; switchover có kế hoạch không mất dữ liệu, failover có thể mất vài giây.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "RDS Proxy": {
+      "kind": "updated",
+      "summary": "Engine hỗ trợ (không có Oracle, Db2), proxy phải cùng VPC với database, thời gian failover giảm tới 66% cho cả RDS Multi-AZ và Aurora.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "DMS": {
+      "kind": "updated",
+      "summary": "Thêm DMS Serverless (min/max DCU, không cần replication instance); chuyển schema nay tích hợp trong DMS (DMS Schema Conversion), SCT riêng còn cho DB OLAP.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "DMS + Snowball cho migration rất lớn"
+      ]
+    },
+    "EFS": {
+      "kind": "updated",
+      "summary": "Dùng được với Lambda, ECS/EKS và EC2 Mac; throughput Elastic là mặc định, Max I/O là legacy; mount từ on-premises bằng IP mount target; lifecycle sang Archive.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Demo cũ: WordPress dùng EFS"
+      ]
+    },
+    "AWS Backup": {
+      "kind": "updated",
+      "summary": "Vault Lock có hai mode governance và compliance (cool-off tự chọn, tối thiểu 72 giờ); continuous backup cho PITR tới 35 ngày.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []

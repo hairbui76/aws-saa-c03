@@ -4,7 +4,7 @@
   "steps": [
    "Sơ đồ này nói về RDS read replica, bản sao chỉ đọc được replicate bất đồng bộ. Ghi được commit ở primary trước, replica nhận sau, nên luôn có một độ trễ gọi là replication lag.",
    "Ứng dụng ghi và đọc vào primary, còn phần đọc có thể chuyển sang read replica. Nhưng replica có endpoint riêng, nên app phải được sửa để dùng, nếu không replica coi như vô dụng.",
-   "Primary replicate bất đồng bộ sang replica, lag thường vài giây. Bạn có tới 5 replica trực tiếp, replica còn có replica riêng nhưng lag cộng dồn, và có thể đặt replica ở region khác với dữ liệu được mã hóa in transit.",
+   "Primary replicate bất đồng bộ sang replica, lag thường vài giây. MySQL, MariaDB và PostgreSQL cho tới 15 replica, Oracle và SQL Server 5, Db2 3. Replica còn có replica riêng nhưng lag cộng dồn, và có thể đặt replica ở region khác với dữ liệu được mã hóa in transit.",
    "Khi cần, bạn promote cross-region replica thành một instance độc lập đọc ghi bình thường. Lưu ý bước promote này là thủ công, không tự động.",
    "Nếu cả region chính sập, promote replica ở region kia giúp RPO gần 0 vì dữ liệu sync liên tục, và RTO thấp vì promote nhanh hơn nhiều so với restore snapshot.",
    "Khi đi thi nhớ: read replica không tự failover, app không tự biết replica, và không chống data corruption vì lỗi cũng được replicate theo. Với RDS, sync là Multi-AZ, async là read replica; Aurora cross-region thì chọn Aurora Global Database."

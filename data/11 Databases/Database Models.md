@@ -2,6 +2,7 @@
 tags: [saa-c03, s11-databases, database, fundamentals, nosql, sql]
 aliases: [Database Refresher, SQL vs NoSQL, RDBMS, NoSQL, Relational vs Non-relational, Key-Value, Wide Column, Document DB, Columnar DB, Graph DB]
 lessons: ["0193 Database Refresher MODELS PART1", "0194 Database Refresher MODELS PART2"]
+videos: ["190 [ASSOCIATESHARED] Database Refresher & MODELS - PART1", "191 [ASSOCIATESHARED] Database Refresher & MODELS - PART2"]
 ---
 # Database Models
 
@@ -36,7 +37,7 @@ flowchart LR
 ## Các mô hình NoSQL
 
 ### Key-Value
-- Chỉ là danh sách cặp **key → value**, không có structure, không có schema, không có quan hệ bảng. Ví dụ: key = thời điểm, value = số bánh bị lấy khỏi máy cho ăn trong 60 phút trước.
+- Chỉ là danh sách cặp **key → value**, không có structure, không có schema, không có quan hệ bảng. Ví dụ: giỏ hàng của Aus-E-Mart, key = user ID, value = nội dung giỏ hàng.
 - Chỉ cần **key duy nhất**. Value là **opaque** với DB (text, JSON, ảnh mèo... đều được).
 - Một số sản phẩm cho tạo nhiều "bảng" key-value nhưng chỉ để chia dữ liệu, không có liên kết.
 - **Rất scalable** (có thể chia dữ liệu ra nhiều server) và **rất nhanh** (ít thứ cản giữa ghi và đĩa).

@@ -2,10 +2,11 @@
 tags: [saa-c03, s11-databases, database, aurora, rds, high-availability, storage]
 aliases: [Amazon Aurora, Aurora Provisioned, Aurora Architecture, Aurora Cluster]
 lessons: ["0208 Aurora Architecture", "0209 DEMO Migrating Wordpress onto Aurora PART1", "0210 DEMO Migrating Wordpress onto Aurora PART2"]
+videos: ["204 [ASSOCIATESHARED] Aurora Architecture"]
 ---
 # Aurora
 
-> **TL;DR:** Aurora chính thức thuộc RDS, nhưng kiến trúc khác hẳn nên Adrian coi nó là một sản phẩm riêng. Đơn vị cơ bản là **cluster**: 1 primary + tối đa 15 replica dùng chung một **cluster volume** SSD được sao chép 6 bản qua 3 AZ. Replica vừa đọc được trong lúc chạy bình thường vừa làm đích failover, nên bạn có lợi ích của Multi-AZ và Read Replica cùng lúc.
+> **TL;DR:** Aurora chính thức thuộc RDS, nhưng kiến trúc khác hẳn nên giảng viên coi nó là một sản phẩm riêng. Đơn vị cơ bản là **cluster**: 1 primary + tối đa 15 replica dùng chung một **cluster volume** SSD được sao chép 6 bản qua 3 AZ. Replica vừa đọc được trong lúc chạy bình thường vừa làm đích failover, nên bạn có lợi ích của Multi-AZ và Read Replica cùng lúc.
 
 ## 🖼️ Sơ đồ
 ![[Aurora.excalidraw]]
@@ -19,12 +20,14 @@ lessons: ["0208 Aurora Architecture", "0209 DEMO Migrating Wordpress onto Aurora
 ### Cluster thay vì instance
 - Các engine RDS khác không có khái niệm cluster; Aurora có (xem [[RDS Architecture]]).
 - Compute gồm **1 primary instance** (đọc + ghi) và **0 hoặc nhiều replica**.
-- Khác với standby của [[RDS Multi-AZ]] (chỉ ngồi chờ, không phục vụ đọc), replica của Aurora **phục vụ đọc ngay trong lúc hoạt động bình thường** và cũng là **đích failover**. Không cần chọn giữa availability và read scaling như khi dùng [[RDS Read Replicas]].
+- Primary còn gọi là **writer instance** (vẫn đọc + ghi), replica gọi là **reader instance**.
+- Khác với standby của [[RDS Multi-AZ]] kiểu instance (chỉ ngồi chờ, không phục vụ đọc), replica của Aurora **phục vụ đọc ngay trong lúc hoạt động bình thường** và cũng là **đích failover**. Kiến trúc này giống RDS Multi-AZ **cluster**, vốn lấy cảm hứng từ Aurora. Không cần chọn giữa availability và read scaling, cũng không cần tạo [[RDS Read Replicas|read replica]] riêng.
 - Tối đa **15 replica**, replica nào cũng có thể được chọn làm đích failover. Failover nhanh hơn RDS thường vì không phải thay đổi gì ở storage.
 
 ### Cluster volume (shared storage)
 - Compute instance **không có storage local**; mọi instance trong cluster dùng chung một cluster volume.
-- SSD, kích thước tối đa **128 TiB** (khóa học; các version mới hơn đã nâng giới hạn lên 256 TiB).
+- SSD, kích thước tối đa **256 TiB** (bản khóa cũ nêu 128 TiB).
+- Khi tạo cluster chọn một trong hai **storage configuration**: **Standard** và **I/O-Optimized**; khác nhau chủ yếu ở cách tính tiền (xem phần Chi phí).
 - **6 bản sao** trải trên **3 AZ**. Khi primary ghi, Aurora sao chép **đồng bộ** lên cả 6 storage node.
 - Sao chép diễn ra **ở tầng storage**, không tốn tài nguyên CPU của primary hay replica.
 - Mặc định chỉ primary được ghi; primary và replica đều đọc được.
@@ -33,12 +36,12 @@ lessons: ["0208 Aurora Architecture", "0209 DEMO Migrating Wordpress onto Aurora
 - Vì storage thuộc về cluster chứ không thuộc instance, thêm/bớt replica **không cần cấp phát storage**, nhanh hơn nhiều.
 
 ### Storage billing và high watermark
-- Không cần chọn trước dung lượng storage khi tạo cluster (trong demo, form tạo Aurora **không có** mục storage). Trả tiền theo **dung lượng thực dùng**.
-- Khóa học mô tả mô hình **high watermark**: đã dùng 50 GiB rồi xóa còn 40 GiB vẫn bị tính 50 GiB (dung lượng giải phóng thì dùng lại được). Muốn giảm hẳn chi phí storage thì tạo cluster mới rồi migrate dữ liệu sang.
-- Adrian cũng nói AWS đã bỏ cơ chế này ở các version mới (hiện nay storage co giãn động khi xóa dữ liệu), nhưng khi đi thi vẫn nên giả định high watermark.
+- Không cần chọn trước dung lượng storage khi tạo cluster (form tạo Aurora **không có** mục storage). Trả tiền theo **dung lượng thực dùng** của cluster, tới giới hạn 256 TiB.
+- **Dynamic resizing**: dùng 50 GB thì trả 50 GB; xóa bớt dữ liệu thì hóa đơn storage **giảm theo**. Storage co giãn **cả lên lẫn xuống**.
+- **High watermark là hành vi legacy** của các version Aurora cũ: đã dùng 50 GiB rồi xóa còn 40 GiB vẫn bị tính 50 GiB, muốn giảm thì phải tạo cluster mới rồi migrate dữ liệu sang. Gặp chữ "high watermark" thì hiểu là bản cũ; mọi version mới đều dynamic resizing. (Bản khóa cũ khuyên khi đi thi vẫn giả định high watermark; bài mới không còn nói vậy.)
 
 ### Endpoints
-Endpoint là các địa chỉ DNS để kết nối. Aurora có nhiều endpoint hơn RDS thường:
+Endpoint là các địa chỉ DNS để kết nối. Aurora có nhiều endpoint hơn RDS thường (bài mới trình bày cluster endpoint và reader endpoint; custom và instance endpoint là bản khóa cũ nêu):
 
 | Endpoint | Trỏ tới | Dùng cho |
 |---|---|---|
@@ -52,7 +55,11 @@ Reader endpoint tự cập nhật khi thêm replica, nên scale đọc dễ hơn
 ### Chi phí
 - **Không có free tier**, vì Aurora không hỗ trợ instance micro. Nhưng với mọi cấu hình lớn hơn một RDS single-AZ micro, Aurora thường **đáng tiền hơn**.
 - Compute: tính theo giờ, **billed theo giây, tối thiểu 10 phút**.
-- Storage: GB-month (theo high watermark) **cộng phí I/O** cho mỗi request tới cluster storage. (Bổ sung: từ 2023 có cấu hình **Aurora I/O-Optimized**, không tính phí I/O, hợp với workload I/O nặng.)
+- Storage: **GB-month theo dung lượng thực dùng** (dynamic resizing: xóa dữ liệu thì hóa đơn nhỏ lại).
+- I/O tùy storage configuration:
+  - **Aurora Standard**: tính **phí I/O cho mỗi request** tới cluster storage. Rẻ cho workload I/O thấp tới vừa.
+  - **Aurora I/O-Optimized**: **không tính phí I/O**, đổi lại giá instance và storage cao hơn → chi phí **dễ dự đoán**, rẻ hơn khi I/O chiếm phần lớn hóa đơn.
+  - Quy tắc: I/O chiếm **khoảng 25% trở lên** tổng chi phí Aurora → chuyển cluster sang I/O-Optimized. Chuyển sang I/O-Optimized được **30 ngày một lần**, chuyển về Standard **bất cứ lúc nào**.
 - Backup: miễn phí dung lượng backup bằng **100% dung lượng cluster** (cluster 100 GiB → 100 GiB backup miễn phí). Với workload vừa và nhỏ, chi phí backup thường đã nằm trong giá cluster, trừ khi dữ liệu thay đổi nhiều hoặc giữ lâu.
 
 ### Backup, restore, backtrack, clone
@@ -78,7 +85,7 @@ flowchart TB
     subgraph AZC["AZ-C"]
       R2["Replica"]
     end
-    VOL["Cluster volume SSD: 6 bản sao / 3 AZ, tối đa 128 TiB"]
+    VOL["Cluster volume SSD: 6 bản sao / 3 AZ, tối đa 256 TiB"]
   end
   CE --> P
   RE --> R1
@@ -104,22 +111,25 @@ flowchart TB
 |---|---|---|
 | Đơn vị | Instance | Cluster |
 | Standby/replica | 1 standby, không đọc được | Tối đa 15 replica, đọc được, đều failover được |
-| Storage | EBS riêng mỗi instance, cấp phát trước | Cluster volume dùng chung, 6 bản/3 AZ, trả theo dùng |
-| Max storage | Tùy engine | 128 TiB (khóa học) |
+| Storage | EBS riêng mỗi instance, cấp phát trước | Cluster volume dùng chung, 6 bản/3 AZ, trả theo dùng (co giãn lên xuống) |
+| Max storage | Tùy engine | 256 TiB |
+| Phí I/O | Theo storage type (EBS) | Standard: theo request · I/O-Optimized: không tính |
 | Storage type | gp2/gp3/io1/io2/(magnetic cũ) | Chỉ SSD |
 | Endpoints | 1 endpoint (CNAME) | Cluster, reader, custom, instance |
 | Free tier | Có (micro) | Không |
 | Restore | Instance mới | Cluster mới, hoặc backtrack tại chỗ |
 
 ## 🎯 Mẹo thi SAA-C03
-- Con số cần thuộc: **6 bản sao / 3 AZ**, **15 replica**, **128 TiB**, billing **theo giây, tối thiểu 10 phút**, backup miễn phí bằng **100%** dung lượng cluster.
+- Con số cần thuộc: **6 bản sao / 3 AZ**, **15 replica**, **256 TiB**, billing **theo giây, tối thiểu 10 phút**, backup miễn phí bằng **100%** dung lượng cluster.
+- Storage Aurora **co giãn cả lên lẫn xuống** (dynamic resizing); "high watermark" là hành vi của version cũ.
+- "Chi phí I/O chiếm phần lớn hóa đơn Aurora (từ ~25%)", "muốn giá dễ dự đoán" → **Aurora I/O-Optimized** (không tính phí I/O; đổi sang được 30 ngày một lần, đổi về Standard lúc nào cũng được).
 - "Vừa cần HA vừa cần scale đọc mà không muốn trả tiền cho standby ngồi không" → Aurora (replica làm cả hai việc).
 - "Scale đọc tự động khi thêm replica, app chỉ cần một địa chỉ đọc" → **reader endpoint**.
 - "Rollback DB về vài phút trước khi lỡ xóa bảng, không đổi endpoint" → **Backtrack** (in-place). Nếu đề nói restore → luôn tạo **cluster mới**.
 - "Tạo bản sao DB production để test thật nhanh, ít tốn storage" → **Fast clone** (copy-on-write).
 - Failover Aurora nhanh hơn RDS thường vì storage dùng chung; muốn nhanh hơn nữa và trong suốt với app thì kết hợp [[RDS Proxy]].
 - Bẫy: "Aurora nằm trong free tier" → sai.
-- Migrate RDS MySQL → Aurora: dùng **migrate snapshot** (hoặc tạo Aurora read replica từ RDS MySQL); cùng engine nên không cần SCT ([[DMS]]).
+- Migrate RDS MySQL → Aurora: dùng **migrate snapshot** (hoặc tạo Aurora read replica từ RDS MySQL); cùng engine nên không cần chuyển schema ([[DMS]]).
 
 ## Liên kết
 - Tiên quyết: [[RDS Architecture]], [[RDS Multi-AZ]], [[RDS Read Replicas]], [[RDS Backups and Restore]]

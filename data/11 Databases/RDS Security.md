@@ -2,6 +2,7 @@
 tags: [saa-c03, s11-databases, database, rds, security, encryption, iam]
 aliases: [RDS Data Security, RDS Encryption, RDS IAM Authentication, RDS IAM DB Auth]
 lessons: ["0206 RDS Data Security"]
+videos: ["202 [ASSOCIATESHARED] RDS Data Security"]
 ---
 # RDS Security
 
@@ -18,19 +19,21 @@ lessons: ["0206 RDS Data Security"]
 
 ### Encryption in transit
 - Mọi engine của RDS đều hỗ trợ mã hóa đường truyền client ↔ RDS instance bằng [[SSL and TLS|SSL/TLS]].
-- Có thể bắt buộc dùng SSL/TLS **theo từng database user** (mandatory per user).
+- Có thể bắt buộc dùng SSL/TLS: với một số engine là **theo từng database user**, với engine khác là **cho cả instance**.
 
 ### Encryption at rest: KMS + EBS (mặc định, mọi engine)
 - Việc mã hóa do **RDS host** và lớp lưu trữ EBS đảm nhận ([[EBS Encryption]]). Database engine không hề biết dữ liệu bị mã hóa: nó ghi dữ liệu "thô", host mã hóa trước khi đẩy xuống EBS.
 - Dùng [[KMS]]: chọn một KMS key (khóa học gọi là CMK), có thể là AWS managed hoặc customer managed. Key này sinh ra **data encryption key (DEK)**; DEK được nạp lên RDS host khi cần và dùng cho thao tác mã hóa/giải mã thực tế (envelope encryption, xem [[Encryption Fundamentals]]).
-- Khi bật, **storage, log, snapshot và replica** đều được mã hóa bằng cùng một KMS key. Dữ liệu truyền giữa primary và replica cũng được mã hóa.
-- **Không thể tắt mã hóa** sau khi đã bật.
-- (Bổ sung, không có trong bài) Encryption at rest phải chọn lúc tạo instance. Muốn mã hóa một DB đang không mã hóa: tạo snapshot → copy snapshot có bật encryption → restore từ bản copy đó ([[RDS Backups and Restore]]).
+- Khi bật, **storage, log, automated backup, snapshot và replica** đều được mã hóa bằng cùng một KMS key. Dữ liệu truyền giữa primary và replica cũng được mã hóa.
+- **KMS key là regional**: **cross-region replica** hoặc **snapshot copy sang region khác** được mã hóa bằng một key ở **region đích**.
+- **Không thể tắt mã hóa** sau khi đã bật, và **chỉ bật được lúc tạo instance**.
+- (Bổ sung, bài không nói) Muốn mã hóa một DB đang không mã hóa: tạo snapshot → copy snapshot có bật encryption → restore từ bản copy đó ([[RDS Backups and Restore]]).
 
 ### Encryption at rest: TDE (Transparent Data Encryption)
 - Chỉ **Microsoft SQL Server** và **Oracle** hỗ trợ.
 - Mã hóa/giải mã xảy ra **bên trong database engine**, không phải ở host. Dữ liệu đã được mã hóa ngay từ lúc engine ghi ra đĩa, nên mức độ phải tin tưởng vào bên khác thấp hơn.
-- **RDS Oracle + TDE + [[CloudHSM]]**: khóa nằm trong HSM do khách hàng quản lý, AWS không tiếp xúc với khóa. Kiểu này loại bỏ AWS khỏi chuỗi tin cậy, phù hợp với yêu cầu tuân thủ khắt khe.
+- Khóa TDE nằm cùng database, trong **key store của chính engine**, do RDS quản lý giúp bạn.
+- **[[CloudHSM]] không còn được hỗ trợ cho TDE trên RDS**: trước đây RDS Oracle dùng được CloudHSM để giấu khóa TDE khỏi chính những người vận hành RDS; nay không còn lựa chọn này cho Oracle, và RDS SQL Server thì chưa bao giờ có. (Bản khóa cũ dạy "RDS Oracle + TDE + CloudHSM" như một cách loại AWS khỏi chuỗi tin cậy.)
 
 ## Cách hoạt động / Kiến trúc
 
@@ -39,7 +42,7 @@ lessons: ["0206 RDS Data Security"]
 flowchart LR
   subgraph TDE["Oracle / MSSQL với TDE"]
     E1["DB engine<br/>(tự mã hóa)"] -->|"dữ liệu đã mã hóa"| H1["RDS host"] --> V1["EBS volume"]
-    HSM["CloudHSM<br/>(khách hàng quản lý khóa)"] -.-> E1
+    KS["Key store của engine<br/>(RDS quản lý)"] -.-> E1
   end
   subgraph KMSE["Engine bất kỳ với KMS"]
     E2["DB engine<br/>(không biết mã hóa)"] -->|"dữ liệu thô"| H2["RDS host<br/>dùng DEK để mã hóa"] --> V2["EBS volume + snapshot"]
@@ -70,22 +73,22 @@ sequenceDiagram
 
 - **Đây chỉ là authentication, không phải authorization.** Quyền trên các object trong DB vẫn được gán cho local DB user và do engine kiểm soát. IAM không cấp quyền gì bên trong database.
 - Chỉ hoạt động khi bạn chủ động bật trên instance.
-- (Bổ sung) IAM DB auth hỗ trợ RDS MySQL, MariaDB, PostgreSQL và Aurora MySQL/PostgreSQL; không áp dụng cho RDS Oracle và SQL Server.
+- Chỉ hỗ trợ engine **MariaDB, MySQL và PostgreSQL**. (Bổ sung, bài không nói: Aurora MySQL/PostgreSQL cũng hỗ trợ; RDS Oracle, SQL Server thì không.)
 
 ## Bảng so sánh / số liệu
 
 | Cơ chế | Engine | Ai mã hóa | Key | Ghi chú |
 |---|---|---|---|---|
-| SSL/TLS in transit | Mọi engine | Client ↔ endpoint | Cert của RDS | Có thể bắt buộc theo từng user |
-| KMS + EBS at rest | Mọi engine | RDS host | KMS key → DEK | Áp dụng cho storage, log, snapshot, replica; không gỡ được |
-| TDE | MSSQL, Oracle | DB engine | Do engine quản (Oracle có thể dùng CloudHSM) | Ít phải tin tưởng AWS hơn |
+| SSL/TLS in transit | Mọi engine | Client ↔ endpoint | Cert của RDS | Có thể bắt buộc theo từng user hoặc cả instance (tùy engine) |
+| KMS + EBS at rest | Mọi engine | RDS host | KMS key → DEK | Áp dụng cho storage, log, backup, snapshot, replica; chỉ bật lúc tạo, không gỡ được; cross-region dùng key ở region đích |
+| TDE | MSSQL, Oracle | DB engine | Key store của engine, RDS quản lý (không còn CloudHSM) | Ít phải tin tưởng AWS hơn |
 | IAM DB auth | MySQL/MariaDB/PostgreSQL/Aurora | — | Token 15 phút | Chỉ authentication |
 
 ## 🎯 Mẹo thi SAA-C03
 - "Đăng nhập DB không dùng password / dùng IAM role của EC2 hoặc Lambda để vào DB" → **IAM DB Authentication** + `generate-db-auth-token`. Nhưng nếu đề hỏi "kiểm soát quyền đọc/ghi bảng bằng IAM" thì đó là bẫy: **IAM không làm authorization** trong RDS.
 - Token có hiệu lực **15 phút**.
-- "Mã hóa trong engine, AWS không được thấy khóa" → **TDE** (MSSQL/Oracle); thêm "khóa trong HSM do khách hàng quản lý" → **Oracle TDE + CloudHSM**.
-- Encryption at rest bằng KMS: snapshot, log, replica **đều mã hóa theo** và **không thể tắt**. Cần mã hóa DB đang plaintext → đi đường snapshot → copy (encrypt) → restore.
+- "Mã hóa ngay trong database engine" → **TDE** (chỉ MSSQL/Oracle). Bẫy: **RDS Oracle TDE + CloudHSM nay không còn được hỗ trợ** (bản khóa cũ dạy là có).
+- Encryption at rest bằng KMS: **chỉ bật lúc tạo instance**; snapshot, log, backup, replica **đều mã hóa theo** và **không thể tắt**. Replica/snapshot ở region khác dùng KMS key của **region đích**. Cần mã hóa DB đang plaintext → đi đường snapshot → copy (encrypt) → restore (bổ sung, bài không nói).
 - "Bắt buộc mã hóa kết nối từ client" → SSL/TLS, có thể ép theo user; nếu có RDS Proxy thì proxy cũng ép được TLS ([[RDS Proxy]]).
 
 ## Liên kết

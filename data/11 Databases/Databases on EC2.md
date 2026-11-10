@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s11-databases, database, compute, ec2]
-aliases: [Self-managed Database, DB on EC2, Splitting WordPress Monolith]
+aliases: [Self-managed Database, DB on EC2, Splitting WordPress Monolith, Splitting a Monolithic Web App]
 lessons: ["0196 Databases on EC2", "0197 DEMO Splitting Wordpress Monolith APP DB"]
+videos: ["192 [ASSOCIATESHARED] Databases on EC2", "193 [ASSOCIATESHARED][DEMO] Splitting a Monolithic Web App to App & DB"]
 ---
 # Databases on EC2
 
@@ -16,7 +17,7 @@ lessons: ["0196 Databases on EC2", "0197 DEMO Splitting Wordpress Monolith APP D
 
 ## Khái niệm cốt lõi
 Hai kiến trúc thường gặp:
-1. **Monolith**: một instance chạy cả web server (Apache), application (WordPress) và database — nằm trong **một AZ**. Đây là kiến trúc Animals4life WordPress dùng tới giờ.
+1. **Monolith**: một instance chạy cả web server (ví dụ Apache), application và database — nằm trong **một AZ**. Đây là kiến trúc Aus-E-Mart Web Store dùng tới giờ.
 2. **Split architecture**: tách DB ra instance riêng. Hai instance có thể cùng AZ hoặc khác AZ (AZ-A chạy web+app, AZ-B chạy DB).
 
 Khi tách ra:
@@ -56,16 +57,17 @@ flowchart LR
 - **Replication**: tự setup, tự giám sát, cần kỹ năng.
 - **Performance**: không có các tối ưu hiệu năng mà AWS xây cho managed DB.
 
-## Demo / Lab — Tách WordPress monolith thành App + DB
-Kiến trúc: từ 1 instance `A4L-WordPress` (WordPress + MariaDB) sang 2 instance, DB chạy trên `A4L-DB-WordPress` (MariaDB riêng). Đây là bước 1 trong lộ trình tiến tới kiến trúc elastic (xem [[Lab - Architecture Evolution]]).
-1. Deploy stack CloudFormation (one-click), cài WordPress, tạo bài viết "The Best Cats Ever!!!" có gallery 4 ảnh. Dữ liệu bài viết vào MariaDB local; **ảnh lưu trên file system local** của instance (vấn đề sẽ phải xử lý sau bằng shared storage như [[EFS]]).
-2. Trên instance app (kết nối bằng [[EC2 Instance Connect and SSH|EC2 Instance Connect]]), dump DB: `mysqldump -u root -p a4lwordpress > a4lwordpress.sql` (`-p` có khoảng trắng phía sau → hỏi password).
-3. Nạp dump vào DB mới qua **private IP**: `mysql -h <privateIP> -u a4lwordpress -p a4lwordpress < a4lwordpress.sql`.
-4. Sửa `/var/www/html/wp-config.php`: đổi `DB_HOST` từ `localhost` sang private IP của instance DB.
-5. Kiểm chứng: `sudo service mariadb stop` trên instance app, refresh site vẫn chạy → WordPress đang dùng DB riêng.
-6. Dọn: xóa stack CloudFormation.
+## Demo / Lab — Tách web app monolith thành App + DB
+Kiến trúc: từ một instance chạy cả Aus-E-Mart Web Store (ứng dụng web Python) lẫn dữ liệu, sang hai tầng: app trên một EC2, database **MariaDB** trên một EC2 khác. Đây là bước đầu trong chuỗi tiến hóa kiến trúc của khóa học; DB trên EC2 vẫn chưa phải best practice.
+1. Deploy stack CloudFormation (one-click, us-east-1): tạo instance app chạy web store và một instance MariaDB rỗng. Nên đổi password DB và root trong tham số của stack.
+2. Kết nối instance app bằng [[EC2 Instance Connect and SSH|EC2 Instance Connect]]: code ở `/var/www/aem-webstore`, dữ liệu sản phẩm đang nằm **local** trong file `data/products.json`, nên không scale được.
+3. Kết nối instance DB, `mysql -u aem -p aem-webstore` → `SHOW TABLES;` rỗng.
+4. Cấu hình app tách khỏi code, nằm ở `/etc/aem-webstore/env` (đã có thông tin kết nối DB, nhưng nguồn dữ liệu đang là JSON). Chạy `sudo python3 .../migrate.py` để chuyển dữ liệu JSON sang MariaDB; `SELECT * FROM products;` thấy dữ liệu.
+5. Sửa `env`: nguồn dữ liệu `JSON` → `DB`, rồi `sudo systemctl restart aem-webstore`.
+6. Kiểm chứng: `UPDATE products SET name='croc-cap now served from MariaDB' ...` → refresh trang thấy tên mới → app đang đọc từ DB riêng.
+7. Dọn: xóa stack CloudFormation.
 
-Bài học: hiểu kiến trúc "xấu" (self-managed) để hiểu best practice; bước tiếp theo là chuyển DB sang RDS ([[RDS Architecture]]).
+Bài học: app và DB giờ scale/đổi cỡ riêng được, nhưng vẫn còn nhiều điểm yếu: DB **tự quản**, **một AZ**, **credential nằm trong file text**, ảnh sản phẩm vẫn trên instance app. Bước tiếp theo là chuyển DB sang RDS ([[RDS Architecture]]); ảnh sẽ được đưa lên shared storage như [[EFS]].
 
 ## 🎯 Mẹo thi SAA-C03
 - Mặc định: chọn **managed DB** (RDS/Aurora/DynamoDB) thay vì DB trên EC2.

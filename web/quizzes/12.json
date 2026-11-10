@@ -22,13 +22,13 @@
         "options": [
           "Bật S3 Object Lock trên bucket lưu snapshot",
           "Gắn IAM policy Deny xóa recovery point cho mọi user",
-          "Bật AWS Backup Vault Lock trên backup vault",
+          "Bật AWS Backup Vault Lock ở compliance mode trên backup vault",
           "Bật MFA Delete trên backup vault"
         ],
         "answer": [
           2
         ],
-        "explain": "Vault Lock bật WORM cho backup vault; sau thời gian cool-off không ai, kể cả AWS, xóa được backup trước hạn. S3 Object Lock là tính năng riêng cho S3 object, còn IAM deny có thể bị admin gỡ bỏ."
+        "explain": "Vault Lock bật WORM cho backup vault. Ở compliance mode, sau thời gian cool-off (tối thiểu 72 giờ) không ai, kể cả AWS, xóa được backup trước hạn; governance mode thì người có đủ quyền IAM vẫn gỡ được lock. S3 Object Lock là tính năng riêng cho S3 object, còn IAM deny có thể bị admin gỡ bỏ."
       },
       {
         "type": "single",
@@ -46,19 +46,19 @@
       },
       {
         "type": "multi",
-        "q": "Những con số nào về AWS Backup là đúng theo khóa học? (Chọn 2)",
+        "q": "Những con số nào về AWS Backup là đúng? (Chọn 2)",
         "options": [
           "Vault Lock có thời gian cool-off 24 giờ",
           "Tần suất backup nhỏ nhất qua cron expression là mỗi 5 phút",
           "Backup chuyển sang cold storage phải nằm ở đó tối thiểu 30 ngày",
-          "Vault Lock có thời gian cool-off 72 giờ, trong thời gian đó vẫn gỡ được lock",
+          "Vault Lock compliance mode có cool-off tối thiểu 72 giờ, trong thời gian đó vẫn gỡ được lock",
           "Backup chuyển sang cold storage phải nằm ở đó tối thiểu 90 ngày"
         ],
         "answer": [
           3,
           4
         ],
-        "explain": "Vault Lock có 72 giờ cool-off trước khi khóa hoàn toàn, và backup ở cold storage phải giữ tối thiểu 90 ngày. Tần suất nhỏ nhất qua cron là mỗi giờ."
+        "explain": "Compliance mode của Vault Lock có cool-off do bạn chọn, tối thiểu 72 giờ, trước khi khóa hoàn toàn; backup ở cold storage phải giữ tối thiểu 90 ngày. Tần suất nhỏ nhất qua cron là mỗi giờ; continuous backup cho PITR trong cửa sổ tới 35 ngày."
       },
       {
         "type": "single",
@@ -106,7 +106,7 @@
       },
       {
         "type": "single",
-        "q": "Một ứng dụng trên EFS lưu lượng dữ liệu nhỏ nhưng cần throughput cao và ổn định. Ở chế độ Bursting, throughput không đủ. Theo khóa học, nên chọn gì?",
+        "q": "Một ứng dụng trên EFS lưu lượng dữ liệu nhỏ nhưng cần throughput cao và ổn định, được đảm bảo ở một mức cụ thể. Ở chế độ Bursting, throughput không đủ. Nên chọn gì?",
         "options": [
           "Performance mode Max I/O",
           "Storage class One Zone",
@@ -116,7 +116,7 @@
         "answer": [
           2
         ],
-        "explain": "Bursting có throughput tăng theo dung lượng lưu (giống gp2), còn Provisioned cho phép chỉ định throughput độc lập với dung lượng (giống io1/io2). Max I/O tăng aggregate IOPS cho workload song song nhưng latency cao hơn, không giải quyết việc throughput gắn với dung lượng."
+        "explain": "Bursting có throughput tăng theo dung lượng lưu (giống gp2), còn Provisioned cho phép chỉ định throughput độc lập với dung lượng (giống io1/io2), đổi lại giá cao hơn. Elastic (mặc định) cũng tự co giãn theo tải nếu không cần mức đảm bảo cố định. Max I/O là performance mode legacy, latency cao hơn, không giải quyết việc throughput gắn với dung lượng."
       },
       {
         "type": "single",
@@ -130,7 +130,7 @@
         "answer": [
           0
         ],
-        "explain": "Max I/O dành cho workload song song cao như big data, media processing, chấp nhận latency cao hơn. General Purpose là mặc định với latency thấp, phù hợp hầu hết workload."
+        "explain": "Max I/O dành cho workload song song cao như big data, media processing, chấp nhận latency cao hơn; AWS nay xếp nó là previous generation và khuyên không dùng làm mặc định. General Purpose là mặc định với latency thấp, phù hợp hầu hết workload."
       },
       {
         "type": "multi",
@@ -146,7 +146,7 @@
           1,
           2
         ],
-        "explain": "EFS là private service, phơi ra qua mount target có IP trong subnet, và on-premises tới được qua VPN/Direct Connect. EFS chỉ hỗ trợ Linux (Windows/SMB dùng FSx for Windows), và encryption at rest chỉ bật được khi tạo file system."
+        "explain": "EFS là private service, phơi ra qua mount target có IP trong subnet, và on-premises tới được qua VPN/Direct Connect (nên mount bằng IP của mount target). EFS dành cho Linux (và macOS trên EC2), không cho Windows (Windows/SMB dùng FSx for Windows); encryption at rest chỉ bật được khi tạo file system."
       }
     ]
   }

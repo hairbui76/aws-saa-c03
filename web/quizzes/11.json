@@ -91,15 +91,15 @@
       },
       {
         "type": "single",
-        "q": "Theo khóa học, một Aurora Global Database có tối đa bao nhiêu secondary region, và mỗi secondary region có tối đa bao nhiêu replica?",
+        "q": "Một Aurora Global Database có tối đa bao nhiêu secondary region, và mỗi secondary region có tối đa bao nhiêu replica?",
         "options": [
+          "10 secondary region, mỗi region tối đa 16 replica",
+          "10 secondary region, mỗi region tối đa 15 replica",
           "5 secondary region, mỗi region tối đa 16 replica",
-          "5 secondary region, mỗi region tối đa 15 replica",
-          "3 secondary region, mỗi region tối đa 6 replica",
-          "10 secondary region, mỗi region tối đa 5 replica"
+          "3 secondary region, mỗi region tối đa 6 replica"
         ],
         "answer": [0],
-        "explain": "Khóa học nêu 5 secondary region (hiện AWS đã nâng lên 10), mỗi secondary có tối đa 16 replica vì không có writer nên cả 16 slot (1 + 15) đều là read replica. Con số 15 là số replica ở primary region."
+        "explain": "Aurora Global Database có tối đa 10 secondary region (bản khóa cũ nêu 5), mỗi secondary có tối đa 16 replica chỉ đọc vì không có writer. Con số 15 là số replica ở cluster của primary region."
       },
       {
         "type": "single",
@@ -240,29 +240,29 @@
       },
       {
         "type": "single",
-        "q": "Trong kiến trúc Aurora Serverless (v1) mà khóa học mô tả, vì sao cluster scale in/out mà không làm gián đoạn kết nối của ứng dụng?",
+        "q": "Trong Aurora Serverless v2, min/max ACU được cấu hình ở đâu và các instance serverless scale như thế nào?",
         "options": [
-          "Mỗi ACU có storage local đồng bộ với nhau nên kết nối được chuyển kèm dữ liệu",
-          "Một Application Load Balancer do người dùng tạo đứng trước các ACU",
-          "Ứng dụng kết nối qua một shared proxy fleet do AWS quản lý, proxy môi giới kết nối tới các ACU",
-          "Ứng dụng dùng instance endpoint của từng ACU và tự chuyển khi ACU thay đổi"
+          "Min/max ACU đặt riêng cho từng instance; instance scale bằng cách failover sang một instance lớn hơn",
+          "Min/max ACU đặt ở mức cluster; mỗi instance serverless scale độc lập, tại chỗ, theo CPU, memory và network mà không gián đoạn ứng dụng",
+          "Mọi instance trong cluster phải cùng là serverless và luôn scale cùng lúc như một khối",
+          "Phải tự tạo scaling policy và CloudWatch alarm để instance serverless scale"
         ],
-        "answer": [2],
-        "explain": "Client không nối trực tiếp tới ACU mà đi qua shared proxy fleet do AWS quản lý, nên việc thêm/bớt ACU trong suốt với ứng dụng. ACU là stateless và không có storage local."
+        "answer": [1],
+        "explain": "Với v2, min/max ACU cấu hình cho cả cluster nhưng mỗi instance serverless scale riêng, tại chỗ, không cần scaling policy hay alarm. Cluster trộn được instance serverless và provisioned (v1 thì không)."
       }
     ],
     "Aurora": [
       {
         "type": "single",
-        "q": "Cluster volume của Aurora (theo khóa học) có đặc điểm nào sau đây?",
+        "q": "Cluster volume của Aurora có đặc điểm nào sau đây?",
         "options": [
           "3 bản sao trên 3 AZ, tối đa 5 replica",
           "6 bản sao trên 2 AZ, tối đa 15 replica",
-          "6 bản sao trên 3 AZ, tối đa 15 replica, dung lượng tối đa 128 TiB",
+          "6 bản sao trên 3 AZ, tối đa 15 replica, dung lượng tối đa 256 TiB",
           "2 bản sao trên 2 AZ, 1 standby không đọc được"
         ],
         "answer": [2],
-        "explain": "Con số cần thuộc: cluster volume SSD 6 bản sao trên 3 AZ, tối đa 15 replica, 128 TiB (khóa học). 1 standby không đọc được là mô tả RDS Multi-AZ instance."
+        "explain": "Con số cần thuộc: cluster volume SSD 6 bản sao trên 3 AZ, tối đa 15 replica, 256 TiB (bản khóa cũ nêu 128 TiB). 1 standby không đọc được là mô tả RDS Multi-AZ instance."
       },
       {
         "type": "single",
@@ -302,16 +302,16 @@
       },
       {
         "type": "multi",
-        "q": "Những phát biểu nào về chi phí Aurora (theo khóa học) là đúng? (Chọn 2)",
+        "q": "Những phát biểu nào về chi phí Aurora là đúng? (Chọn 2)",
         "options": [
           "Aurora có free tier với instance micro giống RDS",
           "Phải chọn trước dung lượng storage khi tạo cluster",
           "Compute được tính theo giây với mức tối thiểu 10 phút",
-          "Xóa dữ liệu thì phí storage giảm ngay theo dung lượng đang dùng",
+          "Cấu hình Aurora I/O-Optimized vẫn tính phí cho mỗi I/O request tới cluster storage",
           "Dung lượng backup được miễn phí bằng 100% dung lượng cluster"
         ],
         "answer": [2, 4],
-        "explain": "Aurora tính compute theo giây (tối thiểu 10 phút) và miễn phí backup bằng 100% dung lượng cluster. Aurora không có free tier, không cần cấp phát storage trước, và khi đi thi nên giả định cơ chế high watermark (xóa dữ liệu không giảm phí ngay)."
+        "explain": "Aurora tính compute theo giây (tối thiểu 10 phút) và miễn phí backup bằng 100% dung lượng cluster. Aurora không hỗ trợ instance micro, không cần cấp phát storage trước (storage co giãn lên xuống theo dung lượng dùng). I/O-Optimized là cấu hình không tính phí I/O; Standard mới tính phí theo request."
       }
     ],
     "DMS": [
@@ -319,13 +319,13 @@
         "type": "single",
         "q": "Một công ty cần migrate database Oracle on-premises sang Aurora PostgreSQL với downtime tối thiểu. Giải pháp nào phù hợp nhất?",
         "options": [
-          "DMS với Full load only, không cần SCT",
+          "DMS với Full load only, không cần chuyển schema",
           "AWS DataSync qua Site-to-Site VPN",
-          "DMS với CDC only, không cần SCT",
-          "AWS SCT để chuyển schema, sau đó DMS với Full load + CDC"
+          "DMS với CDC only, không cần chuyển schema",
+          "Chuyển schema bằng DMS Schema Conversion (hoặc SCT), rồi DMS với Full load + CDC"
         ],
         "answer": [3],
-        "explain": "Đổi engine (Oracle → PostgreSQL) cần SCT để chuyển schema vì DMS không tự chuyển schema; minimal downtime thì dùng Full load + CDC. DataSync dùng cho file/object, không phải database."
+        "explain": "Đổi engine (Oracle → PostgreSQL) cần chuyển schema; nay DMS có sẵn tính năng DMS Schema Conversion (trước đây dùng công cụ riêng SCT). Minimal downtime thì dùng Full load + CDC. DataSync dùng cho file/object, không phải database."
       },
       {
         "type": "single",
@@ -341,15 +341,15 @@
       },
       {
         "type": "single",
-        "q": "Một công ty cần migrate database vài chục TB lên AWS nhưng đường mạng yếu và không muốn chiếm băng thông của doanh nghiệp. Giải pháp nào phù hợp?",
+        "q": "Một công ty muốn migrate database bằng AWS DMS nhưng không muốn chọn cỡ hay quản lý replication instance; AWS phải tự lo compute, availability và scale. Lựa chọn nào phù hợp (giả sử database được hỗ trợ)?",
         "options": [
-          "Dùng SCT trích dữ liệu vào Snowball, AWS nạp vào S3, rồi DMS migrate từ S3 vào DB đích",
-          "Dùng DMS Full load trực tiếp qua internet",
-          "Dùng Storage Gateway File Gateway để đồng bộ file dump",
-          "Dùng DataSync chép file dữ liệu DB vào EFS"
+          "DMS Standard với replication instance cỡ lớn nhất",
+          "DMS Serverless, đặt min/max DMS Capacity Unit (DCU)",
+          "AWS DataSync với task chạy định kỳ",
+          "Chỉ dùng AWS Schema Conversion Tool (SCT)"
         ],
-        "answer": [0],
-        "explain": "Migration nhiều TB với mạng yếu dùng DMS + SCT + Snowball: SCT extract ra Snowball, AWS nạp vào S3, DMS migrate từ S3 (CDC cũng đi qua S3). DMS trực tiếp qua internet sẽ chậm và chiếm băng thông."
+        "answer": [1],
+        "explain": "DMS Serverless không cần replication instance: bạn tạo một replication (Full load, Full load + CDC hoặc CDC only) và đặt min/max DCU, DMS tự lo phần còn lại. Lưu ý DMS Serverless chưa hỗ trợ mọi loại database như DMS Standard. SCT chỉ chuyển schema, DataSync dành cho file/object."
       },
       {
         "type": "single",
@@ -365,16 +365,16 @@
       },
       {
         "type": "multi",
-        "q": "Những phát biểu nào về AWS DMS và SCT là đúng? (Chọn 2)",
+        "q": "Những phát biểu nào về AWS DMS và việc chuyển schema là đúng? (Chọn 2)",
         "options": [
           "Ít nhất một endpoint (source hoặc target) phải nằm trong AWS",
-          "Migrate MySQL on-premises sang RDS MySQL bắt buộc phải dùng SCT",
-          "DMS tự chuyển đổi schema giữa các engine khác nhau",
-          "Migrate Microsoft SQL Server on-premises sang RDS MySQL cần dùng SCT",
+          "Migrate MySQL on-premises sang RDS MySQL bắt buộc phải chuyển schema",
+          "DMS Schema Conversion hỗ trợ mọi loại database, kể cả OLAP như Teradata hay Vertica",
+          "Migrate Microsoft SQL Server on-premises sang RDS MySQL cần chuyển schema (DMS Schema Conversion hoặc SCT)",
           "DMS dùng được để migrate giữa hai database đều nằm on-premises"
         ],
         "answer": [0, 3],
-        "explain": "DMS yêu cầu ít nhất một đầu ở AWS, và SCT chỉ cần khi đổi engine (MSSQL → MySQL). Cùng engine (MySQL → RDS MySQL) không cần SCT; DMS không tự chuyển schema và không migrate giữa hai DB on-prem."
+        "explain": "DMS yêu cầu ít nhất một đầu ở AWS, và chỉ cần chuyển schema khi đổi engine (MSSQL → MySQL). Cùng engine (MySQL → RDS MySQL) thì không. DMS Schema Conversion không hỗ trợ nhiều DB OLAP như Teradata, Vertica, Greenplum; với chúng vẫn dùng SCT riêng. DMS không migrate giữa hai DB on-prem."
       }
     ],
     "Database Models": [
@@ -662,7 +662,7 @@
           "Oracle và Microsoft SQL Server"
         ],
         "answer": [3],
-        "explain": "RDS Custom chỉ hỗ trợ Oracle và Microsoft SQL Server; các engine khác cần quyền OS thì phải dùng EC2."
+        "explain": "RDS Custom hỗ trợ Microsoft SQL Server và Oracle (RDS Custom for Oracle có hạn chót 31/3/2027); các engine khác cần quyền OS thì phải dùng EC2."
       },
       {
         "type": "single",
@@ -716,7 +716,7 @@
       },
       {
         "type": "single",
-        "q": "Một công ty cần RDS MySQL có 1 writer và 2 standby đọc được ở các AZ khác nhau, failover dưới khoảng 35 giây, chạy trên Graviton với local NVMe SSD. Lựa chọn nào phù hợp?",
+        "q": "Một công ty cần RDS MySQL có 1 writer và 2 standby đọc được ở các AZ khác nhau, replication semi-synchronous, failover dưới khoảng 35 giây, instance có local NVMe SSD. Lựa chọn nào phù hợp?",
         "options": [
           "RDS Multi-AZ Instance deployment",
           "Aurora Global Database",
@@ -724,7 +724,7 @@
           "RDS single-AZ với 2 cross-region read replica"
         ],
         "answer": [2],
-        "explain": "1 writer + 2 reader đọc được, failover ~35 giây, Graviton + NVMe là dấu hiệu của Multi-AZ DB Cluster. Multi-AZ Instance chỉ có 1 standby không đọc được và failover 60–120 giây."
+        "explain": "1 writer + 2 reader đọc được, semi-synchronous (commit khi ít nhất 1 reader xác nhận), failover ~35 giây, local NVMe là dấu hiệu của Multi-AZ DB Cluster, chỉ có với MySQL và PostgreSQL. Multi-AZ Instance chỉ có 1 standby không đọc được và failover 60–120 giây."
       },
       {
         "type": "multi",
@@ -779,15 +779,15 @@
       },
       {
         "type": "single",
-        "q": "Theo khóa học, RDS Proxy giúp giảm thời gian failover khoảng bao nhiêu và vì sao?",
+        "q": "RDS Proxy giúp giảm thời gian failover tới khoảng bao nhiêu và vì sao?",
         "options": [
-          "Hơn 60%, vì client vẫn nối vào proxy và chờ trong khi proxy tự kết nối tới primary mới, không phải đợi CNAME của DB đổi",
+          "Tới 66%, vì client vẫn nối vào proxy và chờ trong khi proxy tự kết nối tới primary mới, không phải đợi CNAME của DB đổi",
           "Khoảng 10%, vì proxy cache kết quả truy vấn trong lúc failover",
           "100%, vì proxy ghi đồng thời vào primary và standby",
-          "Hơn 60%, vì proxy biến standby thành reader phục vụ đọc"
+          "Tới 66%, vì proxy biến standby thành reader phục vụ đọc"
         ],
         "answer": [0],
-        "explain": "RDS Proxy giảm failover hơn 60% (Aurora khoảng 66–67%) và che lỗi DB khỏi ứng dụng: client giữ kết nối tới proxy, proxy tự lập kết nối tới primary mới. Proxy không phải cache và không ghi song song."
+        "explain": "RDS Proxy giảm thời gian failover tới 66% (con số của AWS, cho cả RDS Multi-AZ và Aurora) và che lỗi DB khỏi ứng dụng: client giữ kết nối tới proxy, proxy tự lập kết nối tới primary mới. Proxy không phải cache và không ghi song song."
       },
       {
         "type": "single",
@@ -829,15 +829,15 @@
       },
       {
         "type": "single",
-        "q": "Theo khóa học, RDS read replica dùng kiểu replication nào và mỗi DB instance có tối đa bao nhiêu read replica trực tiếp?",
+        "q": "RDS read replica dùng kiểu replication nào và một RDS MySQL instance có tối đa bao nhiêu read replica?",
         "options": [
           "Synchronous; tối đa 1",
           "Synchronous; tối đa 15",
-          "Asynchronous; tối đa 5",
+          "Asynchronous; tối đa 15",
           "Asynchronous; không giới hạn"
         ],
         "answer": [2],
-        "explain": "Read replica dùng asynchronous replication (có lag) và khóa học nêu tối đa 5 replica trực tiếp mỗi instance (hiện nay MySQL/MariaDB/PostgreSQL lên tới 15). Synchronous là Multi-AZ."
+        "explain": "Read replica dùng asynchronous replication (có lag). MySQL, MariaDB, PostgreSQL cho tới 15 read replica mỗi instance; Oracle và SQL Server 5, Db2 3 (bản khóa cũ nêu chung là 5). Synchronous là Multi-AZ instance."
       },
       {
         "type": "single",
@@ -904,15 +904,15 @@
       },
       {
         "type": "single",
-        "q": "Một ngân hàng chạy RDS Oracle và yêu cầu dữ liệu được mã hóa ngay trong database engine, khóa mã hóa nằm trong HSM do khách hàng quản lý để AWS không thể tiếp xúc với khóa. Giải pháp nào đáp ứng?",
+        "q": "Một ngân hàng chạy RDS Oracle và yêu cầu dữ liệu được mã hóa ngay trong database engine trước khi ghi ra đĩa. Giải pháp nào đáp ứng, và điều gì cần lưu ý?",
         "options": [
-          "Encryption at rest bằng KMS với customer managed key",
+          "Encryption at rest bằng KMS với customer managed key; engine tự mã hóa",
           "Bắt buộc SSL/TLS cho mọi database user",
-          "EBS encryption với AWS managed key",
-          "Oracle TDE tích hợp với AWS CloudHSM"
+          "Oracle TDE; khóa nằm trong key store của engine do RDS quản lý, RDS không còn hỗ trợ đặt khóa TDE trong CloudHSM",
+          "Oracle TDE tích hợp với AWS CloudHSM để khóa nằm trong HSM do khách hàng quản lý"
         ],
-        "answer": [3],
-        "explain": "TDE mã hóa trong engine; RDS Oracle + TDE + CloudHSM để khóa trong HSM do khách hàng quản lý, loại AWS khỏi chuỗi tin cậy. KMS/EBS encryption do RDS host thực hiện nên vẫn cần tin AWS."
+        "answer": [2],
+        "explain": "TDE mã hóa ngay trong engine (chỉ Oracle và SQL Server), khóa nằm trong key store của engine do RDS quản lý. CloudHSM từng dùng được cho RDS Oracle TDE nhưng nay không còn (SQL Server chưa bao giờ có). KMS/EBS encryption do RDS host thực hiện, engine không biết; SSL/TLS chỉ là in transit."
       },
       {
         "type": "single",
@@ -937,7 +937,7 @@
           "Có thể tắt mã hóa bất kỳ lúc nào qua Modify"
         ],
         "answer": [1, 3],
-        "explain": "Với KMS + EBS, storage, log, snapshot và replica đều được mã hóa và không thể tắt. Việc mã hóa do RDS host làm (engine không biết), áp dụng cho mọi engine; chỉ TDE mới giới hạn ở MSSQL/Oracle."
+        "explain": "Với KMS + EBS, storage, log, backup, snapshot và replica đều được mã hóa bằng cùng key, chỉ bật được lúc tạo instance và không thể tắt. Việc mã hóa do RDS host làm (engine không biết), áp dụng cho mọi engine."
       }
     ]
   }

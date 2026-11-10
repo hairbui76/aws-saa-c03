@@ -79,7 +79,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | WORM, kể cả root không xóa được | **Object Lock Compliance mode** | [[S3 Object Lock]] |
 | Người không có account AWS tải/up 1 object private, có hạn | **Presigned URL** | [[S3 Presigned URLs]] |
 | Replicate có SLA 15 phút | **S3 RTC** | [[S3 Replication]] |
-| Backup tập trung đa dịch vụ/account, backup không thể xóa | **AWS Backup** (+ Vault Lock) | [[AWS Backup]] |
+| Backup tập trung đa dịch vụ/account, backup không thể xóa | **AWS Backup** (+ Vault Lock compliance mode) | [[AWS Backup]] |
 
 ### Database
 | Từ khóa trong đề | Chọn | Note |
@@ -89,6 +89,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | "Too many connections", Lambda + RDS, failover trong suốt | **RDS Proxy** | [[RDS Proxy]] |
 | Relational, tải thất thường, dev/test tắt khi rảnh | **Aurora Serverless** | [[Aurora Serverless]] |
 | DR cross-region relational, RPO ~1 s | **Aurora Global Database** | [[Aurora Global Database]] |
+| Chi phí I/O chiếm phần lớn hóa đơn Aurora (≥ ~25%), muốn giá dễ đoán | **Aurora I/O-Optimized** | [[Aurora]] |
 | NoSQL ghi ở nhiều region (active-active) | **DynamoDB Global Tables** | [[DynamoDB Global Tables]] |
 | Cache DynamoDB, microsecond | **DAX** | [[DAX]] |
 | Cache generic, session store, sub-ms | **ElastiCache** (Redis nếu cần HA/backup) | [[ElastiCache]] |
@@ -138,7 +139,8 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 ### Migration
 | Từ khóa trong đề | Chọn | Note |
 |---|---|---|
-| Migrate DB, downtime tối thiểu | **DMS full load + CDC** (thêm **SCT** nếu đổi engine) | [[DMS]] |
+| Migrate DB, downtime tối thiểu | **DMS full load + CDC** (đổi engine thì thêm chuyển schema: **DMS Schema Conversion** / SCT) | [[DMS]] |
+| Migrate DB, không muốn quản lý replication instance | **DMS Serverless** (min/max DCU) | [[DMS]] |
 | Chuyển file online NFS/SMB → S3/EFS/FSx, có lịch, retry | **DataSync** | [[DataSync]] |
 | 10 TB–10 PB, mạng yếu, offline | **Snowball / Snowball Edge** | [[Snow Family]] |
 | On-prem dùng storage AWS lâu dài (file/volume/tape) | **Storage Gateway** | [[Storage Gateway]] |
@@ -216,7 +218,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Mục đích | **HA** (standby không phục vụ đọc) | **Scale đọc**, DR cross-region | HA + scale đọc cùng lúc |
 | Phạm vi | Một region | Cùng region hoặc cross-region | Một region; cross-region = Global Database |
 | Failover | Tự động, đổi DNS CNAME, 60–120 s | **Thủ công** (promote), đổi endpoint | Tự động, nhanh hơn (replica promote) |
-| Số replica | 1 standby (Multi-AZ Cluster: 2 reader đọc được) | 5 replica trực tiếp (theo khóa học) | 15 replica, reader endpoint |
+| Số replica | 1 standby (Multi-AZ Cluster: 2 reader đọc được, chỉ MySQL/PostgreSQL) | 15 (MySQL/MariaDB/PostgreSQL), 5 (Oracle, SQL Server), 3 (Db2) | 15 replica, reader endpoint |
 | Chống data corruption | Không (lỗi đồng bộ sang) | Không | Backtrack / PITR |
 
 ### S3 storage classes → [[S3 Storage Classes]]
@@ -334,8 +336,8 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | Step Functions | Standard ≤ 1 năm; Express ≤ 5 phút |
 | DynamoDB | Item ≤ 400 KB; RCU 4 KB, WCU 1 KB; PITR 35 ngày; Streams 24 h |
 | RDS | Automated backup ≤ 35 ngày; PITR ~5 phút; Multi-AZ failover 60–120 s (Multi-AZ Cluster ~35 s); IAM DB auth token 15 phút |
-| Aurora | 6 bản sao / 3 AZ; 15 replica; 128 TiB; billing theo giây, tối thiểu 10 phút |
-| Aurora Global | Replication ~1 s, RTO < 1 phút; secondary region: khóa học 5, nay 10; 16 replica mỗi secondary |
+| Aurora | 6 bản sao / 3 AZ; 15 replica; 256 TiB (storage co giãn lên xuống); billing theo giây, tối thiểu 10 phút; I/O-Optimized khi I/O ≥ ~25% chi phí |
+| Aurora Global | Replication ~1 s, RTO < 1 phút; tối đa 10 secondary region; 16 replica mỗi secondary |
 | Route 53 | 4 name server/zone; multivalue ≤ 8 record; health check 30 s (fast 10 s), ngưỡng 18%; string match 5.120 byte đầu |
 | CloudFront | Default TTL 24 h; cert ACM ở **us-east-1** |
 | ASG | Lifecycle hook timeout 3.600 s; health check grace 300 s (mặc định trên console; CLI/API là 0) |
@@ -344,10 +346,10 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | Direct Connect | Port 1/10/100 Gbps (nay thêm 400 Gbps) |
 | Snow | Snowball kinh tế 10 TB–10 PB; Snowmobile ≥ 10 PB (tới 100 PB), một site |
 | Storage Gateway | Stored 16 TB/volume × 32 = 512 TB; Cached 32 TB/volume × 32 = 1 PB |
-| AWS Backup | Cold storage ≥ 90 ngày; Vault Lock cool-off 72 h |
+| AWS Backup | Cold storage ≥ 90 ngày; Vault Lock compliance cool-off ≥ 72 h; continuous backup PITR tới 35 ngày |
 | Redshift | Auto snapshot ~8 h hoặc 5 GB; retention 1 ngày mặc định, tối đa 35 |
 | ELB | Khóa học: 3 loại; nay: 4 (thêm GWLB) |
-| EFS | Khóa học: Bursting/Provisioned; nay thêm **Elastic** (mặc định trên console) |
+| EFS | Throughput: **Elastic** (mặc định), Bursting, Provisioned; Max I/O là legacy |
 
 ---
 
@@ -397,7 +399,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 - CORS không phải permission: bucket private vẫn cần bucket policy / presigned URL ([[CORS]]).
 - One Zone-IA cho dữ liệu quan trọng duy nhất là sai ([[S3 Storage Classes]]).
 - Lifecycle sang IA sau 7 ngày là sai (cần ≥ 30 ngày) ([[S3 Lifecycle Configuration]]).
-- EFS chỉ dùng cho Linux; Windows/SMB dùng FSx for Windows ([[EFS]]).
+- EFS chỉ dùng cho Linux (và macOS trên EC2); Windows/SMB dùng FSx for Windows ([[EFS]]).
 - Volume Gateway Stored không giải quyết thiếu capacity on-prem. Dùng Cached ([[Storage Gateway]]).
 - Object Lock Compliance không gỡ được, kể cả root hay AWS Support ([[S3 Object Lock]]).
 

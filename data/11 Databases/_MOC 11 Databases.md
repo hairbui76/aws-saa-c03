@@ -17,13 +17,13 @@ Section database quan hệ của khóa học: bắt đầu từ lý thuyết mô
 6. [[RDS Backups and Restore]] — manual snapshot không hết hạn và automated backup 0–35 ngày với log 5 phút cho PITR; restore luôn tạo instance mới.
 7. [[RDS Read Replicas]] — bản sao chỉ đọc, async, cùng hoặc khác region; scale đọc và promote cho RTO thấp, không cứu được data corruption.
 8. [[RDS Security]] — SSL/TLS in transit, KMS/EBS hoặc TDE at rest, IAM DB Authentication chỉ thay password khi đăng nhập.
-9. [[RDS Custom]] — RDS có quyền vào OS và tùy biến engine, chỉ cho Oracle và SQL Server; tài nguyên hiện trong account của bạn.
+9. [[RDS Custom]] — RDS có quyền vào OS và tùy biến engine, cho SQL Server và Oracle (Oracle tới 31/3/2027); tài nguyên hiện trong account của bạn.
 10. [[Aurora]] — cluster 1 primary + tối đa 15 replica dùng chung cluster volume 6 bản/3 AZ; reader endpoint, backtrack, fast clone.
-11. [[Aurora Serverless]] — capacity theo ACU min/max, tự scale và pause về 0; dành cho workload thất thường, dev/test.
+11. [[Aurora Serverless]] — v2: instance serverless scale tại chỗ trong min/max ACU của cluster, trộn với provisioned, auto-pause về 0; dành cho workload thất thường, dev/test.
 12. [[Aurora Global Database]] — replication tầng storage sang secondary region (~1 s) cho cross-region DR và global read scaling.
 13. [[Aurora Multi-Master]] — mọi instance đều ghi được, failover gần như tức thì nhưng app tự quản kết nối; trong một region.
 14. [[RDS Proxy]] — connection pool managed cho RDS/Aurora, giải lỗi too many connections từ Lambda và làm failover trong suốt.
-15. [[DMS]] — replication instance chạy task Full load / Full load + CDC / CDC only; đổi engine thì thêm SCT.
+15. [[DMS]] — replication instance hoặc DMS Serverless chạy task Full load / Full load + CDC / CDC only; đổi engine thì thêm DMS Schema Conversion (hoặc SCT).
 
 ## Bản đồ khái niệm
 ```mermaid
@@ -33,12 +33,12 @@ flowchart TB
   REL --> EC2DB["DB trên EC2 (self-managed)"]
   REL --> RDS["RDS: DB instance trong VPC, DB subnet group"]
   REL --> AUR["Aurora: cluster + shared volume 6 bản/3 AZ"]
-  EC2DB -.->|"cần OS access, Oracle/MSSQL"| CUST["RDS Custom"]
+  EC2DB -.->|"cần OS access, MSSQL/Oracle"| CUST["RDS Custom"]
   RDS --> MAZ["Multi-AZ: sync, HA trong region"]
   RDS --> RR["Read replicas: async, scale đọc, cross-region"]
   RDS --> BK["Backups: snapshot, automated 35 ngày, PITR"]
   RDS --> SEC["Security: SG, TLS, KMS/TDE, IAM auth"]
-  AUR --> SLS["Aurora Serverless: ACU, pause về 0"]
+  AUR --> SLS["Aurora Serverless v2: ACU, auto-pause về 0"]
   AUR --> GDB["Global Database: storage replication ~1 s"]
   AUR --> MM["Multi-Master: nhiều writer, 1 region"]
   PROXY["RDS Proxy: connection pool"] --> RDS
@@ -47,7 +47,7 @@ flowchart TB
   SM["Secrets Manager"] -->|"credential DB"| PROXY
   DMS["DMS: Full load + CDC"] -->|"migrate vào"| RDS
   DMS --> AUR
-  SCT["SCT: đổi engine"] --> DMS
+  SCT["Schema Conversion: đổi engine"] --> DMS
   BK -.->|"quản lý tập trung"| BAK["AWS Backup"]
 ```
 
@@ -67,14 +67,14 @@ flowchart TB
 - Key-value đơn giản/caching → key-value store; **DynamoDB là wide column**; reporting/analytics/column-based → **Redshift**; OLTP row-based → RDS; quan hệ phức tạp kiểu social → graph. ([[Database Models]])
 - Thấy **BASE** → NoSQL; thấy **ACID** → RDS; ACID đi cùng DynamoDB → DynamoDB Transactions. ([[ACID vs BASE]])
 - Mặc định chọn managed DB; chỉ chọn **DB trên EC2** khi cần OS/root access, engine/version không hỗ trợ hoặc replication đặc thù. ([[Databases on EC2]])
-- RDS không có OS/SSH access; cần OS access với **Oracle/SQL Server** → **RDS Custom**, với MySQL/PostgreSQL → EC2. ([[RDS Custom]])
+- RDS không có OS/SSH access; cần OS access với **SQL Server** (hoặc Oracle, tới 31/3/2027) → **RDS Custom**, với MySQL/PostgreSQL → EC2. ([[RDS Custom]])
 - **Synchronous = Multi-AZ** (HA, standby không phục vụ đọc, failover đổi DNS 60–120 s); **asynchronous = read replica** (scale đọc, cross-region). ([[RDS Multi-AZ]])
-- "1 writer + 2 readable standby, failover dưới 35 giây" → **Multi-AZ DB Cluster**, không phải Aurora. ([[RDS Multi-AZ]])
+- "1 writer + 2 readable standby, semi-synchronous, failover dưới 35 giây" → **Multi-AZ DB Cluster** (chỉ MySQL/PostgreSQL), không phải Aurora. ([[RDS Multi-AZ]])
 - Automated backup giữ tối đa **35 ngày**, PITR nhờ log **5 phút**; giữ lâu hơn → manual snapshot hoặc AWS Backup; **restore = instance mới, endpoint mới**. ([[RDS Backups and Restore]])
-- **Data corruption** → point-in-time restore; **instance/region lỗi, cần RTO thấp** → promote read replica. ([[RDS Read Replicas]])
-- IAM DB Authentication chỉ thay **password** (token 15 phút); IAM **không** cấp quyền đọc/ghi bảng. Mã hóa DB đang plaintext → snapshot → copy có encrypt → restore. ([[RDS Security]])
-- Thuộc số Aurora: **6 bản/3 AZ**, **15 replica**, **128 TiB**; rollback tại chỗ không đổi endpoint → **Backtrack**; bản sao test nhanh, ít storage → **Fast clone**. ([[Aurora]])
+- **Data corruption** → point-in-time restore; **instance/region lỗi, cần RTO thấp** → promote read replica. Read replica: 15 (MySQL/MariaDB/PostgreSQL), 5 (Oracle, SQL Server), 3 (Db2). ([[RDS Read Replicas]])
+- IAM DB Authentication chỉ thay **password** (token 15 phút); IAM **không** cấp quyền đọc/ghi bảng. Encryption at rest chỉ bật lúc tạo; mã hóa DB đang plaintext → snapshot → copy có encrypt → restore. TDE (Oracle/SQL Server) giữ khóa trong key store của engine, **RDS không còn hỗ trợ CloudHSM cho TDE**. ([[RDS Security]])
+- Thuộc số Aurora: **6 bản/3 AZ**, **15 replica**, **256 TiB**, storage co giãn lên xuống; I/O chiếm ≥ ~25% chi phí → **I/O-Optimized**; rollback tại chỗ không đổi endpoint → **Backtrack**; bản sao test nhanh, ít storage → **Fast clone**. ([[Aurora]])
 - Workload **thất thường/không đoán trước**, dev/test muốn tắt khi rảnh → **Aurora Serverless**. ([[Aurora Serverless]])
 - Cross-region DR cho DB quan hệ với RPO/RTO rất thấp, hoặc đọc latency thấp ở nhiều châu lục → **Aurora Global Database**; cần ghi ở nhiều region với NoSQL → DynamoDB Global Tables. ([[Aurora Global Database]])
 - "Too many connections", **Lambda + RDS**, hoặc "failover trong suốt với app" → **RDS Proxy**; proxy chỉ truy cập từ VPC và không phải cache. ([[RDS Proxy]])
-- Migrate DB ít/không downtime → **DMS Full load + CDC**; đổi engine → **SCT + DMS**; nhiều TB, mạng yếu → DMS + SCT + **Snowball**. ([[DMS]])
+- Migrate DB ít/không downtime → **DMS Full load + CDC**; đổi engine → **DMS Schema Conversion** (hoặc SCT) + DMS; không muốn quản lý instance → **DMS Serverless**. ([[DMS]])

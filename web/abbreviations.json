@@ -150,6 +150,7 @@
   "BYOIP": "Bring Your Own IP",
   "SCT": "Schema Conversion Tool",
   "DMS": "Database Migration Service",
+  "DCU": "DMS Capacity Unit",
   "TDE": "Transparent Data Encryption",
   "POSIX": "Portable Operating System Interface",
   "DLQ": "Dead-Letter Queue",

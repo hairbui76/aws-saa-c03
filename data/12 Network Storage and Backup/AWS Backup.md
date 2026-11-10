@@ -2,6 +2,7 @@
 tags: [saa-c03, s12-network-storage-and-backup, network-storage, storage, backup, disaster-recovery, compliance]
 aliases: [Backup, AWS Backup Vault Lock, Vault Lock, Backup Plan, Backup Vault]
 lessons: ["0221 AWS Backup"]
+videos: ["212 AWS Backup"]
 ---
 # AWS Backup
 
@@ -17,7 +18,7 @@ lessons: ["0221 AWS Backup"]
 ## Khái niệm cốt lõi
 - Ở mức SAA-C03, cứ coi đây là sản phẩm **backup và restore**. Ngoài ra nó còn có phần auditing và quản trị giám sát.
 - Lợi ích hằng ngày lớn nhất là **hợp nhất quản lý**. Không cần bật backup [[RDS Backups and Restore|RDS]] ở một nơi, cấu hình DynamoDB ở nơi khác, rồi viết cron job để chụp [[EBS Snapshots]]. AWS Backup làm tất cả theo một chính sách chung.
-- **Multi-account**: kết hợp [[AWS Organizations]] và [[AWS Control Tower]] để quản lý backup tập trung cho cả tổ chức.
+- **Multi-account**: dùng [[AWS Organizations]] để quản lý backup tập trung cho cả tổ chức (bản khóa cũ nêu thêm [[AWS Control Tower]]).
 - **Cross-region**: copy backup sang region khác để bảo vệ dữ liệu khi cả region gặp sự cố (DR).
 - **Dịch vụ được hỗ trợ** (danh sách luôn mở rộng):
   - Compute: [[EC2 Basics|EC2]], VMware (cả VMware chạy trên AWS)
@@ -30,7 +31,7 @@ lessons: ["0221 AWS Backup"]
 ## Cách hoạt động / Kiến trúc
 | Thành phần | Vai trò |
 |---|---|
-| **Backup Plan** | Chính sách: **tần suất** (hourly, 12h, daily, weekly theo ngày trong tuần, monthly theo ngày trong tháng, hoặc **cron expression**, tối thiểu là mỗi giờ), **backup window** (giờ bắt đầu và thời lượng), **lifecycle** (khi nào chuyển sang cold storage, khi nào hết hạn), **vault** đích, **region copy**. Có thể bật **continuous backup** cho dịch vụ hỗ trợ để có PITR. |
+| **Backup Plan** | Chính sách: **tần suất** (hourly, 12h, daily, weekly theo ngày trong tuần, monthly theo ngày trong tháng, hoặc **cron expression**, tối thiểu là mỗi giờ), **backup window** (giờ bắt đầu và thời lượng), **lifecycle** (khi nào chuyển sang cold storage, khi nào hết hạn), **vault** đích, **region copy**. Có thể bật **continuous backup** cho dịch vụ hỗ trợ để có PITR trong cửa sổ **tối đa 35 ngày**. |
 | **Backup Resources** | *Cái gì* được backup: một S3 bucket, một RDS DB... (gán vào plan, ví dụ theo tag) |
 | **Backup Vault** | **Đích** lưu backup (container). Cần ít nhất một vault. Gán [[KMS]] key để mã hóa. Mặc định là read/write, tức backup **xóa được**. |
 | **Vault Lock** | Bật chế độ **WORM** (write-once, read-many) cho vault |
@@ -59,19 +60,20 @@ flowchart LR
 - Lifecycle cũng quy định thời điểm backup **expire** và bị xóa tự động.
 
 ### Vault Lock
-- Bật WORM cho vault. Có **72 giờ cool-off** sau khi bật, và trong thời gian này vẫn gỡ được lock. Hết 72 giờ thì lock có hiệu lực hoàn toàn: **không ai, kể cả AWS, xóa được** backup trước hạn.
+- Bật WORM (write-once, read-many) cho vault. Có **hai mode**:
+  - **Governance mode**: ai có **đủ quyền IAM** vẫn gỡ được lock.
+  - **Compliance mode**: chặt hơn. Có **thời gian cool-off do bạn chọn, tối thiểu 72 giờ**, trong thời gian này vẫn gỡ được lock. Hết thời gian đó thì **không ai, kể cả AWS, xóa được** backup trước hạn.
 - Retention period vẫn có hiệu lực: backup vẫn **hết hạn tự nhiên** theo lifecycle. Lock chỉ ngăn xóa sớm hoặc lách quy định.
 - Thiết kế cho tình huống **compliance**.
 - **Không nhầm** với [[S3 Object Lock]] hay Glacier Vault Lock. Đây là tính năng riêng của AWS Backup.
-- (Hiện nay Vault Lock có hai mode. *Governance* cho phép user có quyền IAM phù hợp gỡ lock. *Compliance* có thời gian grace tối thiểu 72 giờ, sau đó bất biến. Thứ khóa học mô tả chính là compliance mode.)
 
 ## 🎯 Mẹo thi SAA-C03
 - Đề nói "**quản lý backup tập trung** cho nhiều dịch vụ, nhiều account, nhiều region", "chính sách backup thống nhất", "thay script snapshot tự viết" thì chọn **AWS Backup**.
-- Đề nói "backup **không thể bị xóa**, kể cả bởi root/admin", "WORM", "compliance/ransomware" thì chọn **AWS Backup Vault Lock**. Đừng nhầm với S3 Object Lock khi đối tượng không phải S3 object.
+- Đề nói "backup **không thể bị xóa**, kể cả bởi root/admin", "WORM", "compliance/ransomware" thì chọn **AWS Backup Vault Lock** ở **compliance mode**. **Governance mode** thì người có đủ quyền IAM vẫn gỡ được. Đừng nhầm với S3 Object Lock khi đối tượng không phải S3 object.
 - Đề nói "DR cross-region cho backup" thì dùng **region copy** trong backup plan, hoặc copy sang account khác qua Organizations.
-- Đề nói "restore về một thời điểm cụ thể" thì dùng **continuous backup / PITR** (dịch vụ hỗ trợ: RDS, S3...).
-- Nhớ con số: **cold storage tối thiểu 90 ngày**, **Vault Lock cool-off 72 giờ**, tần suất nhỏ nhất qua cron là **mỗi giờ**.
-- Ở SAA-C03 chỉ cần hiểu ở mức kiến trúc (theo Adrian), không cần đi sâu.
+- Đề nói "restore về một thời điểm cụ thể" thì dùng **continuous backup / PITR** (dịch vụ hỗ trợ: RDS, S3...), cửa sổ tối đa **35 ngày**.
+- Nhớ con số: **cold storage tối thiểu 90 ngày**, **Vault Lock compliance cool-off tối thiểu 72 giờ**, **continuous backup PITR tới 35 ngày**, tần suất nhỏ nhất qua cron là **mỗi giờ**.
+- Ở SAA-C03 chỉ cần hiểu ở mức kiến trúc (theo giảng viên), không cần đi sâu.
 
 ## Liên kết
 - Tiên quyết: [[RPO and RTO]], [[HA vs FT vs DR]]
