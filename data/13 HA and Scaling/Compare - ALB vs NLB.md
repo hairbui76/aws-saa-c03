@@ -2,10 +2,11 @@
 tags: [saa-c03, s13-ha-and-scaling, networking, load-balancing, compare]
 aliases: [ALB vs NLB, Application Load Balancer, Network Load Balancer, ALB, NLB, ALB Rules, Listener Rules]
 lessons: ["0226 Application Load Balancing ALB vs Network Load Balancing NLB"]
+videos: ["217 [SHAREDALL] Application Load balancing (ALB) vs Network Load Balancing (NLB) - PART1", "218 [SHAREDALL] Application Load balancing (ALB) vs Network Load Balancing (NLB) - PART1"]
 ---
 # Compare - ALB vs NLB
 
-> **TL;DR:** **ALB** là load balancer layer 7, chỉ dành cho HTTP/HTTPS(/WebSocket). Nó hiểu nội dung request nên định tuyến được theo host, path, header, cookie... nhưng luôn **terminate** kết nối. **NLB** là layer 4 (TCP/TLS/UDP): rất nhanh, có **IP tĩnh**, chuyển thẳng TCP xuống backend được (mã hóa end-to-end không bị cắt), và là nền của **PrivateLink**. Cách nhớ của Adrian: thuộc danh sách lý do chọn NLB, ngoài danh sách đó thì chọn ALB.
+> **TL;DR:** **ALB** là load balancer layer 7, chỉ dành cho HTTP/HTTPS(/WebSocket). Nó hiểu nội dung request nên định tuyến được theo host, path, header, cookie... nhưng luôn **terminate** kết nối. **NLB** là layer 4 (TCP/TLS/UDP, nay cả QUIC): rất nhanh, có **IP tĩnh**, chuyển thẳng TCP xuống backend được (mã hóa end-to-end không bị cắt), và là nền của **PrivateLink**. Cách nhớ: thuộc danh sách lý do chọn NLB, ngoài danh sách đó thì chọn ALB.
 
 ## 🖼️ Sơ đồ
 ![[Compare - ALB vs NLB.excalidraw]]
@@ -36,7 +37,7 @@ lessons: ["0226 Application Load Balancing ALB vs Network Load Balancing NLB"]
 - **Rule** quyết định xử lý thế nào với kết nối đến một **listener**.
 - Xét theo **thứ tự priority**; rule cuối cùng là **default rule** (catch-all).
 - **Conditions**: `host-header`, `http-header`, `http-request-method`, `path-pattern`, `query-string`, `source-ip`.
-- **Actions**: `forward` (tới target group), `redirect` (sang URL/domain khác), `fixed-response` (trả mã lỗi hoặc thành công cố định), `authenticate-oidc`, `authenticate-cognito` (xem [[Cognito]]).
+- **Actions**: `forward` (tới target group), `redirect` (sang URL/domain khác), `fixed-response` (trả mã lỗi hoặc thành công cố định), `authenticate-oidc`, `authenticate-cognito` (xem [[Cognito]]), và **`jwt-validation`** (ALB tự kiểm tra JWT access token trong request).
 - Ví dụ trong bài:
   - Host header `catagram.io` → forward tới TG catagram.
   - Source IP `1.3.3.7` (khách doanh nghiệp) → forward tới TG thứ hai với bản ứng dụng riêng. Kết nối từ ALB tới TG này là một **kết nối riêng**, không phải pass-through.
@@ -52,10 +53,10 @@ flowchart LR
 ```
 
 ### Network Load Balancer (NLB)
-- **Layer 4**: TCP, TLS, UDP (và TCP_UDP). **Không thấy** HTTP/HTTPS, nên không đọc được header hay cookie và **không có session stickiness kiểu cookie**. (Hiện nay NLB vẫn có stickiness theo *source IP* ở target group.)
-- **Rất nhanh**: hàng triệu request/giây, latency khoảng **25%** của ALB, vì không phải xử lý các tầng trên.
+- **Layer 4**: listener TCP, TLS, UDP, TCP_UDP, và mới thêm **QUIC**, **TCP_QUIC**. **Không thấy** HTTP/HTTPS, nên không đọc được header hay cookie và **không có session stickiness kiểu cookie**. Nếu cần stickiness thì NLB có stickiness theo **source IP**.
+- **Rất nhanh**: hàng triệu request/giây, latency **thấp hơn ALB nhiều**, vì không phải xử lý các tầng trên. (Bản khóa cũ nêu con số latency khoảng 25% của ALB, bài mới không nói.)
 - Hợp với giao thức **không phải HTTP/HTTPS**: SMTP, SSH, game server, ứng dụng tài chính dùng giao thức riêng.
-- Health check: khóa học nói chỉ có **ICMP/TCP handshake**, không application-aware. (Hiện nay target group của NLB hỗ trợ health check TCP, HTTP và HTTPS, nhưng ý thi vẫn là: kiểm tra sức khỏe ứng dụng sâu thì ALB mạnh hơn.)
+- Health check: mặc định là **TCP handshake** cơ bản, nhưng cấu hình được health check **HTTP hoặc HTTPS**. Dù NLB route ở layer 4, **health check của nó có thể application-aware** (điểm hơi ngược trực giác). (Bản khóa cũ nói NLB chỉ có health check ICMP/TCP, không application-aware.)
 - **Static IP**: mỗi AZ có một IP tĩnh, gắn được Elastic IP. Rất hữu ích để khách doanh nghiệp **whitelist** trên firewall.
 - **TCP listener forward thẳng** tới instance: các tầng trên TCP (TLS/HTTPS) **không bị terminate**, nên giữ được **mã hóa end-to-end không đứt đoạn**.
 - Là nền của **PrivateLink**: cung cấp dịch vụ cho VPC khác (xem [[Interface VPC Endpoints]]).
@@ -64,17 +65,17 @@ flowchart LR
 | Tiêu chí | ALB | NLB |
 |---|---|---|
 | OSI layer | 7 | 4 |
-| Listener | HTTP, HTTPS (WebSocket, HTTP/2, gRPC) | TCP, TLS, UDP, TCP_UDP |
+| Listener | HTTP, HTTPS (WebSocket, HTTP/2, gRPC) | TCP, TLS, UDP, TCP_UDP, QUIC, TCP_QUIC |
 | Giao thức không phải web | Không | Có |
 | Đọc header/cookie/path | Có | Không |
 | Routing rules (host/path/header/query/source IP) | Có | Không (chỉ chọn theo port/protocol) |
 | SSL/TLS | Luôn terminate trên ALB, cần cert | TCP listener: pass-through end-to-end; TLS listener: terminate |
 | Unbroken end-to-end encryption | Không | Có (TCP listener) |
-| Hiệu năng | Chậm hơn | Hàng triệu rps, latency ~25% ALB |
+| Hiệu năng | Chậm hơn | Hàng triệu rps, latency thấp hơn ALB nhiều |
 | Static IP / Elastic IP | Không (DNS name thay đổi IP) | Có, mỗi AZ một IP |
-| Health check | L7, application-aware | Khóa học: ICMP/TCP cơ bản |
+| Health check | L7, application-aware | TCP mặc định; HTTP/HTTPS (application-aware) cấu hình được |
 | Session stickiness (cookie) | Có (`AWSALB`) | Không (chỉ source IP) |
-| Authentication (OIDC/Cognito) | Có | Không |
+| Authentication (OIDC/Cognito), JWT validation | Có | Không |
 | PrivateLink (endpoint service) | Không | Có |
 | Target Lambda | Có | Không |
 | Cross-zone mặc định | Bật | Tắt |
@@ -95,8 +96,8 @@ Mọi trường hợp khác thì chọn **ALB**, vì tính năng L7 của nó c�
 - "**Path-based / host-based routing**", "`/api` và `/images` đi tới backend khác nhau", "nhiều domain trên một LB" → **ALB**.
 - "**UDP**", "game", "IoT", "SMTP" → **NLB**.
 - "Expose dịch vụ cho VPC/account khác **không cần peering**" → **PrivateLink + NLB**.
-- "Xác thực người dùng ngay tại LB" → ALB với `authenticate-cognito` hoặc `authenticate-oidc`.
-- Health check cần kiểm tra **logic ứng dụng** (một trang cụ thể trả 200) → ALB, kết hợp ELB health check trong ASG ([[ASG Health Checks]]).
+- "Xác thực người dùng ngay tại LB" → ALB với `authenticate-cognito` hoặc `authenticate-oidc`; "kiểm tra JWT access token ngay tại LB" → ALB action `jwt-validation`.
+- Health check cần kiểm tra **logic ứng dụng** (một trang cụ thể trả 200) → ALB, kết hợp ELB health check trong ASG ([[ASG Health Checks]]). Đừng loại NLB chỉ vì health check: NLB mặc định TCP nhưng cũng cấu hình được HTTP/HTTPS.
 - Stickiness bằng cookie chỉ có trên **ALB**.
 
 ## Liên kết

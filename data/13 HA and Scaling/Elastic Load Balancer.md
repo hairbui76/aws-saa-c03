@@ -2,6 +2,7 @@
 tags: [saa-c03, s13-ha-and-scaling, networking, load-balancing, high-availability]
 aliases: [ELB, Elastic Load Balancing, CLB, Classic Load Balancer, Cross-Zone Load Balancing, Internal Load Balancer]
 lessons: ["0223 Evolution of the Elastic Load Balancer", "0224 Elastic Load Balancer Architecture PART1", "0225 Elastic Load Balancer Architecture PART2"]
+videos: ["214 [ASSOCIATESHARED] Evolution of the Elastic Load Balancer", "215 [SHAREDALL] Elastic Load Balancer Architecture - PART1", "216 [SHAREDALL] Elastic Load Balancer Architecture - PART2"]
 ---
 # Elastic Load Balancer
 
@@ -17,7 +18,7 @@ lessons: ["0223 Evolution of the Elastic Load Balancer", "0224 Elastic Load Bala
 ## Khái niệm cốt lõi
 
 ### Lịch sử: v1 và v2
-- "ELB" là tên chung cho cả họ load balancer. Khóa học nói có **3 loại**; hiện nay có **4** vì thêm [[Gateway Load Balancer]] (GWLB, layer 3, dùng cho appliance bảo mật), được học riêng ở cuối section.
+- "ELB" là tên chung cho cả họ load balancer, hiện có **4 loại**: CLB (v1), ALB, NLB và [[Gateway Load Balancer]] (GWLB, v2, layer 3, chỉ dùng cho appliance bảo mật chạy trên EC2 cần HA), được học riêng ở cuối section. (Bản khóa cũ nói 3 loại vì chưa tính GWLB.)
 - **v1, Classic Load Balancer (CLB)**, ra đời năm **2009**:
   - Cân bằng được HTTP/HTTPS và các giao thức tầng thấp hơn, nhưng **không thực sự là layer 7**: không hiểu HTTP nên không ra quyết định dựa trên tính năng của HTTP.
   - Thiếu tính năng, có thể đắt hơn, và chỉ hỗ trợ **1 SSL certificate cho mỗi CLB** (không có SNI). Hệ quả: mỗi ứng dụng HTTPS cần một CLB riêng, hệ thống lớn có thể cần hàng trăm CLB, trong khi chúng có thể **gộp (consolidate)** lại thành một LB v2.
@@ -78,7 +79,7 @@ flowchart LR
   - **ALB**: luôn **bật** (khóa học). Hiện nay có thể tắt ở cấp target group.
   - **NLB** (và GWLB): mặc định **tắt**; bật lên thì có thể phát sinh phí data transfer giữa các AZ.
   - **CLB**: tạo bằng console thì bật, tạo bằng API/CLI thì tắt.
-  - (Phần mặc định của NLB/CLB là kiến thức AWS hiện tại, khóa học chỉ nói "trước đây mặc định tắt, ALB thì bật sẵn".)
+  - (Mặc định của CLB và phí data transfer khi bật cross-zone trên NLB là bổ sung, bài không nói.)
 
 ```mermaid
 flowchart TB

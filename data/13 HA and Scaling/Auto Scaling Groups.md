@@ -2,6 +2,7 @@
 tags: [saa-c03, s13-ha-and-scaling, compute, ec2, auto-scaling, high-availability]
 aliases: [ASG, Auto Scaling Group, EC2 Auto Scaling, Self-healing, Cooldown]
 lessons: ["0228 Auto Scaling Groups"]
+videos: ["221 [ASSOCIATESHARED] Auto-Scaling Groups", "222 [ASSOCIATESHARED] ASG Scaling Policies"]
 ---
 # Auto Scaling Groups
 
@@ -12,7 +13,7 @@ lessons: ["0228 Auto Scaling Groups"]
 *Mở bằng plugin Excalidraw để chỉnh sửa · ảnh tĩnh: [[Auto Scaling Groups.svg]]*
 
 ## Khái niệm cốt lõi
-- ASG dùng **một** Launch Configuration hoặc **một version cụ thể** của Launch Template tại một thời điểm. Có thể đổi sang LC/LT khác, nhưng mọi instance mới đều dựng theo một định nghĩa duy nhất đó.
+- ASG lấy cấu hình từ [[Launch Templates|Launch Template]]: chọn **một version cụ thể**, hoặc version **Default**, hoặc **Latest**. Mọi instance ASG tạo ra đều dựng theo launch template đó. (ASG cũ có thể còn dùng Launch Configuration, bản legacy.)
 - Ba giá trị quan trọng nhất: **Minimum size**, **Desired capacity**, **Maximum size**. Thường viết gọn là `min/desired/max`, ví dụ `1:2:4`.
   - Ràng buộc: `min ≤ desired ≤ max`.
   - **Việc nền tảng duy nhất**: desired = 2 mà mới có 1 instance thì launch thêm; desired = 2 mà đang có 3 thì terminate bớt một.
@@ -23,7 +24,9 @@ lessons: ["0228 Auto Scaling Groups"]
 
 ### Vị trí đặt instance
 - ASG gắn với **một VPC** và **nhiều subnet** trong VPC đó. Instance được launch vào các subnet này.
-- ASG cố **cân bằng số instance giữa các AZ**. Ví dụ 3 subnet ở 3 AZ, desired = 3 thì thường mỗi AZ một instance (không phải lúc nào cũng được, ASG sẽ cân lại khi có thể).
+- ASG cố **cân bằng số instance giữa các AZ**. Ví dụ 3 subnet ở 3 AZ, desired = 3 thì thường mỗi AZ một instance. Có hai chiến lược cân bằng:
+  - **Balanced best effort** (mặc định): chỉ cố gắng hết sức, không đảm bảo. Nếu không launch được vào một AZ thì ASG **launch instance ở AZ khác**.
+  - **Balanced only**: ASG **cứ thử lại ở đúng AZ đó** thay vì launch sang AZ khác.
 
 ### Các cách scale (tổng quan, chi tiết ở [[ASG Scaling Policies]])
 | Loại | Mô tả | Khi dùng |
@@ -37,9 +40,10 @@ lessons: ["0228 Auto Scaling Groups"]
 - Metric không chỉ là CPU: memory, disk I/O (**cần [[CloudWatch Agent]]** cho metric bên trong OS), độ dài **SQS queue** ([[SQS]]), hoặc custom metric như response time.
 - Target tracking hỗ trợ: average CPU, average network in/out, và **ALB request count per target**.
 
-### Cooldown period
-- Đơn vị là giây: thời gian **chờ sau một scaling action** rồi mới làm action tiếp theo (mặc định 300s cho simple scaling).
-- Tránh scale loạn khi metric dao động, và tránh tốn tiền vì mỗi instance launch ra đều bị tính **tối thiểu một khoảng billing** dù dùng bao lâu.
+### Cooldown và instance warmup (chi tiết ở [[ASG Scaling Policies]])
+- **Cooldown period**: thời gian **chờ sau một scaling action** rồi mới làm action tiếp theo, để metric kịp phản ánh kết quả. Chỉ áp dụng cho **simple scaling**, mặc định **300s**.
+- **Step scaling và target tracking** dùng **instance warmup** thay cho cooldown: thời gian một instance mới cần trước khi được tính vào metric của group.
+- Mục đích chung: tránh scale loạn khi metric dao động, và tránh tốn tiền vì mỗi instance launch ra đều bị tính **tối thiểu một khoảng billing** dù dùng bao lâu. (Ý billing là bản khóa cũ nêu, bài mới không nói.)
 
 ### Health và self-healing
 - Mặc định ASG theo dõi sức khỏe bằng **EC2 status checks**. Instance hỏng thì ASG **terminate và launch instance mới** thay thế. Terminate tay một instance thì ASG cũng tự bù lại.
@@ -73,6 +77,7 @@ flowchart LR
 | `HealthCheck` | Tắt health check cho cả group |
 | `ReplaceUnhealthy` | Không thay instance unhealthy |
 | `ScheduledActions` | Không chạy scheduled action |
+| `InstanceRefresh` | Instance refresh đang chạy không terminate và thay instance nữa |
 
 - Ngoài ra có thể đặt **từng instance** ở trạng thái **Standby** hoặc **InService**. Standby nghĩa là ASG không đụng tới instance đó, rất hợp khi cần **bảo trì** một instance.
 
@@ -83,7 +88,7 @@ flowchart LR
 - Worker xử lý hàng đợi → scale theo **SQS ApproximateNumberOfMessagesVisible**.
 - **HA rẻ cho một instance** → ASG `1/1/1` trải trên nhiều AZ.
 - **Instance bị launch rồi terminate liên tục** → nghi **health check grace period** quá ngắn hoặc health check phụ thuộc DB ([[ASG Health Checks]]).
-- **Tiết kiệm chi phí**: dùng **cooldown** để tránh scale dồn dập; dùng **nhiều instance nhỏ** thay vì ít instance lớn để tăng **granularity** (thêm 1 trong 20 instance nhỏ rẻ hơn nhiều so với thêm 1 trong 2 instance lớn).
+- **Tiết kiệm chi phí**: dùng **cooldown** (simple scaling) hoặc **instance warmup** (step, target tracking) để tránh scale dồn dập; dùng **nhiều instance nhỏ** thay vì ít instance lớn để tăng **granularity** (thêm 1 trong 20 instance nhỏ rẻ hơn nhiều so với thêm 1 trong 2 instance lớn).
 - **ASG + ALB = elasticity + abstraction**.
 - **ASG defines WHEN & WHERE, LT defines WHAT.**
 - Cần bảo trì một instance mà ASG không thay nó → đặt **Standby**. Không muốn ASG tự cân AZ → suspend **AZRebalance**.

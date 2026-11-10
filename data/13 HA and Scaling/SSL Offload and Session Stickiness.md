@@ -2,6 +2,7 @@
 tags: [saa-c03, s13-ha-and-scaling, networking, load-balancing, security, encryption]
 aliases: [SSL Offload, SSL Bridging, SSL Pass-through, SSL Termination, Session Stickiness, Sticky Sessions, Connection Stickiness, AWSALB]
 lessons: ["0232 SSL Offload Session Stickiness", "0233 DEMO Seeing Session Stickiness in Action"]
+videos: ["225 SSL Offload and Session Stickiness", "226 [DEMO] Seeing Session Stickiness in Action"]
 ---
 # SSL Offload and Session Stickiness
 
@@ -60,7 +61,7 @@ flowchart LR
   1. Instance đó **fail** (unhealthy), khi đó user được dời sang instance khỏe khác và cookie được cập nhật.
   2. **Cookie hết hạn**: quy trình lặp lại, user nhận cookie mới và có thể được gán instance mới.
 - (−) **Tải không đều**: một user tạo rất nhiều tải vẫn chỉ dùng một server, LB mất khả năng phân phối linh hoạt.
-- (Hiện nay ALB có 2 kiểu stickiness: duration-based dùng cookie `AWSALB` do LB sinh ra, và application-based dùng cookie do ứng dụng đặt. NLB chỉ có stickiness theo **source IP**, không dùng cookie.)
+- ALB có 2 kiểu cookie cho stickiness: cookie `AWSALB` do LB sinh ra, hoặc cookie do ứng dụng đặt (application-based); demo có nhắc cả hai lựa chọn. NLB chỉ có stickiness theo **source IP**, không dùng cookie (bài [[Compare - ALB vs NLB]]). (Tên gọi "duration-based" là bổ sung, bài không nói.)
 
 ```mermaid
 sequenceDiagram
@@ -97,11 +98,12 @@ sequenceDiagram
 | Nơi cấu hình (ALB) | Target group attributes |
 
 ## Demo / Lab
-- CloudFormation tạo VPC với 3 public subnet (3 AZ), một [[Auto Scaling Groups|ASG]] dùng [[Launch Templates|launch template]] chạy **6 instance (2/AZ)**, và một ALB trải trên các subnet. Mỗi instance hiển thị instance ID, màu nền và ảnh gif mèo riêng để dễ nhận biết.
-- **Stickiness tắt:** refresh DNS name của ALB thì trang nhảy qua lại giữa các instance (mỗi instance có khoảng 1/6, tức 16,67% khả năng nhận request).
-- **Bật stickiness:** Target group → Attributes → Edit → bật stickiness, chọn **load balancer generated cookie**, thời hạn **1 phút**. Refresh một lúc thì trang bị khóa vào một instance. Developer tools của browser cho thấy cookie `AWSALB`.
-- **Stop instance đang bị khóa:** LB phát hiện target không còn hợp lệ và chuyển ngay sang instance khác, cookie cập nhật theo. Người dùng không nhận ra backend hỏng, ngoài việc instance ID đổi. Start lại instance cũ thì user **không** quay về nó vì đã bị khóa vào instance mới. Do ASG dùng **ELB health check**, instance bị stop có thể đã bị ASG terminate và thay thế (xem [[ASG Health Checks]]), và đó là hành vi đúng.
-- Tắt stickiness thì request lại được phân phối đều. Cuối bài xóa stack.
+- Stack CloudFormation `ALB-STICKINESS` (us-east-1) cài web store **Aus-E-Mart** ở chế độ **stateful** (giỏ hàng lưu ngay trên instance) lên **6 instance** `aem-web-instance` (tối thiểu 2), đặt sau một ALB. Góc trên trang hiển thị instance ID với màu riêng để dễ nhận biết.
+- **Truy cập thẳng từng instance qua public IP:** thêm hàng vào giỏ ở instance này thì instance khác không biết giỏ đó, chứng tỏ state nằm trên từng server.
+- **Qua ALB, stickiness tắt:** mỗi lần refresh có thể rơi vào instance khác, lúc thấy giỏ hàng lúc không. State có thể là giỏ hàng, tùy chỉnh của người dùng hay cả phiên đăng nhập.
+- **Bật stickiness:** EC2 → Target groups → Attributes → Edit → bật stickiness, chọn **load balancer generated cookie** (hoặc **application-based cookie** nếu ứng dụng tự đặt cookie), thời hạn ví dụ **5 phút**. Sau vài giây refresh, user luôn vào cùng một instance và thấy đủ giỏ hàng. Developer tools → Storage cho thấy cookie do ALB thêm vào.
+- Cuối bài xóa stack.
+- (Bản khóa cũ nêu thêm, bài mới không nói: stop instance đang bị khóa thì LB chuyển user sang instance khác và cập nhật cookie; start lại instance cũ thì user không quay về nó; vì ASG dùng ELB health check nên instance bị stop có thể bị terminate và thay thế, xem [[ASG Health Checks]].)
 
 ## 🎯 Mẹo thi SAA-C03
 - Đề nhấn **"end-to-end encryption"**, **"không được để certificate trên load balancer / AWS không được truy cập cert"**, hay **CloudHSM giữ key** → **SSL pass-through với NLB (TCP listener)**.

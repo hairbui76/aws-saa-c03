@@ -16,7 +16,9 @@
     "Exam Cheat Sheet: mốc EBS mới (gp2 16K, io1 64K, gp3 80K / 2,000 MiB/s, io2 Block Express 256K; io2 = Block Express), FSR tối đa 5/region, Spot cảnh báo 2 phút và terminate/stop/hibernate, RI Standard/Convertible, ODCR giá On-Demand (immediate/future, open/targeted), Savings Plans không giữ capacity, Scheduled RI đã deprecated",
     "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans",
     "Exam Cheat Sheet: thêm ECS Managed Instances, ECS trên EC2 khi cần custom AMI/SSH/Windows, EKS Auto Mode / Hybrid Nodes, ECR scanning + lifecycle policy, EC2 Image Builder, CloudWatchAgentAdminPolicy, Parameter Store share cross-account (Advanced) và 15 cấp, user data 16 KB trước base64",
-    "Top mẹo thi và concept map chương 08, 09: ba capacity của ECS (Managed Instances), ECR scanning/lifecycle, EKS Auto Mode và Hybrid Nodes, EC2 Image Builder, CloudWatchAgentAdminPolicy, nhiều spread group"
+    "Top mẹo thi và concept map chương 08, 09: ba capacity của ECS (Managed Instances), ECR scanning/lifecycle, EKS Auto Mode và Hybrid Nodes, EC2 Image Builder, CloudWatchAgentAdminPolicy, nhiều spread group",
+    "Exam Cheat Sheet: ELB 4 loại (CLB, ALB, NLB, GWLB); NLB có QUIC, stickiness theo source IP, health check TCP hoặc HTTP/HTTPS; ALB có JWT validation; cooldown chỉ cho simple scaling (step/target tracking dùng instance warmup); lifecycle hook gia hạn bằng heartbeat tới 48 giờ; ASG có EBS health check",
+    "Top mẹo thi và concept map chương 13: EBS health check cho ASG, LT trỏ version Default/Latest và account mới không tạo được Launch Configuration, heartbeat của lifecycle hook, NLB QUIC và health check HTTP/HTTPS"
   ],
   "missing": [],
   "lessons": {
@@ -913,6 +915,75 @@
     "EC2 Image Builder": {
       "kind": "new",
       "summary": "Dịch vụ tự động build, test và phân phối AMI lẫn container image (ECR) qua image pipeline: recipe, infrastructure configuration, distribution configuration; không tính phí dịch vụ."
+    },
+    "Compare - ALB vs NLB": {
+      "kind": "updated",
+      "summary": "NLB nay có listener QUIC/TCP_QUIC và health check HTTP/HTTPS (application-aware) ngoài TCP mặc định; ALB thêm action jwt-validation kiểm tra JWT access token; bài không còn nêu con số latency khoảng 25%.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Launch Templates": {
+      "kind": "updated",
+      "summary": "Bài chỉ còn dạy Launch Template: Launch Configuration là bản cũ, account mới không tạo được; ASG trỏ tới version cụ thể, Default hoặc Latest (version mới tự có hiệu lực); LT thêm mixed instance types.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Auto Scaling Groups": {
+      "kind": "updated",
+      "summary": "ASG chọn version cụ thể, Default hoặc Latest của launch template; cân bằng AZ có hai chiến lược balanced best effort (mặc định, launch sang AZ khác) và balanced only; cooldown chỉ cho simple scaling, step/target tracking dùng instance warmup; thêm process InstanceRefresh.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "ASG Scaling Policies": {
+      "kind": "updated",
+      "summary": "Thêm cooldown (chỉ cho simple scaling, mặc định 300 giây) và instance warmup cho step/target tracking (instance đang warmup chưa tính vào metric, scale in bị chặn); scaling processes nay có InstanceRefresh.",
+      "changed": [
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "ASG Lifecycle Hooks": {
+      "kind": "updated",
+      "summary": "Hook gửi thông báo tới EventBridge, SNS, SQS hoặc Lambda; ghi heartbeat để đặt lại timeout, tối đa 48 giờ hoặc 100 lần heartbeat timeout (lấy giá trị nhỏ hơn).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "ASG Health Checks": {
+      "kind": "updated",
+      "summary": "Thêm loại thứ tư là EBS health check (bật thêm cho instance Nitro, EBS volume lỗi IO thì instance bị thay); EC2 check mặc định chỉ dùng system và instance check; grace period không che instance rời trạng thái running.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Lab - Architecture Evolution": {
+      "kind": "removed",
+      "summary": "khóa mới không còn advanced demo Architecture Evolution (WordPress qua 6 stage)"
     }
   }
 }
