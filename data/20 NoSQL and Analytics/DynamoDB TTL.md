@@ -2,6 +2,7 @@
 tags: [saa-c03, s20-nosql-and-analytics, database, dynamodb, cost-optimization]
 aliases: [DynamoDB Time To Live, TTL DynamoDB]
 lessons: ["0357 DynamoDB TTL"]
+videos: ["342 [ASSOCIATESHARED] DynamoDB Time-To-Live (TTL)"]
 ---
 # DynamoDB TTL
 
@@ -27,12 +28,11 @@ flowchart LR
     A["Item có TTL attribute (epoch seconds)"] --> P1{"Process 1: TTL < now?"}
     P1 -->|có| E["Đánh dấu EXPIRED (vẫn đọc được)"]
     E --> P2["Process 2: xóa khỏi table + indexes"]
-    P2 --> S["Delete ghi vào stream (nếu bật)"]
-    P2 --> T["Stream riêng cho TTL deletions (24h, tùy chọn)"]
+    P2 --> S["Delete ghi vào stream của table (nếu bật), dạng system delete, giữ 24h"]
 ```
 
 - Các lệnh delete do TTL là **system process chạy nền**: **không ảnh hưởng hiệu năng** và **không tính phí** (không tốn WCU).
-- **Stream**: delete do TTL xuất hiện trong [[DynamoDB Streams and Triggers|stream]] bình thường của table cùng các insert/update; ngoài ra có thể theo dõi riêng các TTL deletion (cửa sổ **24 giờ**) — hữu ích cho housekeeping như **undelete** hay **audit**. (Khóa học nói có thể bật "stream riêng cho TTL"; thực tế hiện nay chỉ có stream của table, record xóa do TTL mang `userIdentity` là service `dynamodb.amazonaws.com` nên lọc riêng được, ví dụ bằng event filter của Lambda.)
+- **Stream**: bật [[DynamoDB Streams and Triggers|DynamoDB Streams]] trên table thì delete do TTL được ghi vào stream của table dưới dạng **system delete**, cùng các insert/update, trong cửa sổ **24 giờ** — hữu ích cho housekeeping theo dõi các lần xóa do TTL (ví dụ **undelete**, **audit**). Record xóa do TTL mang `userIdentity` là service `dynamodb.amazonaws.com` nên lọc riêng được, ví dụ bằng event filter của Lambda (bổ sung, bài không nói). (Bản khóa cũ mô tả như một "stream riêng cho TTL".)
 - Lưu ý thực tế: việc xóa không tức thì — item hết hạn thường bị xóa trong vòng vài ngày, nên ứng dụng nên tự lọc item đã quá TTL khi đọc.
 
 ## Use case

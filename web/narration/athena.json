@@ -1,17 +1,30 @@
 {
  "Athena": {
-  "sig": "10-e51rtx",
+  "sig": "10-1o4jitt",
   "steps": [
-   "Sơ đồ này nói về Athena, dịch vụ serverless cho phép chạy SQL trực tiếp trên dữ liệu trong S3. Không load, không ETL, không server, và bạn chỉ trả tiền theo lượng dữ liệu mà query quét.",
-   "Đầu tiên là table definition, tức schema. Nó chỉ là một công thức khai báo cột, kiểu dữ liệu và location trên S3, hoàn toàn không chứa dữ liệu. Bạn có thể dùng Glue Data Catalog làm nơi lưu metadata này.",
+   "Sơ đồ này nói về Athena với SQL engine: chạy SQL trực tiếp trên dữ liệu trong S3, không load, không ETL, không server. Bạn trả theo lượng dữ liệu query quét, hoặc chọn capacity reservation với giá DPU cố định theo giờ.",
+   "Đầu tiên là table definition, tức schema, được định nghĩa trong Glue Data Catalog. Nó chỉ là công thức khai báo cột, kiểu dữ liệu và location trên S3, hoàn toàn không chứa dữ liệu.",
    "Athena lấy schema đó và áp vào dữ liệu ngay lúc query. Đây chính là schema-on-read: dữ liệu được dịch sang dạng bảng trong lúc đọc.",
-   "Dữ liệu gốc nằm trong S3 và luôn read-only, không bao giờ bị sửa. Athena đọc được nhiều định dạng như JSON, CSV, Parquet, ORC, Avro, và cả log dịch vụ AWS như CloudTrail hay VPC Flow Logs.",
+   "Dữ liệu gốc nằm trong S3 và luôn read-only, không bao giờ bị sửa. Athena đọc được dữ liệu structured, semi-structured lẫn unstructured: Ion, JSON, CSV, Parquet, ORC, Avro, và log dịch vụ AWS như CloudTrail hay VPC Flow Logs.",
    "Người phân tích hoặc ứng dụng gửi câu lệnh SELECT bằng SQL chuẩn. Đây là kiểu truy vấn ad-hoc, cần là chạy, không phải dựng cluster trước.",
-   "Kết quả hiển thị trên console, được lưu vào S3 query result location, hoặc chuyển sang dịch vụ khác. Lưu ý bạn phải cấu hình result location trước khi chạy query đầu tiên.",
-   "Với nguồn không phải S3, Athena có Federated Query, dùng data source connector chạy trên Lambda. Có connector dựng sẵn cho DynamoDB, RDS, CloudWatch Logs, DocumentDB và các nguồn JDBC như MySQL, PostgreSQL.",
-   "Connector Lambda đóng vai trò phiên dịch giữa nguồn dữ liệu và Athena, như một phần mở rộng của query engine. Nhờ vậy một câu SQL có thể truy vấn cả nguồn ngoài S3.",
-   "Về chi phí, bạn trả khoảng 5 USD cho mỗi TB dữ liệu quét, không có phí nền. Hãy nén dữ liệu, dùng định dạng cột Parquet hoặc ORC, và partition để quét ít hơn, rẻ hơn, nhanh hơn.",
-   "Khi đi thi, nhớ rằng database truyền thống phải tạo table rồi load hoặc ETL dữ liệu vào, còn Athena bỏ hẳn bước đó. Thấy query ad-hoc trên S3 hay query log thì chọn Athena, data warehouse chạy liên tục thì chọn Redshift, lọc trong một object thì chọn S3 Select."
+   "Kết quả được lưu vào S3 hoặc managed storage, hiển thị trên console, hoặc chuyển sang dịch vụ khác và công cụ bên thứ ba.",
+   "Với nguồn không phải S3, Athena có Federated Query, dùng data source connector đi qua Glue hoặc Lambda. Có connector dựng sẵn cho DynamoDB, CloudWatch Logs, DocumentDB, và các engine quan hệ như MySQL, PostgreSQL, Oracle, SQL Server.",
+   "Connector đóng vai trò cầu nối giữa nguồn dữ liệu và Athena, như một phần mở rộng của query engine. Nhờ vậy Athena query được cả nguồn ngoài S3, dù S3 vẫn là việc chính của nó.",
+   "Về chi phí, không có phí nền: trả theo dữ liệu quét, hoặc capacity reservation khi cần chi phí dễ đoán. Hãy nén dữ liệu, dùng định dạng cột Parquet hoặc ORC, và partition để quét ít hơn, rẻ hơn, nhanh hơn.",
+   "Khi đi thi, nhớ database truyền thống phải load hoặc ETL dữ liệu vào trước, còn Athena bỏ hẳn bước đó. Query ad-hoc trên S3 hay query log thì chọn Athena; engine SQL hay Spark chọn theo workgroup và không đổi được; data warehouse cho BI nặng thì Redshift."
+  ]
+ },
+ "Athena - spark": {
+  "sig": "8-1opyf0c",
+  "steps": [
+   "Sơ đồ này nói về Athena for Apache Spark. Engine được chọn theo workgroup lúc tạo và không đổi được. SQL để hỏi dữ liệu có sẵn, còn Spark để làm việc với dữ liệu bằng code, như ETL, làm sạch, pipeline nhiều bước.",
+   "Bạn làm việc trong notebook, về cơ bản là trình soạn Python chia cell. Viết PySpark, chạy, xem output rồi viết tiếp. Khi chạy code, Athena mở một Spark session chạy trên DPU, compute serverless tự scale, bạn không chọn instance type.",
+   "Code đọc dữ liệu nguồn từ S3 vào DataFrame, tức biểu diễn dữ liệu dạng bảng trong bộ nhớ. Nguồn hỗ trợ Parquet, ORC, JSON, CSV và các open table format như Apache Iceberg hay Delta Lake, và dữ liệu S3 vẫn read-only.",
+   "Bạn có thể đọc table qua Glue Data Catalog nếu đã định nghĩa ở đó, nhưng không bắt buộc; đọc thẳng S3 là cách đơn giản nhất.",
+   "Trong session, code lọc, join, biến đổi DataFrame và tạo ra DataFrame mới. Nhớ rằng DataFrame chỉ sống trong session, session kết thúc là mất.",
+   "Kết quả tính toán được lưu vào S3 mặc định, ở results location cấu hình tại workgroup, nên bền vững. Đồng thời kết quả hiển thị ngay trong notebook cell để bạn khám phá dữ liệu.",
+   "Về giá, Spark tính theo DPU giờ khi session đang chạy. Không có kiểu trả theo dữ liệu quét, cũng không có capacity reservation như engine SQL.",
+   "Khi đi thi, nhớ: muốn giữ kết quả phải ghi ra S3. Cần data engineering bằng PySpark mà không muốn quản cluster Spark thì chọn Athena for Apache Spark; chỉ cần SQL thì Athena SQL; cần full Hadoop, HDFS, chọn Spot theo node thì Amazon EMR."
   ]
  }
 }

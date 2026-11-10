@@ -14,17 +14,17 @@
   ]
  },
  "ElastiCache - redis-vs-memcached": {
-  "sig": "10-1igirv7",
+  "sig": "10-b0lp7z",
   "steps": [
-   "Sơ đồ này so sánh hai engine của ElastiCache. Đề thi phân biệt bằng tính năng: cần bền vững, high availability hay cấu trúc phức tạp thì chọn Redis, còn đơn giản và đa luồng thì Memcached.",
-   "Hai cột là Memcached và Redis. Hiện nay còn có Valkey, một bản fork mã nguồn mở tương thích Redis, nên cứ xếp chung với Redis.",
-   "Về cấu trúc dữ liệu, Memcached chỉ có string đơn giản. Redis có list, set, hash và sorted set, rất hợp cho leaderboard game vì lưu luôn thứ tự xếp hạng.",
-   "Memcached không có replication nên không highly available. Redis replicate qua nhiều AZ, vừa cho high availability vừa dùng replica để scale đọc.",
-   "Memcached không có persistence nên không backup hay restore được. Redis cho phép khôi phục cache về trạng thái trước sự cố.",
-   "Memcached là multi-threaded nên tận dụng tốt CPU nhiều core, còn lõi xử lý của Redis chủ yếu là single-threaded.",
-   "Muốn scale ngang với Memcached, bạn thêm node và tự sharding thủ công. Redis dùng replica cho đọc và cluster mode để shard.",
-   "Memcached không hỗ trợ transactions. Redis có, cho phép nhiều lệnh thực thi theo kiểu all or nothing.",
-   "Điểm chung là cả hai đều in-memory, latency dưới một mili giây. Khi thi, cần Multi-AZ, backup, transactions hay sorted set thì chọn Redis; cache đơn giản, đa luồng, chấp nhận mất dữ liệu thì chọn Memcached.",
+   "Sơ đồ này so sánh các engine của ElastiCache. Đề thi phân biệt bằng tính năng: cần bền vững, high availability hay cấu trúc phức tạp thì chọn Valkey hoặc Redis OSS, còn đơn giản và đa luồng thì Memcached.",
+   "Hai cột là Memcached và Valkey cùng Redis OSS. Valkey là bản thay thế mã nguồn mở cho Redis, tương thích Redis client và cấu trúc dữ liệu, và là engine AWS khuyên dùng cho triển khai mới.",
+   "Về cấu trúc dữ liệu, Memcached chỉ có string đơn giản. Valkey và Redis OSS có list, set, hash và sorted set, rất hợp cho leaderboard game vì lưu luôn thứ tự xếp hạng.",
+   "Memcached không có replication nên không highly available. Valkey và Redis OSS replicate qua nhiều AZ, vừa cho high availability vừa dùng replica để scale đọc.",
+   "Memcached không có persistence nên không backup hay restore được. Valkey và Redis OSS cho phép khôi phục cache về trạng thái trước sự cố.",
+   "Memcached là multi-threaded nên tận dụng tốt CPU nhiều core, còn lõi xử lý của Valkey và Redis OSS chủ yếu là single-threaded.",
+   "Muốn scale ngang với Memcached, bạn thêm node và tự sharding thủ công. Valkey và Redis OSS dùng replica cho đọc và cluster mode để shard.",
+   "Memcached không hỗ trợ transactions. Valkey và Redis OSS có, cho phép nhiều lệnh thực thi theo kiểu all or nothing.",
+   "Điểm chung là đều in-memory, latency dưới một mili giây. Khi thi, cần Multi-AZ, backup, transactions hay sorted set thì chọn Valkey hoặc Redis OSS; cache đơn giản, đa luồng, chấp nhận mất dữ liệu thì chọn Memcached.",
    "Tóm lại, sáu tiêu chí cần nhớ là cấu trúc dữ liệu, replication và Multi-AZ, backup và restore, threading, scale ngang, và transactions."
   ]
  }

@@ -1,0 +1,15 @@
+{
+ "AWS Data Exchange": {
+  "sig": "8-1rre29b",
+  "steps": [
+   "Sơ đồ này nói về AWS Data Exchange, nơi tìm, subscribe và cung cấp dataset của bên thứ ba qua data grant hoặc AWS Marketplace data product, miễn phí hoặc trả phí. Provider không phải tự dựng marketplace, giá, license hay cấp quyền.",
+   "Provider publish dataset, có thể đưa revision mới, đặt giá, offer và thời hạn. Data Exchange lo catalog, điều khoản, license, cấp và thu hồi quyền, và còn có Open Data on AWS hoàn toàn miễn phí.",
+   "Subscriber tìm trong catalog rồi subscribe, ví dụ dữ liệu thời tiết để dự báo nhu cầu, hay dữ liệu địa lý về cửa hàng đối thủ, mã bưu chính, dân số. Tùy provider, request có thể phải được duyệt.",
+   "Dữ liệu giao theo nhiều cách. Files được export vào S3 của subscriber hoặc tải qua signed URL, tức là một bản sao. Redshift datashare cho query SQL read-only, subscriber trả compute trên cluster của mình.",
+   "Với API, provider dựng REST API trên API Gateway, subscriber gọi endpoint do Data Exchange quản lý và endpoint này proxy tới API của provider.",
+   "Với S3, Data Exchange tạo access point read-only tới object của provider. Provider bật Requester Pays thì subscriber trả phí request và transfer.",
+   "Với Lake Formation, provider share resource gắn LF-Tag và subscriber query từ account của chính họ.",
+   "Khi đi thi, nhớ: Files cho subscriber một bản sao, giữ cả sau khi hết hạn và chỉ mới khi có revision mới. Các cách còn lại là truy cập tại chỗ, thu hồi được ngay và luôn mới nhất. Lấy hoặc bán dataset bên thứ ba thì chọn Data Exchange."
+  ]
+ }
+}

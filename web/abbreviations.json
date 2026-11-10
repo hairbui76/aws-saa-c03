@@ -275,5 +275,16 @@
   "RUM": "Real User Monitoring",
   "NFC": "Near Field Communication",
   "GPS": "Global Positioning System",
-  "LLM": "Large Language Model"
+  "LLM": "Large Language Model",
+  "SCRAM": "Salted Challenge Response Authentication Mechanism",
+  "MPP": "Massively Parallel Processing",
+  "RPU": "Redshift Processing Unit",
+  "OCU": "OpenSearch Compute Unit",
+  "NCU": "Neptune Capacity Unit",
+  "DPU": "Data Processing Unit",
+  "MREC": "Multi-Region Eventual Consistency",
+  "MRSC": "Multi-Region Strong Consistency",
+  "ODBC": "Open Database Connectivity",
+  "SIEM": "Security Information and Event Management",
+  "RAG": "Retrieval-Augmented Generation"
 }

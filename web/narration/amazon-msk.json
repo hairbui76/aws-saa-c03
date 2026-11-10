@@ -1,0 +1,14 @@
+{
+ "Amazon MSK": {
+  "sig": "7-y57zri",
+  "steps": [
+   "Sơ đồ này nói về Amazon MSK, Apache Kafka managed. AWS sở hữu control plane: tạo cluster, patch, thay broker hỏng, scale. Bạn vẫn sở hữu data plane gồm topic, producer và consumer dùng Kafka client. Record được giữ theo thứ tự trong partition và không bị xóa khi đọc.",
+   "Ở web store Aus-E-Mart, storefront service dùng Kafka client gửi một record vào topic orders mỗi khi có đơn hàng, không cần AWS SDK.",
+   "Fraud service đọc mọi record của topic orders để tìm bất thường, còn recommendation service cũng đọc topic đó để gợi ý sản phẩm. Mỗi consumer group có offset riêng nên đọc độc lập và replay được, không cần nhân bản topic.",
+   "Warehouse service gửi record vào topic shipping mỗi lần giao hàng.",
+   "Athena không đọc Kafka native. Muốn query ad-hoc topic shipping thì dùng MSK Connect, Amazon Data Firehose, hoặc data delivery của Express broker để đưa dữ liệu ra S3 rồi Athena query trên S3.",
+   "Provisioned thì bạn chọn số broker, size, storage và trả cả khi rảnh, với Standard broker bạn quản storage còn Express thì MSK quản. Serverless trả theo throughput và storage. Cluster private mặc định; public chỉ với provisioned, bật sau khi tạo và bắt buộc IAM, SCRAM hoặc mutual TLS. Khác SQS, Kafka giữ record theo retention.",
+   "Khi đi thi, nhớ: đã dùng Kafka, muốn migrate hay mở rộng lên AWS mà không tự quản cluster thì chọn MSK. Xây mới kiến trúc event-driven chỉ với dịch vụ native thì chọn Kinesis Data Streams."
+  ]
+ }
+}

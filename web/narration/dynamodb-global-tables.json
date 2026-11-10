@@ -1,16 +1,16 @@
 {
  "DynamoDB Global Tables": {
-  "sig": "9-r50pkd",
+  "sig": "9-1so1juf",
   "steps": [
-   "Sơ đồ này nói về DynamoDB Global Tables, giải pháp replication multi-master giữa nhiều region. Ở đây ta có ba region: us-east-1, London và Sydney, mỗi nơi giữ một replica table ngang hàng.",
+   "Sơ đồ này nói về DynamoDB Global Tables, replication multi-active giữa nhiều region. Ở đây có ba region: us-east-1, London và Sydney, mỗi nơi một replica table ngang hàng. Consistency mode chọn lúc tạo và không đổi được: MREC mặc định, hoặc MRSC.",
    "Người dùng ở Mỹ, Anh và Úc đều kết nối tới replica table gần mình nhất, và quan trọng là họ được cả đọc lẫn ghi ngay tại chỗ, nên latency rất thấp.",
-   "Các replica table đồng bộ dữ liệu với nhau theo kiểu bất đồng bộ, thường dưới một giây tùy tải từng region, nên dùng được cho cả ứng dụng đòi hỏi cao.",
-   "Đây là điểm cốt lõi: multi-master nghĩa là không có table nào là primary, cũng không có read replica chỉ đọc. Mọi table đều ngang hàng và nhận cả read lẫn write.",
-   "Nếu cùng một item bị ghi ở hai region gần như đồng thời, DynamoDB áp dụng last writer wins: bản ghi mới nhất thắng và được replicate đè lên mọi replica khác. Đơn giản và dễ dự đoán.",
-   "Về consistency: đọc trong chính region vừa ghi thì chọn được strongly consistent hoặc eventual. Còn đọc từ region khác thì luôn là eventually consistent, vì replication bất đồng bộ.",
-   "Cách dựng khá đơn giản: tạo DynamoDB table ở từng region, rồi từ một table bất kỳ thêm các table còn lại vào global table. Hậu trường, replication dựa trên DynamoDB Streams.",
+   "Với MREC, các replica table đồng bộ bất đồng bộ: ghi xong ở region local trước rồi mới replicate, thường dưới một giây, tùy chủ yếu vào khoảng cách giữa các region.",
+   "Đây là điểm cốt lõi: multi-active nghĩa là không có table nào là primary, cũng không có read replica chỉ đọc. Mọi table đều ngang hàng và nhận cả read lẫn write.",
+   "Khi cùng một item bị ghi ở hai region gần như đồng thời, MREC áp dụng last writer wins, bản mới nhất thắng và đè lên mọi replica. Còn MRSC replicate đồng bộ nên ghi chậm hơn, và không giải quyết xung đột mà chặn luôn: lệnh ghi xung đột bị từ chối, app phải retry.",
+   "Về consistency: với MREC, đọc trong chính region vừa ghi thì chọn được strongly consistent, còn region khác luôn eventually consistent. Với MRSC, strongly consistent read làm được ở mọi region.",
+   "Cách dựng khá đơn giản: tạo DynamoDB table ở từng region, rồi từ một table bất kỳ thêm các table còn lại vào global table, và chọn MREC hoặc MRSC ngay lúc đó.",
    "Ba use case chính là: global high availability khi một region sập, hiệu năng toàn cầu kết hợp Route 53 latency routing, và DR với RPO và RTO gần như bằng không.",
-   "Khi đi thi, nhớ nhé: NoSQL cần đọc và ghi ở nhiều region, kiểu active-active, thì chọn Global Tables. Nếu là relational hoặc SQL toàn cầu với một region ghi thì chọn Aurora Global Database. Và ứng dụng không chịu được eventual consistency giữa các region thì phải cẩn thận."
+   "Khi đi thi, nhớ nhé: NoSQL cần đọc và ghi ở nhiều region thì chọn Global Tables. Cần strongly consistent read ở mọi region thì chọn MRSC. Relational hoặc SQL toàn cầu với một region ghi thì là Aurora Global Database."
   ]
  }
 }

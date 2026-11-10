@@ -1,0 +1,16 @@
+{
+ "Amazon OpenSearch Service": {
+  "sig": "9-1actn5u",
+  "steps": [
+   "Sơ đồ này nói về Amazon OpenSearch Service, dịch vụ search và log analytics near real-time, là bản fork của Elasticsearch và Kibana do AWS quản lý. Dữ liệu vào dạng JSON document, được index ngay khi tới, tìm được trong khoảng một giây mà không cần schema trước.",
+   "Đội vận hành Aus-E-Mart đã gửi VPC Flow Logs vào CloudWatch Logs. Họ chỉ cần thêm subscription filter trên log group để đẩy event thẳng vào endpoint của OpenSearch domain, vì CloudWatch Logs làm được việc này native.",
+   "Đội web thì gửi clickstream vào Kinesis Data Streams, rồi gắn Amazon Data Firehose vào stream đó.",
+   "Firehose buffer và batch clickstream, biến đổi được nếu cần, rồi giao native vào OpenSearch. Cách này dùng được cho cả log của đội vận hành.",
+   "Domain thực chất là một cluster với một endpoint. Bên trong là các data node, tức instance có storage, giữ index và chạy query. Với domain, bạn tự chọn instance type và số node.",
+   "Dữ liệu được replicate sang data node ở AZ khác, có thể trải 2 hoặc 3 AZ, nên mất một node hay một AZ vẫn chạy tiếp. Đội vận hành dùng OpenSearch Dashboards để search và đặt alert, đội web dùng QuickSight làm BI.",
+   "Ứng dụng tự viết cũng query thẳng được OpenSearch. Lưu ý các công cụ này không nhận dữ liệu, chúng query index JSON đang nằm trong OpenSearch.",
+   "Nguồn không native như Kinesis Data Streams, S3 hay DynamoDB thì đặt Lambda ở giữa, hoặc dùng OpenSearch Ingestion, pipeline managed lọc và reshape được. Domain trả theo instance giờ, không auto scaling; Serverless đặt min và max OCU, tự scale, về 0 được.",
+   "Khi đi thi, thấy search, full text search, log analytics, near real-time, Elasticsearch hay Kibana, SIEM, vector search cho RAG thì chọn OpenSearch. Nếu chỉ cần lưu rẻ và thỉnh thoảng query thì S3 cộng Athena."
+  ]
+ }
+}

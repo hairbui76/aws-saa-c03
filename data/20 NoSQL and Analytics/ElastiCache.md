@@ -1,11 +1,12 @@
 ---
 tags: [saa-c03, s20-nosql-and-analytics, database, caching, performance, high-availability]
-aliases: [Amazon ElastiCache, ElastiCache Redis, ElastiCache Memcached, Redis, Memcached]
+aliases: [Amazon ElastiCache, ElastiCache Redis, ElastiCache Memcached, Redis, Memcached, Valkey, Redis OSS, ElastiCache Valkey]
 lessons: ["0361 ElastiCache"]
+videos: ["343 ElastiCache Theory & Architecture"]
 ---
 # ElastiCache
 
-> **TL;DR:** ElastiCache là **in-memory cache/database dạng managed service**, có hai engine **Redis** và **Memcached**. Dùng để giảm tải đọc cho database (workload **read-heavy**), đạt độ trễ **sub-millisecond**, và lưu **session state** bên ngoài instance để ứng dụng thành **stateless**. Điều kiện tiên quyết: **phải sửa code ứng dụng**.
+> **TL;DR:** ElastiCache là **in-memory cache/database dạng managed service**, có ba engine **Valkey**, **Redis OSS** và **Memcached** (Valkey là engine AWS khuyên dùng cho triển khai mới). Dùng để giảm tải đọc cho database (workload **read-heavy**), đạt độ trễ **sub-millisecond**, và lưu **session state** bên ngoài instance để ứng dụng thành **stateless**. Điều kiện tiên quyết: **phải sửa code ứng dụng**.
 
 ## 🖼️ Sơ đồ
 ![[ElastiCache.excalidraw]]
@@ -21,9 +22,15 @@ lessons: ["0361 ElastiCache"]
 - Cache giữ dữ liệu **trong RAM**: nhanh hơn disk nhiều bậc cả về throughput lẫn latency, nhưng **không bền vững**. Chỉ dùng cho dữ liệu tạm hoặc dữ liệu có thể nạp lại từ nguồn.
 - ElastiCache cung cấp cache này **as a service**, giống cách RDS cung cấp database server as a service.
 
+### Ba engine
+- **Valkey**: bản thay thế **mã nguồn mở** cho Redis, rất giống Redis, **tương thích với Redis client và cấu trúc dữ liệu của Redis**. Đây là engine **AWS khuyên dùng cho triển khai mới**.
+- **Redis OSS**: Redis bản mã nguồn mở.
+- **Memcached**.
+- Valkey và Redis OSS có cùng nhóm tính năng nâng cao (bảng so sánh bên dưới); Memcached là cache đơn giản, đa luồng.
+
 ### Ba trường hợp sử dụng chính
 1. **Workload read-heavy**: chuyển phần lớn lượt đọc sang cache, database chịu ít tải hơn. Database, nhất là relational, **khó scale** và **đắt** so với lượng dữ liệu và hiệu năng nó cho → offload đọc sang cache vừa nhanh hơn vừa **rẻ hơn (cost-effective)**.
-2. **Yêu cầu latency thấp**: cả hai engine đều cho truy cập **sub-millisecond**.
+2. **Yêu cầu latency thấp**: cả ba engine đều cho truy cập **sub-millisecond**.
 3. **Lưu session state** của người dùng bên ngoài EC2 → app server **stateless** → hệ thống dùng [[Elastic Load Balancer|load balancer]] + [[Auto Scaling Groups|ASG]] có thể tiến tới **fault tolerant** chứ không chỉ highly available (xem [[HA vs FT vs DR]]).
 
 ### Phải sửa ứng dụng
@@ -33,7 +40,7 @@ lessons: ["0361 ElastiCache"]
 ## Cách hoạt động / Kiến trúc
 
 ### Mô hình cache-aside (cache hit / cache miss)
-Ví dụ Catagram dùng [[Aurora]] làm database và đã được sửa để dùng ElastiCache:
+Ví dụ web store Aus-E-Mart dùng [[Aurora]] làm database và đã được sửa để dùng ElastiCache:
 - Lần đầu Bob truy vấn: app hỏi cache → **cache miss** → app đọc Aurora (chậm hơn, tốn hơn) → app **ghi kết quả vào cache**.
 - Lần sau Bob (hoặc người khác) hỏi cùng dữ liệu → **cache hit** → trả thẳng từ ElastiCache, không đọc database.
 - Khi số người dùng tăng mà kiểu truy cập dữ liệu tương tự nhau, phần lớn tải tăng thêm rơi vào cache. Số lượt đọc database **không tăng tương ứng**, nhờ vậy kiến trúc scale được với chi phí thấp hơn nhiều so với đọc thẳng database.
@@ -57,9 +64,9 @@ sequenceDiagram
     App-->>U: response
 ```
 
-### Lưu session state (Catagram "extreme" edition, fault tolerant)
+### Lưu session state (Aus-E-Mart "extreme" edition, fault tolerant)
 - App chạy trong ASG gồm 3 EC2 sau load balancer, dữ liệu bền vững trong Aurora.
-- Khi Bob kết nối, instance phục vụ **ghi session state** (ví dụ giỏ hàng) vào ElastiCache và cập nhật liên tục.
+- Khi Bob kết nối, instance phục vụ **ghi session state** (ví dụ giỏ hàng có chiếc Croc Cap bản giới hạn) vào ElastiCache và cập nhật liên tục.
 - Instance hỏng → load balancer chuyển Bob sang instance khác → instance mới **đọc session từ ElastiCache** → phiên tiếp tục, Bob không thấy gián đoạn.
 
 ```mermaid
@@ -81,9 +88,9 @@ flowchart LR
 
 ## Bảng so sánh / số liệu
 
-### Redis vs Memcached
+### Valkey / Redis OSS vs Memcached
 
-| Tiêu chí | Memcached | Redis |
+| Tiêu chí | Memcached | Valkey / Redis OSS |
 |---|---|---|
 | Latency | Sub-millisecond | Sub-millisecond |
 | Ngôn ngữ lập trình | Hỗ trợ nhiều ngôn ngữ | Hỗ trợ nhiều ngôn ngữ |
@@ -94,16 +101,17 @@ flowchart LR
 | Threading | **Multi-threaded** → tận dụng tốt CPU nhiều core | Lõi xử lý chủ yếu single-threaded |
 | Transactions | Không | **Có**: nhiều thao tác thực thi như một (all or nothing) |
 
-- Ví dụ Redis: **leaderboard game** dùng sorted set, Redis lưu cả dữ liệu lẫn thứ tự xếp hạng, giảm việc app phải tự sắp xếp.
-- Cả hai engine chạy trên nhiều instance type/size. Instance có nhiều RAM hơn hoặc RAM nhanh hơn thì hiệu năng tốt hơn. Đề thi không hỏi chi tiết các loại node.
-- (Khóa học chỉ nói hai engine. Hiện nay ElastiCache có thêm **Valkey**, bản fork mã nguồn mở tương thích Redis, và chế độ **ElastiCache Serverless**. Với đề thi, cứ phân biệt theo đặc tính Redis-like và Memcached như bảng trên.)
+- Ví dụ Valkey / Redis OSS: **leaderboard game** dùng sorted set, engine lưu cả dữ liệu lẫn thứ tự xếp hạng, giảm việc app phải tự sắp xếp.
+- Các engine chạy trên nhiều instance type/size. Instance có nhiều RAM hơn hoặc RAM nhanh hơn thì hiệu năng tốt hơn. Đề thi không hỏi chi tiết các loại node.
+- (Bản khóa cũ chỉ nói hai engine Redis và Memcached. ElastiCache hiện còn có chế độ **ElastiCache Serverless**; bổ sung, bài không nói.)
 
 ## 🎯 Mẹo thi SAA-C03
 - Từ khóa → ElastiCache: "**read-heavy**", "giảm tải / **giảm chi phí** đọc database", "**sub-millisecond**", "**in-memory**", "lưu **session state** bên ngoài EC2", "ứng dụng **stateless**".
 - Đề ghi "**không được sửa code / no application changes**" → ElastiCache **gần như chắc chắn sai**. Cân nhắc [[RDS Read Replicas]], [[Aurora]] replicas, hoặc [[DAX]] (với DynamoDB, ít thay đổi app).
-- Cần **Multi-AZ, high availability, resilience, replication** → chọn **Redis**.
-- Cần **backup/restore**, khôi phục cache mà không mất dữ liệu → **Redis** (Memcached không có persistence).
-- Cần **transactions** / consistency chặt hơn → **Redis**. Cấu trúc dữ liệu phức tạp (sorted set, leaderboard) → **Redis**.
+- Cần **Multi-AZ, high availability, resilience, replication** → chọn **Valkey / Redis OSS**.
+- Cần **backup/restore**, khôi phục cache mà không mất dữ liệu → **Valkey / Redis OSS** (Memcached không có persistence).
+- Cần **transactions** / consistency chặt hơn → **Valkey / Redis OSS**. Cấu trúc dữ liệu phức tạp (sorted set, leaderboard) → **Valkey / Redis OSS**.
+- Đề nhắc **Valkey**: engine mã nguồn mở tương thích Redis (client, cấu trúc dữ liệu), AWS khuyên dùng cho triển khai mới.
 - Cần **multi-threaded**, cache đơn giản, tận dụng CPU nhiều core, chấp nhận mất dữ liệu → **Memcached**.
 - Cache cho **DynamoDB** → mặc định **[[DAX]]**, không phải ElastiCache. Cache nội dung tĩnh ở edge cho người dùng toàn cầu → [[CloudFront Architecture|CloudFront]].
 - Phân biệt với Session Stickiness ([[SSL Offload and Session Stickiness]]): stickiness gắn user vào một instance, instance chết thì mất session. Lưu session trong ElastiCache thì instance nào cũng phục vụ được → bền hơn.

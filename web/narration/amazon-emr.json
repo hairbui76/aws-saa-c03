@@ -1,0 +1,15 @@
+{
+ "Amazon EMR": {
+  "sig": "8-1dcxcnj",
+  "steps": [
+   "Sơ đồ này nói về Amazon EMR, nền tảng cluster managed chạy Hadoop và Spark, có thể chạy dài hạn hoặc transient cho từng workload. Có bốn cách chạy: EC2, Serverless, EKS và Outposts; ở đây là EMR trên EC2, cluster nằm trong một AZ.",
+   "Input được đọc từ S3. Mọi cluster đều có primary node, chạy 1 hoặc 3 cái, lo quản cluster, phân phối việc, chạy HDFS NameNode, và là node bạn SSH vào. Primary hỏng thì cả cluster dừng.",
+   "Primary chia việc cho core node, nơi chạy task map và reduce và giữ HDFS. Task node là tùy chọn, chỉ chạy task, không dính HDFS, nên rất hợp chạy Spot.",
+   "Cluster có thể có nhiều core node, HDFS được replicate giữa chúng trên storage gắn vào từng node.",
+   "Kết quả cuối được ghi về S3, nơi dữ liệu bền vững.",
+   "HDFS rất nhanh nhưng tạm thời: sinh ra khi cluster chạy, mất khi cluster terminate hoặc core node hỏng, và chỉ ở một AZ.",
+   "EMRFS hoặc S3A, mặc định là S3A, là file system dựa trên S3, bền qua vòng đời cluster và chịu được lỗi AZ. Serverless thì không có cluster, EKS chạy job thành pod trên EKS của bạn, Outposts giữ dữ liệu on-prem và chỉ On-Demand. Spot hợp nhất cho task node, đừng đặt primary lên Spot.",
+   "Khi đi thi, mỗi job có runtime role riêng. Thấy Hadoop, Hive, HBase, Presto, Spark quy mô lớn thì chọn EMR: cần HDFS và full control thì EC2, dữ liệu không rời on-prem thì Outposts, chỉ job Spark hay Hive thì Serverless, đã có EKS thì EKS. Chỉ nói Spark thì cân nhắc cả Glue."
+  ]
+ }
+}
