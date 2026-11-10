@@ -4037,3 +4037,60 @@ body.resizing-chat {
   margin-top: 8px;
   border-top: 2px dashed var(--line-soft);
 }
+
+/* marks inside lesson lists / title / home cards */
+.lesson-side li a .upd-mark svg,
+.mobile-lessons .upd-mark svg {
+  color: inherit;
+  margin: 0;
+}
+.lesson-side li a .upd-mark {
+  margin-top: 2px;
+}
+.lesson-side li a .upd-mark.new {
+  margin-top: 1px;
+}
+.lesson-side li a .upd-mark + .exam-mark {
+  margin-left: 0;
+}
+.lesson-side li a > span + .upd-mark {
+  margin-left: auto;
+}
+.lesson-title .upd-mark {
+  margin-left: 4px;
+  vertical-align: -2px;
+}
+.lesson-title .upd-mark.new {
+  font-size: 12px;
+  vertical-align: middle;
+}
+.path-status .upd-mark.new {
+  margin-right: 2px;
+}
+.upd-ch {
+  align-self: flex-start;
+  margin: -4px 0 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.upd-ch > span {
+  display: inline;
+}
+.upd-ch .upd-mark {
+  margin-right: 3px;
+  vertical-align: -2px;
+}
+.upd-ch .new {
+  color: var(--upd-new);
+}
+.upd-ch .updated {
+  color: var(--upd-changed);
+}
+.upd-ch .removed {
+  color: var(--upd-removed);
+}
+.upd-ch .sep {
+  color: var(--muted);
+}

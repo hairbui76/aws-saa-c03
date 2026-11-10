@@ -11,6 +11,7 @@ import ChatPanel from '../components/ChatPanel';
 import LessonNotes from '../components/LessonNotes';
 import LessonMarks from '../components/LessonMarks';
 import ExamMark from '../components/ExamMark';
+import { UpdateMark } from '../components/UpdateMark';
 import { BookmarkButton, BookmarkMark } from '../components/Bookmark';
 import { useUi } from '../App';
 
@@ -81,6 +82,7 @@ export default function LessonPage() {
                 <Link to={`/l/${l.id}`}>
                   <Icon size={15} className={isDone(s) ? 'ok' : ''} />
                   <span>{l.title}</span>
+                  <UpdateMark kind={l.u} />
                   <ExamMark n={l.pq} main={l.pm} />
                   <BookmarkMark id={l.id} />
                   <NoteMark id={l.id} />
@@ -105,7 +107,7 @@ export default function LessonPage() {
               {chapter.lessons.map((l) => (
                 <li key={l.id} className={`${l.id === lesson.id ? 'cur' : ''} ${isDone(p.lessons[l.id]) ? 'done' : ''}`}>
                   <Link to={`/l/${l.id}`}>
-                    {l.title} <ExamMark n={l.pq} main={l.pm} /> <BookmarkMark id={l.id} />
+                    {l.title} <UpdateMark kind={l.u} /> <ExamMark n={l.pq} main={l.pm} /> <BookmarkMark id={l.id} />
                   </Link>
                 </li>
               ))}
@@ -113,7 +115,9 @@ export default function LessonPage() {
           </details>
         )}
         <div className="lesson-title-row">
-          <h1 className="lesson-title">{lesson.title}</h1>
+          <h1 className="lesson-title">
+            {lesson.title} <UpdateMark kind={lesson.update?.kind} size={22} />
+          </h1>
           <BookmarkButton lessonId={lesson.id} />
         </div>
         {examCount > 0 && (

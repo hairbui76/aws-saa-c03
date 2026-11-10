@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Bookmark, Play, Route as RouteIcon, Search, Target, X } from 'lucide-react';
+import { UpdateMark } from '../components/UpdateMark';
+import { chapterUpdateCounts, updateCountParts, type UpdateKind } from '../lib/updates';
 import { useIndex, useJson, type Diagram, type Index } from '../lib/content';
 import { bookmarks, isDone, progress, toggleBookmark } from '../lib/store';
 import { Sketch, SketchBar } from '../components/Sketch';
@@ -99,6 +101,7 @@ export default function Home() {
                       luyện thi
                     </span>
                   )}
+                  <ChapterUpdates lessons={c.lessons} />
                   <div className="row between small">
                     <SketchBar value={d / c.lessons.length} color="#228be6" />
                     <span className="muted nowrap">
@@ -211,5 +214,22 @@ function RoadmapStrip() {
         Xem lộ trình
       </Link>
     </Sketch>
+  );
+}
+
+/** "2 bài mới · 3 cập nhật · 1 không còn trong khóa": what the latest update batch touched in this chapter. */
+function ChapterUpdates({ lessons }: { lessons: { u?: UpdateKind }[] }) {
+  const parts = updateCountParts(chapterUpdateCounts(lessons));
+  if (!parts.length) return null;
+  return (
+    <span className="upd-ch" title="Bài của chương thay đổi theo bản khóa mới (đánh dấu ở danh sách bài)">
+      {parts.map((p, i) => (
+        <span key={p.kind} className={p.kind}>
+          {i > 0 && <span className="sep"> · </span>}
+          {p.kind !== 'new' && <UpdateMark kind={p.kind} size={13} />}
+          {p.text}
+        </span>
+      ))}
+    </span>
   );
 }

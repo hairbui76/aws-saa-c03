@@ -6,6 +6,7 @@ import { Sketch, SketchBar, Stars } from '../components/Sketch';
 import Sections from '../components/Sections';
 import ExamMark from '../components/ExamMark';
 import { BookmarkMark } from '../components/Bookmark';
+import { UpdateLegend, UpdateMark } from '../components/UpdateMark';
 
 export default function ChapterPage() {
   const { id } = useParams();
@@ -39,6 +40,7 @@ export default function ChapterPage() {
       </Sketch>
 
       <h2 className="hand">🧭 Lộ trình học</h2>
+      {ch.lessons.some((l) => l.u) && <UpdateLegend />}
       <ol className="path">
         {ch.lessons.map((l, i) => {
           const lp = p.lessons[l.id];
@@ -54,6 +56,7 @@ export default function ChapterPage() {
                   </div>
                   <div className="path-status">
                     <BookmarkMark id={l.id} />
+                    <UpdateMark kind={l.u} />
                     <ExamMark n={l.pq} main={l.pm} />
                     {lp?.quiz ? <Stars score={lp.quiz.best} total={lp.quiz.total} /> : null}
                     <Icon size={20} />

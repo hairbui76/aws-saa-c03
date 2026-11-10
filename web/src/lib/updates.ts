@@ -41,3 +41,12 @@ export function chapterUpdateCounts(lessons: { u?: UpdateKind }[]): Record<Updat
   for (const l of lessons) if (l.u) n[l.u]++;
   return n;
 }
+
+/** Non-zero counts as short Vietnamese phrases, in the fixed order new, updated, removed ("2 bài mới", "3 cập nhật", ...). */
+export function updateCountParts(counts: Record<UpdateKind, number>): { kind: UpdateKind; text: string }[] {
+  const parts: { kind: UpdateKind; text: string }[] = [];
+  if (counts.new) parts.push({ kind: 'new', text: `${counts.new} bài mới` });
+  if (counts.updated) parts.push({ kind: 'updated', text: `${counts.updated} cập nhật` });
+  if (counts.removed) parts.push({ kind: 'removed', text: `${counts.removed} không còn trong khóa` });
+  return parts;
+}
