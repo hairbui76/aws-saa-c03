@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns]
 aliases: [Public Hosted Zone, R53 Public Zone, Hosted Zone]
 lessons: ["0178 R53 Public Hosted Zones"]
+videos: ["174 [ASSOCIATESHARED] R53 Public Hosted Zones"]
 ---
 # R53 Public Hosted Zones
 
@@ -54,6 +55,6 @@ flowchart LR
 
 ## Liên kết
 - Tiên quyết: [[DNS Fundamentals]], [[Route 53 Fundamentals]], [[DNS Record Types]]
-- Liên quan: [[R53 Interoperability]], [[R53 Routing Policies]], [[CNAME vs Alias]], [[R53 DNSSEC]], [[VPC Sizing and Structure]]
+- Liên quan: [[R53 Interoperability]], [[R53 Routing Policies]], [[CNAME vs Alias]], [[R53 DNSSEC]], [[VPC Sizing and Structure]], [[R53 Resolver DNS Firewall]] (lọc query đi qua VPC Resolver)
 - Phân biệt với: [[R53 Private Hosted Zones]]
 - Section: [[_MOC 10 Route 53]]

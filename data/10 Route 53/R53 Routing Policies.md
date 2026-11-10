@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, high-availability]
 aliases: [Route 53 Routing Policies, R53 Routing, Routing Policy]
 lessons: ["0181 Simple Routing", "0183 Failover Routing", "0186 Multi Value Routing", "0187 Weighted Routing", "0188 Latency Routing", "0189 Geolocation Routing", "0190 Geoproximity"]
+videos: ["177 [ASSOCIATESHARED] Simple Routing", "179 [ASSOCIATESHARED] R53 Failover Routing", "182 [ASSOCIATESHARED] R53 Multi Value Routing", "183 [ASSOCIATESHARED] Weighted Routing", "184 [ASSOCIATESHARED] Latency Routing", "185 [ASSOCIATESHARED] Geolocation Routing", "186 [ASSOCIATESHARED] Geoproximity Routing"]
 ---
 # R53 Routing Policies
 

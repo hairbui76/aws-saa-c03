@@ -4,7 +4,7 @@ aliases: [MOC Route 53, MOC R53]
 ---
 # 10 Route 53
 
-Section này đi sâu vào Route 53 sau phần giới thiệu ở [[Route 53 Fundamentals]] và lý thuyết DNS ở [[DNS Fundamentals]]: public và private hosted zone, CNAME so với Alias, health check, bảy routing policy, cách R53 phối hợp với registrar bên ngoài, và bật DNSSEC. Routing policy và health check là nhóm câu hỏi rất hay gặp trong đề, và là mảnh DNS của các kiến trúc HA/DR ở [[_MOC 13 HA and Scaling]] và [[_MOC 15 Global Content Delivery]].
+Section này đi sâu vào Route 53 sau phần giới thiệu ở [[Route 53 Fundamentals]] và lý thuyết DNS ở [[DNS Fundamentals]]: public và private hosted zone, CNAME so với Alias, health check, bảy routing policy, cách R53 phối hợp với registrar bên ngoài, bật DNSSEC, và chặn domain độc hại bằng Resolver DNS Firewall. Routing policy và health check là nhóm câu hỏi rất hay gặp trong đề, và là mảnh DNS của các kiến trúc HA/DR ở [[_MOC 13 HA and Scaling]] và [[_MOC 15 Global Content Delivery]].
 
 ← [[00 Home]] · Section trước: [[_MOC 09 Advanced EC2]] · Section tiếp theo: [[_MOC 11 Databases]] →
 
@@ -23,6 +23,7 @@ Section này đi sâu vào Route 53 sau phần giới thiệu ở [[Route 53 Fun
 12. [[R53 Geoproximity Routing]] — trả tài nguyên gần nhất theo khoảng cách, dùng bias để nới hoặc thu vùng phục vụ.
 13. [[R53 Interoperability]] — tách vai trò Registrar và DNS Hosting; mẫu phổ biến là registrar bên ngoài, R53 chỉ host zone.
 14. [[R53 DNSSEC]] — KSK từ asymmetric KMS key ở us-east-1, ZSK do R53 quản lý, DS record ở zone cha để lập chain of trust.
+15. [[R53 Resolver DNS Firewall]] — lọc DNS query tại VPC Resolver theo domain: rule group (domain list + ALLOW/BLOCK/ALERT) associate với VPC; fail closed mặc định.
 
 ## Bản đồ khái niệm
 ```mermaid
@@ -50,6 +51,7 @@ flowchart TB
   HC -.-> GP
   FO -->|"secondary qua Alias"| S3W["S3 static website"]
   PUB -->|"ký zone"| DS["DNSSEC: KSK từ KMS us-east-1, DS ở zone cha"]
+  VPC -->|"lọc query theo domain"| FW["Resolver DNS Firewall: rule group ALLOW/BLOCK/ALERT, fail closed mặc định"]
 ```
 
 ## Liên kết sang section khác
@@ -62,6 +64,7 @@ flowchart TB
 - [[CloudFront Architecture]] — cache nội dung và geo restriction ở tầng CDN.
 - [[HA vs FT vs DR]] — failover routing là kỹ thuật DR mức DNS.
 - [[KMS]] — asymmetric key ở us-east-1 cho KSK của DNSSEC.
+- [[NACL]] và [[WAF]] — lọc theo IP và theo HTTP request; Resolver DNS Firewall thì lọc DNS query theo domain.
 - [[Direct Connect]] — on-premises resolve private hosted zone qua Resolver endpoint trên kết nối hybrid.
 
 ## 🎯 Top mẹo thi của section
@@ -70,12 +73,13 @@ flowchart TB
 - Trỏ **apex domain** tới ELB/CloudFront/S3 website → **Alias** (CNAME không hợp lệ ở apex); với tài nguyên AWS mặc định chọn Alias. ([[CNAME vs Alias]])
 - **Simple** là policy duy nhất **không hỗ trợ health check**. ([[R53 Simple Routing]])
 - "Active-passive", "trang bảo trì trên S3 khi site chính lỗi" → **Failover** + health check trên primary. ([[R53 Failover Routing]])
-- "Nhiều IP, chỉ trả IP healthy, tối đa 8" → **Multivalue**; nó **không** thay thế ELB. ([[R53 Multivalue Routing]])
-- "X% traffic tới phiên bản mới, canary" → **Weighted**; weight 0 = ngừng gửi traffic. ([[R53 Weighted Routing]])
+- "Nhiều IP, chỉ trả IP healthy, tối đa 8" → **Multivalue**; nó **không** thay thế ELB; không dùng cho NS/CNAME/Alias; mọi record unhealthy thì vẫn trả tối đa 8. ([[R53 Multivalue Routing]])
+- "X% traffic tới phiên bản mới, canary" → **Weighted**; weight 0–255, weight 0 = ngừng gửi traffic; cả nhóm unhealthy thì R53 coi như healthy hết. ([[R53 Weighted Routing]])
 - "Lowest latency cho user toàn cầu" → **Latency**; một record mỗi region cho cùng tên. ([[R53 Latency Routing]])
-- "Nội dung theo quốc gia/ngôn ngữ, giới hạn thị trường" → **Geolocation**; nó theo **vị trí khớp**, không theo khoảng cách; thiếu record default thì user ngoài vùng nhận NO ANSWER. ([[R53 Geolocation Routing]])
+- "Nội dung theo quốc gia/ngôn ngữ, giới hạn thị trường" → **Geolocation**; nó theo **vị trí khớp**, không theo khoảng cách; thiếu record default thì user ngoài vùng nhận NO ANSWER; dùng được cả với private hosted zone (vị trí theo region của VPC Resolver). ([[R53 Geolocation Routing]])
 - "Bias", "nới/thu vùng địa lý, dịch traffic giữa các vùng" → **Geoproximity**. ([[R53 Geoproximity Routing]])
 - Cần kiểm tra **nội dung trang** → HTTP/HTTPS + string matching; tài nguyên private hoặc metric nội bộ → **CloudWatch alarm health check**; gộp nhiều thành phần → **calculated**. ([[R53 Health Checks]])
 - Health check báo unhealthy dù app chạy → firewall/SG/WAF đang chặn IP của health checker. ([[R53 Health Checks]])
 - Failover qua DNS **không tức thời**: phụ thuộc health check interval và **TTL**. ([[R53 Routing Policies]])
 - DNSSEC trên R53: KMS key **asymmetric ở us-east-1** cho KSK, ZSK do R53 quản lý; DNSSEC bảo đảm toàn vẹn và nguồn gốc, **không mã hóa** query. ([[R53 DNSSEC]])
+- Chặn instance resolve domain độc hại (malware, botnet, command and control) → **Route 53 Resolver DNS Firewall**: lọc theo domain, chỉ ở VPC Resolver, **fail closed mặc định**; chỉ cho domain đã duyệt = walled garden. ([[R53 Resolver DNS Firewall]])

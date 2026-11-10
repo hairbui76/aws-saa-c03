@@ -1,0 +1,14 @@
+{
+ "R53 Resolver DNS Firewall": {
+  "sig": "7-1dx24xe",
+  "steps": [
+   "Sơ đồ này nói về Route 53 Resolver DNS Firewall, lớp lọc DNS query theo domain ngay tại VPC Resolver. Ở đây có hai VPC của Aus-E-Mart trong region ap-southeast-2, một VPC để fail closed và một VPC để fail open.",
+   "Instance web store của Aus-E-Mart đã bị nhiễm malware. Malware muốn phone home nên gửi DNS query tra cứu domain setup.notahack.io tới VPC Resolver, ở địa chỉ VPC cộng 2.",
+   "VPC Resolver đưa query qua rule group của DNS Firewall. Mỗi rule là một domain list cộng một action allow, alert hoặc block, và rule được xét theo priority, số nhỏ trước, khớp rule nào thì dừng ở đó.",
+   "Domain này khớp rule block, nên VPC Resolver không bao giờ tra cứu tới server command and control. Malware không tìm được địa chỉ để nhận lệnh tiếp theo.",
+   "Instance nhận lại câu trả lời kiểu NXDOMAIN, NODATA, hoặc OVERRIDE trỏ tới một trang nội bộ báo đã bị chặn. Bạn tự chọn kiểu trả lời này khi cấu hình action block.",
+   "Một rule group dùng được cho nhiều VPC cùng region, và một VPC cũng gắn được nhiều rule group theo priority. Nhớ rằng nếu firewall không phản hồi thì VPC fail closed sẽ dừng toàn bộ DNS, còn VPC fail open vẫn cho query đi qua.",
+   "Khi đi thi, nhớ DNS Firewall chỉ bảo vệ query đi qua VPC Resolver, lọc theo domain chứ không theo IP, và không cắt kết nối đã mở sẵn. Muốn chỉ cho phép domain đã duyệt thì dựng walled garden, còn chống DGA và DNS tunneling thì dùng advanced rules."
+  ]
+ }
+}

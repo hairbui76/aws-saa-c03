@@ -255,5 +255,6 @@
   "ORC": "Optimized Row Columnar",
   "CSV": "Comma-Separated Values",
   "NSA": "National Security Agency",
-  "CNSSP": "Committee on National Security Systems Policy"
+  "CNSSP": "Committee on National Security Systems Policy",
+  "DGA": "Domain Generation Algorithm"
 }

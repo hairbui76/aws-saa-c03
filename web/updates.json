@@ -14,7 +14,9 @@
     "Exam Cheat Sheet: NAT Gateway có chế độ zonal (mỗi AZ một cái, trong public subnet) và regional (một NATGW cho cả VPC, AWS trải qua các AZ); private NAT Gateway cho mạng private chồng lấn",
     "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64",
     "Exam Cheat Sheet: mốc EBS mới (gp2 16K, io1 64K, gp3 80K / 2,000 MiB/s, io2 Block Express 256K; io2 = Block Express), FSR tối đa 5/region, Spot cảnh báo 2 phút và terminate/stop/hibernate, RI Standard/Convertible, ODCR giá On-Demand (immediate/future, open/targeted), Savings Plans không giữ capacity, Scheduled RI đã deprecated",
-    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans"
+    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans",
+    "Exam Cheat Sheet: thêm Route 53 Resolver DNS Firewall (chặn domain độc hại tại VPC Resolver, fail closed mặc định); multivalue không dùng cho NS/CNAME/Alias, weight 0–255",
+    "Top mẹo thi và concept map chương 10: thêm Resolver DNS Firewall; multivalue/weighted khi mọi record unhealthy, geolocation trong private hosted zone"
   ],
   "missing": [],
   "lessons": {
@@ -792,6 +794,80 @@
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []
+    },
+    "R53 Multivalue Routing": {
+      "kind": "updated",
+      "summary": "Multivalue không cấu hình được cho record NS, CNAME, Alias; khi mọi record đều unhealthy, Route 53 vẫn trả lời với tối đa 8 record unhealthy.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "R53 Weighted Routing": {
+      "kind": "updated",
+      "summary": "Weight là số nguyên 0–255 (nay bài giảng nêu); cả nhóm unhealthy thì Route 53 coi tất cả là healthy và vẫn trả lời; record không gắn health check luôn healthy; weighted không dùng cho NS, SOA, DS.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "R53 Latency Routing": {
+      "kind": "updated",
+      "summary": "Database latency chỉ đo traffic giữa user và AWS region, nên record trỏ tới hạ tầng ngoài AWS có thể bị ước tính latency sai lệch đáng kể.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "R53 Geolocation Routing": {
+      "kind": "updated",
+      "summary": "Record default còn là nơi duy nhất trả lời cho IP không xác định được vị trí; geolocation dùng được cả trong private hosted zone, khi đó vị trí lấy theo region của VPC Resolver.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "R53 Geoproximity Routing": {
+      "kind": "updated",
+      "summary": "Ví dụ khoảng cách Saudi Arabia – UK sửa còn khoảng 5,000 km; bias +1 đến +99 hoặc -1 đến -99 nay do bài giảng nêu; bài mới không còn nhắc Route 53 Traffic Flow.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "R53 Health Checks": {
+      "kind": "updated",
+      "summary": "Sau khi tạo health check không đổi được protocol (TCP/HTTP/HTTPS), chỉ sửa được IP và các thiết lập; console có thêm IPv6 và tùy chọn SNI cho HTTPS.",
+      "changed": [
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "R53 Interoperability": {
+      "kind": "updated",
+      "summary": "Phí đăng ký domain trả định kỳ, thường theo năm; phần lớn TLD cho đăng ký nhiều năm một lần, tới 10 năm.",
+      "changed": [
+        "Khái niệm cốt lõi"
+      ],
+      "dropped": []
+    },
+    "R53 DNSSEC": {
+      "dropped": [
+        "Demo / Lab"
+      ]
+    },
+    "R53 Resolver DNS Firewall": {
+      "kind": "new",
+      "summary": "Route 53 Resolver DNS Firewall: lọc DNS query tại VPC Resolver theo domain bằng rule group (domain list + ALLOW/BLOCK/ALERT), fail closed mặc định, walled garden, advanced rules chống DGA và DNS tunneling."
     }
   }
 }

@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, compliance, global]
 aliases: [Geolocation Routing, Geo Routing]
 lessons: ["0189 Geolocation Routing"]
+videos: ["185 [ASSOCIATESHARED] Geolocation Routing"]
 ---
 # R53 Geolocation Routing
 
@@ -24,6 +25,8 @@ lessons: ["0189 Geolocation Routing"]
   3. Không khớp → tìm record theo **continent**.
   4. Không khớp → trả record **default** nếu có.
   5. Không có default → **NO ANSWER**.
+- **Default còn bắt một trường hợp đặc biệt**: IP **không ánh xạ được tới vị trí nào** chỉ nhận được câu trả lời khi có record default.
+- Dùng được trong cả **public lẫn private hosted zone**. Với **private hosted zone**, vị trí lấy theo **region của VPC Resolver** chứ không theo IP check.
 - Ví dụ: user ở UK, chỉ có record tag **Canada** → **không** nhận record Canada dù đó là record duy nhất. User ở US nhưng khác state với record state → không nhận record đó, trừ khi có record cấp country/continent/default.
 - Có hỗ trợ health check (như mọi policy trừ simple).
 
@@ -44,7 +47,8 @@ flowchart TB
 ## 🎯 Mẹo thi SAA-C03
 - Adrian nhấn mạnh nhiều lần: **geolocation không phải về proximity (khoảng cách)**, mà về **location (vị trí khớp)**.
 - Use case: **giới hạn nội dung theo vùng** (chỉ phục vụ thị trường US), **nội dung theo ngôn ngữ**, tuân thủ pháp lý/bản quyền theo quốc gia, **load balance theo endpoint khu vực** dựa trên vị trí khách hàng.
-- Muốn user ở mọi nơi đều nhận được câu trả lời → phải có record **default**, nếu không user ngoài vùng sẽ nhận **NO ANSWER**.
+- Muốn user ở mọi nơi đều nhận được câu trả lời → phải có record **default**, nếu không user ngoài vùng (và IP không xác định được vị trí) sẽ nhận **NO ANSWER**.
+- Geolocation dùng được cả với **private hosted zone**: vị trí lấy theo region của VPC Resolver.
 - Đề nói "gần nhất / latency thấp nhất" → **không** chọn geolocation, mà chọn [[R53 Latency Routing]] hoặc [[R53 Geoproximity Routing]].
 - Nếu cần chặn truy cập nội dung theo quốc gia ở tầng CDN → xem thêm geo restriction của CloudFront ([[CloudFront Architecture]]) hoặc [[WAF]].
 

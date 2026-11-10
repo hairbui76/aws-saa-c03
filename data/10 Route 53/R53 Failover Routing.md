@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, high-availability, disaster-recovery]
 aliases: [Failover Routing, Active-Passive Failover]
 lessons: ["0183 Failover Routing", "0184 DEMO Using R53 and Failover Routing PART1", "0185 DEMO Using R53 and Failover Routing PART2"]
+videos: ["179 [ASSOCIATESHARED] R53 Failover Routing", "180 [SHAREDALL] [DEMO] Using R53 and Failover Routing - PART1", "181 [SHAREDALL] [DEMO] Using R53 and Failover Routing - PART2"]
 ---
 # R53 Failover Routing
 
@@ -17,7 +18,7 @@ lessons: ["0183 Failover Routing", "0184 DEMO Using R53 and Failover Routing PAR
 ## Khái niệm cốt lõi
 - Nhiều record cùng tên (`www`), gán vai trò **Primary** và **Secondary**.
 - **Health check** là thành phần then chốt, thường gắn vào **primary** (xem [[R53 Health Checks]]).
-  - Primary **healthy** → mọi query `www` trả giá trị của primary (ví dụ EC2 chạy catagram).
+  - Primary **healthy** → mọi query `www` trả giá trị của primary (ví dụ EC2 chạy website chiến dịch DropBear Awareness).
   - Primary **unhealthy** → trả **secondary** cùng tên (ví dụ S3 bucket).
 - Kiến trúc phổ biến: **out-of-band failure/maintenance page**, tức là trang lỗi hoặc bảo trì chạy trên **dịch vụ khác** với site chính (EC2 → S3 static website). Nhờ vậy lỗi của site chính không kéo theo trang dự phòng.
 - Mỗi record cần **Record ID** duy nhất trong nhóm cùng tên (demo: `EC2` và `S3`).
@@ -27,7 +28,7 @@ lessons: ["0183 Failover Routing", "0184 DEMO Using R53 and Failover Routing PAR
 ```mermaid
 flowchart LR
     U["User"] --> R53{"www (failover): primary healthy?"}
-    HC["Health check A4LHealth (HTTP /index.html, Fast 10s)"] -. "theo dõi" .-> EC2
+    HC["Health check DAC-Health (HTTP /index.html, Fast 10s)"] -. "theo dõi" .-> EC2
     HC --> R53
     R53 -- "Healthy" --> EC2["Primary: EC2 (Elastic IP)"]
     R53 -- "Unhealthy" --> S3["Secondary: Alias tới S3 website endpoint"]
@@ -36,17 +37,17 @@ flowchart LR
 ## Bảng so sánh / số liệu
 | Thành phần (demo) | Cấu hình |
 |---|---|
-| Primary | A record → **Elastic IP** của EC2 `A4L-web`, gắn health check `A4LHealth`, Record ID `EC2` |
+| Primary | A record → **Elastic IP** của EC2 `dac-public-instance`, gắn health check `DAC-Health`, Record ID `EC2` |
 | Secondary | **Alias tới S3 website endpoint** (us-east-1), không gắn health check, không evaluate target health, Record ID `S3` |
 | Health check | Endpoint theo IP, HTTP, path `index.html`, **Fast (10s)**, không tạo alarm |
 | TTL | 60s (1m) |
 
 ## Demo / Lab
-**Phần 1 (0184), domain đăng ký bằng R53 (ví dụ `animalsforlife1337.org`), region us-east-1:**
-1. Deploy stack CloudFormation 1-click (`DNS-and-failover-demo`) → tạo VPC và EC2 public `A4L-web`. Kiểm tra trang web qua IP public (dùng http, không https).
-2. Cấp **Elastic IP** và associate với instance để có **IPv4 public tĩnh** (IP public thường sẽ đổi khi stop/start, xem [[EC2 Network Interfaces IPs and DNS]]).
-3. Tạo S3 bucket tên **`www.<domain>`** (tên bucket phải khớp tên DNS thì mới alias được với website endpoint), bỏ *Block all public access*, upload `index.html` + `minimal.jpg` của trang failover, bật **static website hosting** (index/error = `index.html`), thêm **bucket policy** public read (thay ARN bucket vào). Xem [[S3 Static Website Hosting]].
-4. Tạo health check `A4LHealth`: endpoint theo IP (Elastic IP), HTTP, path `index.html`, request interval **Fast**, không alarm. Ban đầu trạng thái là *Unknown*; tab *Health checkers* hiển thị kết quả từng checker (HTTP 200), sau vài phút chuyển *Healthy*.
+**Phần 1 (video 180), domain đăng ký bằng R53 (kịch bản chiến dịch DropBear Awareness, `dropbearaware.org`), region us-east-1, đăng nhập `iamadmin`:**
+1. Deploy stack CloudFormation 1-click (`DNS-and-failover-demo`) → tạo VPC của chiến dịch DropBear Awareness (DAC-VPC1), public subnet và EC2 public `dac-public-instance` chạy sẵn website. Kiểm tra trang web qua IP public (dùng http, không https).
+2. Cấp **Elastic IP** (us-east-1) và associate với instance (chọn private IP, tick *Allow this Elastic IP address to be reassociated*) để có **IPv4 public tĩnh** (IP public thường sẽ đổi khi stop/start, xem [[EC2 Network Interfaces IPs and DNS]]).
+3. Tạo S3 bucket tên **`www.<domain>`** (tên bucket phải khớp tên DNS thì mới alias được với website endpoint), bỏ *Block all public access*, upload các file trong `s3web.zip` của trang failover, bật **static website hosting** (index `index.html`, error `error.html`), thêm **bucket policy** public read (thay ARN bucket vào). Xem [[S3 Static Website Hosting]].
+4. Tạo health check `DAC-Health`: endpoint theo IP (Elastic IP), HTTP, path `index.html`, request interval **Fast**, không alarm. Ban đầu trạng thái là *Unknown*; tab *Health checkers* hiển thị kết quả từng checker (HTTP 200), sau vài phút chuyển *Healthy*.
 5. Trong hosted zone: *Create record* → wizard → **Failover**, tên `www`, TTL 60s:
    - Primary: IP = Elastic IP, gắn health check, ID `EC2`.
    - Secondary: **Alias to S3 website endpoint**, chọn bucket, ID `S3`.
@@ -54,7 +55,7 @@ flowchart LR
 7. **Stop instance** → health checker báo *connection timed out* → health check chuyển *Unhealthy* sau khoảng 1 phút → sau khi TTL 60s hết hạn, refresh thì thấy **trang failover trên S3**.
 8. **Start lại** instance → checker dần trả 200 → health check *Healthy* → site quay lại EC2 (**fail back** tự động).
 
-**Phần 2 (0185):** private hosted zone (xem [[R53 Private Hosted Zones]]), sau đó dọn dẹp: xóa health check, record, private zone, 2 record `www`, empty và xóa bucket, disassociate và **release Elastic IP**, xóa stack.
+**Phần 2 (video 181):** private hosted zone (xem [[R53 Private Hosted Zones]]), sau đó dọn dẹp: xóa health check, record, private zone, 2 record `www`, empty và xóa bucket, disassociate và **release Elastic IP**, xóa stack.
 
 **Rút ra:** failover hoạt động cả hai chiều. Độ trễ chuyển đổi = phát hiện lỗi (interval × threshold) + TTL cache.
 

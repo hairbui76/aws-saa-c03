@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, security]
 aliases: [Private Hosted Zone, PHZ, Split-view DNS, Split-horizon DNS]
 lessons: ["0179 R53 Private Hosted Zones", "0185 DEMO Using R53 and Failover Routing PART2"]
+videos: ["175 [ASSOCIATESHARED] R53 Private Hosted Zones", "181 [SHAREDALL] [DEMO] Using R53 and Failover Routing - PART2"]
 ---
 # R53 Private Hosted Zones
 
@@ -22,7 +23,7 @@ lessons: ["0179 R53 Private Hosted Zones", "0185 DEMO Using R53 and Failover Rou
 - Muốn truy cập private zone thì client phải **chạy trong một VPC** và VPC đó phải **được associate** với zone. Từ Internet hay từ VPC không associate đều không query được.
 - Client trong VPC dùng **Route 53 Resolver (VPC+2)**. VPC cần bật `enableDnsSupport` và `enableDnsHostnames` (khóa học chỉ nói "DNS được bật cho VPC").
 - Dùng cho record **nhạy cảm/nội bộ** mà không muốn lộ ra DNS công cộng.
-- Tên zone **không cần là domain bạn sở hữu** (demo dùng `ilikedogsreally.com`), vì zone không bao giờ được delegate từ DNS công cộng.
+- Tên zone **không cần là domain bạn sở hữu** (demo dùng `myownprivatehostedzone.io`), vì zone không bao giờ được delegate từ DNS công cộng.
 
 ## Cách hoạt động / Kiến trúc
 ```mermaid
@@ -58,11 +59,11 @@ flowchart LR
 | Cross-account | Không áp dụng | Associate VPC khác account qua CLI/API |
 
 ## Demo / Lab
-(Phần 2 của demo failover, bài 0185)
-1. Tạo private hosted zone `ilikedogsreally.com`, associate với **default VPC** ở us-east-1.
+(Phần 2 của demo failover, video 181)
+1. Tạo private hosted zone `myownprivatehostedzone.io`, associate với **default VPC** ở us-east-1.
 2. Tạo record simple `www` → A `1.1.1.1`, TTL 60s.
-3. Từ EC2 (nằm trong A4L-VPC1, không phải default VPC) chạy `ping www.ilikedogsreally.com` → **"Name or service not known"**, vì VPC của instance chưa được associate.
-4. Edit hosted zone, thêm association với `a4l-vpc1` → chờ khoảng **4–5 phút** để có hiệu lực → ping resolve được.
+3. Từ EC2 `dac-public-instance` (nằm trong DAC-VPC1, không phải default VPC; kết nối bằng EC2 Instance Connect) chạy `ping www.myownprivatehostedzone.io` → **"Name or service not known"**, vì VPC của instance chưa được associate.
+4. Edit hosted zone, thêm association với DAC-VPC1 → chờ khoảng **5 phút** để có hiệu lực → ping resolve được.
 - Rút ra: resolve được hay không phụ thuộc hoàn toàn vào việc **VPC của client có được associate** với zone hay không, và thay đổi association cần vài phút mới có hiệu lực.
 
 ## 🎯 Mẹo thi SAA-C03

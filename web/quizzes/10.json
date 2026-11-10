@@ -875,6 +875,69 @@
         "answer": [1, 3],
         "explain": "Weight 0 tạm tắt một record, ngoại lệ là khi mọi record đều weight 0 thì tất cả được xét. Tổng weight không cần bằng 100, weighted có hỗ trợ health check và record unhealthy không làm đổi tổng weight."
       }
+    ],
+    "R53 Resolver DNS Firewall": [
+      {
+        "type": "single",
+        "q": "Một EC2 instance trong VPC bị nghi nhiễm malware và đang cố tra cứu domain của server command and control. Công ty muốn ngăn mọi instance trong VPC phân giải các domain độc hại đã biết (malware, botnet), với ít công vận hành nhất. Giải pháp nào phù hợp?",
+        "options": [
+          "Thêm deny rule vào NACL cho các domain độc hại",
+          "Route 53 Resolver DNS Firewall với rule group dùng AWS managed domain list, action BLOCK, associate với VPC",
+          "AWS WAF gắn vào Application Load Balancer với rule chặn các domain đó",
+          "Private hosted zone chứa record cho các domain độc hại trỏ tới 127.0.0.1"
+        ],
+        "answer": [1],
+        "explain": "DNS Firewall lọc DNS query đi qua VPC Resolver theo domain name; AWS managed domain list có sẵn các domain liên quan malware, botnet, ransomware. NACL lọc theo IP/port chứ không theo domain, còn WAF lọc HTTP request tới ALB/CloudFront chứ không lọc DNS query của instance."
+      },
+      {
+        "type": "single",
+        "q": "Một VPC đã associate rule group của Route 53 Resolver DNS Firewall với thiết lập mặc định. Nếu DNS Firewall không phản hồi, điều gì xảy ra với DNS query của các instance trong VPC?",
+        "options": [
+          "Query được cho qua và trả về bình thường (fail open)",
+          "Chỉ query khớp domain list bị chặn, còn lại được cho qua",
+          "Mọi DNS query của VPC bị dừng (fail closed)",
+          "Query được chuyển sang DNS public bên ngoài"
+        ],
+        "answer": [2],
+        "explain": "Thiết lập fail open/fail closed nằm trên VPC và mặc định là fail closed: firewall không phản hồi thì mọi DNS query của cả VPC dừng. Muốn ưu tiên availability thì đổi sang fail open."
+      },
+      {
+        "type": "single",
+        "q": "Một VPC chỉ chạy các instance payment gateway. Đội bảo mật muốn các instance này chỉ resolve được một danh sách domain đã duyệt, mọi domain khác đều bị chặn. Cấu hình DNS Firewall nào đúng?",
+        "options": [
+          "Một rule BLOCK với AWS managed domain list ở priority số nhỏ nhất",
+          "Rule ALLOW với domain list đã duyệt ở priority số nhỏ nhất, rule BLOCK wildcard (*) ở cuối",
+          "Rule BLOCK wildcard (*) ở priority số nhỏ nhất, rule ALLOW với domain list đã duyệt ở cuối",
+          "Rule ALERT cho mọi domain và để resolver query logging tự chặn"
+        ],
+        "answer": [1],
+        "explain": "Đây là walled garden: chặn tất cả theo mặc định, chỉ cho domain đã duyệt. Rule xét theo priority, số nhỏ trước và khớp thì dừng, nên ALLOW phải đứng trước, BLOCK * đứng cuối. Đặt BLOCK * trước thì mọi query đều bị chặn."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về Route 53 Resolver DNS Firewall? (Chọn 2)",
+        "options": [
+          "Nó lọc theo domain name, không theo địa chỉ IP",
+          "Nó bảo vệ cả DNS server tự dựng trong VPC gọi thẳng ra DNS public bên ngoài",
+          "Nó cắt luôn các kết nối đã mở tới domain độc hại trước khi bật firewall",
+          "Rule group phải cùng region với VPC được associate",
+          "Một VPC chỉ associate được với đúng một rule group"
+        ],
+        "answer": [0, 3],
+        "explain": "DNS Firewall lọc theo domain và chỉ áp dụng cho query đi qua VPC Resolver (VPC+2), nên DNS server tự dựng gọi ra ngoài thì không được bảo vệ. Nó chỉ chặn tra cứu mới, không cắt kết nối đã có. Rule group và VPC phải cùng region; một VPC có thể associate nhiều rule group theo priority."
+      },
+      {
+        "type": "single",
+        "q": "Khi rule của DNS Firewall dùng action BLOCK, công ty muốn client được trả về địa chỉ của một trang nội bộ báo \"site này đã bị IT chặn\" thay vì lỗi. Chọn kiểu phản hồi nào?",
+        "options": [
+          "NODATA",
+          "NXDOMAIN",
+          "OVERRIDE với một CNAME tùy chọn trỏ tới trang nội bộ",
+          "ALERT"
+        ],
+        "answer": [2],
+        "explain": "BLOCK có ba kiểu trả lời: NODATA (query thành công nhưng không có câu trả lời), NXDOMAIN (domain không tồn tại) và OVERRIDE (trả về một CNAME tùy chọn, còn gọi là sinkhole). ALERT là một action khác, không chặn query."
+      }
     ]
   }
 }

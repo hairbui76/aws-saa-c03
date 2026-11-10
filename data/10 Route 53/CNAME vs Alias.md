@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns]
 aliases: [Alias Record, R53 Alias, CNAME, Zone Apex, Naked Domain]
 lessons: ["0180 CNAME vs R53 Alias"]
+videos: ["176 [ASSOCIATESHARED] CNAME vs R53 Alias"]
 ---
 # CNAME vs Alias
 

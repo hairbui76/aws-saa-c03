@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, performance, global]
 aliases: [Latency Routing, Latency-Based Routing, LBR]
 lessons: ["0188 Latency Routing"]
+videos: ["184 [ASSOCIATESHARED] Latency Routing"]
 ---
 # R53 Latency Routing
 
@@ -14,6 +15,7 @@ lessons: ["0188 Latency Routing"]
 ## Khái niệm cốt lõi
 - Nhiều record cùng tên (`www`), mỗi record có **record region**: ví dụ `us-east-1 → 1.2.3.3`, `us-west-1 → 1.2.3.4`, `ap-southeast-2 → 1.2.3.5`.
 - **Chỉ 1 record cùng tên cho mỗi AWS region**. Region là nơi đặt hạ tầng của record đó.
+- Dữ liệu latency của AWS **chỉ dựa trên traffic giữa user và các AWS region**. Nếu hạ tầng phía sau record **không chạy trên AWS** thì ước tính latency có thể **sai lệch đáng kể**.
 - Khi có query, R53 xác định vị trí user bằng **IP lookup**, tra **database latency** (vị trí user ↔ region) và chọn region latency thấp nhất.
   - Ví dụ user ở Úc: us-east-1 khoảng 400 ms, us-west-1 khoảng 280 ms, ap-southeast-2 khoảng 42 ms → trả `1.2.3.5`.
 - **Kết hợp health check**: record latency thấp nhất mà unhealthy → trả record có **latency thấp tiếp theo**.
@@ -38,6 +40,7 @@ flowchart LR
 ## 🎯 Mẹo thi SAA-C03
 - "**Lowest latency**", "best performance cho user toàn cầu", ứng dụng triển khai ở **nhiều region** → **Latency routing**.
 - Giới hạn: **một record cho mỗi region** với cùng một tên.
+- Endpoint **ngoài AWS** (on-premises) → latency routing ước tính kém chính xác, vì database latency chỉ đo user ↔ AWS region. (Bổ sung, bài không nói: tài nguyên ngoài AWS khai báo được bằng tọa độ lat/long ở [[R53 Geoproximity Routing]].)
 - Đừng nhầm với geolocation (theo vị trí, có thể không trả gì) hay geoproximity (theo khoảng cách + bias).
 - Nếu đề yêu cầu cải thiện performance ở **tầng mạng** (anycast IP, đi backbone AWS, failover nhanh không phụ thuộc DNS cache) → [[Global Accelerator]]. Nếu yêu cầu cache nội dung → [[CloudFront Architecture]].
 

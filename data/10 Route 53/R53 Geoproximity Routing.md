@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, global]
 aliases: [Geoproximity Routing, Geoproximity, Bias]
 lessons: ["0190 Geoproximity"]
+videos: ["186 [ASSOCIATESHARED] Geoproximity Routing"]
 ---
 # R53 Geoproximity Routing
 
@@ -21,18 +22,18 @@ lessons: ["0190 Geoproximity"]
 - **Bias**:
   - **"+" bias**: **tăng** kích thước vùng phục vụ của tài nguyên đó và **giảm** vùng của các tài nguyên lân cận.
   - **"-" bias**: thu hẹp vùng phục vụ.
-  - Bias co giãn vùng địa lý dùng để định tuyến traffic. (Bổ sung: giá trị bias từ -99 đến +99.)
+  - Bias co giãn vùng địa lý dùng để định tuyến traffic. Giá trị: **+1 đến +99** hoặc **-1 đến -99**.
 - Có hỗ trợ health check.
 
 ## Cách hoạt động / Kiến trúc
-Ví dụ trong bài: có 3 tài nguyên ở **US**, **UK** và **Úc**. User ở **Saudi Arabia** (không có tài nguyên): cách Úc hơn 10,000 km, cách UK khoảng 6,700 km.
+Ví dụ trong bài: có 3 tài nguyên ở **US**, **UK** và **Úc**. User ở **Saudi Arabia** (không có tài nguyên): cách Úc hơn 10,000 km, cách UK khoảng 5,000 km.
 - Không có bias → user Saudi được route về **UK** (gần hơn).
 - Đặt **+bias cho UK** (vùng phục vụ của UK lớn hơn, bao thêm các nước xung quanh) và **+bias lớn hơn nữa cho Úc** → vùng của Úc mở rộng tới tận Trung Đông → user Saudi được route về **Úc** dù UK gần hơn.
 
 ```mermaid
 flowchart LR
     SA["User ở Saudi Arabia"] --> R53{"Khoảng cách + bias"}
-    R53 -. "Không bias: UK gần hơn (khoảng 6,700 km)" .-> UK["UK resource (+bias)"]
+    R53 -. "Không bias: UK gần hơn (khoảng 5,000 km)" .-> UK["UK resource (+bias)"]
     R53 == "Bias Úc lớn hơn: vùng Úc phủ tới Trung Đông" ==> AU["Australia resource (++bias)"]
     R53 --> US["US resource"]
 ```
@@ -50,7 +51,7 @@ flowchart LR
 - Đề nói route theo **vị trí địa lý của user và tài nguyên** và muốn **dịch chuyển (shift) traffic** từ vùng này sang vùng khác → **Geoproximity + bias**.
 - Từ khóa "**bias**", "expand/shrink geographic region" → chắc chắn là geoproximity.
 - Tài nguyên **on-premises/ngoài AWS** với tọa độ → geoproximity hỗ trợ lat/long.
-- (Khóa học quay ở thời điểm geoproximity chỉ tạo được qua **Route 53 Traffic Flow**. Hiện nay có thể tạo trực tiếp như một record thông thường.)
+- (Bản khóa cũ nêu geoproximity chỉ tạo được qua **Route 53 Traffic Flow**, bài mới không nhắc Traffic Flow. Hiện nay có thể tạo trực tiếp như một record thông thường.)
 
 ## Liên kết
 - Tổng quan: [[R53 Routing Policies]]

@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, high-availability, monitoring]
 aliases: [Route 53 Health Checks, Health Check, R53 Health Check]
 lessons: ["0182 R53 Health Checks"]
+videos: ["178 [ASSOCIATESHARED] R53 Health Checks"]
 ---
 # R53 Health Checks
 
@@ -54,10 +55,11 @@ flowchart LR
 ```
 
 ### Tùy chọn trên console (bài demo console)
-- **Specify endpoint by**: *IP address* hoặc *Domain name*. Nếu dùng domain name thì mọi health checker **resolve tên trước** rồi check IP thu được.
+- **Specify endpoint by**: *IP address* (IPv4 hoặc IPv6) hoặc *Domain name*. Nếu dùng domain name thì mọi health checker **resolve tên trước** rồi check IP thu được.
 - **Host name**: gửi làm **Host header**, hữu ích khi server có nhiều virtual host. **Path**: check `/` hoặc một path cụ thể (ví dụ `/index.html`).
-- **Advanced**: request interval (30s/10s), failure threshold, string matching, **latency graphs**, **invert health check status** (đảo healthy ↔ unhealthy, ít dùng), **disable health check** (khi tắt thì luôn được coi là **healthy**, hữu ích lúc bảo trì), chọn **health checker regions** (recommended hoặc customize).
-- **Notification** (tùy chọn): tạo CloudWatch alarm gửi tới **SNS topic** (mới hoặc có sẵn) → tích hợp dịch vụ AWS khác hoặc hệ thống bên ngoài (xem [[SNS]]).
+- **Advanced**: request interval (30s/10s), failure threshold, string matching, **latency graphs**, **invert health check status** (đảo healthy ↔ unhealthy, ít dùng), **disable health check** (khi tắt thì luôn được coi là **healthy**, hữu ích lúc bảo trì), chọn **health checker regions** (recommended hoặc customize). Với HTTPS còn có tùy chọn **SNI** (server name indication) cho chứng chỉ TLS trên endpoint.
+- **Notification** (tùy chọn): tạo CloudWatch alarm gửi tới **SNS topic** (mới hoặc có sẵn) → tích hợp dịch vụ AWS khác hoặc hệ thống bên ngoài (xem [[SNS]]). (Bản khóa cũ nêu, bài mới chỉ nhắc có thể tạo CloudWatch alarm gắn với health check.)
+- **Sau khi tạo**: sửa được IP address và các thiết lập (interval, threshold...), disable được, nhưng **không đổi được protocol** (TCP/HTTP/HTTPS) của health check.
 
 ## 🎯 Mẹo thi SAA-C03
 - Health check **tồn tại độc lập**, record chỉ tham chiếu tới nó.
@@ -67,6 +69,7 @@ flowchart LR
 - Health check báo unhealthy dù app chạy bình thường → nghi **firewall/Security Group/WAF chặn IP của health checker**.
 - Health check của R53 chỉ thấy được **endpoint public**. Tài nguyên private thì dùng CloudWatch alarm health check.
 - Ngưỡng **18%** health checker healthy; mặc định 30s, fast 10s.
+- Muốn đổi protocol (TCP ↔ HTTP/HTTPS) của health check → phải **tạo health check mới**; protocol không sửa được sau khi tạo.
 
 ## Liên kết
 - Tiên quyết: [[Route 53 Fundamentals]], [[CloudWatch Basics]]

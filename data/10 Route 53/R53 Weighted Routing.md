@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, deployment]
 aliases: [Weighted Routing, Weighted Routing Policy]
 lessons: ["0187 Weighted Routing"]
+videos: ["183 [ASSOCIATESHARED] Weighted Routing"]
 ---
 # R53 Weighted Routing
 
@@ -18,7 +19,10 @@ lessons: ["0187 Weighted Routing"]
 - **Weight = 0** → record **không bao giờ được trả về** (tạm "tắt" một record). Ngoại lệ: **nếu tất cả record đều weight 0 thì tất cả đều được xét**.
 - **Kết hợp health check**: chọn record theo weight; nếu record đó **unhealthy** thì bỏ qua và **lặp lại quá trình chọn** cho tới khi được record healthy.
   - Health check **không loại record khỏi phép tính** và **không thay đổi tổng weight**.
-- (Bổ sung: weight hợp lệ trong khoảng 0–255.)
+  - **Record không gắn health check luôn được coi là healthy.**
+  - **Tất cả record trong nhóm đều unhealthy** → Route 53 **coi tất cả là healthy** và vẫn trả lời, nên query không bao giờ bị bỏ trống.
+- Weight của mỗi record là **số nguyên từ 0 đến 255**.
+- Hỗ trợ hầu hết loại record, **trừ NS, SOA và DS** (theo bài, tại thời điểm quay).
 
 ## Cách hoạt động / Kiến trúc
 ```mermaid
@@ -33,7 +37,8 @@ flowchart TB
 - "Gửi **X% traffic** tới phiên bản mới / canary / blue-green bằng DNS" → **Weighted**.
 - "Load balancing đơn giản bằng DNS theo tỷ lệ" → **Weighted** (nếu cần LB thật thì dùng [[Elastic Load Balancer]]).
 - **Weight 0** = ngừng gửi traffic tới record đó. **Tất cả 0** = tất cả được trả như nhau.
-- Record unhealthy **không làm đổi tổng weight**; R53 chỉ chọn lại.
+- Record unhealthy **không làm đổi tổng weight**; R53 chỉ chọn lại. Cả nhóm unhealthy → R53 coi như healthy hết và vẫn trả lời; record không có health check luôn là healthy.
+- Weight là số nguyên **0–255**; weighted không dùng cho record **NS, SOA, DS**.
 
 ## Liên kết
 - Tổng quan: [[R53 Routing Policies]]
