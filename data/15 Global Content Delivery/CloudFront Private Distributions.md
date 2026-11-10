@@ -2,6 +2,7 @@
 tags: [saa-c03, s15-global-content-delivery, security, cloudfront, cdn]
 aliases: [CloudFront Private Behaviours, Private Behaviors, Signed URLs, Signed Cookies, CloudFront Signed URL, CloudFront Signed Cookie, Trusted Key Groups, Trusted Signers]
 lessons: ["0283 CloudFront Private Distribution Behaviours"]
+videos: ["262 [SHAREDALL] CloudFront - Security - Private Distributions"]
 ---
 # CloudFront Private Distributions
 

@@ -42,6 +42,8 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Chặn một IP/dải IP độc hại | **NACL** deny rule | [[NACL]] |
 | Truy cập S3/DynamoDB private, rẻ nhất | **Gateway endpoint** | [[Gateway VPC Endpoints]] |
 | Truy cập service private từ on-prem/peer, expose service sang VPC khác | **Interface endpoint / PrivateLink** (+ NLB) | [[Interface VPC Endpoints]] |
+| Cung cấp dịch vụ riêng tư cho VPC/account khác, không Internet, không nối cả mạng | **PrivateLink**: provider NLB (cross-zone) + endpoint service; consumer interface endpoint mỗi AZ | [[AWS PrivateLink]] |
+| Quản lý tập trung dải IP nhiều VPC/account/region, tránh CIDR trùng | **VPC IPAM** (pool theo cấp bậc; cross-account cần advanced tier + Organizations + **RAM** (AWS Resource Access Manager)) | [[VPC IPAM]] |
 | Nhiều VPC + on-prem, transitive, hub-and-spoke | **Transit Gateway** | [[Transit Gateway]] |
 | Kết nối mã hóa tới on-prem trong vài giờ, rẻ | **Site-to-Site VPN** | [[Site-to-Site VPN]] |
 | Latency ổn định, > 1.25 Gbps, không qua Internet | **Direct Connect** | [[Direct Connect]] |
@@ -122,7 +124,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Từ khóa trong đề | Chọn | Note |
 |---|---|---|
 | Cache nội dung HTTP cho user toàn cầu | **CloudFront** | [[CloudFront Architecture]] |
-| TCP/UDP toàn cầu, 2 anycast static IP, failover không phụ thuộc TTL | **Global Accelerator** | [[Global Accelerator]] |
+| TCP/UDP toàn cầu, 2 anycast static IP (dual-stack 4), failover không phụ thuộc TTL | **Global Accelerator** | [[Global Accelerator]] |
 | User chỉ được vào S3 qua CloudFront | **OAC** + bucket policy | [[CloudFront OAI and OAC]] |
 | Active-passive, trang bảo trì trên S3 | **R53 Failover routing** | [[R53 Failover Routing]] |
 | Độ trễ cực thấp cho user ở một thành phố lớn (game, VDI) | **Local Zone** | [[AWS Local Zones]] |
@@ -203,7 +205,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Security Group | Không | **Có** |
 | Từ on-prem/VPC peer | **Không** | **Có** |
 | Giá | Miễn phí | Theo giờ/AZ + GB |
-| Protocol | | Khóa học: chỉ TCP, IPv4; nay: có IPv6 |
+| Protocol | | **TCP và UDP**; IPv4, IPv6, dual-stack |
 
 ### Site-to-Site VPN vs Direct Connect → [[Compare - VPN vs Direct Connect]]
 | | Site-to-Site VPN | Direct Connect |
@@ -307,7 +309,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 |---|---|---|
 | Protocol | HTTP/HTTPS | **TCP/UDP** (cả non-HTTP) |
 | Cache | **Có** (chỉ read/download) | **Không** |
-| IP | Nhiều IP, đổi | **2 anycast static IP** |
+| IP | Nhiều IP, đổi | **2 anycast static IP** (dual-stack: 4) |
 | Tính năng | Signed URL/cookie, OAC, Lambda@Edge, WAF | Failover region nhanh, không phụ thuộc DNS TTL |
 | Dùng khi | Phân phối nội dung, website | Game, IoT, VoIP, cần IP để whitelist |
 
@@ -381,14 +383,14 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 - CloudTrail không real-time (log giao khoảng 5 phút một lần) ([[CloudTrail]]).
 - Metric filter của CloudWatch Logs **không áp ngược** cho log đã có ([[CloudWatch Logs]]).
 - AWS managed key (`aws/s3`) không dùng cross-account được. Cần customer managed key ([[S3 Encryption]]).
-- ACM không gắn được vào EC2. Đặt ALB phía trước. Cert phải cùng region, riêng CloudFront ở us-east-1 ([[ACM]]).
+- ACM không tích hợp với EC2. Đặt ALB phía trước (exportable cert cài tay được nhưng tự lo gia hạn). Cert phải cùng region, riêng CloudFront ở us-east-1 ([[ACM]]).
 
 **Networking**
 - Security Group không có deny. Chặn IP cụ thể dùng NACL ([[Compare - Security Groups vs NACL]]).
 - NACL: rule DENY số lớn hơn ALLOW thì vô tác dụng; quên mở outbound ephemeral 1024–65535 ([[NACL]]).
 - NAT Gateway: không có SG. **Zonal** đặt trong **public** subnet, chỉ HA trong một AZ; **regional** chỉ chọn VPC, AWS tự trải qua các AZ. NAT giữa mạng private có CIDR chồng lấn: private NAT Gateway ([[NAT Gateway]]).
 - IPv6 + NAT Gateway là sai. IPv6 outbound-only dùng Egress-Only IGW ([[Egress-Only Internet Gateway]]).
-- VPC peering **không transitive**, CIDR trùng thì không peer được ([[VPC Peering]]).
+- VPC peering **không transitive**, CIDR trùng thì không peer được; luôn đi trên backbone AWS, chỉ cross-region mới được mã hóa ([[VPC Peering]]).
 - "Gateway endpoint mỗi AZ" sai; "một interface endpoint là đủ HA" cũng sai ([[Compare - Gateway vs Interface Endpoints]]).
 - Gateway endpoint không dùng được từ on-prem hay VPC peer ([[Gateway VPC Endpoints]]).
 - Direct Connect không mã hóa sẵn, không HA mặc định, không kịp khi đề nói "trong vài ngày" ([[Direct Connect]]).

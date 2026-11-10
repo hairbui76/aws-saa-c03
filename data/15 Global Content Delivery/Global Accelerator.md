@@ -2,10 +2,11 @@
 tags: [saa-c03, s15-global-content-delivery, networking, performance]
 aliases: [AWS Global Accelerator, GA, Anycast IP]
 lessons: ["0286 Global Accelerator"]
+videos: ["263 AWS Global Accelerator"]
 ---
 # Global Accelerator
 
-> **TL;DR:** AWS Global Accelerator cấp **2 anycast IP**. Người dùng ở đâu cũng vào được **edge location gần nhất** qua public internet, rồi traffic đi tiếp trên **AWS global backbone** tới ứng dụng. Nó đưa **mạng AWS** tới gần khách hàng, còn CloudFront đưa **nội dung (cache)** tới gần khách hàng. Global Accelerator là **network product**, chạy với **mọi ứng dụng TCP/UDP** và **không cache**.
+> **TL;DR:** AWS Global Accelerator cấp **2 anycast IP tĩnh** (dual-stack thì 4: 2 IPv4 + 2 IPv6) trỏ tới **endpoint** (ALB, NLB, EC2, Elastic IP) ở một hoặc nhiều region. Người dùng ở đâu cũng vào được **edge location gần nhất** qua public internet, rồi traffic đi tiếp trên **AWS global backbone** tới ứng dụng. Nó đưa **mạng AWS** tới gần khách hàng, còn CloudFront đưa **nội dung (cache)** tới gần khách hàng. Global Accelerator là **network product**, chạy với **mọi ứng dụng TCP/UDP** và **không cache**.
 
 ## 🖼️ Sơ đồ
 ![[Global Accelerator.excalidraw]]
@@ -22,7 +23,12 @@ lessons: ["0286 Global Accelerator"]
 ## Khái niệm cốt lõi
 - **Unicast IP**: một IP cho một thiết bị. Hai thiết bị cùng dùng một unicast IP cùng lúc sẽ gây lỗi.
 - **Anycast IP**: **nhiều thiết bị dùng chung một IP**, được quảng bá (advertise) ra internet. Router lõi internet đưa traffic tới **thiết bị gần nguồn nhất**. Xem [[Layer 3 Network]], [[BGP]].
-- Tạo một accelerator sẽ được cấp **2 anycast IP** (ví dụ trên slide là `1.2.3.4` và `4.3.2.1`). **Mọi** Global Accelerator edge location đều dùng cặp IP này.
+- Global Accelerator đưa traffic tới **endpoint**: **Application Load Balancer, Network Load Balancer, EC2 instance hoặc Elastic IP**, nằm ở **một region hoặc trải trên nhiều region**.
+- Điểm vào là các **anycast IP tĩnh**:
+  - Mặc định (IPv4): **2 anycast IP** (ví dụ trên slide là `1.2.3.4` và `4.3.2.1`).
+  - Accelerator **dual-stack** (IPv4 + IPv6): **4 IP tĩnh**, 2 IPv4 và 2 IPv6.
+  - Hoặc **mang IPv4 của mình** (BYOIP).
+- **Mọi** Global Accelerator edge location đều dùng bộ IP này (2, hoặc 4 nếu dual-stack).
 - Người dùng ở London và Australia cùng truy cập một IP nhưng mỗi người được định tuyến tới edge **gần mình nhất**.
 
 ## Cách hoạt động / Kiến trúc
@@ -41,10 +47,11 @@ flowchart LR
     E2 ==>|"AWS global backbone"| R2["App endpoint us-east"]
 ```
 
+- Endpoint là [[Elastic Load Balancer|ALB, NLB]], EC2 instance, Elastic IP (bài có nói, xem Khái niệm cốt lõi). IP **tĩnh**, có thể dùng IP của bạn (BYOIP).
 - Thông tin bổ sung, ngoài bài giảng (theo AWS hiện tại):
-  - **Endpoint** có thể là [[Elastic Load Balancer|ALB, NLB]], EC2 instance, Elastic IP. Các endpoint được nhóm theo **endpoint group** cho từng region, có **traffic dial** (% traffic vào region) và **weight** cho từng endpoint.
+  - Các endpoint được nhóm theo **endpoint group** cho từng region, có **traffic dial** (% traffic vào region) và **weight** cho từng endpoint.
   - Có **health check**, tự **failover** sang endpoint/region khỏe trong vài giây. Không phụ thuộc DNS TTL vì IP **không đổi**.
-  - **IP tĩnh**: tiện cho khách hàng cần **whitelist IP** trong firewall. Có thể dùng IP của bạn (BYOIP).
+  - **IP tĩnh** tiện cho khách hàng cần **whitelist IP** trong firewall.
   - Mặc định được bảo vệ bởi [[Shield]] Standard.
   - Có **client IP preservation** với một số loại endpoint (ALB, EC2).
 
@@ -56,14 +63,15 @@ flowchart LR
 | Giao thức | **Mọi TCP/UDP**, kể cả web app | **Chỉ HTTP/HTTPS** |
 | Caching | **Không cache gì cả** | Có (TTL, invalidation) |
 | Hiểu HTTP | Không | Có: behaviors, headers, cookies, signed URL/cookie, Lambda@Edge |
-| Điểm vào | **2 anycast IP tĩnh** | DNS name `*.cloudfront.net` / CNAME |
+| Điểm vào | **2 anycast IP tĩnh** (dual-stack: 4) | DNS name `*.cloudfront.net` / CNAME |
 | Use case điển hình | Game, VoIP, IoT, MQTT, ứng dụng TCP/UDP cần hiệu năng toàn cầu; cần IP tĩnh; failover nhanh đa region | Website tĩnh/động, video, API, phân phối nội dung có cache |
 
 ## 🎯 Mẹo thi SAA-C03
 - Câu hỏi **"khi nào chọn Global Accelerator, khi nào chọn CloudFront"** là trọng tâm của bài này.
 - Đề nhắc **caching, content delivery, HTTP/HTTPS, signed URL, thao tác nội dung** → **CloudFront**.
 - Đề nhắc **TCP hoặc UDP** + **tối ưu hiệu năng toàn cầu** / **non-HTTP** → **Global Accelerator**.
-- Từ khóa **anycast IP**, **2 static IP**, **AWS global (backbone) network**, **vào mạng AWS sớm nhất có thể** → Global Accelerator.
+- Từ khóa **anycast IP**, **2 static IP** (dual-stack 4: 2 IPv4 + 2 IPv6), **AWS global (backbone) network**, **vào mạng AWS sớm nhất có thể** → Global Accelerator.
+- Endpoint của Global Accelerator: **ALB, NLB, EC2, Elastic IP**, ở một hoặc nhiều region.
 - Global Accelerator **không cache, không hiểu HTTP/HTTPS**. Đáp án nào gán cho nó tính năng cache là sai.
 - (Bổ sung thường gặp) Cần **IP cố định để khách whitelist** + phục vụ đa region, hoặc **failover region nhanh không phụ thuộc DNS TTL** → Global Accelerator, không phải Route 53.
 

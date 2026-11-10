@@ -1,10 +1,10 @@
 {
  "VPC Flow Logs": {
-  "sig": "6-v7x4xr",
+  "sig": "6-1q4q0fa",
   "steps": [
    "Sơ đồ này nói về VPC Flow Logs: nó chỉ ghi metadata như IP, port, protocol và kết quả ACCEPT hoặc REJECT, không ghi nội dung packet. Gắn ở VPC, subnet hay ENI thì bắt mọi thứ từ mức đó trở xuống.",
    "Ở đây Flow Log gắn ở ENI của app instance chỉ bắt đúng instance đó, còn gắn ở private subnet thì bắt cả DB primary lẫn standby. Log được gom theo 1 hoặc 10 phút nên luôn có độ trễ.",
-   "Sau khi gom, log được đẩy tới một trong hai đích: S3 để lưu file và xây pipeline riêng, hoặc CloudWatch Logs khi cần tích hợp, metric filter, alarm hay stream đi tiếp.",
+   "Sau khi gom, log được đẩy tới một trong ba đích: S3 để lưu file và xây pipeline riêng, CloudWatch Logs khi cần tích hợp, metric filter, alarm hay stream đi tiếp, hoặc Amazon Data Firehose khi cần biến đổi dữ liệu cho công cụ analytics.",
    "Nếu log nằm trong S3, bạn dùng Athena để truy vấn bằng cú pháp kiểu SQL. Athena là schema-on-read và chỉ tính tiền theo lượng dữ liệu đọc.",
    "Lưu ý vài loại traffic không bao giờ xuất hiện trong Flow Logs: Instance Metadata ở 169.254.169.254, Time Sync, DHCP, Amazon DNS Resolver và traffic kích hoạt license Windows.",
    "Khi đi thi, nhớ Flow Logs lọc được ACCEPT, REJECT hoặc ALL. Nếu đề cần xem nội dung packet hoặc giám sát real-time, thì đáp án không phải Flow Logs."

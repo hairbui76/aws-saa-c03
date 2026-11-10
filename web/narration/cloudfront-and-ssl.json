@@ -1,11 +1,11 @@
 {
  "CloudFront and SSL": {
-  "sig": "5-znz85y",
+  "sig": "5-su8i07",
   "steps": [
    "Sơ đồ này nói về hai chặng TLS của CloudFront: chặng viewer từ người dùng tới edge, và chặng origin từ edge tới origin. Cả hai đều cần cert public tin cậy, không được self-signed.",
-   "Ở chặng viewer, trình duyệt hiện đại dùng SNI trên IP chung, miễn phí, còn trình duyệt cũ không có SNI cần dedicated IP, khoảng 600 đô mỗi tháng. Viewer protocol policy đặt trên behavior, phổ biến nhất là redirect HTTP sang HTTPS.",
-   "Ở chặng origin, S3 tự lo cert và bạn không thay được. ALB dùng cert public từ ACM hoặc CA ngoài. Còn EC2 hay on-prem phải cài tay cert từ CA bên ngoài, vì ACM không hỗ trợ.",
-   "Khi dùng tên riêng như cdn.catagram.io, bạn thêm alternate domain name, gắn cert ACM ở us-east-1 khớp tên đó, rồi tạo bản ghi Alias trong Route 53 trỏ về distribution. Cert là bắt buộc, kể cả khi không dùng HTTPS.",
+   "Ở chặng viewer, trình duyệt hiện đại dùng SNI trên IP chung, miễn phí, còn trình duyệt cũ không có SNI cần dedicated IP, khoảng 600 đô mỗi tháng cho mỗi certificate. Viewer protocol policy đặt trên behavior, phổ biến nhất là redirect HTTP sang HTTPS.",
+   "Ở chặng origin, S3 tự lo cert và bạn không thay được. ALB dùng cert public từ ACM hoặc CA ngoài. Còn EC2 hay on-prem thì ACM không tự deploy được, bạn phải cài tay cert public từ CA bên ngoài hoặc cert exportable của ACM.",
+   "Khi dùng tên riêng như cdn chấm ausemart chấm net, bạn thêm alternate domain name, gắn cert ACM ở us-east-1 khớp tên đó, rồi tạo bản ghi A và AAAA trong Route 53 trỏ về distribution. Cert là bắt buộc, kể cả khi không dùng HTTPS.",
    "Khi đi thi, nhớ ba tên phải khớp nhau: alternate domain name, tên trên cert và tên DNS record. Và self-signed cert không bao giờ dùng được ở cả hai chặng."
   ]
  },

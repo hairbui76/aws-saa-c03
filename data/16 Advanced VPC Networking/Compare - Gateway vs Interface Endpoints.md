@@ -2,6 +2,7 @@
 tags: [saa-c03, s16-advanced-vpc-networking, networking, vpc-endpoints, compare]
 aliases: [Gateway vs Interface Endpoint, VPC Endpoint Types, VPC Endpoints]
 lessons: ["0289 VPC Endpoints Gateway", "0290 VPC Endpoints Interface"]
+videos: ["267 [ASSOCIATESHARED] VPC Endpoints (Gateway)", "268 [ASSOCIATESHARED] VPC Endpoints (Interface)"]
 ---
 # Compare - Gateway vs Interface Endpoints
 
@@ -21,7 +22,7 @@ lessons: ["0289 VPC Endpoints Gateway", "0290 VPC Endpoints Interface"]
 | Dịch vụ | **Chỉ S3 và DynamoDB** | Hầu hết dịch vụ AWS, dịch vụ bên thứ ba qua PrivateLink. S3 có (khóa học); DynamoDB có từ 2024 (khóa học nói chưa) |
 | Bản chất | Gateway object logic của VPC | **ENI** có private IP trong subnet |
 | Cơ chế dẫn traffic | **Route table + prefix list** (AWS tự thêm) | **DNS**: tên resolve ra private IP của ENI |
-| Chọn gì khi tạo | VPC + **route table** (subnet) | VPC + **một subnet mỗi AZ** + Security Group |
+| Chọn gì khi tạo | VPC + **route table** (không chọn subnet, không có Private DNS) | VPC + **một subnet mỗi AZ** + Security Group + Private DNS |
 | Vị trí / AZ | Không nằm trong subnet/AZ nào | Nằm trong **một subnet = một AZ** |
 | High availability | **HA mặc định** trên mọi AZ của region | **Không HA mặc định**, cần **một endpoint mỗi AZ** |
 | Security Group | **Không** | **Có** |
@@ -29,10 +30,10 @@ lessons: ["0289 VPC Endpoints Gateway", "0290 VPC Endpoints Interface"]
 | Ứng dụng có phải sửa? | **Không bao giờ** (chỉ đổi đường đi) | Không, nếu bật **Private DNS** (mặc định bật). Nếu tắt thì phải dùng tên endpoint-specific |
 | Tên DNS mới | Không | Regional, Zonal, và Private DNS ghi đè tên mặc định |
 | Truy cập từ ngoài VPC (on-prem qua VPN/DX, VPC peer) | **Không** | **Có** (chỉ là private IP) |
-| Region | Chỉ dịch vụ cùng region | Dịch vụ cùng region (ngoài khóa học: PrivateLink hiện có hỗ trợ cross-region cho một số trường hợp) |
-| Protocol | Theo dịch vụ | Khóa học: chỉ TCP, chỉ IPv4 (hiện nay đã có IPv6/dual-stack) |
+| Region | Chỉ dịch vụ cùng region | Dịch vụ cùng region (console nay có thêm tùy chọn **cross-region endpoint**; demo mới thấy nhưng không dùng, bài không giải thích) |
+| Protocol | Theo dịch vụ | **TCP và UDP**; VPC IPv4, IPv6 hoặc dual-stack (bản khóa cũ: chỉ TCP, chỉ IPv4) |
 | Thời gian tạo | Gần như tức thì | Vài phút (pending → available) |
-| Chi phí (ngoài khóa học) | **Miễn phí** | Phí theo giờ mỗi AZ + phí theo GB |
+| Chi phí | **Miễn phí** (demo nhấn "no cost") | Có phí (bổ sung, bài không nói chi tiết: theo giờ mỗi AZ + theo GB) |
 
 ## Cách hoạt động khác nhau
 
@@ -56,7 +57,8 @@ flowchart TB
 - **S3 nhưng cần truy cập từ on-premises (VPN/Direct Connect) hoặc từ VPC khác** → **Interface endpoint cho S3**.
 - **Cần kiểm soát bằng Security Group** → Interface endpoint.
 - **Đưa dịch vụ của bên thứ ba/vendor vào VPC private** → Interface endpoint / **PrivateLink**.
-- Hai loại có thể **dùng cùng lúc** trong một VPC, như demo: gateway cho S3, interface cho SNS.
+- Ứng dụng **dùng tên DNS mặc định viết cứng** mà không muốn sửa: gateway endpoint (chỉ đổi route), hoặc interface endpoint **bật Private DNS**. Demo mới: interface endpoint S3 **tắt Private DNS** làm script cài đặt lỗi; chuyển sang gateway endpoint thì chạy ngay.
+- Hai loại có thể **dùng cùng lúc** trong một VPC (bản khóa cũ demo gateway cho S3, interface cho SNS; bản mới demo lần lượt cả hai loại cho S3).
 
 ## 🎯 Mẹo thi SAA-C03
 - **Gateway = route table/prefix list, HA sẵn, không SG, chỉ trong VPC.** **Interface = DNS/ENI, theo AZ, có SG, PrivateLink.** Nắm được hai dòng này là trả lời được phần lớn câu hỏi.
@@ -64,7 +66,8 @@ flowchart TB
 - "Ứng dụng không sửa được" + interface endpoint → bật **Private DNS** (Route 53 private hosted zone ghi đè tên mặc định).
 - "Bucket chỉ nhận traffic từ VPC" → bucket policy với điều kiện `aws:SourceVpce` (thường đi cùng gateway endpoint).
 - "Giới hạn VPC chỉ truy cập một số bucket" → **endpoint policy** (có ở cả hai loại).
-- Từ khóa **PrivateLink** → interface endpoint.
+- Từ khóa **PrivateLink** → interface endpoint (dịch vụ của account khác/vendor qua endpoint service + NLB: [[AWS PrivateLink]]).
+- Interface endpoint: **TCP và UDP**, IPv4/IPv6/dual-stack. Gateway endpoint: **miễn phí**.
 - Không loại endpoint nào cấp đường ra Internet. Cần ra Internet thì dùng [[NAT Gateway]] (IPv4) hoặc [[Egress-Only Internet Gateway]] (IPv6).
 
 ## Liên kết

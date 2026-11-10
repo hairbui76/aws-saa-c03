@@ -2,6 +2,7 @@
 tags: [saa-c03, s15-global-content-delivery, networking, cdn, cloudfront]
 aliases: [CloudFront Behaviours, Cache Behavior, Cache Behaviour, Path Pattern, Price Class]
 lessons: ["0274 CloudFront Behaviours"]
+videos: ["254 [SHAREDALL] CloudFront (CF) - Architecture", "258 [SHAREDALL] [DEMO] CloudFront (CF) - Add CDN to the Aus-E-Mart Web Store - PART2"]
 ---
 # CloudFront Behaviors
 

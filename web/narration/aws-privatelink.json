@@ -1,0 +1,14 @@
+{
+ "AWS PrivateLink": {
+  "sig": "7-1eo2leg",
+  "steps": [
+   "Sơ đồ này nói về AWS PrivateLink với hai phía: provider đặt dịch vụ sau NLB và tạo endpoint service, còn consumer tạo interface endpoint ngay trong subnet của mình. Traffic đi private trong AWS, không qua Internet.",
+   "Ở VPC consumer của Aus-E-Mart, ứng dụng ở mỗi AZ gọi dịch vụ qua interface endpoint, tức một ENI có private IP. DNS, thường là private DNS, trả về IP private của ENI, và endpoint được bảo vệ bằng Security Group cùng NACL.",
+   "Từ các ENI, traffic đi qua PrivateLink tới Network Load Balancer của provider. NLB bật cross-zone load balancing để chia tải đều sang các AZ.",
+   "Endpoint service gắn với NLB là thứ provider tạo ra để chia sẻ dịch vụ. Provider cấp quyền cho AWS account, IAM user, IAM role, hoặc mở cho tất cả.",
+   "NLB chuyển kết nối tới các EC2 chạy Aus-E-Pay Enterprise ở hai AZ. Khi làm cross-account, nhớ dùng AZ ID như use1-az1 để hai bên khớp đúng AZ vật lý.",
+   "Vì dịch vụ được đưa vào VPC dưới dạng ENI, mạng nào tới được VPC đó cũng dùng được dịch vụ: on-prem qua Direct Connect hoặc Site-to-Site VPN, VPC peering và Transit Gateway.",
+   "Khi đi thi, nhớ: muốn HA thì đặt một endpoint ở mỗi AZ. PrivateLink hỗ trợ TCP và UDP, IPv4 và IPv6. Private DNS cho consumer giữ nguyên tên miền của provider nhưng trỏ về IP private."
+  ]
+ }
+}

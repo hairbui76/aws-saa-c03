@@ -116,7 +116,7 @@
         "answer": [
           0
         ],
-        "explain": "EIGW có kiến trúc giống Internet Gateway: gắn vào VPC, HA mặc định trên mọi AZ và tự scale. Mô hình \"một cái mỗi AZ\" là của NAT Gateway."
+        "explain": "EIGW có kiến trúc giống Internet Gateway: gắn vào VPC, HA mặc định trên mọi AZ và tự scale. Mô hình \"một cái mỗi AZ\" là của NAT Gateway zonal."
       },
       {
         "type": "single",
@@ -280,17 +280,17 @@
       },
       {
         "type": "single",
-        "q": "Theo khóa học, interface endpoint có giới hạn protocol nào?",
+        "q": "Theo bài giảng mới, interface VPC endpoint hỗ trợ những gì về protocol và địa chỉ IP?",
         "options": [
-          "Chỉ UDP, hỗ trợ cả IPv4 và IPv6",
-          "TCP và UDP, chỉ IPv6",
-          "Chỉ TCP và chỉ IPv4",
-          "Mọi protocol IP, chỉ IPv4"
+          "Chỉ TCP, chỉ VPC IPv4",
+          "TCP và UDP; VPC IPv4-only, IPv6-only hoặc dual-stack",
+          "Chỉ UDP, chỉ VPC dual-stack",
+          "Mọi protocol IP, nhưng chỉ VPC IPv4"
         ],
         "answer": [
-          2
+          1
         ],
-        "explain": "Khóa học nói interface endpoint chỉ hỗ trợ TCP và chỉ IPv4 (Adrian nhấn mạnh ý IPv4). Hiện nay đã có IPv6/dual-stack cho nhiều dịch vụ, nhưng đề theo khóa học thì chọn TCP + IPv4."
+        "explain": "Interface endpoint hỗ trợ cả TCP và UDP, dùng được trong VPC chỉ IPv4, chỉ IPv6 hoặc dual-stack. Bản khóa cũ nói \"chỉ TCP, chỉ IPv4\", nay không còn đúng."
       }
     ],
     "VPC Flow Logs": [
@@ -437,6 +437,154 @@
           1
         ],
         "explain": "Full mesh n VPC cần n(n-1)/2 peering: 5×4/2 = 10. Khi số VPC lớn hoặc cần hub-and-spoke/transitive thì nên dùng Transit Gateway."
+      }
+    ],
+    "AWS PrivateLink": [
+      {
+        "type": "single",
+        "q": "Một công ty fintech muốn cung cấp API thanh toán chạy trên EC2 trong VPC của mình cho hàng trăm khách hàng, mỗi khách một AWS account riêng. Traffic không được đi qua Internet và công ty không muốn nối toàn bộ mạng của mình với VPC khách hàng. Giải pháp nào phù hợp?",
+        "options": [
+          "Tạo VPC peering tới VPC của từng khách hàng",
+          "Đặt dịch vụ sau Network Load Balancer, tạo endpoint service (AWS PrivateLink) và cho khách hàng tạo interface endpoint trong VPC của họ",
+          "Gắn Elastic IP cho các EC2 instance và whitelist IP của khách hàng trong Security Group",
+          "Tạo gateway VPC endpoint cho dịch vụ và chia sẻ cho các account khách hàng"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "PrivateLink: provider đặt dịch vụ sau NLB và tạo endpoint service, cấp quyền cho account của khách; khách (consumer) tạo interface endpoint (ENI có private IP) trong subnet của họ, traffic đi private trong AWS. VPC peering nối cả hai mạng và khó mở rộng cho hàng trăm VPC; Elastic IP đi qua Internet; gateway endpoint chỉ cho S3 và DynamoDB."
+      },
+      {
+        "type": "single",
+        "q": "Phía provider của một endpoint service PrivateLink cần thành phần nào đặt trước dịch vụ, và nên bật thêm gì để tải được phân bổ đều, chịu lỗi giữa các AZ?",
+        "options": [
+          "Application Load Balancer, bật sticky session",
+          "Network Load Balancer, bật cross-zone load balancing",
+          "NAT Gateway regional, bật auto-scaling",
+          "Internet Gateway, bật route propagation"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Theo bài, endpoint service đặt sau Network Load Balancer có node ở mỗi AZ của provider VPC; bật cross-zone load balancing để mỗi node chia kết nối sang instance ở AZ khác, giúp tải đều và resilient khi có nhiều consumer."
+      },
+      {
+        "type": "single",
+        "q": "Consumer dùng một dịch vụ qua PrivateLink từ 3 AZ và yêu cầu vẫn hoạt động khi một AZ gặp sự cố. Cần làm gì ở phía consumer?",
+        "options": [
+          "Một interface endpoint trong một subnet là đủ vì PrivateLink HA mặc định",
+          "Tạo interface endpoint ở mỗi AZ mà VPC consumer sử dụng",
+          "Thêm VPC peering dự phòng tới VPC của provider",
+          "Bật Private DNS cho endpoint"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Interface endpoint là ENI trong một subnet (một AZ). Muốn giải pháp PrivateLink highly available thì triển khai nhiều endpoint, mỗi AZ một cái. Private DNS chỉ giúp giữ nguyên tên miền, không tạo HA."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về AWS PrivateLink theo bài giảng? (Chọn 2)",
+        "options": [
+          "Hỗ trợ cả TCP và UDP, IPv4 và IPv6 (dual-stack)",
+          "Chỉ truy cập được từ bên trong VPC consumer, không dùng được qua Direct Connect hay VPN",
+          "Truy cập được dịch vụ qua Direct Connect, Site-to-Site VPN, VPC peering và Transit Gateway",
+          "Endpoint service chỉ cấp quyền được cho AWS account, không cấp cho IAM user hay role",
+          "Bắt buộc dùng Internet Gateway ở phía provider"
+        ],
+        "answer": [
+          0,
+          2
+        ],
+        "explain": "PrivateLink hỗ trợ TCP và UDP, IPv4 và IPv6. Vì dịch vụ được \"inject\" vào VPC dưới dạng ENI, mạng nào nối tới VPC đó (Direct Connect, VPN, peering, Transit Gateway) đều tới được. Endpoint service cấp quyền được cho IAM user, IAM role, account hoặc mở; không cần Internet Gateway."
+      },
+      {
+        "type": "single",
+        "q": "Provider có payment gateway public ở payments.example.io. Khách hàng dùng PrivateLink muốn ứng dụng vẫn gọi đúng tên payments.example.io nhưng traffic đi qua endpoint private. Cần gì?",
+        "options": [
+          "Tạo bản ghi CNAME public trỏ payments.example.io về endpoint",
+          "Bật Private DNS cho PrivateLink với domain đã được xác minh",
+          "Dùng gateway endpoint thay cho interface endpoint",
+          "Gắn Elastic IP cho interface endpoint"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Private DNS của PrivateLink (domain phải được xác minh) cho consumer dùng nguyên tên của provider, nhưng trong VPC consumer tên đó trỏ về IP private của endpoint thay vì IP public."
+      }
+    ],
+    "VPC IPAM": [
+      {
+        "type": "single",
+        "q": "Một tổ chức có hàng trăm VPC trên nhiều account và region, thường xuyên gặp lỗi CIDR chồng lấn khi tạo VPC mới và khi peering. Họ muốn quản lý tập trung dải IP và tự cấp CIDR không trùng khi tạo VPC. Dịch vụ nào phù hợp?",
+        "options": [
+          "Route 53 Resolver",
+          "Amazon VPC IP Address Manager (IPAM)",
+          "AWS Transit Gateway",
+          "AWS Config rule kiểm tra CIDR"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "IPAM quản lý pool IP theo cấp bậc; khi tạo VPC chỉ cần chọn pool và kích thước, IPAM cấp dải còn trống, tránh chồng lấn, và thu hồi dải khi VPC bị xóa. Transit Gateway nối mạng chứ không cấp IP; Config chỉ phát hiện."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng IPAM ở free tier và muốn quản lý dải private IPv4 cho VPC ở nhiều account trong AWS Organizations. Điều gì đúng?",
+        "options": [
+          "Free tier đã đủ vì IPAM luôn hỗ trợ cross-account",
+          "Cần advanced tier: free tier chỉ 1 account, 1 region và không hỗ trợ private IPv4",
+          "Chỉ cần bật trusted access của IPAM trong Organizations, không cần đổi tier",
+          "IPAM không quản được private IPv4, chỉ quản IP public"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Theo bài, free tier chỉ hỗ trợ một account, một region và không có private IPv4. Advanced tier (trả phí) mới có private IPv4, audit, cross-account và cross-region."
+      },
+      {
+        "type": "single",
+        "q": "Để các account khác trong tổ chức tạo VPC từ pool IPAM của account network trung tâm, cần dùng gì?",
+        "options": [
+          "VPC peering giữa các account",
+          "AWS Organizations kết hợp AWS Resource Access Manager để chia sẻ pool",
+          "CloudFormation StackSets sao chép pool sang từng account",
+          "Tạo IPAM riêng ở mỗi account rồi nhập tay cùng dải"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Bài nói IPAM cross-account cần dùng AWS Organizations để quản các account và Resource Access Manager để chia sẻ pool IPAM sang account khác."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về VPC IPAM? (Chọn 2)",
+        "options": [
+          "Tạo IPAM là có sẵn hai scope: public và private",
+          "Xóa VPC thì dải đã cấp bị khóa vĩnh viễn, không cấp lại được",
+          "Mỗi pool có thể đặt minimum, maximum và default netmask",
+          "IPAM chỉ quản được dải IP của VPC, không quản IP public của ELB hay NAT Gateway",
+          "Mỗi account tạo được một IPAM ở mỗi region"
+        ],
+        "answer": [
+          0,
+          2
+        ],
+        "explain": "IPAM tạo ở một home region (mỗi account một IPAM) và tự có public scope và private scope; mỗi pool đặt min/max/default netmask. IPAM theo dõi cả cấp lẫn thu hồi: xóa VPC thì dải về lại pool. IPAM còn quản IP public cho ELB, NAT Gateway (qua Elastic IP), Elastic IP."
+      },
+      {
+        "type": "single",
+        "q": "Một team muốn dùng dải IPv6 chỉ dùng nội bộ, AWS không cho ra Internet. Cách nào đáp ứng?",
+        "options": [
+          "Dùng Amazon-provided IPv6 /56 mặc định của VPC",
+          "Dùng Egress-Only Internet Gateway để biến IPv6 thành private",
+          "Dùng dải IPv6 private cấp qua VPC IPAM",
+          "Dùng NAT64 trên NAT Gateway"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Bình thường mọi IPv6 trong AWS đều public (publicly routable). IPAM là cách duy nhất cho dải IPv6 private-only. EIGW chỉ chặn inbound chứ không làm địa chỉ thành private; NAT64 để IPv6-only gọi IPv4."
       }
     ]
   }
