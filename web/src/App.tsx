@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { HashRouter, Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import { BookOpenCheck, KeyRound, Monitor, Moon, Search, Settings2, Sun } from 'lucide-react';
-import { useIndex } from './lib/content';
-import { isDone, progress, settings, viewPrefs } from './lib/store';
+import { BookOpenCheck, KeyRound, Monitor, Moon, Search, Settings2, Sparkles, Sun } from 'lucide-react';
+import { useIndex, useJson } from './lib/content';
+import { isDone, progress, settings, updatesSeen, viewPrefs } from './lib/store';
+import { shouldShowWhatsNew, type UpdatesIndex } from './lib/updates';
 import { nextTheme, THEMES, useThemeSync } from './lib/theme';
 import SettingsDialog from './components/SettingsDialog';
 import SearchPalette from './components/SearchPalette';
+import WhatsNew from './components/WhatsNew';
 import LessonPeek from './components/LessonPeek';
 import Home from './pages/Home';
 import ChapterPage from './pages/Chapter';
@@ -15,12 +17,12 @@ import NotesPage from './pages/Notes';
 import RoadmapPage from './pages/Roadmap';
 import PracticePage, { PracticeResult, PracticeRun } from './pages/Practice';
 
-type Ui = { openSettings: () => void; openSearch: () => void };
+type Ui = { openSettings: () => void; openSearch: () => void; openWhatsNew?: () => void };
 const UiContext = createContext<Ui>({ openSettings: () => {}, openSearch: () => {} });
 export const useUi = () => useContext(UiContext);
 
 function Header() {
-  const { openSettings, openSearch } = useUi();
+  const { openSettings, openSearch, openWhatsNew } = useUi();
   const { data } = useIndex();
   const p = progress.use();
   const s = settings.use();
@@ -54,6 +56,11 @@ function Header() {
         <button className={`pill ${s.apiKey ? 'ok' : ''}`} onClick={openSettings} title="Anthropic API key">
           <KeyRound size={16} /> <span className="hide-sm">{s.apiKey ? 'Claude ✓' : 'Thêm key'}</span>
         </button>
+        {openWhatsNew && (
+          <button className="pill upd-pill" onClick={openWhatsNew} title="Những thay đổi theo bản khóa mới" aria-label="Có gì mới">
+            <Sparkles size={16} /> <span className="hide-md">Có gì mới</span>
+          </button>
+        )}
         <ThemeButton />
         <button className="pill icon" onClick={openSettings} title="Cài đặt, export/import tiến độ">
           <Settings2 size={16} />
@@ -92,6 +99,13 @@ export default function App() {
   useThemeSync();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  // the update batch, if the build has one (no file: no popup and no header button)
+  const updates = useJson<UpdatesIndex>('updates.json').data;
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+  const updatesId = updates?.id;
+  useEffect(() => {
+    if (shouldShowWhatsNew(updatesSeen.get().seen, updatesId)) setWhatsNewOpen(true);
+  }, [updatesId]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -104,7 +118,13 @@ export default function App() {
   }, []);
   return (
     <HashRouter>
-      <UiContext.Provider value={{ openSettings: () => setSettingsOpen(true), openSearch: () => setSearchOpen(true) }}>
+      <UiContext.Provider
+        value={{
+          openSettings: () => setSettingsOpen(true),
+          openSearch: () => setSearchOpen(true),
+          openWhatsNew: updates ? () => setWhatsNewOpen(true) : undefined,
+        }}
+      >
         <ScrollTop />
         <Header />
         <Routes>
@@ -123,6 +143,7 @@ export default function App() {
           Ghi chú tổng hợp từ khóa AWS SAA-C03 của Adrian Cantrill · tiến độ lưu trên máy bạn
         </footer>
         {settingsOpen && <SettingsDialog onClose={() => setSettingsOpen(false)} />}
+        {whatsNewOpen && updates && <WhatsNew data={updates} onClose={() => setWhatsNewOpen(false)} />}
         {searchOpen && <SearchPalette onClose={() => setSearchOpen(false)} />}
         <LessonPeek />
       </UiContext.Provider>

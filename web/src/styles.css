@@ -16,6 +16,12 @@
   --green-soft: #d3f9d8;
   --red: #e03131;
   --red-soft: #ffe3e3;
+  /* update marks (UpdateMark): blue = changed, red = no longer in the new course, green chip = new lesson */
+  --upd-changed: #1971c2;
+  --upd-changed-soft: #d0ebff;
+  --upd-removed: #e03131;
+  --upd-removed-soft: #ffe3e3;
+  --upd-new: #2b8a3e;
   --violet-soft: #e5dbff;
   --hand: 'Patrick Hand', 'Be Vietnam Pro', cursive;
   --body: 'Be Vietnam Pro', system-ui, sans-serif;
@@ -62,6 +68,11 @@
   --green-soft: #1f3b27;
   --red: #ff8787;
   --red-soft: #4a2526;
+  --upd-changed: #74c0fc;
+  --upd-changed-soft: #1e3a55;
+  --upd-removed: #ff8787;
+  --upd-removed-soft: #4a2526;
+  --upd-new: #69db7c;
   --violet-soft: #352b52;
   --bg-2: #2a2b30;
   --hover: #2d2f34;
@@ -1710,6 +1721,13 @@ button.pill:hover {
 }
 
 /* ---------- responsive ---------- */
+/* header label that gives way first, so the nav links keep their line */
+@media (max-width: 1440px) {
+  .hide-md,
+  .topbar-right:has(.upd-pill) .search-pill kbd {
+    display: none;
+  }
+}
 @media (max-width: 1280px) {
   .lesson-layout {
     grid-template-columns: 190px minmax(0, 1fr);
@@ -3929,4 +3947,93 @@ body.resizing-chat {
 }
 .bubble tr:last-child td {
   border-bottom: 0;
+}
+
+/* ---------- update marks: ❗ changed / removed, MỚI chip ---------- */
+.upd-mark {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 1;
+  vertical-align: -2px;
+}
+.upd-mark.updated {
+  color: var(--upd-changed);
+}
+.upd-mark.removed {
+  color: var(--upd-removed);
+}
+.upd-mark.new {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: var(--card);
+  background: var(--upd-new);
+  vertical-align: 1px;
+}
+.upd-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.upd-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ---------- "Có gì mới" popup ---------- */
+.modal.whatsnew {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: 92vh;
+}
+.wn-body {
+  max-height: min(70vh, 640px);
+  overflow: auto;
+  margin-top: 8px;
+  padding-right: 4px;
+}
+.wn-summary {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.wn-body .muted.small {
+  margin: 0 0 10px;
+}
+.wn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14.5px;
+}
+.wn-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.wn-list li > .upd-mark {
+  margin-top: 3px;
+}
+.wn-list a {
+  color: var(--blue);
+  text-underline-offset: 3px;
+}
+.wn-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 2px dashed var(--line-soft);
 }

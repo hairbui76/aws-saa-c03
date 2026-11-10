@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { newerBatchId } from './updates';
 
 // Tiny localStorage-backed store. Everything lives in the learner's browser;
 // progress can be exported to a file and imported on another device.
@@ -300,6 +301,9 @@ export function toggleBookmark(lessonId: string) {
   });
 }
 
+// ---------- "Có gì mới": the last update batch the learner has seen (its id, see updates.json) ----------
+export const updatesSeen = createStore<{ seen: string | null }>('saa.updates.v1', { seen: null });
+
 // ---------- export / import ----------
 type ExportFile = {
   app: 'saa-c03-sketchbook';
@@ -313,6 +317,7 @@ type ExportFile = {
   chats?: Record<string, ChatThread>;
   roadmap?: StoredRoadmap;
   practice?: Pick<PracticeState, 'attempts' | 'last'>;
+  updatesSeen?: string | null;
 };
 
 export function exportProgress() {
@@ -328,6 +333,7 @@ export function exportProgress() {
     chats: chats.get().items,
     roadmap: roadmap.get().current,
     practice: { attempts: practice.get().attempts, last: practice.get().last },
+    updatesSeen: updatesSeen.get().seen,
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
@@ -372,6 +378,12 @@ function importExtras(data: ExportFile, mode: 'merge' | 'replace') {
     ink.set({ items: { ...inInk, ...ink.get().items } });
   }
   if (data.roadmap && (mode === 'replace' || !roadmap.get().current)) roadmap.set({ current: data.roadmap });
+  // seen batch: replace takes the file's value when it has one, merge keeps the later batch
+  if (mode === 'replace') {
+    if (data.updatesSeen !== undefined) updatesSeen.set({ seen: data.updatesSeen || null });
+  } else {
+    updatesSeen.set({ seen: newerBatchId(updatesSeen.get().seen, data.updatesSeen) });
+  }
   const inPr = data.practice;
   if (inPr && Array.isArray(inPr.attempts)) {
     if (mode === 'replace') practice.update((s) => ({ ...s, attempts: inPr.attempts, last: obj(inPr.last) }));
