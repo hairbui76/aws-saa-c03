@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns]
 aliases: [Route 53 Interoperability, Domain Registrar vs DNS Hosting, R53 Registrar Only, R53 Hosting Only]
 lessons: ["0191 R53 Interoperability"]
+videos: ["187 [ASSOCIATESHARED] R53 Interoperability"]
 ---
 # R53 Interoperability
 
@@ -16,7 +17,7 @@ lessons: ["0191 R53 Interoperability"]
 
 ## Khái niệm cốt lõi
 Khi đăng ký domain bằng R53, thực chất có các bước sau:
-1. **Nhận tiền**: phí đăng ký domain (trả theo năm hoặc 3 năm) → vai trò **registrar**.
+1. **Nhận tiền**: phí đăng ký domain, trả định kỳ (theo năm hoặc 3 năm; phần lớn TLD cho đăng ký nhiều năm một lần, tới 10 năm) → vai trò **registrar**.
 2. **Cấp phát 4 name server** của R53 → vai trò **hosting**.
 3. **Tạo zone file** (public hosted zone) trên 4 NS đó → vai trò **hosting** (tính phí hằng tháng).
 4. **Liên lạc với registry của TLD** (ví dụ `.org` do **PIR** quản lý) → vai trò **registrar**.

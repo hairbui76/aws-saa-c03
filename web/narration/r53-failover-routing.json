@@ -3,7 +3,7 @@
   "sig": "4-1dfycsf",
   "steps": [
    "Sơ đồ này nói về Failover routing, cách làm active-passive bằng DNS. Ta tạo hai record www cùng tên, một Primary và một Secondary, và health check quyết định record nào được trả về.",
-   "User truy vấn www tới Route 53. Health check A4LHealth gọi HTTP tới index.html trên EC2 mỗi 10 giây với chế độ Fast, rồi báo trạng thái cho record failover. Primary là A record trỏ tới Elastic IP của EC2, Record ID là EC2.",
+   "User truy vấn www tới Route 53. Health check DAC-Health gọi HTTP tới index.html trên EC2 mỗi 10 giây với chế độ Fast, rồi báo trạng thái cho record failover. Primary là A record trỏ tới Elastic IP của EC2, Record ID là EC2.",
    "Khi Primary healthy, Route 53 trả về Elastic IP của EC2. Khi Primary unhealthy, nó trả Secondary, tức là Alias tới S3 website endpoint với Record ID là S3. Secondary không cần gắn health check.",
    "Khi đi thi, nhớ rằng trang bảo trì nên nằm trên dịch vụ khác site chính, để EC2 lỗi không kéo S3 theo, và bucket phải tên đúng www cộng domain. Nếu đề hỏi active-active thì chọn Multivalue, Weighted hoặc Latency, không phải Failover."
   ]

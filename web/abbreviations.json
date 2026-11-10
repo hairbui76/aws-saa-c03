@@ -259,5 +259,6 @@
   "OCI": "Open Container Initiative",
   "CRI": "Container Runtime Interface",
   "STIG": "Security Technical Implementation Guide",
-  "CIS": "Center for Internet Security"
+  "CIS": "Center for Internet Security",
+  "DGA": "Domain Generation Algorithm"
 }

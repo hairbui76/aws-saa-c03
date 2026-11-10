@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, high-availability]
 aliases: [Multivalue Routing, Multi Value Answer Routing, Multi-Value Routing]
 lessons: ["0186 Multi Value Routing"]
+videos: ["182 [ASSOCIATESHARED] R53 Multi Value Routing"]
 ---
 # R53 Multivalue Routing
 
@@ -13,9 +14,11 @@ lessons: ["0186 Multi Value Routing"]
 
 ## Khái niệm cốt lõi
 - Nhiều record **cùng tên** (ví dụ 3 record `www` kiểu A: `1.2.3.3`, `1.2.3.4`, `1.2.3.5`).
+- **Không dùng được với record NS, CNAME và Alias**: những loại này không cấu hình được với multivalue routing (ví dụ trong bài dùng record A).
 - **Mỗi record độc lập** và có thể gắn một health check (xem [[R53 Health Checks]]).
 - Query trả về **tối đa 8 record healthy**. Hơn 8 thì **8 được chọn ngẫu nhiên**.
 - Record **fail health check không được trả về** nên client không chọn trúng nó.
+- **Tất cả record đều unhealthy** thì Route 53 **vẫn trả lời**, trả về **tối đa 8 record unhealthy** (không để query không có câu trả lời).
 - Client chọn **một** value và kết nối.
 - Mục tiêu: **tăng availability** theo kiểu active-active. Nó **không** xử lý kết nối ở tầng mạng như load balancer (xem [[Elastic Load Balancer]]).
 
@@ -36,11 +39,12 @@ flowchart LR
 |---|---|---|---|
 | Số record cùng tên | 1 (nhiều value) | 2 (primary/secondary) | Nhiều, mỗi record độc lập |
 | Health check | Không | Có (thường trên primary) | Có, từng record |
-| Trả về | Tất cả value, ngẫu nhiên | 1 record (primary hoặc secondary) | Tối đa 8 record healthy |
+| Trả về | Tất cả value, ngẫu nhiên | 1 record (primary hoặc secondary) | Tối đa 8 record healthy (tất cả unhealthy: vẫn trả tối đa 8) |
 | Mô hình | 1 service | Active-passive | Active-active |
 
 ## 🎯 Mẹo thi SAA-C03
 - "Trả về **nhiều IP**, chỉ những IP **healthy**", "tối đa **8**" → **Multivalue**.
+- Multivalue **không** dùng cho record **NS, CNAME, Alias**. Khi mọi record đều unhealthy, R53 vẫn trả tối đa 8 record (unhealthy).
 - Phân biệt với Simple: Simple cũng trả nhiều value nhưng **không health check**.
 - Multivalue **không phải** load balancer. Nếu đề cần phân phối kết nối thực sự, health check tầng ứng dụng, sticky session... thì chọn **ELB**.
 - Dùng khi có nhiều tài nguyên đều phục vụ được request và muốn chọn ngẫu nhiên trong số tài nguyên còn sống.

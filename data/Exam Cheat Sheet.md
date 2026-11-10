@@ -50,6 +50,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Path/host-based routing, nhiều domain HTTPS (SNI) | **ALB** | [[Compare - ALB vs NLB]] |
 | UDP, IP tĩnh, TLS end-to-end tới instance | **NLB** (TCP listener) | [[SSL Offload and Session Stickiness]] |
 | Trỏ apex domain tới ELB/CloudFront/S3 | **Alias record** | [[CNAME vs Alias]] |
+| Chặn instance resolve domain độc hại (malware, botnet, C2), chỉ cho domain đã duyệt | **Route 53 Resolver DNS Firewall** (rule group + domain list, associate VPC; fail closed mặc định) | [[R53 Resolver DNS Firewall]] |
 
 ### Compute
 | Từ khóa trong đề | Chọn | Note |
@@ -264,8 +265,8 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 |---|---|---|
 | Simple | **Không** | Một tài nguyên |
 | Failover | Có (primary) | Active-passive, trang bảo trì S3 |
-| Multivalue | Có | Trả tối đa 8 record healthy, ngẫu nhiên (không thay LB) |
-| Weighted | Có | X% traffic, canary, A/B |
+| Multivalue | Có | Trả tối đa 8 record healthy, ngẫu nhiên (không thay LB); không dùng cho NS/CNAME/Alias |
+| Weighted | Có | X% traffic, canary, A/B; weight 0–255 |
 | Latency | Có | Latency thấp nhất, app nhiều region (1 record/region) |
 | Geolocation | Có | Theo **vị trí khớp** (quốc gia/châu lục); cần record default |
 | Geoproximity | Có | Theo **khoảng cách** + **bias** để dời traffic |

@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns]
 aliases: [Simple Routing, Simple Routing Policy]
 lessons: ["0181 Simple Routing"]
+videos: ["177 [ASSOCIATESHARED] Simple Routing"]
 ---
 # R53 Simple Routing
 

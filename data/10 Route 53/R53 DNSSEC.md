@@ -2,6 +2,7 @@
 tags: [saa-c03, s10-route-53, route53, networking, dns, security]
 aliases: [Route 53 DNSSEC, DNSSEC Signing Route 53, R53 KSK]
 lessons: ["0192 Implementing DNSSEC using Route53"]
+videos: ["188 Implementing DNSSEC using Route 53"]
 ---
 # R53 DNSSEC
 
