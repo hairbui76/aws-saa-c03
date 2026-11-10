@@ -170,12 +170,12 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 ### ALB vs NLB vs GWLB → [[Compare - ALB vs NLB]], [[Gateway Load Balancer]]
 | | ALB | NLB | GWLB |
 |---|---|---|---|
-| Layer | L7 (HTTP/HTTPS/WebSocket) | L4 (TCP/UDP/TLS) | L3 (GENEVE, UDP 6081) |
+| Layer | L7 (HTTP/HTTPS/WebSocket) | L4 (TCP/UDP/TLS/QUIC) | L3 (GENEVE, UDP 6081) |
 | Routing | Path, host, header, query | Theo port | Đẩy traffic qua appliance |
 | TLS | Terminate (offload/bridging) | **Pass-through** được (end-to-end) | Không xử lý |
 | IP tĩnh | Không | **Có** (1 IP/AZ, gắn EIP) | Không |
-| Stickiness | Cookie | Không (cookie) | Flow stickiness |
-| Đặc biệt | WAF, auth Cognito/OIDC, Lambda target | PrivateLink, độ trễ cực thấp | Firewall/IDS bên thứ ba |
+| Stickiness | Cookie | Source IP (không cookie) | Flow stickiness |
+| Đặc biệt | WAF, auth Cognito/OIDC, JWT validation, Lambda target | PrivateLink, độ trễ cực thấp, health check TCP hoặc HTTP/HTTPS | Firewall/IDS bên thứ ba |
 
 ### Gateway vs Interface endpoint → [[Compare - Gateway vs Interface Endpoints]]
 | | Gateway endpoint | Interface endpoint |
@@ -338,7 +338,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | Aurora Global | Replication ~1 s, RTO < 1 phút; secondary region: khóa học 5, nay 10; 16 replica mỗi secondary |
 | Route 53 | 4 name server/zone; multivalue ≤ 8 record; health check 30 s (fast 10 s), ngưỡng 18%; string match 5.120 byte đầu |
 | CloudFront | Default TTL 24 h; cert ACM ở **us-east-1** |
-| ASG | Lifecycle hook timeout 3.600 s; health check grace 300 s (mặc định trên console; CLI/API là 0) |
+| ASG | Lifecycle hook timeout 3.600 s (heartbeat gia hạn, tối đa 48 h hoặc 100 lần timeout); health check grace 300 s (mặc định trên console; CLI/API là 0); cooldown 300 s chỉ cho simple scaling (step/target tracking dùng instance warmup) |
 | WAF | Inspect body 8 KB đầu |
 | VPN / BGP | ~1.25 Gbps/tunnel (khóa học; nay TGW có tunnel băng thông lớn + ECMP); BGP TCP 179; private ASN 64512–65534 |
 | Direct Connect | Port 1/10/100 Gbps (nay thêm 400 Gbps) |
@@ -346,7 +346,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | Storage Gateway | Stored 16 TB/volume × 32 = 512 TB; Cached 32 TB/volume × 32 = 1 PB |
 | AWS Backup | Cold storage ≥ 90 ngày; Vault Lock cool-off 72 h |
 | Redshift | Auto snapshot ~8 h hoặc 5 GB; retention 1 ngày mặc định, tối đa 35 |
-| ELB | Khóa học: 3 loại; nay: 4 (thêm GWLB) |
+| ELB | 4 loại: CLB (v1, legacy), ALB, NLB, GWLB (v2) |
 | EFS | Khóa học: Bursting/Provisioned; nay thêm **Elastic** (mặc định trên console) |
 
 ---
@@ -382,6 +382,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 - ELB không có ASG thì không tự thay instance hỏng ([[Exam Technique]]).
 - ASG launch rồi terminate liên tục: health check grace period quá ngắn ([[ASG Health Checks]]).
 - App lỗi mà ASG không thay instance: chưa bật ELB health check trên ASG ([[ASG Health Checks]]).
+- EBS volume lỗi IO mà ASG không thay instance: bật EBS health check cho ASG (instance Nitro) ([[ASG Health Checks]]).
 - Spot không bao giờ dùng cho workload không chịu gián đoạn ([[EC2 Purchase Options]]).
 - Instance Store mất dữ liệu khi stop/start, resize, host lỗi; reboot thì giữ ([[Instance Store]]).
 - EBS chỉ trong một AZ. Sang AZ khác: snapshot → volume mới ([[EBS]]).

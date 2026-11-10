@@ -16,7 +16,7 @@
       },
       {
         "type": "single",
-        "q": "Web server trên một EC2 trong ASG bị crash, nhưng instance vẫn ở trạng thái running và qua 2/2 status check. ASG không thay instance này. Cần làm gì để ASG tự thay instance khi ứng dụng hỏng?",
+        "q": "Web server trên một EC2 trong ASG bị crash, nhưng instance vẫn ở trạng thái running và qua system và instance status check. ASG không thay instance này. Cần làm gì để ASG tự thay instance khi ứng dụng hỏng?",
         "options": [
           "Bật ELB health check trên ASG, dùng health check theo path của ALB target group",
           "Bật EC2 Auto Recovery bằng CloudWatch alarm",
@@ -28,28 +28,28 @@
       },
       {
         "type": "single",
-        "q": "Theo khóa học, health check grace period mặc định của ASG là bao nhiêu?",
+        "q": "Một ASG chạy trên instance Nitro, dùng health check mặc định. Một instance có EBS volume bị lỗi IO và không truy cập được, nhưng instance vẫn running và qua system check lẫn instance check, nên ASG không thay nó. Cách nào giúp ASG tự thay instance trong trường hợp này?",
         "options": [
-          "60 giây",
-          "120 giây",
-          "3600 giây",
-          "300 giây"
+          "Tăng health check grace period",
+          "Bật EBS health check cho ASG để EBS status check thành một phần health check",
+          "Chuyển sang custom health check và tắt EC2 health check",
+          "Bật cross-zone load balancing trên load balancer"
         ],
-        "answer": [3],
-        "explain": "Grace period mặc định 300 giây (5 phút) theo khóa học (300s là mặc định khi tạo trong console; tạo qua CLI/API thì mặc định 0). 3600 giây là timeout mặc định của lifecycle hook."
+        "answer": [1],
+        "explain": "Instance Nitro có 3 status check (system, instance, EBS) nhưng ASG mặc định chỉ dùng 2 check system và instance. Bật EBS health check thì volume không truy cập được hoặc lỗi IO làm instance bị đánh dấu unhealthy và bị thay. Grace period chỉ hoãn health check; cross-zone không liên quan."
       },
       {
         "type": "multi",
         "q": "Với EC2 health check mặc định của ASG, những trạng thái nào khiến instance bị coi là UNHEALTHY? (Chọn 2)",
         "options": [
           "Instance ở trạng thái stopped",
-          "Instance running, qua 2/2 status check nhưng ứng dụng bên trong bị treo",
-          "Instance bị impaired (không đạt 2/2 status check)",
+          "Instance running, qua system và instance status check nhưng ứng dụng bên trong bị treo",
+          "Instance bị impaired (fail system hoặc instance status check)",
           "Instance running và pass health check của target group",
           "Instance vừa launch và còn trong health check grace period"
         ],
         "answer": [0, 2],
-        "explain": "EC2 health check coi mọi trạng thái khác running (stopping, stopped, shutting-down, terminated) hoặc impaired là unhealthy. App treo nhưng instance vẫn running và qua status check thì EC2 check vẫn báo healthy; trong grace period instance không bị đánh giá fail."
+        "explain": "EC2 health check coi mọi trạng thái khác running (stopping, stopped, shutting-down, terminated) hoặc impaired là unhealthy. App treo nhưng instance vẫn running và qua status check thì EC2 check vẫn báo healthy; trong grace period health check fail chưa bị tính (nhưng instance rời trạng thái running thì vẫn bị thay ngay)."
       },
       {
         "type": "single",
@@ -123,7 +123,7 @@
           "Dùng Route 53 health check gọi Lambda"
         ],
         "answer": [0],
-        "explain": "Lifecycle hook tích hợp với EventBridge và SNS để xử lý event-driven, ví dụ EventBridge rule kích hoạt Lambda. Poll CloudTrail hay dựa vào user data khi shutdown đều không đáng tin cậy và phức tạp hơn."
+        "explain": "Lifecycle hook gửi thông báo tới EventBridge, SNS, SQS hoặc Lambda khi instance vào trạng thái Wait, ví dụ EventBridge rule kích hoạt Lambda để xử lý event-driven. Poll CloudTrail hay dựa vào user data khi shutdown đều không đáng tin cậy và phức tạp hơn."
       }
     ],
     "ASG Scaling Policies": [
@@ -286,7 +286,7 @@
           "Application Load Balancer với WebSocket"
         ],
         "answer": [1],
-        "explain": "NLB là layer 4, hỗ trợ UDP, rất nhanh (latency khoảng 25% của ALB) và hợp với giao thức không phải HTTP. ALB chỉ có listener HTTP/HTTPS."
+        "explain": "NLB là layer 4, hỗ trợ UDP, rất nhanh (hàng triệu request mỗi giây, latency thấp hơn ALB nhiều) và hợp với giao thức không phải HTTP. ALB chỉ có listener HTTP/HTTPS."
       },
       {
         "type": "single",
@@ -621,10 +621,10 @@
           "Placement groups",
           "Chỉ định user data",
           "Chỉ định AMI và instance type",
-          "T2/T3 Unlimited"
+          "Capacity reservations"
         ],
         "answer": [1, 4],
-        "explain": "LT hỗ trợ thêm T2/T3 Unlimited, placement groups, capacity reservations và Elastic Graphics. Security group, user data, AMI và instance type thì cả LC lẫn LT đều khai báo được."
+        "explain": "LT thay thế LC và hỗ trợ thêm versioning, mixed instance types, placement groups và capacity reservations. Security group, user data, AMI và instance type thì cả LC lẫn LT đều khai báo được."
       }
     ],
     "Regional and Global Architecture": [

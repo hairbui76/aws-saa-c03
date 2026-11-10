@@ -2,6 +2,7 @@
 tags: [saa-c03, s13-ha-and-scaling, compute, auto-scaling]
 aliases: [Scaling Policies, Simple Scaling, Step Scaling, Target Tracking, Scheduled Scaling, Manual Scaling]
 lessons: ["0229 ASG Scaling Policies"]
+videos: ["222 [ASSOCIATESHARED] ASG Scaling Policies"]
 ---
 # ASG Scaling Policies
 
@@ -22,7 +23,7 @@ lessons: ["0229 ASG Scaling Policies"]
 
 | Kiểu | Cơ chế | Ưu / nhược |
 |---|---|---|
-| **Simple** | Một CloudWatch alarm vào trạng thái ALARM thì thêm/bớt **một lượng cố định**, ví dụ CPU > 40% thì +1, < 40% thì −1 | Đơn giản nhưng cứng nhắc, kém hiệu quả |
+| **Simple** | Một CloudWatch alarm vào trạng thái ALARM thì thêm/bớt **một lượng cố định**, ví dụ CPU > 50% thì +1, < 50% thì −1 | Đơn giản nhưng cứng nhắc, kém hiệu quả |
 | **Step** | Alarm kèm các **step adjustments** (cận trên/dưới); lệch càng xa thì thêm/bớt càng nhiều | Linh hoạt, hợp tải biến động; **AWS khuyến nghị Step thay cho Simple** |
 | **Target tracking** | Đặt **giá trị mục tiêu** cho một metric, ASG tự tính lượng điều chỉnh | Dễ nhất; lệch càng xa mục tiêu thì action càng mạnh |
 | **Scale theo SQS** | Dựa trên `ApproximateNumberOfMessagesVisible` | Pattern worker pool: queue dài thì thêm worker, queue cạn thì thu nhỏ để giảm chi phí |
@@ -70,6 +71,15 @@ flowchart LR
     D --> C["Kẹp trong [min, max]"] --> ASG["ASG launch / terminate"]
 ```
 
+### Cooldown và instance warmup
+- Sau một scaling action cần **chờ cho hệ thống ổn định**: instance mới cần thời gian khởi động và nhận tải, nên không muốn ASG phản ứng lần nữa trước khi metric phản ánh được kết quả của lần scale vừa rồi.
+- **Cooldown period**: chỉ dùng cho **simple scaling**, mặc định **300 giây**.
+- **Step scaling và target tracking** dùng **instance warmup**: giá trị **theo từng instance**, là thời gian một instance mới cần trước khi được coi là sẵn sàng và **được tính vào metric của group**.
+  - Trong lúc còn instance đang warmup, policy vẫn **scale out ngay** được, nhưng **scale in bị chặn**, để ASG không phản ứng theo những instance chưa sẵn sàng.
+
+### Scaling processes
+- Các tiến trình của ASG có thể **suspend** hoặc **resume**: `Launch`, `Terminate`, `AddToLoadBalancer`, `AlarmNotification`, `AZRebalance`, `HealthCheck`, `ReplaceUnhealthy`, `ScheduledActions`, và **`InstanceRefresh`** (instance refresh đang chạy có được terminate và thay instance hay không). Từng instance còn đặt được **Standby / InService** để bảo trì. Bảng chi tiết ở [[Auto Scaling Groups]].
+
 ## 🎯 Mẹo thi SAA-C03
 - Câu hỏi "**Simple vs Step**": Step tốt hơn vì phản ứng **tương xứng với mức độ** thay đổi tải. Chỉ chọn Simple khi đề ưu tiên tuyệt đối sự đơn giản.
 - "Giữ CPU trung bình ở ~50%" hoặc "giữ số request mỗi target ổn định" → **Target tracking** (với ALB thì dùng **ALBRequestCountPerTarget**).
@@ -77,6 +87,7 @@ flowchart LR
 - "Biết trước lịch tải" (Black Friday, giờ hành chính) → **Scheduled**. "Tải lặp lại theo chu kỳ, muốn scale *trước* khi tải tới" → nghĩ tới Predictive.
 - "Giữ số instance cố định để kiểm soát chi phí" hoặc "đang test" → **Manual** (min = max = desired).
 - Nhớ: policy chỉ đổi **desired**; **min và max là ranh giới cứng**.
+- **Cooldown** (mặc định 300s) chỉ áp cho **simple scaling**; step và target tracking dùng **instance warmup** (instance chưa warmup xong thì chưa tính vào metric, scale in bị chặn).
 
 ## Liên kết
 - Tiên quyết: [[Auto Scaling Groups]], [[CloudWatch Basics]], [[Horizontal vs Vertical Scaling]]

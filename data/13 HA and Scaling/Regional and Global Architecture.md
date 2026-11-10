@@ -2,6 +2,7 @@
 tags: [saa-c03, s13-ha-and-scaling, architecture, high-availability, networking]
 aliases: [Global vs Regional Architecture, Kiến trúc toàn cầu và vùng, Application Tiers]
 lessons: ["0222 Regional and Global AWS Architecture"]
+videos: ["213 [ASSOCIATESHARED] Regional and Global AWS Architecture"]
 ---
 # Regional and Global Architecture
 

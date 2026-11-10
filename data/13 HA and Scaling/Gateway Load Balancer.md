@@ -2,6 +2,7 @@
 tags: [saa-c03, s13-ha-and-scaling, ha-and-scaling, networking, security, load-balancing]
 aliases: [GWLB, GWLBE, Gateway Load Balancer Endpoint, GENEVE]
 lessons: ["0242 Gateway Load Balancer"]
+videos: ["219 Gateway Load Balancer"]
 ---
 # Gateway Load Balancer
 
