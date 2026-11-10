@@ -263,5 +263,6 @@
   "DGA": "Domain Generation Algorithm",
   "EB": "Elastic Beanstalk",
   "PaaS": "Platform as a Service",
-  "DHMC": "Default Host Management Configuration"
+  "DHMC": "Default Host Management Configuration",
+  "DCU": "DMS Capacity Unit"
 }

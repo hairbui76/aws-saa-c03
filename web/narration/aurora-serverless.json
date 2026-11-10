@@ -1,14 +1,14 @@
 {
  "Aurora Serverless": {
-  "sig": "7-3dsbj0",
+  "sig": "7-zs0hrr",
   "steps": [
-   "Sơ đồ này nói về Aurora Serverless thế hệ v1. Thay vì cấp instance cố định, bạn để compute co giãn bằng ACU giữa mức min và max, và client đi qua proxy fleet nên scale không làm rớt kết nối.",
-   "Ứng dụng gửi kết nối vào shared proxy fleet do AWS quản lý. Phía sau, ACU được lấy từ warm pool, vốn stateless và không có storage local, nên gắn vào cluster rất nhanh. Tải thấp thì chạy ở min ACU, tới peak thì thêm hoặc tăng ACU nhưng không vượt max.",
-   "Proxy fleet chuyển kết nối tới các ACU đang gắn, kể cả ACU mới thêm khi tải tăng. Tất cả cùng đọc ghi trên cluster volume 6 bản qua 3 AZ, giống hệt Aurora provisioned. Nếu rảnh đủ N phút, cluster về 0 ACU và chỉ trả tiền storage.",
-   "Mỗi ACU truy cập cluster storage như một instance provisioned. Nhưng chú ý, khi đang pause mà có request mới, cluster phải resume nên có độ trễ, ứng dụng cần chịu được thời gian kết nối lâu.",
-   "Aurora Serverless hợp với tải thất thường hoặc khó đoán, ứng dụng ít dùng hoặc mới chưa rõ tải, môi trường dev test có thể pause khi rảnh, và mô hình multi-tenant nơi chi phí tăng theo doanh thu.",
-   "Điểm mấu chốt là client không nối thẳng vào ACU, proxy môi giới kết nối nên scale in và out trong suốt với ứng dụng. Lưu ý thêm, v1 đã hết hỗ trợ tháng 3 năm 2025; v2 scale theo bước 0.5 ACU, chạy chung cluster với provisioned và cũng hỗ trợ auto-pause về 0.",
-   "Khi đi thi, nhớ rằng việc của bạn chỉ là chọn min và max ACU, trả theo giây cho ACU đang dùng cộng storage. Thấy từ khóa unpredictable, intermittent hay không muốn quản lý capacity thì nghĩ tới Aurora Serverless; còn cần latency thấp ngay request đầu thì đặt min ACU lớn hơn 0 hoặc dùng provisioned."
+   "Sơ đồ này nói về Aurora Serverless v2. Vẫn là một Aurora cluster bình thường, nhưng instance được chọn kiểu serverless thay vì một cỡ cố định, và tự scale tại chỗ theo tải mà không gián đoạn ứng dụng.",
+   "Ứng dụng vẫn trỏ vào cluster endpoint như thường. Min và max ACU được đặt ở mức cluster, mỗi ACU khoảng 2 GB RAM cộng CPU và mạng, và đó là giới hạn scale của từng instance serverless. Tải thấp thì chạy gần min, tới peak thì tăng nhưng không vượt max.",
+   "Cluster trộn được instance serverless và provisioned: ở đây writer là serverless, một reader là db.t3.medium cỡ cố định, một reader khác là serverless. Nếu đặt min ACU bằng 0, instance serverless sẽ auto-pause và bạn chỉ trả tiền storage.",
+   "Mọi instance cùng đọc ghi trên cluster volume 6 bản qua 3 AZ, giống hệt Aurora provisioned. Khi đang pause mà có kết nối mới, instance tự resume, nhưng kết nối đầu tiên sẽ chậm một chút.",
+   "Aurora Serverless hợp với ứng dụng ít dùng hoặc mới chưa rõ tải, tải biến động hay khó đoán, môi trường dev test có thể pause khi rảnh, và mô hình multi-tenant nơi chi phí tăng theo doanh thu.",
+   "Tải tăng thì instance serverless scale lên tại chỗ, tải giảm thì scale xuống dần, không cần scaling policy hay alarm. Lưu ý v1 đã hết hạn từ tháng 3 năm 2025, không tạo mới được, và v1 không trộn được serverless với provisioned như v2.",
+   "Khi đi thi, nhớ rằng việc của bạn chỉ là chọn min và max ACU, trả theo giây cho phần đang dùng cộng storage. Thấy từ khóa unpredictable, intermittent hay không muốn quản lý capacity thì nghĩ tới Aurora Serverless; còn cần latency thấp ngay request đầu thì đặt min ACU lớn hơn 0 hoặc dùng provisioned."
   ]
  }
 }

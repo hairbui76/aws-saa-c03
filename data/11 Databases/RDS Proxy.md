@@ -2,10 +2,11 @@
 tags: [saa-c03, s11-databases, database, rds, aurora, serverless, high-availability]
 aliases: [Amazon RDS Proxy, DB Proxy, Connection Pooling]
 lessons: ["0215 RDS Proxy"]
+videos: ["207 [ASSOCIATESHARED] Relational Database Service (RDS) - RDS Proxy"]
 ---
 # RDS Proxy
 
-> **TL;DR:** RDS Proxy là database proxy fully managed cho RDS và Aurora. Ứng dụng kết nối tới proxy; proxy giữ một **connection pool** lâu dài tới DB và **multiplex** nhiều kết nối client lên ít kết nối DB. Kết quả: DB đỡ tải, Lambda không phải mở/đóng kết nối mỗi lần chạy, và failover **trong suốt** với ứng dụng (nhanh hơn trên 60% với Aurora).
+> **TL;DR:** RDS Proxy là database proxy fully managed cho RDS và Aurora. Ứng dụng kết nối tới proxy; proxy giữ một **connection pool** lâu dài tới DB và **multiplex** nhiều kết nối client lên ít kết nối DB. Kết quả: DB đỡ tải, Lambda không phải mở/đóng kết nối mỗi lần chạy, và failover **trong suốt** với ứng dụng (thời gian failover giảm tới **66%**, cả RDS Multi-AZ lẫn Aurora).
 
 ## 🖼️ Sơ đồ
 ![[RDS Proxy.excalidraw]]
@@ -21,20 +22,20 @@ lessons: ["0215 RDS Proxy"]
 - Mô hình: **Ứng dụng → Proxy (connection pooling) → Database**.
 
 ### Key facts (slide)
-- **Fully managed** DB proxy cho **RDS và Aurora**.
+- **Fully managed** DB proxy cho **RDS và Aurora**. Engine hỗ trợ: RDS **MariaDB, MySQL, PostgreSQL, SQL Server**; **Aurora MySQL, Aurora PostgreSQL**. **Không** hỗ trợ **Oracle** và **Db2**.
 - **Auto scaling, highly available** sẵn, ít việc quản trị.
 - **Connection pooling** giảm tải DB theo hai cách: không mở/đóng kết nối liên tục, và **multiplexing** (ít kết nối proxy→DB phục vụ nhiều kết nối client→proxy).
-- **Chỉ truy cập được từ trong VPC** (hoặc mạng private nối vào VPC), không truy cập từ internet.
+- **Chỉ truy cập được từ trong VPC** (hoặc mạng private nối vào VPC), không truy cập từ internet. Proxy chạy trong VPC, HA qua nhiều AZ, và phải nằm **cùng VPC với database** mà nó đứng trước.
 - Truy cập qua **proxy endpoint**, giống một DB endpoint bình thường, **không cần sửa ứng dụng**.
 - Có thể **bắt buộc SSL/TLS**.
-- **Giảm thời gian failover hơn 60%** (với Aurora khoảng 66–67%).
+- **Giảm thời gian failover tới 66%** (con số AWS đưa ra, so với kết nối thẳng DB), áp dụng cho cả **RDS Multi-AZ** và **Aurora**.
 - **Che giấu lỗi DB** khỏi ứng dụng.
 
 ## Cách hoạt động / Kiến trúc
 ```mermaid
 flowchart LR
   subgraph VPC["VPC us-east-1 (AZ A, B, C)"]
-    EC2["EC2 app (Catagram)"]
+    EC2["EC2 app (Dropwatch)"]
     L["Lambda (ENI trong VPC)"]
     PX["RDS Proxy<br/>(chạy qua các AZ)"]
     P["RDS primary (AZ-B)"]
@@ -51,10 +52,11 @@ flowchart LR
 - Khi failover (ví dụ [[RDS Multi-AZ]] chuyển primary → standby): client vẫn nối vào proxy và **chờ**; proxy tự lập kết nối mới tới primary mới ở phía sau. Ứng dụng không phải đợi CNAME của DB đổi, và không biết mình đang nói chuyện với proxy.
 
 ## 🎯 Mẹo thi SAA-C03
-- Lỗi "**too many connections**", đặc biệt với instance nhỏ/burstable (**T2/T3**) → RDS Proxy.
+- Lỗi "**too many connections**", đặc biệt với **instance nhỏ** (giới hạn kết nối thấp; bản khóa cũ nêu ví dụ T2/T3) → RDS Proxy.
 - **Lambda + RDS** (nhiều invocation đồng thời mở kết nối) → RDS Proxy. Lambda có thể dùng **IAM authentication** qua execution role ([[RDS Security]]); credential DB phía proxy lấy từ [[Secrets Manager]].
 - Ứng dụng chạy lâu dài (SaaS) cần latency thấp → dùng pool có sẵn thay vì mở kết nối theo từng tương tác.
-- "Giảm thời gian failover / failover **trong suốt với ứng dụng**" → RDS Proxy (giảm > 60%).
+- "Giảm thời gian failover / failover **trong suốt với ứng dụng**" → RDS Proxy (giảm tới 66%, cả RDS Multi-AZ và Aurora).
+- Bẫy: RDS Proxy **không hỗ trợ Oracle và Db2**; proxy phải **cùng VPC** với DB.
 - Bẫy: RDS Proxy **không public**, chỉ truy cập từ VPC.
 - Bẫy: proxy không phải cache. Muốn giảm tải đọc thì dùng [[RDS Read Replicas]] hoặc [[ElastiCache]].
 

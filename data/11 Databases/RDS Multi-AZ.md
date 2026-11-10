@@ -2,10 +2,11 @@
 tags: [saa-c03, s11-databases, database, rds, high-availability]
 aliases: [Multi-AZ, RDS Multi-AZ Instance, RDS Multi-AZ Cluster, Multi-AZ DB Cluster, Standby Replica, Reboot with failover]
 lessons: ["0201 Relational Database Service RDS MultiAZ Instance and Cluster", "0204 DEMO MultiAZ Snapshot Restore with RDS PART1", "0205 DEMO MultiAZ Snapshot Restore with RDS PART2"]
+videos: ["197 [ASSOCIATESHARED] Relational Database Service (RDS) MultiAZ - Instance and Cluster", "200 [ASSOCIATESHARED] [DEMO] MultiAZ & Snapshot Restore with RDS - PART1", "201 [ASSOCIATESHARED] [DEMO] MultiAZ & Snapshot Restore with RDS - PART2"]
 ---
 # RDS Multi-AZ
 
-> **TL;DR:** Multi-AZ là cơ chế **high availability** của RDS trong **một region**. Có hai kiểu: **Multi-AZ Instance** (kiểu cũ: 1 primary + **1 standby** đồng bộ, standby không phục vụ đọc/ghi, failover **60–120 giây** qua đổi DNS) và **Multi-AZ Cluster** (kiểu mới: **1 writer + 2 reader** đọc được, replicate qua transaction log, failover **~35 giây**).
+> **TL;DR:** Multi-AZ là cơ chế **high availability** của RDS trong **một region**. Có hai kiểu: **Multi-AZ Instance** (kiểu cũ: 1 primary + **1 standby** đồng bộ, standby không phục vụ đọc/ghi, failover **60–120 giây** qua đổi DNS) và **Multi-AZ Cluster** (kiểu mới: **1 writer + 2 reader** đọc được, replicate **semi-synchronous** qua transaction log, failover **~35 giây**, chỉ **MySQL và PostgreSQL**).
 
 ## 🖼️ Sơ đồ
 ![[RDS Multi-AZ.excalidraw]]
@@ -18,11 +19,12 @@ lessons: ["0201 Relational Database Service RDS MultiAZ Instance and Cluster", "
 
 ### Cách hoạt động
 - Primary instance replicate **synchronous** sang **standby replica** ở **AZ khác**. Standby có cùng database và dữ liệu.
-- Replication ở **mức storage** (kém hiệu quả hơn kiểu cluster). Cơ chế cụ thể tùy engine: MySQL, MariaDB, Oracle, PostgreSQL dùng công nghệ failover của Amazon; **SQL Server** dùng **Database Mirroring** hoặc **Always On Availability Groups** — đều bị trừu tượng hóa, chỉ cần nhớ "synchronous".
+- Trước đây đây là cách duy nhất và chỉ gọi là "Multi-AZ"; nay gọi là **Multi-AZ instance**. Tài liệu cũ chỉ ghi "Multi-AZ" thì cần xác định đang nói kiểu nào.
+- Replication ở **mức storage** (kém hiệu quả hơn kiểu cluster). Cơ chế cụ thể tùy engine: MySQL, MariaDB, Oracle, PostgreSQL dùng công nghệ failover của Amazon; **SQL Server** dùng **Database Mirroring** hoặc **Always On Availability Groups** (chi tiết engine này là bản khóa cũ nêu, bài mới không nói) — đều bị trừu tượng hóa, chỉ cần nhớ "synchronous".
 - Mọi truy cập qua **database CNAME** (endpoint DNS), mặc định trỏ tới primary. **Mọi đọc và ghi đều vào primary**; **không** truy cập được standby kể cả để đọc.
-- **Backup được lấy từ standby** → không thêm tải cho primary (backup lưu S3, replicate nhiều AZ). Xem [[RDS Backups and Restore]].
+- **Backup được lấy từ standby** → giảm tải cho primary (backup lưu S3, replicate nhiều AZ). AWS lưu ý vẫn có thể có **IO latency tăng nhẹ trong thời gian ngắn** lúc backup, tức là không xóa hẳn ảnh hưởng của backup. Xem [[RDS Backups and Restore]].
 - Khi primary gặp sự cố, RDS phát hiện và **failover**: **CNAME đổi sang trỏ vào standby**, standby trở thành primary mới.
-  - Vì là thay đổi DNS nên mất **60–120 giây** → có gián đoạn ngắn. Giảm bằng cách **tắt DNS caching** trong ứng dụng cho tên này.
+  - Vì là thay đổi DNS nên mất **60–120 giây** → có gián đoạn ngắn. Ứng dụng **không nên cache tên DNS này lâu**, nếu không sẽ tiếp tục nối vào primary cũ cả khi failover đã xong.
 
 ```mermaid
 sequenceDiagram
@@ -41,7 +43,7 @@ sequenceDiagram
 
 ### Điểm cần nhớ
 - Data ghi vào primary **và** replicate xong sang standby mới tính là **committed** (synchronous).
-- **Không thuộc free tier** (trả thêm cho standby).
+- **Không thuộc free tier** (trả thêm cho standby; bản khóa cũ nêu, bài mới không nói).
 - Chỉ **MỘT** standby, và standby **không dùng được để đọc hay ghi**.
 - Failover **60–120 s**.
 - **Chỉ trong cùng region** (khác AZ, cùng region). Cross-region → dùng [[RDS Read Replicas]].
@@ -50,13 +52,13 @@ sequenceDiagram
 ## Multi-AZ Cluster deployment (kiểu mới)
 - **1 writer + 2 reader** DB instance, ở các **AZ khác nhau**. Chỉ đúng **2 reader** (Aurora thì nhiều hơn).
 - **Writer** đọc + ghi (giống primary); **reader dùng được cho đọc** → **scale read** một phần. Cần ứng dụng hỗ trợ (gửi đọc và ghi tới endpoint khác nhau).
-- Ghi được coi là **committed khi ít nhất 1 reader xác nhận** đã ghi.
-- Phần cứng nhanh hơn: **Graviton** + **local NVMe SSD**; ghi vào local storage siêu nhanh rồi **flush xuống EBS** (vừa nhanh vừa có độ bền của EBS).
+- AWS gọi đây là **semi-synchronous replication**: ghi được coi là **committed khi ít nhất 1 reader xác nhận** đã ghi (không cần mọi reader). Từ lúc đó dữ liệu đã resilient qua nhiều AZ trong region.
+- Phần cứng nhanh hơn: instance có **local NVMe SSD**; ghi vào local storage siêu nhanh rồi **flush xuống EBS** (vừa nhanh vừa có độ bền của EBS). Nhờ đó **latency ghi thấp hơn** kiểu instance. (Bản khóa cũ nêu thêm là chạy trên **Graviton**; bài mới không nói.)
 - **Mỗi instance vẫn có storage cục bộ riêng** — khác [[Aurora]] (shared cluster volume).
 - Replication qua **transaction log** → hiệu quả hơn; **failover ~35 giây + thời gian apply transaction log**.
 - **Endpoint**:
   - **Cluster endpoint**: trỏ writer; dùng cho đọc, ghi, quản trị (tương đương CNAME ở kiểu instance).
-  - **Reader endpoint**: trỏ tới reader khả dụng (đôi khi cả writer) → cân bằng tải đọc.
+  - **Reader endpoint**: trỏ tới các reader khả dụng → cân bằng tải đọc. (Khác [[Aurora]]: reader endpoint của Aurora có thể trỏ cả writer.)
   - **Instance endpoint**: mỗi instance một cái; không nên dùng trực tiếp vì không tự chuyển khi instance lỗi — chỉ để test/fault finding.
 
 ```mermaid
@@ -75,28 +77,29 @@ flowchart LR
 |---|---|---|---|
 | Thành phần | 1 primary + 1 standby | 1 writer + 2 reader | 1 writer + tới 15 replica |
 | Standby/reader phục vụ đọc? | **Không** | **Có** | Có |
-| Replication | Synchronous, mức storage | Transaction log, commit khi ≥1 reader ack | Shared cluster storage |
+| Replication | Synchronous, mức storage | **Semi-synchronous** qua transaction log, commit khi ≥1 reader ack | Shared cluster storage |
+| Engine | Mọi engine | Chỉ **MySQL, PostgreSQL** | Aurora MySQL / PostgreSQL |
 | Storage | EBS riêng mỗi instance | Local NVMe + EBS riêng mỗi instance | Shared cluster volume |
 | Failover | 60–120 s (đổi CNAME) | ~35 s + apply log | Nhanh (xem note Aurora) |
 | Endpoint | 1 CNAME | Cluster / reader / instance | Cluster / reader / instance / custom |
 | Phạm vi | Cùng region | Cùng region | Cùng region (cross-region: [[Aurora Global Database]]) |
 
-(Hiện nay Multi-AZ DB cluster chỉ hỗ trợ engine **MySQL và PostgreSQL**; khóa học không nêu điểm này.)
+**Chỉ hỗ trợ MySQL và PostgreSQL**: Multi-AZ instance hỗ trợ mọi engine, còn Multi-AZ cluster chỉ chạy với hai engine này.
 
 ## Demo / Lab — Bật Multi-AZ và thử failover
-- Stack `RDS-MultiAZ-Snap` tạo WordPress + RDS MySQL single-AZ (us-east-1a). Single-AZ → **không chịu được lỗi AZ**.
-- Bật Multi-AZ: **Modify** → Availability & durability: *Create a standby instance* → chọn **Apply immediately** (thay vì đợi **maintenance window**; cảnh báo có thể ảnh hưởng hiệu năng/outage).
-- Phía sau, RDS **snapshot primary → restore sang standby ở AZ khác (trong DB subnet group) → thiết lập sync replication**. Mất ~10 phút; xong mới là Multi-AZ thật.
-- Mô phỏng sự cố: **Actions → Reboot → "Reboot with failover"** → CNAME chuyển sang standby, primary cũ được restart. Blog tạm không tải được rồi chạy lại → failover **không tức thời** (60–120 s).
+- Stack `RDS-MultiAZ-Snap` tạo Aus-E-Mart Web Store trên EC2 + RDS MySQL single-AZ (`aemwebstore`). Single-AZ → **không chịu được lỗi AZ**. Trước khi đổi cấu hình, demo chụp một manual snapshot "baseline" (xem [[RDS Backups and Restore]]).
+- Bật Multi-AZ: **Modify** (sửa được gần như mọi thứ lúc tạo: engine version, identifier, password, auth, instance class, storage) → Availability & durability: *Create a standby instance* → chọn **Apply immediately** (thay vì đợi **maintenance window**).
+- Phía sau, RDS **snapshot primary → restore sang standby ở AZ khác (trong DB subnet group) → thiết lập sync replication** (bản khóa cũ nêu, bài mới không nói). Mất khoảng 10 phút; xong mới là Multi-AZ thật.
+- Mô phỏng sự cố: **Actions → Reboot → "Reboot with failover"** (chỉ có khi đã bật Multi-AZ) → CNAME chuyển sang standby. Web store báo *Internal Server Error* một lúc rồi chạy lại → failover **không tức thời** nhưng gián đoạn ngắn.
 
 ## 🎯 Mẹo thi SAA-C03
 - Với RDS (không tính Aurora): **synchronous = Multi-AZ**, **asynchronous = read replica**.
 - Multi-AZ (instance) là để **HA/availability, không phải để scale đọc**: standby **không phục vụ read**. Đề muốn scale đọc → [[RDS Read Replicas]] (hoặc Multi-AZ Cluster / Aurora).
 - Multi-AZ chỉ **trong một region**; cần chống lỗi **cả region** → cross-region read replica.
 - Failover = **đổi DNS CNAME**, ứng dụng không cần đổi cấu hình endpoint; mất **60–120 s** (cluster ~35 s).
-- Backup lấy từ **standby** → không có IO pause trên primary.
+- Backup lấy từ **standby** → tránh IO pause trên primary (vẫn có thể thấy IO latency tăng nhẹ, ngắn).
 - Không có trong free tier.
-- Đề nhắc "1 writer + 2 readable standby", "failover dưới 35 giây", "Graviton + NVMe" → **Multi-AZ DB Cluster**.
+- Đề nhắc "1 writer + 2 readable standby", "failover dưới 35 giây", "semi-synchronous", "local NVMe" → **Multi-AZ DB Cluster**. Nhớ: kiểu cluster **chỉ MySQL và PostgreSQL**; engine khác (Oracle, SQL Server, MariaDB, Db2) chỉ có Multi-AZ instance.
 - Đừng nhầm Multi-AZ Cluster của RDS với Aurora: RDS cluster chỉ 2 reader và storage riêng từng instance.
 
 ## Liên kết

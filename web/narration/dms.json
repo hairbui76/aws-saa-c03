@@ -1,14 +1,14 @@
 {
  "DMS": {
-  "sig": "8-exc6qp",
+  "sig": "8-1vk58wc",
   "steps": [
-   "Sơ đồ này cho thấy cách AWS Database Migration Service hoạt động: một replication instance chạy task chuyển dữ liệu từ nguồn sang đích, với điều kiện ít nhất một đầu phải nằm trong AWS.",
-   "Mọi thứ bắt đầu từ source DB, có thể ở on-premises hoặc trong AWS. Câu hỏi đầu tiên là engine có đổi không: cùng engine thì chỉ cần DMS, khác engine thì dùng thêm SCT để chuyển schema.",
-   "Source endpoint chứa thông tin kết nối tới DB nguồn. Dữ liệu đi vào replication instance, thực chất là một EC2 có phần mềm migration, chạy được nhiều replication task cùng lúc.",
+   "Sơ đồ này cho thấy cách AWS Database Migration Service hoạt động: một replication instance, hoặc DMS Serverless, chạy task chuyển dữ liệu từ nguồn sang đích, với điều kiện ít nhất một đầu phải nằm trong AWS.",
+   "Mọi thứ bắt đầu từ source DB, có thể ở on-premises hoặc trong AWS. Câu hỏi đầu tiên là engine có đổi không: cùng engine thì chỉ cần DMS, khác engine thì phải chuyển schema trước.",
+   "Source endpoint chứa thông tin kết nối tới DB nguồn. Dữ liệu đi vào replication instance, thực chất là một EC2 có phần mềm migration chạy được nhiều task cùng lúc. Với DMS Serverless, bạn chỉ đặt min và max DCU, AWS tự lo compute.",
    "Từ replication instance, dữ liệu được đẩy tới target endpoint, nơi lưu thông tin kết nối tới database đích.",
    "Cuối cùng dữ liệu được ghi vào target DB, có thể là RDS, Aurora, Redshift, DynamoDB hay cả S3.",
    "Có ba loại task. Full load chỉ copy dữ liệu hiện có nên cần downtime. Full load cộng CDC vừa copy vừa áp thay đổi, gần như không downtime. CDC only dùng khi đã bulk load bằng công cụ native.",
-   "Lưu ý DMS không tự chuyển đổi schema. SCT là ứng dụng độc lập làm việc đó, và nay còn có DMS Schema Conversion ngay trong console.",
+   "Việc chuyển schema nay có sẵn trong DMS, gọi là DMS Schema Conversion. Công cụ riêng SCT vẫn còn, dùng cho các DB OLAP như Teradata hay Vertica mà tính năng tích hợp chưa hỗ trợ.",
    "Khi đi thi, nhớ rằng dữ liệu đi qua internet, VPN, Direct Connect hoặc VPC Peering. Thấy minimal downtime thì chọn Full load cộng CDC, và đừng nhầm DMS với DataSync dành cho file."
   ]
  },

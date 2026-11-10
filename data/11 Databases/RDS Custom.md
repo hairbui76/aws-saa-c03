@@ -2,10 +2,11 @@
 tags: [saa-c03, s11-databases, database, rds, shared-responsibility]
 aliases: [Amazon RDS Custom]
 lessons: ["0207 RDS Custom"]
+videos: ["203 RDS Custom"]
 ---
 # RDS Custom
 
-> **TL;DR:** RDS Custom là lựa chọn ở giữa RDS thường (AWS quản lý hết, không được vào OS) và tự chạy DB trên EC2 (bạn quản lý từ OS trở lên). Bạn vẫn có automation của RDS nhưng được SSH/RDP vào OS và tùy chỉnh engine. Chỉ hỗ trợ **Oracle** và **Microsoft SQL Server**.
+> **TL;DR:** RDS Custom là lựa chọn ở giữa RDS thường (AWS quản lý hết, không được vào OS) và tự chạy DB trên EC2 (bạn quản lý từ OS trở lên). Bạn vẫn có automation của RDS nhưng được SSH/RDP vào OS và tùy chỉnh engine. Hỗ trợ **Microsoft SQL Server** và **Oracle** (RDS Custom for Oracle **hết hạn 31/3/2027**).
 
 ## 🖼️ Sơ đồ
 ![[RDS Custom.excalidraw]]
@@ -15,9 +16,9 @@ lessons: ["0207 RDS Custom"]
 - **RDS thường**: database server as a service, AWS quản lý gần như mọi thứ, quyền vào OS và engine bị giới hạn ([[RDS Architecture]]).
 - **DB trên EC2**: tự quản, linh hoạt tối đa nhưng gánh toàn bộ phần việc từ OS trở lên ([[Databases on EC2]]).
 - **RDS Custom** lấp khoảng giữa: dùng được RDS, nhưng có quyền tùy biến gần giống tự chạy engine trên EC2.
-- Engine hỗ trợ: **Oracle** và **MS SQL Server**.
+- Engine hỗ trợ: **MS SQL Server** và **Oracle**, nhưng **Oracle có hạn chót 31/3/2027** (slide: "Oracle - 2027 expiry").
 - Truy cập OS và engine qua **SSH, RDP, Session Manager** (xem [[EC2 Instance Connect and SSH]]).
-- Adrian nói đây là chủ đề rất hẹp; với đề thi chỉ cần biết nó tồn tại và nó dùng để làm gì.
+- Giảng viên nói đây là chủ đề rất hẹp; với đề thi chỉ cần biết nó tồn tại và nó dùng để làm gì.
 
 ## Cách hoạt động / Kiến trúc
 
@@ -41,7 +42,7 @@ Phân chia trách nhiệm theo slide (C = customer, S = shared, A = AWS), tươn
 |---|---|---|---|---|
 | Application optimization | C | C | C | C |
 | Scaling | C | A | S | C |
-| HA | C | A | S | C |
+| HA | C | A | **A** | C |
 | Backups | C | A | S | C |
 | DB patches | C | A | S | C |
 | OS patches | C | A | S | C |
@@ -49,10 +50,10 @@ Phân chia trách nhiệm theo slide (C = customer, S = shared, A = AWS), tươn
 | Hardware | C | A | A | A |
 
 - Chạy DB trên EC2 so với on-prem chỉ được lợi ở phần hardware.
-- RDS Custom: hardware do AWS, application optimization do bạn, mọi thứ khác là **chia sẻ**.
+- RDS Custom: **hardware và HA do AWS**, application optimization do bạn, mọi thứ khác (scaling, backup, patch DB/OS, cài OS) là **chia sẻ**, tỉ lệ cụ thể tùy engine. (Bản khóa cũ xếp HA vào phần chia sẻ.)
 
 ## 🎯 Mẹo thi SAA-C03
-- "Cần managed RDS nhưng phải truy cập OS / cài agent / tùy chỉnh engine, engine là Oracle hoặc SQL Server" → **RDS Custom**.
+- "Cần managed RDS nhưng phải truy cập OS / cài agent / tùy chỉnh engine, engine là SQL Server (hoặc Oracle, tới 31/3/2027)" → **RDS Custom**.
 - Nếu engine là MySQL/PostgreSQL mà cần quyền OS → không có RDS Custom, phải chạy trên EC2.
 - Nhận diện: tài nguyên (EC2, EBS, backup) **hiện trong account của bạn**; RDS thường thì không.
 - Trước khi tùy chỉnh phải **pause automation**.

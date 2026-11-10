@@ -2,6 +2,7 @@
 tags: [saa-c03, s11-databases, database, rds, backup, disaster-recovery]
 aliases: [RDS Snapshots, RDS Automated Backups, Point-in-time Restore, PITR, RDS Restore, Final Snapshot]
 lessons: ["0202 RDS Automatic Backup RDS Snapshots and Restore", "0204 DEMO MultiAZ Snapshot Restore with RDS PART1", "0205 DEMO MultiAZ Snapshot Restore with RDS PART2"]
+videos: ["198 [ASSOCIATESHARED] RDS Automatic Backup, RDS Snapshots and Restore", "200 [ASSOCIATESHARED] [DEMO] MultiAZ & Snapshot Restore with RDS - PART1", "201 [ASSOCIATESHARED] [DEMO] MultiAZ & Snapshot Restore with RDS - PART2"]
 ---
 # RDS Backups and Restore
 
@@ -16,7 +17,7 @@ lessons: ["0202 RDS Automatic Backup RDS Snapshots and Restore", "0204 DEMO Mult
 - Vì nằm trên S3 nên backup **regionally resilient** (replicate qua nhiều AZ trong region).
 - Backup/snapshot chụp **cả instance** (mọi database trên đó), không phải từng database.
 - Nguồn backup:
-  - Có **Multi-AZ** → lấy từ **standby** → IO pause không ảnh hưởng ứng dụng. Xem [[RDS Multi-AZ]].
+  - Có **Multi-AZ** → lấy từ **standby** → IO pause xảy ra ở standby, ứng dụng gần như không bị ảnh hưởng. Xem [[RDS Multi-AZ]].
   - **Single-AZ** (dev/test) → lấy từ instance duy nhất → có thể **khựng hiệu năng**.
 
 ## Manual snapshot
@@ -38,6 +39,7 @@ lessons: ["0202 RDS Automatic Backup RDS Snapshots and Restore", "0204 DEMO Mult
 - RDS có thể **replicate backup (snapshot và transaction log) sang region khác**.
 - **Không mặc định** — phải bật rõ ràng trong cấu hình automated backup.
 - Tính phí **data transfer cross-region** + **storage ở region đích**.
+- **Chỉ hỗ trợ single-AZ và Multi-AZ instance**; **không hỗ trợ Multi-AZ DB cluster** ([[RDS Multi-AZ]]).
 
 ## Restore
 - **Restore tạo một RDS instance MỚI** → **endpoint DNS mới** → phải **cập nhật ứng dụng** trỏ sang endpoint mới. (RDS thường không restore in-place; khác với tính năng Backtrack của [[Aurora]].)
@@ -65,12 +67,12 @@ flowchart LR
 | Lưu ở | S3 AWS-managed | S3 AWS-managed |
 
 ## Demo / Lab — Snapshot và restore khi dữ liệu bị hỏng
-1. Tạo manual snapshot `a4lwordpress-with-cat-post-mysql-<version>` (Actions → Take snapshot). Snapshot đầu tiên là full, mất ~5 phút.
-2. Mô phỏng **data corruption**: đổi tiêu đề bài viết thành "Not the Best Cats Ever".
-3. Snapshots → chọn snapshot → **Restore snapshot**: nhập **DB identifier mới** `a4lwordpress-restore`, chọn VPC, subnet group, public access = No, **RDS security group**, instance class `db.t3.micro`. Mất ~10 phút.
-4. So sánh endpoint: instance restore có **endpoint DNS khác** instance gốc (phần đầu chứa tên instance + chuỗi ngẫu nhiên, sau là `<region>.rds.amazonaws.com`).
-5. Sửa `DB_HOST` trong `wp-config.php` sang endpoint mới → bài viết đúng xuất hiện lại.
-6. Dọn dẹp: xóa instance restore (không final snapshot, không giữ automated backup) → **system snapshot** của nó bị xóa theo (ngay hoặc khi hết retention); **manual snapshot vẫn còn** và được giữ lại để dùng cho demo [[Aurora]] tiếp theo.
+1. Ngay khi stack (Aus-E-Mart Web Store + RDS MySQL) chạy, tạo manual snapshot "baseline" theo tên trong hướng dẫn (Actions → Take snapshot; đặt tên có ý nghĩa, ví dụ kèm version engine). Manual snapshot do bạn quản lý, khác **system snapshot** của automated backup.
+2. Mô phỏng **data corruption**: chạy lệnh đổi giá mọi sản phẩm thành 999 USD (kiểu script chạy nhầm).
+3. Snapshots → chọn snapshot → **Restore snapshot**: thực chất là **tạo DB instance mới**, nên mọi tùy chọn lúc tạo đều mở lại (cẩn thận mặc định đắt tiền). Chọn single-AZ, **DB identifier mới** `aemwebstore-restored`, `db.t4g.micro`, gp3 20 GiB, VPC + subnet group của stack, **RDS security group** của stack, public access = No. Mất khoảng 10 phút.
+4. So sánh endpoint: web store vẫn hiện giá sai vì restore **không đụng tới DB gốc** và không đổi endpoint; instance restore có **endpoint DNS khác**.
+5. Sửa host DB trong `/etc/aem-webstore/env` sang endpoint mới, `systemctl restart aem-webstore` → giá đúng xuất hiện lại. Phải trỏ lại ứng dụng sang instance khác nên RTO kiểu này chậm.
+6. Dọn dẹp: xóa instance restore (không final snapshot, không giữ automated backup), xóa stack; **manual snapshot vẫn còn** và có thể giữ lại cho demo sau.
 
 ## 🎯 Mẹo thi SAA-C03
 - Backup RDS nằm trong **S3 do AWS quản lý** — **không thấy trong S3 console** của bạn.
@@ -79,8 +81,8 @@ flowchart LR
 - **Point-in-time restore** dùng automated backup + **transaction log 5 phút** → RPO ~5 phút.
 - **Restore = instance mới + endpoint mới** → phải đổi cấu hình ứng dụng.
 - Restore chậm → **RTO cao**; câu hỏi yêu cầu RTO thấp → read replica. Câu hỏi về **data corruption** → restore từ backup (point-in-time), **không** dùng read replica (replica cũng bị hỏng theo).
-- Cross-region backup replication **phải bật thủ công**, có phí transfer + storage.
-- Multi-AZ → backup từ standby → không ảnh hưởng hiệu năng.
+- Cross-region backup replication **phải bật thủ công**, có phí transfer + storage, và **không dùng được với Multi-AZ DB cluster** (chỉ single-AZ và Multi-AZ instance).
+- Multi-AZ → backup từ standby → ảnh hưởng hiệu năng tối thiểu.
 
 ## Liên kết
 - Tiên quyết: [[RDS Architecture]], [[RPO and RTO]], [[EBS Snapshots]]
