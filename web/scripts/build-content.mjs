@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { slugify } from './lib/updates.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const WEB = path.resolve(here, '..');
@@ -26,16 +27,6 @@ const clipName = (text) => crypto.createHash('sha1').update(`${TTS_VOICE}|${TTS_
 const audioFiles = new Set(fs.existsSync(AUDIO) ? fs.readdirSync(AUDIO) : []);
 let narrated = 0;
 let voiced = 0;
-
-const slugify = (s) =>
-  s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
 
 function parseFrontmatter(src) {
   const m = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
