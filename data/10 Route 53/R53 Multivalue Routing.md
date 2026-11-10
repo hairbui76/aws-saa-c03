@@ -39,7 +39,8 @@ flowchart LR
 |---|---|---|---|
 | Số record cùng tên | 1 (nhiều value) | 2 (primary/secondary) | Nhiều, mỗi record độc lập |
 | Health check | Không | Có (thường trên primary) | Có, từng record |
-| Trả về | Tất cả value, ngẫu nhiên | 1 record (primary hoặc secondary) | Tối đa 8 record healthy (tất cả unhealthy: vẫn trả tối đa 8) || Mô hình | 1 service | Active-passive | Active-active |
+| Trả về | Tất cả value, ngẫu nhiên | 1 record (primary hoặc secondary) | Tối đa 8 record healthy (tất cả unhealthy: vẫn trả tối đa 8) |
+| Mô hình | 1 service | Active-passive | Active-active |
 
 ## 🎯 Mẹo thi SAA-C03
 - "Trả về **nhiều IP**, chỉ những IP **healthy**", "tối đa **8**" → **Multivalue**.

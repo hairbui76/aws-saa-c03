@@ -852,14 +852,6 @@
       ],
       "dropped": []
     },
-    "R53 Interoperability": {
-      "kind": "updated",
-      "summary": "Phí đăng ký domain trả định kỳ, thường theo năm; phần lớn TLD cho đăng ký nhiều năm một lần, tới 10 năm.",
-      "changed": [
-        "Khái niệm cốt lõi"
-      ],
-      "dropped": []
-    },
     "R53 DNSSEC": {
       "dropped": [
         "Demo / Lab"

@@ -43,7 +43,7 @@ flowchart LR
     EC2["EC2 web store (nhiễm malware)"] -- "query setup.notahack.io" --> R["VPC Resolver (VPC+2)"]
     R --> RG{"Rule group: xét rule theo priority, số nhỏ trước, khớp thì dừng"}
     RG -- "ALLOW hoặc không khớp rule nào" --> OUT["Resolve bình thường"]
-    RG -- "ALERT" --> LOG["Resolve bình thường + ghi query log"]
+    RG -- "ALERT" --> LOG["Resolve bình thường + cảnh báo (vào log nếu bật resolver query logging)"]
     RG -- "BLOCK" --> B["Trả NODATA, NXDOMAIN hoặc OVERRIDE (CNAME tới trang báo chặn)"]
     RG -. "firewall không phản hồi" .-> F{"Thiết lập của VPC"}
     F -- "Fail closed (mặc định)" --> STOP["Dừng mọi DNS query của VPC"]
