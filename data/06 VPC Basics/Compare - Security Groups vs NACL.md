@@ -2,6 +2,7 @@
 tags: [saa-c03, s06-vpc-basics, networking, security, firewall, comparison]
 aliases: [SG vs NACL, NACL vs SG, Security Group vs Network ACL]
 lessons: ["0119 Network Access Control Lists NACLs", "0120 Security Groups SG"]
+videos: ["114 [ASSOCIATESHARED] Network Access Control Lists (NACLs)", "115 [ASSOCIATESHARED] Security Groups (SG)"]
 ---
 # Compare - Security Groups vs NACL
 
@@ -24,12 +25,12 @@ lessons: ["0119 Network Access Control Lists NACLs", "0120 Security Groups SG"]
 | Loại rule | Chỉ **allow**, còn lại implicit deny | **Allow và Deny** tường minh, cộng rule `*` implicit deny ở cuối |
 | Chặn một IP/dải xấu cụ thể | **Không làm được** | **Làm được** (deny rule) |
 | Thứ tự xử lý | Không có thứ tự, xét toàn bộ rule | Từ **rule number nhỏ nhất**. Rule khớp đầu tiên quyết định, rồi **dừng xét**. Deny đứng trước sẽ che allow phía sau |
-| Đối tượng trong rule | IP, CIDR, port, protocol **và logical resource** (SG khác, self-reference) | Chỉ IP, CIDR, port, protocol. **Không** tham chiếu logical resource |
+| Đối tượng trong rule | IP, CIDR, **prefix list**, port, protocol **và logical resource** (SG khác, self-reference) | Chỉ IP, CIDR, port, protocol. **Không** tham chiếu logical resource |
 | Tầng [[OSI Model]] | Cao hơn, nhiều tính năng hơn | Thấp hơn, kiểu firewall truyền thống |
-| Số lượng gắn | Một ENI gắn được nhiều SG. Một SG dùng cho nhiều ENI | **Mỗi subnet đúng 1 NACL** (default hoặc custom). **Một NACL gắn được nhiều subnet** |
+| Số lượng gắn | Một ENI gắn được nhiều SG (rule các SG **gộp lại**, xét chung). Một SG dùng cho nhiều ENI | **Mỗi subnet đúng 1 NACL** (default hoặc custom). **Một NACL gắn được nhiều subnet** |
 | Mặc định | SG mới: không có inbound rule, outbound allow all *(bổ sung theo tài liệu AWS)* | **Default NACL** của VPC: allow all vào/ra, nên coi như không có tác dụng. **Custom NACL mới tạo: chỉ có implicit deny**, nên gắn vào subnet là **chặn hết** |
 | Scale với ASG / IP thay đổi | Rất tốt nhờ tham chiếu SG | Kém, phải sửa CIDR thủ công |
-| Lọc traffic của [[NAT Gateway]] | **Không** (NATGW không gắn được SG) | **Có**, qua NACL của subnet chứa NATGW |
+| Lọc traffic của [[NAT Gateway]] | **Không** (NATGW không gắn được SG) | **Có** với NATGW **zonal**, qua NACL của subnet chứa NATGW |
 | AWS khuyến nghị dùng chính | Có | Bổ sung khi cần deny |
 
 ## Số rule cần cho một luồng: ví dụ Web → App
@@ -64,7 +65,7 @@ Packet vào phải qua **cả hai**: NACL ở biên subnet trước, sau đó t�
 - **Cho phép traffic tới resource**, nhất là kiến trúc nhiều tầng hoặc instance co giãn: dùng **SG**. Tham chiếu SG của tầng trước, dùng self-reference cho cluster.
 - **Chặn một IP hoặc dải IP cụ thể** (kẻ tấn công, mạng xấu): dùng **NACL deny**, đánh số rule nhỏ hơn rule allow.
 - **Kiểm soát thô ở cấp subnet** (ví dụ chặn toàn bộ một port cho cả subnet): dùng NACL.
-- **Lọc traffic qua NAT Gateway**: chỉ NACL.
+- **Lọc traffic qua NAT Gateway** (zonal): chỉ NACL của subnet chứa nó.
 - Chặn ở tầng ứng dụng (HTTP header, SQLi, rate limit): không phải SG hay NACL mà là [[WAF]] (xem [[Layer 7 Firewall]]).
 
 ## 🎯 Mẹo thi SAA-C03

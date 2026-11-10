@@ -4,20 +4,20 @@ aliases: [MOC VPC Basics]
 ---
 # 06 VPC Basics
 
-Section dựng một custom VPC cho Animals4life từ đầu: lập IP plan, chia subnet theo AZ × tier, cấu hình routing và Internet Gateway, đặt bastion host, lọc traffic bằng NACL và Security Group, rồi cho private subnet ra internet qua NAT Gateway. Section áp dụng trực tiếp phần nền mạng ở [[_MOC 02 Tech Fundamentals]] ([[Subnetting]], [[NAT Fundamentals]]) và là nền cho mọi section dùng EC2, RDS, ELB về sau. Phần nâng cao (endpoint, peering, flow logs) nằm ở [[_MOC 16 Advanced VPC Networking]].
+Section dựng một custom VPC cho Aus-E-Mart (bản khóa cũ: Animals4life) từ đầu: lập IP plan, chia subnet theo AZ × tier, cấu hình routing và Internet Gateway, đặt bastion host, lọc traffic bằng NACL và Security Group, rồi cho private subnet ra internet qua NAT Gateway. Section áp dụng trực tiếp phần nền mạng ở [[_MOC 02 Tech Fundamentals]] ([[Subnetting]], [[NAT Fundamentals]]) và là nền cho mọi section dùng EC2, RDS, ELB về sau. Phần nâng cao (endpoint, peering, flow logs) nằm ở [[_MOC 16 Advanced VPC Networking]].
 
 ← [[00 Home]] · Trước: [[_MOC 05 S3]] · Sau: [[_MOC 07 EC2]]
 
 ## Lộ trình học
 1. [[VPC Sizing and Structure]]: lập IP plan với CIDR không trùng mọi mạng liên quan, đủ chỗ tăng trưởng, rồi chia VPC theo AZ × tier.
-2. [[Custom VPC]]: VPC regional tự thiết kế (IPv4 /28–/16, IPv6 /56, tenancy, DNS); mặc định không có gì và không ra vào được.
-3. [[VPC Subnets]]: subnet nằm trong đúng một AZ, mất 5 IP cho AWS; subnet mới luôn là private.
-4. [[VPC Routing and Internet Gateway]]: VPC Router và route table; IGW regional; subnet public = route tới IGW + public IP; IGW làm static NAT 1:1.
+2. [[Custom VPC]]: VPC regional tự thiết kế (IPv4 /28–/16 + secondary CIDR, IPv6 Amazon cấp /56, IPAM, tenancy, DNS); mặc định không có gì và không ra vào được.
+3. [[VPC Subnets]]: subnet nằm trong đúng một AZ, mất 5 IP cho AWS; IPv6 /44–/64, có thể dual-stack; subnet mới luôn là private.
+4. [[VPC Routing and Internet Gateway]]: VPC Router và route table (longest prefix match, local route chỉ đổi được target); IGW regional; subnet public = route tới IGW + public IP; IGW làm static NAT 1:1.
 5. [[Bastion Host]]: jumpbox trong public subnet làm điểm vào SSH/RDP duy nhất; cách làm cũ, ngày nay thường thay bằng SSM.
 6. [[Stateful vs Stateless Firewalls]]: request/response và ephemeral port; stateless cần 2 rule, stateful chỉ cần rule cho request.
 7. [[NACL]]: firewall stateless ở biên subnet, rule đánh số, có cả ALLOW và DENY; chặn được IP xấu.
 8. [[Security Groups]]: firewall stateful gắn vào ENI, chỉ có allow, tham chiếu được SG khác hoặc chính nó.
-9. [[NAT Gateway]]: managed NAT cho IPv4 outbound-only; đặt trong public subnet với Elastic IP; AZ-resilient nên cần 1 NATGW mỗi AZ.
+9. [[NAT Gateway]]: managed NAT cho IPv4 outbound-only; zonal đặt trong public subnet với Elastic IP, AZ-resilient nên cần 1 NATGW mỗi AZ; regional chỉ chọn VPC, AWS tự trải qua các AZ.
 10. [[Compare - Security Groups vs NACL]]: so sánh nhiều chiều; mô hình chuẩn là SG để allow, NACL để deny bad actor.
 
 ## Bản đồ khái niệm
@@ -33,9 +33,12 @@ flowchart TB
   SUB --> PRIV
   PUB --> IGW
   PUB --> BAS["Bastion Host"]
-  PUB --> NAT["NAT Gateway (EIP, AZ-resilient)"]
+  PUB --> NAT["NAT Gateway zonal (EIP, AZ-resilient)"]
   PRIV -->|"outbound IPv4"| NAT
   NAT --> IGW
+  VPC --> RNAT["NAT Gateway regional (AWS trải các AZ)"]
+  PRIV -.->|"1 route table mọi AZ"| RNAT
+  RNAT --> IGW
   BAS -->|"SSH/RDP"| PRIV
   SF["Stateful vs Stateless"] --> NACL["NACL: stateless, allow + deny"]
   SF --> SG["Security Groups: stateful, allow only"]
@@ -61,6 +64,7 @@ flowchart TB
 - **Subnet = 1 AZ**, luôn **trừ 5 IP** (network, +1 router, +2 DNS, +3 reserved, broadcast). Subnet /28 chứa tối đa **11** instance. ([[VPC Subnets]])
 - "Có public IP nhưng không có public DNS name" → bật **enableDnsHostnames**. Không phân giải được DNS trong VPC → kiểm tra **enableDnsSupport**. ([[Custom VPC]])
 - Dedicated tenancy ở mức VPC ép mọi thứ chạy trên phần cứng dedicated và tốn tiền. Chỉ cần vài instance dedicated thì để VPC default rồi chọn tenancy ở instance. ([[Custom VPC]])
+- Local route không xóa được nhưng **đổi được target** (instance, load balancer, ENI) và bị route cụ thể hơn ghi đè: longest prefix match luôn thắng. ([[VPC Routing and Internet Gateway]])
 - Subnet public cần đủ **ba thứ**: IGW gắn vào VPC, route `0.0.0.0/0` tới IGW, public IP. IGW là **regional**, mỗi VPC tối đa **1**. ([[VPC Routing and Internet Gateway]])
 - **OS không bao giờ thấy public IPv4**. IGW làm static NAT. Đáp án bảo cấu hình public IP trong hệ điều hành là sai. ([[VPC Routing and Internet Gateway]])
 - Câu hỏi "cách an toàn nhất hoặc ít vận hành nhất để quản trị instance private" → **SSM Session Manager**, không phải bastion. Nếu có bastion thì nó phải nằm trong public subnet. ([[Bastion Host]])
@@ -68,7 +72,7 @@ flowchart TB
 - Chặn **một IP độc hại cụ thể** → **NACL** (SG không có deny). Rule NACL xét theo số nhỏ trước, khớp rule đầu tiên là dừng. ([[NACL]])
 - Custom NACL mới tạo **chặn tất cả**; default NACL cho qua hết. NACL không lọc traffic giữa hai instance cùng subnet. ([[NACL]])
 - SG gắn vào **ENI**, không gắn vào subnet. Tầng app chỉ nhận từ tầng web → **tham chiếu SG của tầng web** thay vì hard-code IP. Instance cùng nhóm nói chuyện với nhau → self-referencing SG. ([[Security Groups]])
-- NATGW đặt trong **public subnet** và chỉ **AZ-resilient** → cần 1 NATGW + 1 route table **mỗi AZ**. NATGW **không gắn được SG**, không làm bastion và không port forwarding. ([[NAT Gateway]])
-- **IPv6 + NAT Gateway thì loại ngay.** IPv6 outbound-only dùng Egress-Only IGW. Private instance chỉ cần tới S3/DynamoDB thì Gateway Endpoint rẻ hơn NATGW. ([[NAT Gateway]])
-- NAT instance phải **tắt Source/Destination Check**. Cần phương án rẻ nhất cho môi trường test thì NAT instance là ứng viên. ([[NAT Gateway]])
+- NATGW **zonal** đặt trong **public subnet** và chỉ **AZ-resilient** → cần 1 NATGW + 1 route table **mỗi AZ**. NATGW **regional** chỉ chọn VPC, AWS tự trải qua các AZ: 1 NATGW + 1 route table là đủ. NATGW **không gắn được SG**, không làm bastion và không port forwarding. ([[NAT Gateway]])
+- **IPv6 + NAT Gateway thì loại ngay** (trừ IPv6-only gọi IPv4-only: NAT64 + DNS64). IPv6 outbound-only dùng Egress-Only IGW. Private instance chỉ cần tới S3/DynamoDB thì Gateway Endpoint rẻ hơn NATGW. ([[NAT Gateway]])
+- NAT instance (legacy) phải **tắt Source/Destination Check**; chỉ dùng khi cần port forwarding hay gộp bastion. ([[NAT Gateway]])
 - Bảng nhận diện nhanh: "stateful / reference SG / gắn ENI" → SG; "stateless / deny / gắn subnet / ephemeral port" → NACL. ([[Compare - Security Groups vs NACL]])

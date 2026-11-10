@@ -10,7 +10,9 @@
     "Exam Cheat Sheet: thêm IAM Identity Center, SAML 2.0 federation, PassRole, Service Catalog, Cost Explorer / CUR / cost allocation tags, RAM, Artifact, License Manager; SCP allow phải có ở mọi tầng; CloudTrail giao log khoảng 5 phút một lần; log class của CloudWatch Logs",
     "Top mẹo thi và concept map chương 04: thêm 6 bài mới (Service Catalog, Cost Management, SAML 2.0, Identity Center, RAM, Artifact và License Manager), SCP allow ở mọi tầng, controls proactive của Control Tower",
     "Exam Cheat Sheet: KMS nay FIPS 140-3 Level 3 (CloudHSM chọn theo single-tenant), DSSE-KMS và SSE-C legacy, S3 Express One Zone, Glacier +40 KB metadata, Intelligent-Tiering 90–730 / 183–730 ngày, CORS, Requester Pays, S3 Inventory, Block Public Access mức account/organization, S3 Events tới EventBridge, presigned URL bằng role",
-    "Top mẹo thi và concept map chương 05: thêm CORS, S3 Requester Pays, S3 Inventory; SSE bắt buộc (mặc định SSE-S3), DSSE-KMS; KMS FIPS 140-3 Level 3; lifecycle qua Glacier IR ≥ 90 ngày; replication hai chiều tùy chọn"
+    "Top mẹo thi và concept map chương 05: thêm CORS, S3 Requester Pays, S3 Inventory; SSE bắt buộc (mặc định SSE-S3), DSSE-KMS; KMS FIPS 140-3 Level 3; lifecycle qua Glacier IR ≥ 90 ngày; replication hai chiều tùy chọn",
+    "Exam Cheat Sheet: NAT Gateway có chế độ zonal (mỗi AZ một cái, trong public subnet) và regional (một NATGW cho cả VPC, AWS trải qua các AZ); private NAT Gateway cho mạng private chồng lấn",
+    "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64"
   ],
   "missing": [],
   "lessons": {
@@ -510,6 +512,84 @@
     "S3 Select and Glacier Select": {
       "kind": "removed",
       "summary": "khóa mới không còn bài S3 Select / Glacier Select"
+    },
+    "Custom VPC": {
+      "kind": "updated",
+      "summary": "Thêm VPC IPAM (cấp CIDR IPv4/IPv6 từ pool); secondary CIDR: mặc định 5 tính cả primary, tăng tới 50 qua Service Quotas, không được chồng lấn và không trộn dải private chuẩn khác; IPv6 Amazon cấp mặc định /56, mặc định public nhưng có IPv6 private qua IPAM.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "VPC Subnets": {
+      "kind": "updated",
+      "summary": "Subnet IPv6 từ /44 đến /64 (bước 4, điển hình /64); subnet thuộc primary hoặc secondary CIDR; dual-stack hoặc chỉ IPv6; public IPv4 tính phí theo giờ nên cẩn thận khi bật auto-assign; demo tạo phần lớn subnet bằng script CloudShell.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Thiết lập cấp IP ở mức subnet",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "VPC Routing and Internet Gateway": {
+      "kind": "updated",
+      "summary": "Local route không xóa được nhưng đổi được target (instance, load balancer, ENI) và bị route cụ thể hơn ghi đè: longest prefix match luôn thắng (bản cũ nói local route luôn ưu tiên); router chỉ định tuyến, không lọc; EC2 không còn free tier trong demo.",
+      "changed": [
+        "VPC Router",
+        "Route Table",
+        "IPv4 public address hoạt động thế nào (rất hay ra thi)",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Bastion Host": {
+      "kind": "updated",
+      "summary": "Demo: EC2 không còn free tier nên chọn instance size rẻ; kết nối bằng EC2 Instance Connect và SSH, không còn nhắc Session Manager.",
+      "changed": [
+        "Demo / Lab"
+      ],
+      "dropped": []
+    },
+    "Security Groups": {
+      "kind": "updated",
+      "summary": "Rule SG dùng được prefix list (customer- hoặc AWS-managed); một ENI gắn nhiều SG thì rule được gộp và xét chung, một SG gắn được nhiều ENI.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng số liệu nhanh",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "NAT Gateway": {
+      "kind": "updated",
+      "summary": "Thêm availability mode regional (chỉ chọn VPC, AWS trải NATGW qua các AZ, tự quản lý IP và route ra IGW, 1 route table cho mọi AZ) bên cạnh zonal; private NAT Gateway (chỉ zonal) cho mạng chồng lấn; scale tới 100 Gbps; NAT64 + DNS64; NAT instance là legacy; demo dùng NATGW regional.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng số liệu / đặc điểm NAT Gateway",
+        "NAT Instance vs NAT Gateway",
+        "IPv6 và NAT",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Compare - Security Groups vs NACL": {
+      "kind": "updated",
+      "summary": "SG hỗ trợ prefix list và gộp rule khi ENI gắn nhiều SG; NACL chỉ lọc được NAT Gateway kiểu zonal (nằm trong subnet).",
+      "changed": [
+        "Bảng so sánh nhiều chiều",
+        "Khi nào chọn cái nào"
+      ],
+      "dropped": []
     }
   }
 }

@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s06-vpc-basics, vpc, networking, architecture, ip-planning]
-aliases: [VPC Sizing, IP Plan, VPC IP Planning, A4L IP Plan]
+aliases: [VPC Sizing, IP Plan, VPC IP Planning, A4L IP Plan, AEM IP Plan]
 lessons: ["0110 VPC Sizing and Structure PART1", "0111 VPC Sizing and Structure PART2"]
+videos: ["102 [ASSOCIATESHARED] VPC Sizing and Structure - PART1", "103 [ASSOCIATESHARED] VPC Sizing and Structure - PART2"]
 ---
 # VPC Sizing and Structure
 
@@ -24,8 +25,8 @@ lessons: ["0110 VPC Sizing and Structure PART1", "0111 VPC Sizing and Structure 
 - Giới hạn kích thước VPC (IPv4): nhỏ nhất **/28 = 16 IP**, lớn nhất **/16 = 65,536 IP**.
 - Chồng lấn (overlapping) dải IP làm cho việc kết nối mạng giữa hai bên rất khó hoặc không thể (xem [[VPC Peering]], [[Site-to-Site VPN]]).
 
-## Ví dụ Animals4life: các dải phải tránh
-Bối cảnh từ [[Animals4life Scenario]]. Các mạng đã biết và không được dùng hoặc chồng lấn:
+## Ví dụ Aus-E-Mart: các dải phải tránh
+Bối cảnh: công ty mẫu Aus-E-Mart (AEM) của khóa mới, có văn phòng London, New York, Seattle (khóa cũ dùng [[Animals4life Scenario|Animals4life]] với cùng các dải mạng). Các mạng đã biết và không được dùng hoặc chồng lấn:
 
 | Dải | Thuộc về | Phạm vi |
 |---|---|---|
@@ -40,14 +41,14 @@ Bối cảnh từ [[Animals4life Scenario]]. Các mạng đã biết và không 
 - /9 là nửa của /8: nửa trên của 10.x, tức từ 10.128 đến 10.255. Tập đọc nhanh "network address + prefix ⇒ điểm cuối của dải" (xem [[Subnetting]], [[Decimal and Binary Conversion]]).
 - 172.31.0.0/16 cũng chính là dải của **[[Default VPC]]** ⇒ thêm một lý do không dùng default VPC cho production.
 
-## Cách chọn dải: quy tắc của Adrian
+## Cách chọn dải: quy tắc của giảng viên
 - Ưu tiên dải **10.x.y.z**. Với VPC tối đa /16 thì mỗi VPC "tròn" là 10.1, 10.2, ..., 10.255.
 - **Tránh dải phổ biến**: 10.0 (mặc định của mọi thứ), 10.1 (người ta chọn khi muốn tránh 10.0), an toàn hơn thì tránh luôn tới 10.10. Bắt đầu từ **10.16** (số đẹp, base 2).
 - Trừ thêm 10.128–10.255 vì có thể là GCP ⇒ không gian dùng được: **10.16 → 10.127**.
 - Tính số dải cần: số region tối đa doanh nghiệp có thể dùng (cộng buffer) × **ít nhất 2 dải mỗi region** × số account.
-  - A4L: 3 region US + 1 Europe + 1 Australia = 5 region; ×2 = 10; × 4 account (general, prod, dev + 1 dự phòng) = **40 dải** (lý tưởng).
+  - AEM: 3 region US + 1 Europe + 1 Australia = 5 region; ×2 = 10; × 4 account (general, prod, dev + 1 dự phòng) = **40 dải** (lý tưởng).
 
-## Phân bổ thực tế cho A4L
+## Phân bổ thực tế cho AEM
 
 | Khối /16 | Dành cho |
 |---|---|
@@ -62,7 +63,7 @@ Bối cảnh từ [[Animals4life Scenario]]. Các mạng đã biết và không 
 
 - Mỗi region có 16 khối /16, chia đều cho 4 account (general, prod, dev, reserved) ⇒ **mỗi account mỗi region có 4 khối /16 = 4 VPC không chồng lấn**.
   - Ví dụ US Region 1: 10.16–10.19 general (VPC1..VPC4), 10.20–10.23 prod, 10.24–10.27 dev, 10.28–10.31 reserved.
-- VPC đầu tiên của account general ở US Region 1 = **10.16.0.0/16**, chính là VPC dùng trong [[Custom VPC]].
+- VPC đầu tiên của account general ở US Region 1 = **10.16.0.0/16**, chính là VPC `aem-vpc1` dùng trong [[Custom VPC]].
 
 ## Cấu trúc bên trong VPC: AZ × Tier
 - Service không chạy "trong VPC" trực tiếp mà chạy **trong subnet**, và **mỗi subnet nằm trong đúng một AZ** (xem [[VPC Subnets]]).

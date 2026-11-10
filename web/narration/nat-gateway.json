@@ -1,14 +1,14 @@
 {
  "NAT Gateway": {
-  "sig": "7-11lidfo",
+  "sig": "7-a0c8ly",
   "steps": [
-   "Sơ đồ này cho thấy thiết kế NAT Gateway chịu lỗi cấp region trong VPC 10.16.0.0 trên 16 ở us-east-1. Vì NAT Gateway chỉ AZ-resilient, ta đặt mỗi AZ một NAT Gateway trong public subnet.",
+   "Sơ đồ này cho thấy NAT Gateway ở chế độ zonal, thiết kế chịu lỗi cấp region trong VPC 10.16.0.0 trên 16 ở us-east-1. NAT Gateway zonal chỉ AZ-resilient nên ta đặt mỗi AZ một cái trong public subnet. Còn chế độ regional thì chỉ cần chọn VPC, AWS tự trải qua các AZ.",
    "Các EC2 trong private subnet không có public IP. Mỗi AZ có một route table private riêng, với route 0.0.0.0 trên 0 trỏ tới NAT Gateway của chính AZ đó.",
    "Mỗi route table dẫn traffic tới NAT Gateway cùng AZ. Mỗi NAT Gateway nằm trong web subnet public và có một Elastic IP riêng.",
    "Cả ba NAT Gateway cùng gửi traffic ra Internet Gateway. Internet Gateway là region-resilient nên chỉ cần một cái cho cả VPC.",
    "Tại đây Internet Gateway làm static NAT, đổi source sang Elastic IP của NAT Gateway, rồi gói tin mới đi ra Internet hoặc AWS public zone.",
    "Đừng quên route table của các public web subnet phải có route 0.0.0.0 trên 0 trỏ tới Internet Gateway. Thiếu route này thì NAT Gateway không ra ngoài được.",
-   "Khi đi thi, nhớ: một NAT Gateway cho cả region là sai nếu đề đòi HA. NAT Gateway không gắn được Security Group, chỉ dùng NACL. IPv6 outbound-only thì dùng Egress-Only IGW. NAT chỉ cho kết nối đi ra, và tính phí theo giờ cộng theo GB, không có free tier."
+   "Khi đi thi, nhớ: một NAT Gateway zonal cho cả region là sai nếu đề đòi HA, hãy đặt mỗi AZ một cái hoặc dùng NAT Gateway regional. NAT Gateway không gắn được Security Group, bản zonal lọc bằng NACL của subnet. IPv6 outbound-only thì dùng Egress-Only IGW. NAT chỉ cho kết nối đi ra, và tính phí theo giờ cộng theo GB."
   ]
  },
  "NAT Gateway - flow": {

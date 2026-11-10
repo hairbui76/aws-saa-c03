@@ -2,6 +2,7 @@
 tags: [saa-c03, s06-vpc-basics, vpc, networking, routing]
 aliases: [IGW, Internet Gateway, VPC Router, Route Table, Route Tables, Main Route Table, Public Subnet, Default Route]
 lessons: ["0115 VPC Routing Internet Gateway Bastion Hosts", "0116 DEMO Configuring A4L public subnets and Jumpbox PART1", "0117 DEMO Configuring A4L public subnets and Jumpbox PART2"]
+videos: ["108 [ASSOCIATESHARED] VPC Routing Overview", "109 [ASSOCIATESHARED] Internet Gateway", "111 [ASSOCIATESHARED] [DEMO] Configuring AEM Public Subnets and Jumpbox - PART1", "112 [ASSOCIATESHARED] [DEMO] Configuring AEM Public Subnets and Jumpbox - PART2"]
 ---
 # VPC Routing and Internet Gateway
 
@@ -19,6 +20,7 @@ lessons: ["0115 VPC Routing Internet Gateway Bastion Hosts", "0116 DEMO Configur
 - Có một interface trong **mọi subnet**, tại địa chỉ **network + 1** (xem [[VPC Subnets]]).
 - Mặc định (chưa cấu hình gì) router chỉ chuyển traffic **giữa các subnet trong VPC**.
 - Điều khiển bằng **route table**: route table gắn với subnet quyết định router làm gì với traffic **khi nó rời subnet đó**.
+- Router chỉ **định tuyến** (gói tin đi đường nào, hoặc bị drop vì không có đường); nó **không lọc** traffic theo loại (web hay SSH) hay theo nguồn. Lọc là việc của [[NACL]] và [[Security Groups]].
 
 ## Route Table
 - Mỗi VPC có một **main route table**. Subnet không được gắn route table nào rõ ràng sẽ dùng main route table.
@@ -31,8 +33,10 @@ lessons: ["0115 VPC Routing Internet Gateway Bastion Hosts", "0116 DEMO Configur
 - **Target**: hoặc là một AWS gateway (IGW, NAT gateway, peering, VGW...), hoặc là `local` (đích nằm trong VPC, router chuyển thẳng).
 - **Local route**:
   - luôn có trong mọi route table, khớp CIDR IPv4 của VPC (và CIDR IPv6 nếu có ⇒ thêm một local route IPv6);
-  - **không xóa được**, và theo khóa học là **luôn được ưu tiên**, ngoại lệ của quy tắc longest prefix.
-  - (Cập nhật: từ 2021 AWS cho phép thêm route cụ thể hơn cho một subnet CIDR trong VPC, trỏ tới appliance hoặc [[Gateway Load Balancer]] endpoint, để kiểm tra traffic giữa các subnet. Đó là kịch bản nâng cao; ở mức bài này cứ nhớ local route luôn có và không xóa được.)
+  - **không xóa được**, nhưng **đổi được target**: trỏ tới một **instance, load balancer hoặc network interface**, ví dụ khi muốn traffic nội bộ đi qua firewall tự dựng trên EC2 để kiểm tra gói tin;
+  - **ghi đè được** bằng route cụ thể hơn: longest prefix match **luôn thắng**, nên route 10.16.1.0/24 sẽ được ưu tiên hơn local route 10.16.0.0/16 (xem thêm [[Gateway Load Balancer]] cho kịch bản kiểm tra traffic giữa các subnet).
+  - *(Bản khóa cũ nêu, bài mới không nói)*: local route "luôn được ưu tiên, ngoại lệ của quy tắc longest prefix". Bài mới nói ngược lại như trên.
+- Default route (`0.0.0.0/0`, `::/0`) là route "fallback": chỉ dùng khi không route nào khác khớp.
 
 ## Internet Gateway (IGW)
 - **Region resilient**: một IGW phủ **mọi AZ** của VPC, **không cần một IGW cho mỗi AZ** (bẫy thi rất hay gặp).
@@ -77,8 +81,8 @@ sequenceDiagram
   IGW->>EC2: Đổi DST thành 10.16.16.20
 ```
 - Server bên ngoài chỉ thấy địa chỉ 43.250.192.20 và không biết gì về private IP.
-- **IPv6** thì khác: mọi IPv6 của AWS đều publicly routable, **OS được cấu hình chính địa chỉ IPv6 đó**, IGW chỉ chuyển gói qua lại, **không dịch địa chỉ**.
-- (Cập nhật: từ 02/2024 AWS tính phí mọi public IPv4, kể cả IP tự động cấp; thêm lý do để cân nhắc IPv6.)
+- **IPv6** thì khác: IPv6 do AWS cấp mặc định publicly routable, **OS được cấu hình chính địa chỉ IPv6 đó**, IGW chỉ chuyển gói qua lại, **không dịch địa chỉ**.
+- Public IPv4 **tính phí theo giờ** (xem [[VPC Subnets]]), thêm lý do để cân nhắc IPv6.
 
 ## Bảng so sánh / số liệu
 
@@ -91,24 +95,26 @@ sequenceDiagram
 
 ## Demo / Lab
 **Phần 1: làm tier web thành public**
-- Bắt đầu từ VPC A4L với 12 subnet private (có [[CloudFormation Basics|CloudFormation]] template để dựng lại nếu cần).
-- Tạo IGW `a4l-vpc1-igw` (lúc đầu ở trạng thái *detached*) → Actions → **Attach to VPC** `a4l-vpc1`. (Default VPC đã có sẵn IGW; custom VPC phải tự làm.)
-- Tạo route table `a4l-vpc1-rt-web` trong VPC → **Subnet associations**: chọn sn-web-A/B/C (chúng rời main route table).
+- Bắt đầu từ VPC `aem-vpc1` (Aus-E-Mart) với 12 subnet private dựng ở [[VPC Subnets]].
+- Tạo IGW `aem-vpc1-igw` (lúc đầu ở trạng thái *detached*) → Actions → **Attach to VPC** `aem-vpc1`. (Default VPC đã có sẵn IGW; custom VPC phải tự làm.)
+- Tạo route table `aem-vpc1-rt-web` trong VPC → **Subnet associations**: chọn sn-web-A/B/C (chúng rời main route table).
 - Tab Routes: đã có 2 local route (IPv4 và IPv6 CIDR của VPC). Thêm `0.0.0.0/0` → IGW và `::/0` → IGW. Vì /16 cụ thể hơn /0, chỉ traffic **ra ngoài VPC** mới đi theo default route.
 - Với từng subnet web: Edit subnet settings → **Enable auto-assign public IPv4 address**.
 
 **Phần 2: kiểm tra bằng bastion**
-- Launch EC2 `a4l-bastion` (Amazon Linux, t2/t3.micro free tier) vào **sn-web-A**, auto-assign public IP và IPv6 đều Enable; tạo SG `a4l-bastion-sg` cho SSH từ `0.0.0.0/0` và `::/0`.
+- Launch EC2 `aem-bastion1` (Amazon Linux mới nhất, chọn instance size rẻ: **EC2 hiện không còn free tier**) vào **sn-web-A**, auto-assign public IP và IPv6 đều Enable (theo thiết lập subnet); tạo SG `aem-bastion-sg` cho SSH (TCP 22) từ Anywhere.
 - Instance có public IPv4, private IPv4, public và private DNS name (nhờ bật DNS hostnames ở [[Custom VPC]]).
-- Kết nối: **EC2 Instance Connect** (web console, cần public IPv4) hoặc **SSH client** (`ssh -i a4l.pem ec2-user@<public DNS>`; trên macOS/Linux phải `chmod 400` file key nếu báo "permissions too open"). Cách thứ ba, **Session Manager**, không cần public IP và sẽ học sau. Chi tiết ở [[EC2 Instance Connect and SSH]] và [[Bastion Host]].
-- Dọn dẹp: terminate instance, rồi **xóa VPC** (xóa luôn IGW, route table, subnet đi kèm). Các bài sau dựng lại bằng template.
+- Kết nối: **EC2 Instance Connect** (web console, connect qua public IP; `ping 1.1.1.1` chạy được) hoặc **SSH client** (`ssh -i` file `.pem` của key pair AEM tới public DNS; trên macOS/Linux phải `chmod 400` file key trước). `ping google.com` đi qua IPv6, `ping 1.1.1.1` qua public IPv4. Chi tiết ở [[EC2 Instance Connect and SSH]] và [[Bastion Host]].
+- *(Bản khóa cũ nêu, bài mới không nói)*: cách thứ ba là **Session Manager**, không cần public IP.
+- Dọn dẹp: terminate instance, rồi **xóa VPC** (xóa luôn IGW, route table, subnet đi kèm). Các bài sau phần lớn dựng hạ tầng bằng CloudFormation one-click.
 
 ## 🎯 Mẹo thi SAA-C03
 - IGW là **regional**: đáp án "tạo một IGW cho mỗi AZ" là **sai**. Một VPC chỉ có tối đa **1 IGW**.
 - Đề hỏi "subnet public cần gì" ⇒ IGW gắn VPC **+** route `0.0.0.0/0` tới IGW trong route table của subnet **+** public IP (hoặc Elastic IP). Thiếu một trong ba ⇒ không ra internet.
 - **Không cấu hình public IPv4 trong OS**: đáp án bảo gán public IP vào card mạng trong hệ điều hành là sai. OS chỉ thấy private IP; IGW làm NAT.
 - IPv6: không có NAT, OS có địa chỉ IPv6 thật. Muốn IPv6 **chỉ đi ra** (outbound-only) ⇒ [[Egress-Only Internet Gateway]].
-- Route selection: **longest prefix match**; local route luôn có, không xóa được.
+- Route selection: **longest prefix match**, luôn đúng kể cả với local route. Local route luôn có, không xóa được, chỉ **đổi được target** (instance, load balancer, ENI) hoặc bị ghi đè bằng route cụ thể hơn.
+- Route table chỉ định tuyến, không lọc traffic: chặn theo port/IP là việc của NACL/SG.
 - Subnet không gắn route table rõ ràng ⇒ dùng **main route table**. Cẩn thận khi thêm route ra IGW vào main RT, vì mọi subnet "mặc định" sẽ thành public.
 - Instance private cần ra internet (update) mà không nhận kết nối vào ⇒ [[NAT Gateway]], không phải IGW trực tiếp.
 

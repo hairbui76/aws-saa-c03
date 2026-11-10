@@ -2,6 +2,7 @@
 tags: [saa-c03, s06-vpc-basics, vpc, networking, security, firewall]
 aliases: [NACLs, Network ACL, Network ACLs, Network Access Control List, Network Access Control Lists]
 lessons: ["0119 Network Access Control Lists NACLs"]
+videos: ["114 [ASSOCIATESHARED] Network Access Control Lists (NACLs)"]
 ---
 # NACL
 

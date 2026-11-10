@@ -2,6 +2,7 @@
 tags: [saa-c03, s06-vpc-basics, vpc, networking, security, compute]
 aliases: [Bastion, Jumpbox, Jump Box, Jump Host, Bastion Hosts]
 lessons: ["0115 VPC Routing Internet Gateway Bastion Hosts", "0116 DEMO Configuring A4L public subnets and Jumpbox PART1", "0117 DEMO Configuring A4L public subnets and Jumpbox PART2"]
+videos: ["110 [ASSOCIATESHARED] Bastion Host and Jumpboxes", "111 [ASSOCIATESHARED] [DEMO] Configuring AEM Public Subnets and Jumpbox - PART1", "112 [ASSOCIATESHARED] [DEMO] Configuring AEM Public Subnets and Jumpbox - PART2"]
 ---
 # Bastion Host
 
@@ -44,13 +45,14 @@ flowchart LR
 Điều kiện để bastion truy cập được từ internet: subnet public (IGW + default route + public IP) như ở [[VPC Routing and Internet Gateway]], và security group cho phép SSH inbound.
 
 ## Demo / Lab
-- Launch `a4l-bastion` (Amazon Linux, t2.micro/t3.micro free tier) vào **sn-web-A** của VPC A4L; auto-assign public IPv4 và IPv6 bật; tạo SG `a4l-bastion-sg` cho **SSH từ 0.0.0.0/0 và ::/0** (lab mở rộng cho tiện; thực tế nên giới hạn IP nguồn).
-- Key pair `a4l` (RSA, định dạng PEM).
-- Chờ **2/2 status checks**, rồi kết nối bằng:
-  1. **EC2 Instance Connect**: qua trình duyệt, cần instance có public IPv4, user `ec2-user`.
-  2. **SSH client**: `ssh -i "a4l.pem" ec2-user@<public-dns>`. Trên macOS/Linux, nếu báo key permissions quá mở (0644) thì chạy `chmod 400 a4l.pem`. Windows 10 thường không gặp lỗi này.
-  3. **Session Manager**: không cần public IPv4, cần cấu hình thêm, học ở phần sau.
-- Instance thuộc free tier. Dọn dẹp: terminate instance, rồi xóa VPC.
+- Launch `aem-bastion1` (Amazon Linux mới nhất, 64-bit) vào **sn-web-A** của VPC `aem-vpc1` (Aus-E-Mart); auto-assign public IPv4 và IPv6 bật theo thiết lập subnet; tạo SG `aem-bastion-sg` cho **SSH (TCP 22) từ Anywhere** (lab mở rộng cho tiện; thực tế nên giới hạn IP nguồn).
+- **EC2 hiện không còn free tier**: chọn instance size rẻ và xóa ngay sau demo.
+- Key pair `AEM` (tạo ở phần trước của khóa; mất file `.pem` thì tạo key pair mới, chỉ tải được một lần).
+- Chờ **status checks** đạt, rồi kết nối bằng:
+  1. **EC2 Instance Connect**: qua trình duyệt, connect bằng public IP (bật sẵn mặc định), user `ec2-user`; `ping 1.1.1.1` chứng minh có đường ra internet.
+  2. **SSH client**: `ssh -i` file `.pem` tới public DNS của instance. Trên macOS/Linux phải `chmod 400` file key trước. Lần đầu sẽ hỏi xác nhận authenticity của host.
+- *(Bản khóa cũ nêu, bài mới không nói)*: cách thứ ba là **Session Manager**, không cần public IPv4, cần cấu hình thêm, học ở phần sau; Windows 10 thường không gặp lỗi quyền file key.
+- Dọn dẹp: terminate instance, rồi xóa VPC.
 
 ## Bảng so sánh / số liệu
 Các cách truy cập quản trị instance private (phần ngoài khóa học bổ sung theo AWS hiện tại):

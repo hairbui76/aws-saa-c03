@@ -1,11 +1,12 @@
 ---
 tags: [saa-c03, s06-vpc-basics, vpc, networking, dns]
-aliases: [Custom VPCs, VPC, Virtual Private Cloud, enableDnsHostnames, enableDnsSupport, VPC Tenancy]
+aliases: [Custom VPCs, VPC, Virtual Private Cloud, enableDnsHostnames, enableDnsSupport, VPC Tenancy, Secondary CIDR]
 lessons: ["0112 Custom VPCs", "0383 DEMO Custom VPCs PART2"]
+videos: ["104 [SHAREDALL] Custom VPCs - PART1 - THEORY", "105 [SHAREDALL] [DEMO] Custom VPCs - PART2 - DEMO"]
 ---
 # Custom VPC
 
-> **TL;DR:** Custom VPC là mạng riêng do mình tự thiết kế trong một region: chọn CIDR IPv4 (/28 đến /16), có thể thêm IPv6 /56, chọn tenancy, rồi tự thêm subnet, route table, IGW... Khác với [[Default VPC]], custom VPC mặc định **không có gì cả** và **không có gì ra vào được** nếu chưa cấu hình rõ ràng.
+> **TL;DR:** Custom VPC là mạng riêng do mình tự thiết kế trong một region: chọn CIDR IPv4 (/28 đến /16), có thể thêm IPv6 (Amazon cấp mặc định /56), chọn tenancy, rồi tự thêm subnet, route table, IGW... Khác với [[Default VPC]], custom VPC mặc định **không có gì cả** và **không có gì ra vào được** nếu chưa cấu hình rõ ràng.
 
 ## 🖼️ Sơ đồ
 ![[Custom VPC.excalidraw]]
@@ -27,14 +28,16 @@ lessons: ["0112 Custom VPCs", "0383 DEMO Custom VPCs PART2"]
 ### IPv4
 - Mỗi VPC có **1 primary private IPv4 CIDR bắt buộc**, đặt lúc tạo VPC.
   - Nhỏ nhất **/28** (16 IP, một số IP không dùng được), lớn nhất **/16** (65,536 IP).
-- Có thể thêm **secondary IPv4 CIDR** sau khi tạo: mặc định tối đa **5** CIDR mỗi VPC, tăng được qua yêu cầu tăng quota (support ticket).
+- Có thể dùng **VPC IP Address Manager (IPAM)**, dịch vụ quản lý tập trung các dải IP của tổ chức, để cấp CIDR cho VPC từ một pool (cho cả IPv4 lẫn IPv6). IPAM có bài riêng ở phần mạng nâng cao.
+- Có thể thêm **secondary IPv4 CIDR** sau khi tạo: quota mặc định **5** CIDR IPv4 mỗi VPC **tính cả primary** (tức 1 primary + 4 secondary), tăng được qua **Service Quotas**, hiện tối đa **50**.
+- Ràng buộc khi thêm CIDR (demo): CIDR mới **không được chồng lấn** với CIDR đã có trong chính VPC đó (ví dụ VPC 10.16.0.0/16 không thêm được 10.16.1.0/24); và VPC đang dùng dải private 10.x thì **không thêm được** dải private chuẩn khác như 172.16.0.0/16 (hay 192.168.x). Còn trùng với VPC *khác* thì AWS vẫn cho tạo, vì mỗi VPC là một mạng cách ly; chỉ gặp vấn đề khi nối chúng với nhau (xem [[VPC Sizing and Structure]]).
 - Private IP là phương thức giao tiếp chính trong VPC. Public IP chỉ dùng khi tài nguyên cần nói chuyện với internet hoặc AWS public zone (xem [[AWS Public vs Private Services]]).
 - Cách nghĩ đơn giản: VPC có một "pool" private IPv4, và tùy chọn dùng thêm public IP.
 
 ### IPv6
-- Tùy chọn: gán **IPv6 /56** cho VPC.
-- Không tự chọn được dải như IPv4: hoặc để **AWS cấp (Amazon-provided)**, hoặc dùng dải IPv6 **mình sở hữu** (BYOIP). (Console hiện nay có thêm tùy chọn cấp từ IPAM.)
-- IPv6 **không có khái niệm private/public**: mọi địa chỉ IPv6 AWS cấp đều **publicly routable**. Tuy vậy vẫn phải cấu hình tường minh (route, IGW, firewall) mới có kết nối internet, nên không phải lo về bảo mật; chỉ bớt việc phân biệt public/private.
+- Tùy chọn: gán IPv6 CIDR cho VPC; dải Amazon cấp mặc định là **/56**.
+- Không tự gõ dải như IPv4. Ba nguồn: **AWS cấp (Amazon-provided)**, cấp từ pool IPv6 trong **IPAM**, hoặc dải IPv6 **mình sở hữu** (BYOIP).
+- IPv6 **mặc định là public**: địa chỉ IPv6 **publicly routable**, không chia private/public như IPv4. AWS có hỗ trợ dải **IPv6 private**, nhưng phải chủ động opt in qua IPAM. Dù publicly routable, vẫn phải cấu hình tường minh (route, IGW, firewall) mới có kết nối internet, nên không làm giảm bảo mật; chỉ bớt một bước quản trị.
 - Tính năng IPv6 chưa đầy đủ bằng IPv4 ở mọi dịch vụ, nhưng nên cân nhắc bật IPv6 làm mặc định.
 
 ### DNS trong VPC
@@ -49,11 +52,11 @@ lessons: ["0112 Custom VPCs", "0383 DEMO Custom VPCs PART2"]
 - Gặp sự cố DNS trong VPC (thực tế hoặc đề thi) thì kiểm tra hai thuộc tính này trước tiên. Chúng cũng là điều kiện cần cho [[R53 Private Hosted Zones]] và private DNS của [[Interface VPC Endpoints]].
 
 ## Cách hoạt động / Kiến trúc
-Kiến trúc mục tiêu của cả section: VPC `a4l-vpc1` 10.16.0.0/16 ở us-east-1, 4 tier (reserved, db, app, web) × 3 AZ dùng thật + chừa chỗ cho AZ thứ tư. Sau đó dần thêm [[VPC Routing and Internet Gateway|Internet Gateway]], [[NAT Gateway]], [[Bastion Host]], [[NACL]].
+Kiến trúc mục tiêu của cả section: VPC `aem-vpc1` 10.16.0.0/16 ở us-east-1, 4 tier (reserved, db, app, web) × 3 AZ dùng thật + chừa chỗ cho AZ thứ tư. Sau đó dần thêm [[VPC Routing and Internet Gateway|Internet Gateway]], [[NAT Gateway]], [[Bastion Host]], [[NACL]].
 
 ```mermaid
 flowchart LR
-  subgraph VPC["a4l-vpc1 10.16.0.0/16 + IPv6 /56 (us-east-1)"]
+  subgraph VPC["aem-vpc1 10.16.0.0/16 + IPv6 /56 (us-east-1)"]
     A["AZ A: chưa có subnet"]
     B["AZ B: chưa có subnet"]
     C["AZ C: chưa có subnet"]
@@ -67,14 +70,16 @@ flowchart LR
 ## Demo / Lab
 1. Đăng nhập IAM admin của management account, region **us-east-1**. Vào VPC console → Create VPC.
 2. Chọn **VPC only** (wizard "VPC and more" tạo luôn subnet/route table/gateway; khóa học cố ý làm từng bước).
-3. Name `a4l-vpc1`, IPv4 CIDR **10.16.0.0/16** (lấy từ IP plan ở [[VPC Sizing and Structure]]), tenancy **Default**, chọn **Amazon-provided IPv6 CIDR block**.
+3. Name `aem-vpc1` (Aus-E-Mart), **IPv4 CIDR manual input** **10.16.0.0/16** (lấy từ IP plan ở [[VPC Sizing and Structure]]; nếu có IPAM thì chọn được "IPAM-allocated"). IPv6: các lựa chọn là No IPv6, IPAM, IPv6 CIDR owned by me, **Amazon-provided IPv6 CIDR block** (chọn cái này). Tenancy để **Default** (các tùy chọn khác như network border group, VPC encryption để nguyên).
 4. Sau khi tạo: Actions → **Edit VPC settings** → bật cả **DNS resolution** (thường đã bật) và **DNS hostnames** (custom VPC mặc định tắt).
-5. Kết quả: VPC có VPC ID, IPv4 10.16.0.0/16, IPv6 /56 do AWS cấp (mỗi người một dải khác nhau), **không có subnet nào**. VPC đi kèm main route table, main (default) NACL và DHCP option set.
+5. Kết quả: VPC có VPC ID, IPv4 10.16.0.0/16, IPv6 /56 do AWS cấp (mỗi người một dải khác nhau), **không có subnet nào**; tab **Resource map** chỉ thấy VPC và vài cấu hình mặc định. VPC đi kèm main route table, main (default) NACL và DHCP option set.
+6. Actions → **Edit CIDRs**: thêm được nhiều CIDR IPv4 và IPv6. Thử thêm 10.16.1.0/24 (trùng dải đang dùng) hoặc 172.16.0.0/16 (dải private chuẩn khác) đều báo lỗi.
 - VPC và subnet **không tính phí**.
 
 ## 🎯 Mẹo thi SAA-C03
 - VPC: **regional**, trải trên mọi AZ của region; subnet mới là AZ-level.
-- Kích thước IPv4: **/28 → /16**; IPv6 VPC: **/56**, không tự chọn dải (AWS cấp hoặc BYOIP).
+- Kích thước IPv4: **/28 → /16**; IPv6 VPC: Amazon cấp mặc định **/56**, không tự gõ dải (AWS cấp, IPAM hoặc BYOIP). IPv6 mặc định publicly routable.
+- Secondary IPv4 CIDR: mặc định **5 CIDR/VPC tính cả primary**, tăng qua Service Quotas (tối đa 50); CIDR thêm vào không được chồng lấn CIDR đã có của VPC.
 - Đề nói "instance có public IP nhưng không có public DNS name" ⇒ bật **enableDnsHostnames**. Đề nói "không phân giải được DNS trong VPC/private hosted zone" ⇒ kiểm tra **enableDnsSupport** (và enableDnsHostnames).
 - DNS resolver luôn ở **network + 2** của VPC.
 - **Dedicated tenancy** ở mức VPC ép mọi tài nguyên lên phần cứng dedicated và tốn tiền. Muốn chỉ một vài instance dedicated thì để VPC default và chọn ở instance.

@@ -14,13 +14,13 @@
   ]
  },
  "VPC Sizing and Structure - ip-plan": {
-  "sig": "6-19jky83",
+  "sig": "6-k3973p",
   "steps": [
-   "Sơ đồ này nói về IP plan cho Animals4life: dùng không gian từ 10.16 đến 10.127, rồi chia lần lượt theo region, account và VPC sao cho không chồng lấn.",
+   "Sơ đồ này nói về IP plan cho Aus-E-Mart: dùng không gian từ 10.16 đến 10.127, rồi chia lần lượt theo region, account và VPC sao cho không chồng lấn.",
    "Đây là bảng phân bổ các khối trên 16. Tránh 10.0 đến 10.15 vì quá phổ biến, tránh 10.128 trở lên vì có thể là GCP, phần giữa chia cho từng region.",
    "Trong mỗi region, 16 khối được chia đều cho bốn account: general, prod, dev và reserved. Đồng thời phải loại các dải đã dùng như on-prem, văn phòng, AWS pilot, Azure trùng Default VPC và GCP.",
    "Số dải cần được tính theo nhu cầu: 5 region, mỗi region ít nhất 2 dải, nhân 4 account, ra khoảng 40 dải lý tưởng.",
-   "US Region 1 nhận 10.16 đến 10.31. Account general lấy 10.16 đến 10.19, tức bốn VPC, và VPC đầu tiên chính là a4l-vpc1 với 10.16.0.0 trên 16.",
+   "US Region 1 nhận 10.16 đến 10.31. Account general lấy 10.16 đến 10.19, tức bốn VPC, và VPC đầu tiên chính là aem-vpc1 với 10.16.0.0 trên 16.",
    "Khi đi thi, nếu peering, VPN hoặc Direct Connect không chạy được, hãy nghĩ ngay tới CIDR chồng lấn và chọn dải không overlap."
   ]
  }

@@ -2,6 +2,7 @@
 tags: [saa-c03, s06-vpc-basics, vpc, networking, security, firewall]
 aliases: [Stateful Firewall, Stateless Firewall, Ephemeral Ports, Request and Response]
 lessons: ["0118 Stateful vs Stateless Firewalls"]
+videos: ["113 [ASSOCIATESHARED] Stateful vs Stateless Firewalls"]
 ---
 # Stateful vs Stateless Firewalls
 
@@ -19,7 +20,7 @@ lessons: ["0118 Stateful vs Stateless Firewalls"]
 - Bộ bốn **source IP, source port, destination IP, destination port** xác định duy nhất một kết nối.
 
 ### Hướng đi phụ thuộc góc nhìn
-Ví dụ Bob (119.18.36.73, port 13337) truy cập server Catagram (1.3.3.7:443):
+Ví dụ Bob (119.18.36.73, port 13337) truy cập server KangarooGram (1.3.3.7:443):
 
 | Phần | Gói tin | Góc nhìn client | Góc nhìn server |
 |---|---|---|---|

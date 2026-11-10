@@ -37,7 +37,7 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 ### Networking (VPC, hybrid, DNS)
 | Từ khóa trong đề | Chọn | Note |
 |---|---|---|
-| Private subnet ra Internet (IPv4), không nhận kết nối vào | **NAT Gateway** trong public subnet, mỗi AZ một cái | [[NAT Gateway]] |
+| Private subnet ra Internet (IPv4), không nhận kết nối vào | **NAT Gateway**: zonal thì đặt trong public subnet, mỗi AZ một cái; regional thì một NATGW cho cả VPC (AWS trải qua các AZ) | [[NAT Gateway]] |
 | IPv6 outbound-only | **Egress-Only IGW** | [[Egress-Only Internet Gateway]] |
 | Chặn một IP/dải IP độc hại | **NACL** deny rule | [[NACL]] |
 | Truy cập S3/DynamoDB private, rẻ nhất | **Gateway endpoint** | [[Gateway VPC Endpoints]] |
@@ -368,7 +368,7 @@ Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và 
 **Networking**
 - Security Group không có deny. Chặn IP cụ thể dùng NACL ([[Compare - Security Groups vs NACL]]).
 - NACL: rule DENY số lớn hơn ALLOW thì vô tác dụng; quên mở outbound ephemeral 1024–65535 ([[NACL]]).
-- NAT Gateway: đặt trong **public** subnet, không có SG, chỉ HA trong một AZ ([[NAT Gateway]]).
+- NAT Gateway: không có SG. **Zonal** đặt trong **public** subnet, chỉ HA trong một AZ; **regional** chỉ chọn VPC, AWS tự trải qua các AZ. NAT giữa mạng private có CIDR chồng lấn: private NAT Gateway ([[NAT Gateway]]).
 - IPv6 + NAT Gateway là sai. IPv6 outbound-only dùng Egress-Only IGW ([[Egress-Only Internet Gateway]]).
 - VPC peering **không transitive**, CIDR trùng thì không peer được ([[VPC Peering]]).
 - "Gateway endpoint mỗi AZ" sai; "một interface endpoint là đủ HA" cũng sai ([[Compare - Gateway vs Interface Endpoints]]).

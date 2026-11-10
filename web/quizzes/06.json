@@ -182,11 +182,11 @@
         "options": [
           "Có thể tự chọn bất kỳ dải IPv6 /48 nào cho VPC giống như IPv4",
           "IPv6 trong VPC được chia thành dải private và public giống IPv4",
-          "VPC nhận một dải /56 do AWS cấp hoặc dải mình sở hữu (BYOIP); mọi địa chỉ đều publicly routable nhưng vẫn cần route và firewall mới ra internet",
+          "VPC nhận dải IPv6 (mặc định /56) do AWS cấp, từ IPAM hoặc dải mình sở hữu (BYOIP); địa chỉ mặc định publicly routable nhưng vẫn cần route và firewall mới ra internet",
           "Bật IPv6 làm instance tự động truy cập được từ internet mà không cần route hay IGW"
         ],
         "answer": [2],
-        "explain": "IPv6 VPC là /56, không tự chọn dải tùy ý (Amazon-provided hoặc BYOIP), và không có khái niệm private/public. Dù publicly routable, vẫn phải cấu hình route, IGW và firewall tường minh."
+        "explain": "Dải IPv6 Amazon cấp mặc định là /56 và không tự gõ dải tùy ý (Amazon-provided, IPAM hoặc BYOIP). IPv6 mặc định publicly routable, không chia private/public như IPv4 (dải IPv6 private phải opt in qua IPAM). Dù publicly routable, vẫn phải cấu hình route, IGW và firewall tường minh."
       }
     ],
     "NACL": [
@@ -255,7 +255,7 @@
     "NAT Gateway": [
       {
         "type": "single",
-        "q": "Một công ty có private subnet ở 3 AZ. Các instance cần tải patch từ internet nhưng không được nhận kết nối từ internet, và kiến trúc phải tiếp tục hoạt động khi một AZ hỏng. Giải pháp nào đáp ứng?",
+        "q": "Một công ty dùng NAT Gateway kiểu zonal cho private subnet ở 3 AZ. Các instance cần tải patch từ internet nhưng không được nhận kết nối từ internet, và kiến trúc phải tiếp tục hoạt động khi một AZ hỏng. Thiết kế zonal nào đáp ứng?",
         "options": [
           "Một NAT Gateway trong public subnet của AZ-A, mọi private subnet trỏ 0.0.0.0/0 tới nó",
           "Mỗi AZ một NAT Gateway trong public subnet của AZ đó, mỗi AZ một route table private trỏ 0.0.0.0/0 tới NAT Gateway cùng AZ",
@@ -263,19 +263,19 @@
           "Mỗi AZ một NAT Gateway đặt trong chính private subnet"
         ],
         "answer": [1],
-        "explain": "NAT Gateway chỉ AZ-resilient, nên HA cấp region cần 1 NATGW + 1 route table private cho mỗi AZ. Một NATGW duy nhất sẽ chết theo AZ của nó; IGW thì một VPC chỉ có một."
+        "explain": "NAT Gateway zonal chỉ AZ-resilient, nên HA cấp region cần 1 NATGW + 1 route table private cho mỗi AZ. Một NATGW zonal duy nhất sẽ chết theo AZ của nó; IGW thì một VPC chỉ có một. (Nếu dùng NAT Gateway regional thì AWS tự trải NATGW qua các AZ, chỉ cần một route table.)"
       },
       {
         "type": "single",
-        "q": "Một công ty có VPC cho môi trường test với lưu lượng ra internet rất thấp và chấp nhận availability thấp hơn. Yêu cầu chi phí NAT thấp nhất. Giải pháp nào phù hợp?",
+        "q": "Một công ty cần cho private subnet ở 3 AZ đi ra internet qua IPv4, chịu được lỗi một AZ, và muốn ít vận hành nhất: không phải tự quản lý Elastic IP hay mỗi AZ một route table. Giải pháp nào phù hợp?",
         "options": [
-          "NAT Gateway ở mỗi AZ",
-          "Egress-Only Internet Gateway",
-          "Gán public IPv4 cho mọi instance private",
-          "NAT instance nhỏ (có thể thuộc free tier) đã tắt Source/Destination Check"
+          "Một NAT Gateway zonal trong public subnet của AZ-A, mọi private subnet trỏ 0.0.0.0/0 tới nó",
+          "Một NAT Gateway regional cho VPC, một route table private trỏ 0.0.0.0/0 tới nó và gắn cho private subnet ở cả 3 AZ",
+          "Ba NAT instance, mỗi AZ một cái, đã tắt Source/Destination Check",
+          "Egress-Only Internet Gateway cho VPC"
         ],
-        "answer": [3],
-        "explain": "NAT Gateway tính phí theo giờ và theo GB xử lý, không có free tier; NAT instance nhỏ rẻ hơn cho môi trường test. Egress-Only IGW chỉ dùng cho IPv6, không làm NAT cho IPv4."
+        "answer": [1],
+        "explain": "NAT Gateway regional chỉ cần chọn VPC; AWS tự trải và scale NATGW qua các AZ, tự quản lý public IP và route ra IGW, nên một route table private dùng chung cho mọi AZ. NATGW zonal đơn lẻ chết theo AZ; NAT instance là cách legacy, tốn công vận hành; Egress-Only IGW chỉ dành cho IPv6."
       },
       {
         "type": "single",
@@ -306,13 +306,13 @@
         "q": "Phát biểu nào đúng về NAT Gateway? (Chọn 2)",
         "options": [
           "Có thể gắn Security Group để lọc traffic đi qua",
-          "Không gắn được Security Group; chỉ lọc được bằng NACL của subnet chứa nó",
+          "Không gắn được Security Group; NAT Gateway zonal lọc được bằng NACL của subnet chứa nó",
           "Phải đặt trong private subnet để bảo vệ Elastic IP",
           "Không hỗ trợ port forwarding và không dùng làm bastion host được",
-          "Một NAT Gateway tự động chịu lỗi cho cả region"
+          "Một NAT Gateway zonal tự động chịu lỗi cho cả region"
         ],
         "answer": [1, 3],
-        "explain": "NATGW là dịch vụ managed, không truy cập OS nên không gắn SG, không port forwarding, không làm bastion. Nó nằm ở public subnet và chỉ AZ-resilient."
+        "explain": "NATGW là dịch vụ managed, không truy cập OS nên không gắn SG, không port forwarding, không làm bastion. NATGW zonal (public) nằm ở public subnet và chỉ AZ-resilient; muốn chịu lỗi cả region thì mỗi AZ một NATGW zonal hoặc dùng NATGW regional."
       }
     ],
     "Security Groups": [
@@ -615,15 +615,15 @@
       },
       {
         "type": "single",
-        "q": "Một VPC có dải IPv6 /56. Mỗi subnet nhận dải IPv6 kích thước bao nhiêu và VPC chứa được tối đa bao nhiêu subnet IPv6 như vậy?",
+        "q": "Một VPC có dải IPv6 /56. Subnet IPv6 được phép có kích thước nào, và nếu chia theo kích thước điển hình /64 thì VPC chứa được tối đa bao nhiêu subnet IPv6?",
         "options": [
-          "/48, 256 subnet",
-          "/64, 256 subnet",
-          "/64, 16 subnet",
-          "/60, 16 subnet"
+          "Chỉ đúng /64; 16 subnet",
+          "Từ /44 đến /64 theo bước 4; 256 subnet /64",
+          "Từ /16 đến /28; 256 subnet /64",
+          "Chỉ đúng /56; 1 subnet"
         ],
         "answer": [1],
-        "explain": "Mỗi subnet nhận một /64 cắt từ /56 của VPC, tức 8 bit chênh lệch = 256 subnet (hex 00 → FF)."
+        "explain": "CIDR IPv6 của subnet là tập con của dải IPv6 của VPC, từ /44 đến /64 theo bước 4 (/44, /48, /52...). Điển hình là /64: /56 chia thành /64 chênh 8 bit, tức 256 subnet (hex 00 → FF). /16 đến /28 là giới hạn của IPv4."
       }
     ]
   }

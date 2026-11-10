@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s06-vpc-basics, vpc, networking, high-availability]
-aliases: [Subnet, Subnets, Reserved IPs, DHCP Options Set, Multi-tier VPC subnets]
+aliases: [Subnet, Subnets, Reserved IPs, DHCP Options Set, Multi-tier VPC subnets, Dual-stack subnet]
 lessons: ["0113 VPC Subnets", "0114 DEMO Implement multi tier VPC subnets"]
+videos: ["106 [ASSOCIATESHARED] VPC Subnets", "107 [SHAREDALL] [DEMO] Implement Multi-Tier VPC Subnets"]
 ---
 # VPC Subnets
 
@@ -18,10 +19,11 @@ lessons: ["0113 VPC Subnets", "0114 DEMO Implement multi tier VPC subnets"]
   - **1 AZ ⇒ 0..nhiều subnet**.
 - Muốn HA: đặt các thành phần vào **nhiều subnet ở nhiều AZ** (xem [[HA vs FT vs DR]]).
 - **IPv4 CIDR** của subnet:
-  - phải là tập con của CIDR của VPC;
+  - phải là tập con của CIDR của VPC: thuộc **primary hoặc một secondary CIDR** của VPC (xem [[Custom VPC]]);
   - **không được chồng lấn** với subnet khác trong cùng VPC (cũng hay ra thi).
   - Kích thước subnet: /28 đến /16.
-- **IPv6** (tùy chọn, chỉ khi VPC đã có IPv6): mỗi subnet nhận một **/64** cắt từ /56 của VPC ⇒ một VPC /56 chứa **256** subnet /64 (giá trị hex 00 → FF).
+- **IPv6** (tùy chọn, chỉ khi VPC đã có IPv6): CIDR IPv6 của subnet là tập con của một dải IPv6 của VPC, kích thước từ **/44 đến /64, bước 4** (/44, /48, /52, /56, /60, /64). Điển hình là **/64**: cắt /64 từ /56 của VPC ⇒ một VPC /56 chứa **256** subnet /64 (giá trị hex 00 → FF).
+- Subnet có thể **dual-stack** (cả IPv4 và IPv6), chỉ IPv4, hoặc chỉ IPv6 (demo cho thấy tạo được subnet không có IPv4).
 - Mặc định **các subnet trong cùng VPC nói chuyện tự do với nhau**: cách ly của VPC nằm ở **biên VPC**, không phải giữa các subnet (route `local`, xem [[VPC Routing and Internet Gateway]]).
 - Quy ước màu trên sơ đồ AWS: **xanh dương = private subnet**, **xanh lá = public subnet**.
 
@@ -46,11 +48,12 @@ Ví dụ subnet **10.16.16.0/20** (10.16.16.0 → 10.16.31.255):
 
 ## Thiết lập cấp IP ở mức subnet
 - **Auto-assign public IPv4**: tài nguyên launch vào subnet tự nhận thêm public IPv4 bên cạnh private IP. Đây là **một trong các bước để làm subnet thành public**.
+  - Cẩn thận khi bật: **public IPv4 tính phí theo giờ**, và mọi tài nguyên trong subnet đều nhận public IP.
 - **Auto-assign IPv6 address**: tài nguyên nhận IPv6; yêu cầu cả VPC và subnet đã có dải IPv6.
 - Cả hai đặt **theo từng subnet** và áp cho tài nguyên trong subnet đó.
 
 ## Cách hoạt động / Kiến trúc
-Cấu trúc A4L sau bài này: VPC 10.16.0.0/16, 4 tier × 3 AZ = **12 subnet /20**; khối thứ 4 (10.16.192.0/18) để dành cho AZ tương lai.
+Cấu trúc AEM (Aus-E-Mart) sau bài này: VPC `aem-vpc1` 10.16.0.0/16, 4 tier × 3 AZ = **12 subnet /20**; khối thứ 4 (10.16.192.0/18) để dành cho AZ tương lai.
 
 | AZ | Reserved | DB | APP | WEB |
 |---|---|---|---|---|
@@ -60,7 +63,7 @@ Cấu trúc A4L sau bài này: VPC 10.16.0.0/16, 4 tier × 3 AZ = **12 subnet /2
 
 ```mermaid
 flowchart TB
-  subgraph VPC["a4l-vpc1 10.16.0.0/16"]
+  subgraph VPC["aem-vpc1 10.16.0.0/16"]
     subgraph A["AZ A"]
       a1["sn-reserved-A"]
       a2["sn-db-A"]
@@ -85,19 +88,20 @@ flowchart TB
 Lúc này cả 12 subnet đều **private** (kể cả web). Tier web sẽ thành public ở [[VPC Routing and Internet Gateway]].
 
 ## Demo / Lab
-- Dùng một subnet calculator: nhập 10.16.0.0/16, chọn **16 subnet** ⇒ ra các khối /20: 10.16.0.0, 10.16.16.0, 10.16.32.0... (dù chỉ dùng 12).
-- File `subnets.txt` trong repo khóa học liệt kê tên, CIDR, AZ, giá trị IPv6 cho từng subnet.
-- Console mới cho phép **tạo nhiều subnet trong một lần**: làm từng batch 4 subnet cho mỗi AZ. Mỗi subnet: chọn VPC `a4l-vpc1`, tên `sn-<tier>-<AZ>`, AZ, IPv4 CIDR /20, **Custom IPv6** với giá trị hex tăng dần 00…0B (lưu ý 09 → **0A**, không phải 10).
-- Sau khi tạo: với từng subnet, **Edit subnet settings → Enable auto-assign IPv6 address**. Chưa bật auto-assign public IPv4 (để dành cho bài IGW).
-- Trang chi tiết subnet hiển thị: số IPv4 còn trống (đã trừ 5 IP), IPv6 CIDR, AZ, **route table** và **network ACL** đang gắn, các thiết lập auto-assign.
-- Làm tay một lần để hiểu; các bài sau sẽ tự động hóa bằng [[CloudFormation Basics|CloudFormation]].
+- File text kế hoạch subnet (tải kèm video) liệt kê tên, CIDR IPv4, AZ, giá trị IPv6 cho từng subnet của `aem-vpc1`.
+- Tạo tay **2 subnet đầu** (reserved-A, db-A) trong **một lần Create subnet** (console cho thêm nhiều subnet một lượt). Mỗi subnet: chọn VPC `aem-vpc1`, tên, AZ (us-east-1a), IPv4 CIDR /20; IPv6: chọn block /56 của VPC, bấm mũi tên xuống hai lần để thành **/64**, rồi tăng giá trị hex (00, 01...) để các subnet nằm liền nhau.
+- Sau khi tạo: **Edit subnet settings → Enable auto-assign IPv6 address** (thiết lập này không đặt được lúc tạo). Chưa bật auto-assign public IPv4 vì có phí và sẽ làm ở bài IGW.
+- Phần còn lại dùng **script trong CloudShell** (upload file script, `chmod +x`, chạy với mặc định `aem-vpc1` và `us-east-1`): script kiểm tra đúng VPC, **xóa mọi subnet trong VPC đó** rồi tạo lại đủ **12 subnet** (reserved/db/app/web × A/B/C) và bật auto-assign IPv6. Không chạy script này ở account production.
+- *(Bản khóa cũ nêu, bài mới không nói)*: dùng subnet calculator chia 10.16.0.0/16 thành 16 khối /20; lưu ý giá trị hex 09 → **0A**; trang chi tiết subnet hiển thị số IPv4 còn trống (đã trừ 5 IP), route table và network ACL đang gắn.
+- Thực tế triển khai chuẩn hóa như vầy thường dùng [[CloudFormation Basics|CloudFormation]]; demo dùng console để thấy các thiết lập.
 
 ## 🎯 Mẹo thi SAA-C03
 - **Subnet = 1 AZ**. Đáp án nào nói một subnet trải nhiều AZ là **sai**.
 - CIDR subnet phải nằm trong CIDR của VPC và **không overlap** với subnet khác.
 - Đếm IP dùng được: **trừ 5**. Câu hỏi kiểu "subnet /28 chạy được tối đa bao nhiêu instance" ⇒ **11**.
 - Nhớ 3 IP riêng của AWS: **+1 router, +2 DNS, +3 reserved**, cộng network và broadcast.
-- Subnet mới luôn private. Public cần IGW + route mặc định + public IP (auto-assign).
+- Subnet mới luôn private. Public cần IGW + route mặc định + public IP (auto-assign; public IPv4 có tính phí theo giờ).
+- IPv6 subnet: /44 → /64 (bước 4), điển hình **/64**. Subnet có thể dual-stack hoặc chỉ IPv6.
 - Muốn đổi DNS/NTP server cho VPC ⇒ tạo **DHCP option set mới** và gắn vào VPC (không sửa set cũ).
 - Mặc định subnet trong cùng VPC **định tuyến thẳng tới nhau**. Muốn chặn giữa subnet thì dùng [[NACL]] hoặc [[Security Groups]].
 

@@ -1,7 +1,8 @@
 ---
 tags: [saa-c03, s06-vpc-basics, networking, security, firewall]
-aliases: [SG, Security Group]
+aliases: [SG, Security Group, Prefix List]
 lessons: ["0120 Security Groups SG"]
+videos: ["115 [ASSOCIATESHARED] Security Groups (SG)"]
 ---
 # Security Groups
 
@@ -18,45 +19,49 @@ lessons: ["0120 Security Groups SG"]
   - allow tường minh;
   - **implicit deny**: không allow thì bị chặn.
   - Hệ quả: đã allow một dải (ví dụ `0.0.0.0/0`) thì **không thể chặn một IP con** trong dải đó, như IP của kẻ tấn công. Muốn chặn phải dùng [[NACL]].
-- **Gắn vào ENI, không phải instance hay subnet.** Console cho chọn SG "cho instance", nhưng thực tế SG được gắn vào **primary ENI** của instance (xem [[EC2 Network Interfaces IPs and DNS]]). Đây là ý Adrian nhắc riêng cho kỳ thi.
+- **Gắn vào ENI, không phải instance hay subnet.** Console cho chọn SG "cho instance", nhưng thực tế SG được gắn vào **primary ENI** của instance (xem [[EC2 Network Interfaces IPs and DNS]]). Đây là ý giảng viên nhắc riêng cho kỳ thi. SG dùng được cho EC2, load balancer và nhiều resource khác trong VPC (đều qua ENI).
+- **Nhiều SG trên một resource**: một ENI có thể gắn nhiều SG; khi đó **rule của mọi SG được gộp thành một tập** và xét chung cho traffic vào/ra ENI đó. Ngược lại, một SG gắn được cho **nhiều ENI**.
 - Có **inbound rules** và **outbound rules**. SG áp lên mọi traffic vào/ra ENI đó. Theo hình dung của bài giảng, SG "bao quanh" network interface.
-- SG làm việc ở tầng cao hơn NACL trong [[OSI Model]] nên có nhiều tính năng hơn. Ngoài IP/CIDR, rule còn tham chiếu được **logical resource** của AWS: SG khác, hoặc chính SG đó (self-reference).
+- SG làm việc ở tầng cao hơn NACL trong [[OSI Model]] nên có nhiều tính năng hơn. Rule hỗ trợ:
+  - **IP/CIDR** như NACL;
+  - **prefix list**: danh sách dải IP dùng chung, do mình (customer-managed) hoặc AWS (AWS-managed) quản lý, giúp gom các IP hay dùng vào một chỗ;
+  - **logical resource** của AWS: SG khác, hoặc chính SG đó (self-reference).
 
 ## Cách hoạt động / Kiến trúc
 
 ### 1. Rule cơ bản theo IP/CIDR
-Bob truy cập web instance trong public subnet qua TCP 443. SG `A4L-web` có inbound rule: `TCP 443` từ `0.0.0.0/0`. Response từ instance về Bob tự được cho qua vì SG stateful. Nếu Bob là kẻ xấu thì SG không giúp được, vì không có cách viết rule "deny IP của Bob".
+Bob truy cập web instance trong public subnet qua TCP 443. SG `AEM-web` có inbound rule: `TCP 443` từ `0.0.0.0/0`. Response từ instance về Bob tự được cho qua vì SG stateful. Nếu Bob là kẻ xấu thì SG không giúp được, vì không có cách viết rule "deny IP của Bob".
 
 ### 2. Tham chiếu SG khác (logical reference)
-Kiến trúc 2 tầng: web instance (public subnet, SG `A4L-web`) cần gọi app instance (private subnet, SG `A4L-app`) qua TCP 1337.
+Kiến trúc 2 tầng của web store Aus-E-Mart: web instance (public subnet, SG `AEM-web`) cần gọi app instance backend (private subnet, SG `AEM-app`) qua TCP 1337.
 
 Có ba cách mở traffic:
 1. Đưa IP của web instance vào SG app. Cách này gãy ngay khi IP đổi hoặc khi scale.
-2. Đưa CIDR của web subnet vào SG app. Chạy được nhưng rộng hơn cần thiết.
-3. **Dùng chính SG `A4L-web` làm source** trong inbound rule của `A4L-app`. Đây là cách tốt nhất.
+2. Đưa CIDR của web subnet vào SG app, hoặc dùng một **customer-managed prefix list** chứa các IP cần cho phép. Chạy được nhưng chưa tận dụng tính năng của SG.
+3. **Dùng chính SG `AEM-web` làm source** trong inbound rule của `AEM-app`. Đây là cách tốt nhất.
 
 ```mermaid
 flowchart LR
   Bob["Bob (Internet)"] -- "TCP 443 (source 0.0.0.0/0)" --> WEB
   subgraph PUB["Public web subnet"]
-    WEB["Web instance - SG A4L-web"]
+    WEB["Web instance - SG AEM-web"]
   end
   subgraph PRIV["Private app subnet"]
-    APP["App instance - SG A4L-app"]
+    APP["App instance - SG AEM-app"]
   end
-  WEB -- "TCP 1337 (source = SG A4L-web)" --> APP
+  WEB -- "TCP 1337 (source = SG AEM-web)" --> APP
 ```
 
 - Khi SG X làm source trong rule, nghĩa là **"mọi resource đang gắn SG X"**, không phải chỉ SG X với tư cách một object.
 - Lợi ích:
   - Không phải quản lý IP hay CIDR.
-  - **Scale tự động**: instance mới gắn `A4L-web` được phép gọi app ngay, instance mới gắn `A4L-app` được bảo vệ ngay.
+  - **Scale tự động**: instance mới gắn `AEM-web` được phép gọi app ngay, instance mới gắn `AEM-app` được bảo vệ ngay.
   - Giảm công quản trị và lỗi cấu hình ở ứng dụng nhiều tầng.
 
 ### 3. Self-reference
-Trong một private subnet, số app instance thay đổi liên tục (1, 3 hay 30 instance tùy tải, ví dụ do [[Auto Scaling Groups]] thêm hoặc bớt). SG `A4L-app` có thể có:
-- Rule `All traffic` với source **chính `A4L-app`**: mọi instance gắn SG này nói chuyện tự do với nhau.
-- Rule `TCP 1337` với source `A4L-web`: nhận request từ tầng web.
+Trong một private subnet, số app instance thay đổi liên tục (1, 3 hay 30 instance tùy tải, ví dụ do [[Auto Scaling Groups]] thêm hoặc bớt). SG `AEM-app` có thể có:
+- Rule `All traffic` với source **chính `AEM-app`**: mọi instance gắn SG này nói chuyện tự do với nhau.
+- Rule `TCP 1337` với source `AEM-web`: nhận request từ tầng web.
 
 "Self reference" nghĩa là "bất cứ thứ gì đang gắn SG này". Rule tự áp dụng khi instance được **thêm hoặc bớt** khỏi SG và tự xử lý việc **IP thay đổi**. Use case: giao tiếp nội bộ ứng dụng như Microsoft Domain Controllers (xem [[Directory Service]]) hay cluster HA của ứng dụng.
 
@@ -66,11 +71,12 @@ Trong một private subnet, số app instance thay đổi liên tục (1, 3 hay 
 | Trạng thái | Stateful |
 | Gắn vào | ENI (gián tiếp: EC2, RDS, Lambda trong VPC, ELB...) |
 | Loại rule | Chỉ allow, cộng implicit deny |
-| Source/Destination | IP, CIDR, SG khác, chính nó (và prefix list) |
+| Source/Destination | IP, CIDR, prefix list (customer- hoặc AWS-managed), SG khác, chính nó |
+| Nhiều SG trên một ENI | Được; rule của các SG gộp lại và xét chung |
 | Thứ tự rule | Không có thứ tự, xét toàn bộ rule cùng lúc |
 | Mặc định của SG mới tạo | Không có inbound rule (chặn hết inbound), outbound allow all *(bổ sung theo tài liệu AWS, bài giảng không nói)* |
 
-> Bổ sung ngoài bài giảng: mặc định mỗi SG có tối đa 60 inbound + 60 outbound rule, và mỗi ENI gắn được tối đa 5 SG. Cả hai quota đều tăng được.
+> Bổ sung ngoài bài giảng (bài không nói): mặc định mỗi SG có tối đa 60 inbound + 60 outbound rule, và mỗi ENI gắn được tối đa 5 SG. Cả hai quota đều tăng được.
 
 ## 🎯 Mẹo thi SAA-C03
 - **SG gắn vào ENI**, không gắn vào instance hay subnet. Gặp đáp án "gắn SG vào subnet" thì loại.
@@ -79,7 +85,8 @@ Trong một private subnet, số app instance thay đổi liên tục (1, 3 hay 
 - SG **stateful**: không cần rule cho ephemeral port của response. Đề mô tả việc phải mở 1024–65535 outbound thì đang nói về NACL.
 - Tầng app chỉ nên nhận từ tầng web: chọn **tham chiếu SG của tầng web làm source**, không hard-code IP hay CIDR. Đây là đáp án scale tốt và ít tốn công quản trị nhất.
 - Các instance cùng nhóm cần nói chuyện với nhau (cluster, ASG) thì dùng **self-referencing SG**.
-- [[NAT Gateway]] **không gắn được SG**. Chỉ lọc được bằng NACL trên subnet chứa nó (xem [[NAT Gateway]]).
+- [[NAT Gateway]] **không gắn được SG**. NAT Gateway kiểu zonal nằm trong subnet nên lọc được bằng NACL của subnet đó (xem [[NAT Gateway]]).
+- Một ENI gắn nhiều SG ⇒ rule **gộp lại** (hợp các allow), không có SG nào "chặn" được SG khác vì không có deny.
 
 ## Liên kết
 - Tiên quyết: [[Stateful vs Stateless Firewalls]], [[Layer 4 Transport]], [[VPC Subnets]], [[EC2 Network Interfaces IPs and DNS]]
