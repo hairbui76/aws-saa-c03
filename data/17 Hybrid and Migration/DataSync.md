@@ -2,6 +2,7 @@
 tags: [saa-c03, s17-hybrid-and-migration, storage, migration, data-transfer]
 aliases: [AWS DataSync, Data Sync]
 lessons: ["0313 DataSync"]
+videos: ["286 AWS DataSync"]
 ---
 # DataSync
 
@@ -19,21 +20,21 @@ lessons: ["0313 DataSync"]
   - Archive dữ liệu sang storage giá rẻ của AWS (ví dụ các [[S3 Storage Classes]] lạnh).
   - Một phần của kế hoạch DR / business continuity (xem [[HA vs FT vs DR]]).
 - **Quy mô (số liệu theo khóa học):**
-  - Mỗi **agent ~10 Gbps**, tương đương khoảng **100 TB/ngày**. Muốn nhanh hơn thì thêm agent (nếu đường truyền đủ băng thông).
-  - Mỗi task (job) xử lý được tới khoảng **50 triệu file**.
+  - Mỗi **task ~10 Gbps**, tương đương khoảng **100 TB/ngày** (bản khóa cũ nói ~10 Gbps **mỗi agent**).
+  - Bản khóa cũ nêu, bài mới không nói: mỗi task xử lý được tới khoảng **50 triệu file**.
 - **Giữ metadata**: permission, timestamp. Đây là điều kiện cần khi migrate cấu trúc thư mục phức tạp.
 - **Built-in data validation** (bật mặc định): dữ liệu tới AWS được so khớp với bản gốc. Ví dụ hay gặp: chuyển hồ sơ y tế/ảnh chụp cần chứng minh dữ liệu không bị sai lệch.
 
 ### Tính năng chính
 | Tính năng | Ý nghĩa |
 |---|---|
-| Scalable | ~10 Gbps/agent (~100 TB/ngày), thêm agent để scale |
+| Scalable | ~10 Gbps/task (~100 TB/ngày) |
 | Bandwidth limiter | Đặt trần băng thông (MiB/s) để không làm nghẽn đường internet, giảm ảnh hưởng tới người dùng |
 | Incremental & scheduled | Chỉ chuyển phần thay đổi; đặt lịch chạy vào hoặc tránh một số khung giờ |
 | Compression & encryption | Nén dữ liệu; mã hóa in-transit bằng TLS (xem [[SSL and TLS]]) |
-| Automatic recovery | Tự phục hồi khi lỗi đường truyền |
-| Service integration | S3 (mọi storage class), [[EFS]], FSx (ví dụ [[FSx for Windows]]); hỗ trợ cả service-to-service, ví dụ EFS → EFS, kể cả cross-region |
-| Giá | Pay-as-you-use, tính theo **GB dữ liệu được chuyển** |
+| Recovery khi lỗi đường truyền | Transfer bị ngắt thì lần chạy sau **chỉ chuyển phần còn thiếu**, dữ liệu cuối cùng đầy đủ và nhất quán |
+| Service integration | S3 (các storage class), [[EFS]] và **cả họ FSx**: [[FSx for Windows]], [[FSx for Lustre]], FSx for NetApp ONTAP, FSx for OpenZFS. Hỗ trợ cả service-to-service, ví dụ EFS → EFS, kể cả cross-region |
+| Giá | Pay-as-you-use: phí theo **GB dữ liệu được chuyển**, cộng một khoản nhỏ **mỗi lần chạy** nếu dùng **enhanced mode** (khi cần throughput lớn hơn) |
 
 ## Cách hoạt động / Kiến trúc
 
@@ -64,10 +65,11 @@ flowchart LR
 
 ### Các thành phần
 - **Task**: một "job". Định nghĩa đồng bộ cái gì, tốc độ bao nhiêu (throttle), lịch chạy, và **hai location**: FROM và TO.
-- **Agent**: phần mềm đọc/ghi vào data store on-premises qua NFS hoặc SMB, kéo dữ liệu lên AWS hoặc đẩy ngược về.
-- **Location**: mỗi task có đúng hai location (nguồn và đích). Ví dụ: NFS, SMB, Amazon EFS, Amazon FSx, Amazon S3.
+- **Agent**: phần mềm đọc/ghi vào data store on-premises qua **NFS, SMB**, và cả **HDFS** (cluster Hadoop) hay **object storage**, kéo dữ liệu lên AWS hoặc đẩy ngược về.
+- **Location**: mỗi task có đúng hai location (nguồn và đích). Ví dụ: NFS, SMB, Amazon EFS, Amazon FSx, Amazon S3. Location còn có thể là **storage của cloud khác**, như **Azure Blob Storage** hay **Google Cloud Storage**.
+- **Cần agent** khi một đầu là **storage tự quản lý** (NFS, SMB…). Truyền **giữa các dịch vụ AWS với nhau thì không cần agent**.
 
-> Ghi chú cập nhật (2026): khóa học chỉ nêu S3/EFS/FSx for Windows. Hiện nay DataSync hỗ trợ thêm nhiều location khác (HDFS, object storage tự host, các FSx khác như [[FSx for Lustre]], storage của cloud khác), agent chạy được trên VMware, Hyper-V, KVM hoặc EC2, và truyền giữa các dịch vụ AWS với nhau thì không cần agent. Đề SAA-C03 vẫn chỉ hỏi ở mức kiến trúc.
+> Bổ sung, bài không nói: agent chạy được trên VMware, Hyper-V, KVM hoặc EC2. Đề SAA-C03 vẫn chỉ hỏi ở mức kiến trúc.
 
 ## 🎯 Mẹo thi SAA-C03
 - Câu hỏi DataSync thường **không** hỏi chi tiết tính năng. Đề bắt bạn **chọn giữa DataSync và một cách khác** để đưa dữ liệu vào AWS.
@@ -75,9 +77,11 @@ flowchart LR
   - Chuyển **online / qua mạng** (loại Snowball/Snowball Edge, vốn là thiết bị vật lý → [[Snow Family]]).
   - Truyền **hai chiều** (vào và ra AWS).
   - Cần **schedule**, **bandwidth throttling**, **incremental**, **automatic retry**, **compression**, **data validation/integrity**.
-  - Đích là **S3, EFS hoặc FSx**; nguồn là NAS/SAN dùng **NFS hoặc SMB**.
+  - Đích là **S3, EFS hoặc FSx** (mọi loại FSx); nguồn là NAS/SAN dùng **NFS hoặc SMB**, HDFS, object storage, hoặc storage của **cloud khác** (Azure Blob, Google Cloud Storage).
   - Khối lượng dữ liệu lớn, nhiều file, cần tin cậy.
 - Nhớ kiến trúc: **agent on-premises** → (NFS/SMB tới storage nội bộ) → **DataSync endpoint** → S3/EFS/FSx.
+- **Agent chỉ cần** khi có storage tự quản lý (NFS/SMB…). Chuyển **giữa các dịch vụ AWS** (ví dụ EFS → EFS khác region) thì **không cần agent**.
+- Một task ~**10 Gbps** (~100 TB/ngày).
 - Phân biệt:
   - [[Storage Gateway]]: tích hợp **lâu dài** (hybrid storage, file/volume/tape gateway, cache cục bộ). DataSync dùng để **di chuyển/đồng bộ** dữ liệu.
   - [[Snow Family]]: offline, khi băng thông không đủ hoặc dữ liệu quá lớn so với thời gian cho phép.

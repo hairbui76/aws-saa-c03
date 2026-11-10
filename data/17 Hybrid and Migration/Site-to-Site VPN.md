@@ -2,6 +2,7 @@
 tags: [saa-c03, s17-hybrid-and-migration, networking, vpn, high-availability, hybrid]
 aliases: [S2S VPN, AWS Site-to-Site VPN, AWS VPN, VGW, Virtual Private Gateway, CGW, Customer Gateway, Static VPN, Dynamic VPN]
 lessons: ["0298 AWS Site to Site VPN", "0299 DEMO Simple Site2Site VPN STAGE0 SETUP", "0300 DEMO Simple Site2Site VPN STAGE1 AWS VPN", "0301 DEMO Simple Site2Site VPN STAGE2 onprem pfSense Config", "0302 DEMO Simple Site2Site VPN STAGE3 Routing Security", "0303 DEMO Simple Site2Site VPN STAGE4 Testing", "0304 DEMO Simple Site2Site VPN STAGE5 Cleanup"]
+videos: ["277 AWS Site-to-Site VPN - PART1", "278 AWS Site-to-Site VPN - PART2"]
 ---
 # Site-to-Site VPN
 
@@ -64,13 +65,13 @@ Hai loại có cùng kiến trúc: subnet → VPC router → VGW → CGW. Chỉ 
 ## Bảng so sánh / số liệu: VPN considerations
 | Khía cạnh | Chi tiết |
 |---|---|
-| **Tốc độ** | **1.25 Gbps** tối đa cho một VPN connection (2 tunnel). VGW **tổng cộng** cũng bị cap ~1.25 Gbps. Còn phụ thuộc khả năng của customer router, vì mã hóa IPsec tốn CPU |
+| **Tốc độ** | **1.25 Gbps** tối đa cho một VPN connection (2 tunnel), đây là giới hạn của AWS. Còn phụ thuộc khả năng của customer router, vì mã hóa IPsec tốn CPU. Cần **hơn 1.25 Gbps** thì **không dùng được VPN gắn VGW**: chọn [[Direct Connect]], hoặc **VPN tạo trên [[Transit Gateway]]** (hỗ trợ throughput lớn hơn) |
 | **Latency** | Đi qua public Internet, nhiều hop, nên latency **cao và không ổn định** |
 | **Chi phí** | Phí **theo giờ** cho mỗi VPN connection, phí **data transfer out**, cộng thêm việc dùng băng thông và **data cap** của đường Internet on-prem |
 | **Tốc độ triển khai** | **Vài giờ hoặc ít hơn**, vì hoàn toàn là cấu hình phần mềm. IPsec có trên gần như mọi router, kể cả router dân dụng |
 | **Kết hợp DX** | Làm **backup** cho [[Direct Connect]], dùng **tạm** trong lúc chờ DX (DX mất hàng tuần tới hàng tháng), hoặc chạy **trên** DX để mã hóa (xem [[Direct Connect Public VIF and VPN]]) |
 
-> (Khóa học nói giới hạn cứng 1.25 Gbps/tunnel. Hiện nay AWS có thêm tùy chọn tunnel băng thông lớn hơn cho VPN gắn [[Transit Gateway]]/Cloud WAN, và TGW hỗ trợ **ECMP** để gộp nhiều tunnel. VGW thì không có hai khả năng này. Với đề thi, cứ nhớ **~1.25 Gbps/tunnel**.)
+> (Bổ sung, bài không nói: VPN trên TGW đạt throughput lớn hơn nhờ tùy chọn tunnel băng thông lớn và **ECMP** gộp nhiều tunnel; VGW không có hai khả năng này. Bản khóa cũ chỉ nói giới hạn cứng 1.25 Gbps; bài mới nói thêm "> 1.25 Gbps thì dùng DX hoặc VPN trên TGW".)
 
 ## Demo / Lab: Simple Site-to-Site VPN (AWS ↔ pfSense)
 **Kiến trúc**: AWS VPC `10.16.0.0/16` có *AWS Server A* (web app). Môi trường on-prem **giả lập** trong một VPC khác `192.168.8.0/21`: router **pfSense** (từ Marketplace, trial 30 ngày) có hai interface WAN và LAN, cùng một *on-prem server* Windows trong private subnet `192.168.10.0/24`. Làm trong us-east-1, dựng bằng one-click CloudFormation, cần tạo trước key pair `infra`.
@@ -99,7 +100,7 @@ Hai loại có cùng kiến trúc: subnet → VPC router → VGW → CGW. Chỉ 
 
 ## 🎯 Mẹo thi SAA-C03
 - **"Nhanh nhất / setup trong vài giờ / chi phí thấp / cần mã hóa qua Internet"** → Site-to-Site VPN.
-- **"> 1.25 Gbps"** hoặc **"latency thấp và ổn định"** → không chọn VPN, chọn [[Direct Connect]].
+- **"> 1.25 Gbps"** → không chọn VPN gắn VGW; chọn [[Direct Connect]] hoặc VPN trên [[Transit Gateway]]. **"Latency thấp và ổn định"** → [[Direct Connect]].
 - Một VPN connection = **2 tunnel tới 2 AZ**, nhưng chỉ là **partial HA** nếu chỉ có **1 CGW**. Muốn **full HA** thì cần **2 CGW** (2 router, 2 ISP, lý tưởng là 2 tòa nhà) và **2 VPN connection**.
 - **Dynamic VPN cần BGP** trên customer router. Không có BGP thì chỉ dùng được static.
 - **Route propagation** giúp route on-prem tự vào VPC route table.
@@ -109,4 +110,4 @@ Hai loại có cùng kiến trúc: subnet → VPC router → VGW → CGW. Chỉ 
 ## Liên kết
 - Tiên quyết: [[IPSec VPN]], [[BGP]], [[VPC Routing and Internet Gateway]], [[Custom VPC]]
 - Liên quan: [[Direct Connect]], [[Direct Connect Public VIF and VPN]], [[Transit Gateway]], [[Security Groups]], [[NACL]], [[AWS Public vs Private Services]]
-- Phân biệt với: [[Compare - VPN vs Direct Connect]], [[VPC Peering]]
+- Phân biệt với: [[Compare - VPN vs Direct Connect]], [[VPC Peering]], [[Client VPN]] (từng máy client kết nối vào VPC, không phải cả site)

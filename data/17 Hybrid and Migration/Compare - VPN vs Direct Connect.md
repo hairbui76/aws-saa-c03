@@ -2,10 +2,11 @@
 tags: [saa-c03, s17-hybrid-and-migration, networking, comparison, hybrid]
 aliases: [VPN vs DX, VPN vs Direct Connect, Site-to-Site VPN vs Direct Connect]
 lessons: ["0298 AWS Site to Site VPN", "0305 Direct Connect DX Concepts"]
+videos: ["277 AWS Site-to-Site VPN - PART1", "278 AWS Site-to-Site VPN - PART2", "280 AWS Direct Connect (DX) - Concepts", "282 AWS Direct Connect (DX) - VPNs"]
 ---
 # Compare - VPN vs Direct Connect
 
-> **TL;DR:** [[Site-to-Site VPN]] là kết nối **logic, mã hóa IPsec, chạy qua internet công cộng**: dựng nhanh (dưới một giờ đến vài giờ), rẻ, nhưng bị giới hạn ~1.25 Gbps và latency không ổn định. [[Direct Connect]] (DX) là **kết nối vật lý riêng** vào AWS: tốc độ cao (1/10/100 Gbps), latency thấp và ổn định, nhưng mất **hàng tuần đến hàng tháng** để provision, **không mã hóa** và **không có resilience sẵn**. Thực tế hay **kết hợp** cả hai.
+> **TL;DR:** [[Site-to-Site VPN]] là kết nối **logic, mã hóa IPsec, chạy qua internet công cộng**: dựng nhanh (dưới một giờ đến vài giờ), rẻ, nhưng VPN gắn VGW bị giới hạn ~1.25 Gbps và latency không ổn định. [[Direct Connect]] (DX) là **kết nối vật lý riêng** vào AWS: tốc độ cao (1/10/100/400 Gbps), latency thấp và ổn định, nhưng mất **hàng tuần đến hàng tháng** để provision, **không mã hóa** và **không có resilience sẵn**. Thực tế hay **kết hợp** cả hai.
 
 ## 🖼️ Sơ đồ
 ![[Compare - VPN vs Direct Connect.excalidraw]]
@@ -21,7 +22,7 @@ lessons: ["0298 AWS Site to Site VPN", "0305 Direct Connect DX Concepts"]
 | Bản chất | Kết nối **logic** (software-defined) VPC ↔ on-prem | **Port vật lý** tại DX location, nối bằng cross-connect (cáp quang) |
 | Đường truyền | **Public internet** (trừ khi chạy VPN trên DX) | Mạng riêng, **không** qua internet |
 | Mã hóa | **Có**: IPsec | **Không** mặc định (thêm VPN trên public VIF để mã hóa) |
-| Băng thông | **~1.25 Gbps** mỗi VPN connection/tunnel; VGW cũng có trần tổng ~1.25 Gbps (theo khóa học) | **1 / 10 / 100 Gbps** (dedicated), gần như đạt tối đa tốc độ port |
+| Băng thông | **~1.25 Gbps** mỗi VPN connection (2 tunnel) với VPN gắn VGW. Cần hơn thì dùng DX hoặc **VPN tạo trên [[Transit Gateway]]** (throughput lớn hơn) | **1 / 10 / 100 / 400 Gbps** (dedicated), gần như đạt tối đa tốc độ port |
 | Latency | **Cao hơn, không ổn định** (nhiều hop internet) | **Thấp và ổn định** |
 | Overhead | Có overhead mã hóa/giải mã (CPU), đáng kể ở tốc độ cao | Không |
 | Thời gian setup | **Nhanh**: < 1 giờ đến vài giờ, toàn bộ là cấu hình | **Chậm**: AWS cấp port, rồi cross-connect, rồi kéo cáp tới văn phòng; **tuần đến tháng** |
@@ -31,7 +32,7 @@ lessons: ["0298 AWS Site to Site VPN", "0305 Direct Connect DX Concepts"]
 | Truy cập | Vào VPC (qua VGW hoặc [[Transit Gateway]]) | **Private VIF** → VGW/VPC; **Public VIF** → dịch vụ public của AWS (S3, SQS, EIP...); **Transit VIF** → [[Transit Gateway]]. **Không** ra internet (trừ khi tự đặt proxy) |
 | Routing | Static hoặc Dynamic ([[BGP]]); route propagation | [[BGP]] |
 
-> Cập nhật (2026): tài liệu AWS hiện ghi trần 1.25 Gbps là **mỗi tunnel**. Có thể cộng gộp băng thông bằng **ECMP qua [[Transit Gateway]]** với nhiều tunnel/connection. DX dedicated hiện có thêm tốc độ 400 Gbps ở một số location, và có **hosted connection** tốc độ thấp hơn qua partner. Trên đề, coi "> 1.25 Gbps" là dấu hiệu loại VPN.
+> Bài mới nói rõ: cần **> 1.25 Gbps** thì không dùng được VPN gắn VGW, phải chọn DX hoặc VPN trên TGW; DX đặt từ AWS có port tới **400 Gbps**. (Bổ sung, bài không nói: TGW gộp băng thông nhiều tunnel bằng **ECMP**; DX còn có **hosted connection** tốc độ thấp hơn qua partner.) Trên đề, "> 1.25 Gbps" là dấu hiệu loại VPN thường (VGW).
 
 ## Kiến trúc tóm tắt
 
@@ -66,12 +67,12 @@ flowchart LR
 - **Kết hợp:**
   1. **VPN trước, DX sau**: dựng VPN để có kết nối ngay, đặt DX song song. Khi DX lên thì thay VPN hoặc giữ cả hai.
   2. **DX chính + VPN backup**: HA rẻ hơn hai DX.
-  3. **VPN chạy trên DX (Public VIF)**: thêm mã hóa IPsec cho lưu lượng DX ([[Direct Connect Public VIF and VPN]]).
+  3. **VPN chạy trên DX**: thêm mã hóa IPsec cho lưu lượng DX, qua **public VIF** (public endpoint của VGW/TGW) hoặc qua **transit VIF + DX Gateway + TGW** (private IP VPN, không dùng public IP) ([[Direct Connect Public VIF and VPN]]).
 
 ## 🎯 Mẹo thi SAA-C03
 - "**Nhanh nhất** / trong vài giờ / ngay lập tức" → **VPN**. DX không bao giờ là đáp án khi cần kết nối gấp.
-- "**> 1.25 Gbps**", "**latency thấp, ổn định**", "không đi qua internet" → **DX**.
-- "DX + **mã hóa**" → **VPN over DX** (IPsec qua Public VIF). Bản thân DX **không mã hóa**.
+- "**> 1.25 Gbps**", "**latency thấp, ổn định**", "không đi qua internet" → **DX**. Chỉ cần băng thông VPN > 1.25 Gbps (vẫn qua internet) → VPN trên **Transit Gateway**.
+- "DX + **mã hóa**" → **VPN over DX** (IPsec qua Public VIF; muốn **chỉ dùng IP private** thì private IP VPN qua transit VIF + TGW). Bản thân DX **không mã hóa**.
 - "DX cần **HA nhưng tiết kiệm**" → thêm **VPN làm backup**. "HA tối đa" → nhiều DX ở nhiều DX location ([[Direct Connect Resilience]]).
 - VPN chỉ **fully HA** khi phía khách hàng cũng có **2 router + 2 đường internet**. Một CGW = **single point of failure** (partial HA).
 - Muốn **failover tự động / nhiều đường / dùng cùng DX** → **dynamic VPN (BGP)**. Router không hỗ trợ BGP thì chỉ dùng được static VPN.

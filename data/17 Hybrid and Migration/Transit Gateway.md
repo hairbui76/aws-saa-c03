@@ -2,6 +2,7 @@
 tags: [saa-c03, s17-hybrid-and-migration, networking, transit-gateway, hybrid]
 aliases: [TGW, AWS Transit Gateway]
 lessons: ["0307 Transit Gateway"]
+videos: ["283 Transit Gateway"]
 ---
 # Transit Gateway
 
@@ -17,7 +18,8 @@ lessons: ["0307 Transit Gateway"]
   - **VPC attachment**: chỉ định **một subnet trong mỗi AZ** cần dùng TGW, cách làm giống [[Interface VPC Endpoints]].
   - **Site-to-Site VPN attachment**: TGW đóng vai trò **điểm terminate VPN phía AWS**, thay cho VGW.
   - **Direct Connect Gateway attachment**: tích hợp DX qua **transit VIF**.
-  - **Peering attachment**: peer với TGW khác, **cross-region**, cùng account hoặc **cross-account**.
+  - **Peering attachment**: peer với TGW khác, **cross-region**, cùng account hoặc **cross-account**. Peering attachment **chỉ hỗ trợ static route**: phải tự thêm route trỏ vào peering attachment, không học tự động được.
+  - Còn vài loại khác, ví dụ **Connect attachment** cho **SD-WAN appliance**.
 - **Route table**: mặc định có một **default route table** để route giữa các attachment. Có thể tạo **nhiều route table** để xây topology phức tạp, ví dụ cách ly nhóm VPC.
 - **Transitive routing**: traffic có thể đi VPC-A → TGW → VPC-B hoặc VPC → TGW → on-prem, miễn là route table có route phù hợp. Đây là điểm khác cơ bản so với [[VPC Peering]].
 - **Global network**: peer nhiều TGW giữa các region. Traffic cross-region đi trên **AWS global network** nên latency ổn định hơn Internet.
@@ -26,7 +28,7 @@ lessons: ["0307 Transit Gateway"]
 ## Cách hoạt động / Kiến trúc
 
 ### Không có TGW: full mesh
-Ví dụ Animals4life có 4 VPC (A, B, C, D) và một văn phòng, cần mọi điểm thông với nhau và HA hoàn toàn:
+Ví dụ Aus-E-Mart có 4 VPC (A, B, C, D) và một văn phòng, cần mọi điểm thông với nhau và HA hoàn toàn:
 - VPC peering **không transitive**, nên phải tạo full mesh: **6 peering connection** (công thức n(n−1)/2 với n = 4).
 - VPN cũng không transitive. Mỗi VPC cần VPN tới CGW: 4 VPC × 2 tunnel = **8 tunnel**.
 - Muốn full HA thì cần CGW thứ hai, thêm **8 tunnel** nữa.
@@ -63,7 +65,9 @@ flowchart TB
 - VPC attachment cần **một subnet trong mỗi AZ** muốn dùng.
 - DX tích hợp với TGW qua **Direct Connect Gateway + transit VIF**.
 - Có **nhiều route table** để phân tách routing, ví dụ prod và dev không được thông nhau.
-- So với VGW, VPN terminate trên TGW còn hỗ trợ **ECMP** để gộp băng thông nhiều tunnel. Đây là kiến thức bổ sung ngoài bài giảng.
+- **Peering attachment chỉ dùng static route**: route tới TGW bên kia phải thêm thủ công.
+- VPN tạo trên TGW hỗ trợ throughput **lớn hơn 1.25 Gbps** của VPN gắn VGW (bài [[Site-to-Site VPN]] nói). (Bổ sung, bài không nói: nhờ **ECMP** gộp băng thông nhiều tunnel.)
+- **Private IP VPN** qua Direct Connect (transit VIF + DX Gateway) **chỉ làm được với TGW** (xem [[Direct Connect Public VIF and VPN]]).
 
 ## Liên kết
 - Tiên quyết: [[VPC Peering]], [[Site-to-Site VPN]], [[Direct Connect]], [[VPC Routing and Internet Gateway]]

@@ -63,6 +63,70 @@
         "explain": "BGP là path-vector protocol, chỉ xét độ dài AS_PATH chứ không xét tốc độ hay tình trạng link. Giữa các AS khác nhau là eBGP, không phải iBGP."
       }
     ],
+    "Client VPN": [
+      {
+        "type": "single",
+        "q": "Một công ty có 200 nhân viên làm việc từ xa, mỗi người cần truy cập private vào các ứng dụng trong VPC qua Internet bằng laptop. Họ không muốn tự dựng và quản lý VPN server. Giải pháp nào phù hợp?",
+        "options": [
+          "AWS Site-to-Site VPN với một Customer Gateway cho mỗi laptop",
+          "AWS Client VPN",
+          "AWS Direct Connect với private VIF",
+          "Tự dựng OpenVPN server trên EC2"
+        ],
+        "answer": [1],
+        "explain": "Client VPN là bản managed của OpenVPN, cho từng client kết nối vào VPC. Site-to-Site VPN nối cả một site (router on-prem); tự dựng OpenVPN trên EC2 thì phải tự quản lý, giống tự cài database thay vì dùng RDS."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi kết nối AWS Client VPN, nhân viên không in được ra máy in trong mạng LAN ở nhà và mọi traffic Internet đều đi vòng qua AWS. Cần thay đổi gì?",
+        "options": [
+          "Bật split tunnel trên Client VPN endpoint",
+          "Thêm NAT Gateway vào VPC",
+          "Associate thêm subnet ở AZ khác",
+          "Đổi sang xác thực bằng Directory Service"
+        ],
+        "answer": [0],
+        "explain": "Mặc định route table của Client VPN thay thế route cục bộ trên client, nên mọi traffic đi qua VPN và client mất truy cập LAN. Split tunnel (không phải mặc định, phải bật) thêm route của endpoint vào route cục bộ, chỉ traffic tới AWS mới vào tunnel."
+      },
+      {
+        "type": "multi",
+        "q": "Client kết nối qua AWS Client VPN endpoint gắn với VPC-A (client VPN ENI nằm trong private subnet) cần truy cập public Internet qua VPN và truy cập instance trong VPC-B. Cần cấu hình những gì? (Chọn 2)",
+        "options": [
+          "Route 0.0.0.0/0 trong route table của Client VPN endpoint, cùng NAT Gateway và Internet Gateway trong VPC-A",
+          "Bật split tunnel để client tự ra Internet qua VPC-A",
+          "VPC peering A ↔ B cấu hình routing như bình thường, và route tới CIDR VPC-B trong route table của Client VPN endpoint",
+          "Associate Client VPN endpoint với cả VPC-A và VPC-B cùng lúc",
+          "Gắn Elastic IP cho từng client"
+        ],
+        "answer": [0, 2],
+        "explain": "Client được đối xử như thứ chạy trong VPC: ra Internet cần route trong endpoint cộng NAT Gateway và IGW (vì ENI ở private subnet), sang VPC-B cần peering cộng route. Một endpoint gắn một VPC (hoặc một Transit Gateway); split tunnel làm traffic Internet đi thẳng từ máy client, không qua VPC."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về cách AWS Client VPN tính phí và đạt high availability?",
+        "options": [
+          "Tính phí theo GB dữ liệu, HA bằng cách associate nhiều subnet trong cùng một AZ",
+          "Tính phí theo giờ cho mỗi subnet được associate làm target network và theo giờ cho mỗi client connection; HA bằng cách associate subnet ở nhiều AZ (mỗi AZ một subnet)",
+          "Miễn phí, chỉ tính phí NAT Gateway; HA có sẵn không cần cấu hình",
+          "Tính phí theo số user trong directory; HA bằng cách thêm Customer Gateway thứ hai"
+        ],
+        "answer": [1],
+        "explain": "Mỗi subnet target network có một interface nên tính phí theo giờ, cộng phí theo giờ cho mỗi client connection. Mỗi AZ chỉ chọn được một subnet; associate subnet ở nhiều AZ để HA."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào đúng về AWS Client VPN? (Chọn 2)",
+        "options": [
+          "Dựa trên OpenVPN, nên client OpenVPN chuẩn nào cũng kết nối được, ngoài desktop client của AWS",
+          "Dựa trên IPsec giống Site-to-Site VPN và cần Customer Gateway",
+          "Endpoint có thể gắn thẳng vào một Transit Gateway thay vì một VPC, nhưng không trộn cả hai",
+          "Chỉ hỗ trợ xác thực bằng IAM user",
+          "Mặc định chỉ traffic tới VPC mới đi qua VPN"
+        ],
+        "answer": [0, 2],
+        "explain": "Client VPN là managed OpenVPN, client OpenVPN chuẩn nào cũng dùng được; endpoint gắn một VPC hoặc một Transit Gateway, không trộn. Xác thực bằng certificate, federated identity hoặc Directory Service; mặc định mọi traffic đi qua VPN (split tunnel phải bật)."
+      }
+    ],
     "Compare - VPN vs Direct Connect": [
       {
         "type": "single",
@@ -141,7 +205,7 @@
       },
       {
         "type": "single",
-        "q": "Theo khóa học, một DataSync agent truyền được tốc độ khoảng bao nhiêu?",
+        "q": "Theo khóa học, một DataSync task truyền được tốc độ tối đa khoảng bao nhiêu?",
         "options": [
           "Khoảng 1 Gbps, tương đương 10 TB/ngày",
           "Khoảng 1.25 Gbps, giới hạn giống VPN",
@@ -149,7 +213,7 @@
           "Khoảng 10 Gbps, tương đương 100 TB/ngày"
         ],
         "answer": [3],
-        "explain": "Mỗi agent ~10 Gbps, tương đương khoảng 100 TB/ngày; muốn nhanh hơn thì thêm agent nếu đường truyền đủ băng thông. 1.25 Gbps là trần của một VPN tunnel."
+        "explain": "Mỗi task tới khoảng 10 Gbps, tương đương khoảng 100 TB/ngày (bản khóa cũ nói 10 Gbps mỗi agent). 1.25 Gbps là trần của một VPN connection gắn VGW."
       },
       {
         "type": "single",
@@ -186,7 +250,7 @@
           "Amazon Redshift"
         ],
         "answer": [0, 3],
-        "explain": "DataSync tích hợp với S3 (mọi storage class), EFS và FSx. Migrate database như RDS là việc của DMS, không phải DataSync."
+        "explain": "DataSync tích hợp với S3, EFS và cả họ FSx (Windows, Lustre, NetApp ONTAP, OpenZFS). Migrate database như RDS là việc của DMS, không phải DataSync."
       }
     ],
     "Direct Connect Public VIF and VPN": [
@@ -200,11 +264,11 @@
           "Chuyển sang transit VIF vì transit VIF luôn mã hóa"
         ],
         "answer": [2],
-        "explain": "DX không mã hóa mặc định; cách chuẩn là IPsec VPN over public VIF tới VGW/TGW. VPN qua private VIF là bẫy vì VPN endpoint có public IP."
+        "explain": "DX không mã hóa mặc định; cách phổ biến là IPsec VPN over public VIF tới public endpoint của VGW/TGW. VPN qua private VIF là bẫy vì VPN endpoint có public IP; transit VIF tự nó không mã hóa (nó chỉ là đường cho private IP VPN tới TGW)."
       },
       {
         "type": "single",
-        "q": "Vì sao IPsec VPN chạy trên Direct Connect phải dùng public VIF chứ không phải private VIF?",
+        "q": "Vì sao IPsec VPN tới VGW chạy trên Direct Connect phải dùng public VIF chứ không phải private VIF?",
         "options": [
           "Private VIF không hỗ trợ BGP",
           "Public VIF có băng thông lớn hơn private VIF",
@@ -212,7 +276,7 @@
           "VPN endpoint của VGW/TGW có public IP nằm trong AWS public zone, mà private VIF chỉ tới được private IP trong VPC"
         ],
         "answer": [3],
-        "explain": "Quy tắc chọn VIF là xem đích: VPN endpoint có public IP nên cần public VIF. Mọi VIF đều dùng BGP, và tunnel VPN vẫn tạo kết nối private vào VPC."
+        "explain": "Quy tắc chọn VIF là xem đích: VPN endpoint của VGW có public IP nên cần public VIF. Muốn VPN chỉ dùng IP private thì dùng transit VIF + DX Gateway + Transit Gateway (private IP VPN), không phải private VIF."
       },
       {
         "type": "single",
@@ -224,7 +288,7 @@
           "IPsec VPN cần switch hỗ trợ đặc biệt nên ít vendor hỗ trợ hơn MACsec"
         ],
         "answer": [0],
-        "explain": "MACsec là single hop Layer 2, overhead thấp, thiết kế cho 10 Gbps trở lên; IPsec VPN là end-to-end, vendor hỗ trợ rộng nhưng overhead cao. Hai công nghệ không cạnh tranh nhau."
+        "explain": "MACsec là single hop Layer 2, overhead thấp, nhanh hơn nhiều, và chỉ có trên dedicated connection; IPsec VPN là end-to-end, vendor hỗ trợ rộng nhưng overhead cao. Hai công nghệ không cạnh tranh nhau."
       },
       {
         "type": "single",
@@ -380,15 +444,15 @@
     "Directory Service": [
       {
         "type": "single",
-        "q": "Một công ty khởi nghiệp với khoảng 300 nhân viên muốn dùng Amazon WorkSpaces và cần một directory trong AWS. Họ không có AD on-premises và muốn chi phí thấp nhất. Nên chọn gì?",
+        "q": "Một công ty mới dùng AWS, không có AD on-premises, cần một directory trong AWS cho Amazon WorkSpaces và FSx for Windows File Server. Theo khóa học hiện nay, nên chọn gì?",
         "options": [
-          "AWS Managed Microsoft AD",
+          "Simple AD",
           "AD Connector",
-          "Tự dựng domain controller trên EC2",
-          "Simple AD (Small)"
+          "AWS Managed Microsoft AD",
+          "Tự dựng domain controller trên EC2"
         ],
-        "answer": [3],
-        "explain": "Simple AD là lựa chọn mặc định, rẻ nhất cho directory độc lập trong AWS, cỡ Small hỗ trợ tới 500 user. AD Connector cần AD on-prem để proxy về."
+        "answer": [2],
+        "explain": "AWS Managed Microsoft AD là lựa chọn mặc định khi cần directory trong AWS, và FSx for Windows chỉ chạy với Managed Microsoft AD (hoặc AD tự quản). Simple AD đã đóng với khách hàng mới; AD Connector cần AD on-prem để proxy về."
       },
       {
         "type": "single",
@@ -400,7 +464,7 @@
           "Amazon Cognito user pool"
         ],
         "answer": [1],
-        "explain": "Managed Microsoft AD là AD thật, hỗ trợ schema extension, tạo trust với AD on-prem và primary nằm trong AWS nên không phụ thuộc VPN. Simple AD dựa trên Samba, chỉ tương thích một phần và không dành cho tích hợp on-prem."
+        "explain": "Managed Microsoft AD là AD thật, hỗ trợ schema extension, tạo trust với AD on-prem và primary nằm trong AWS nên user trong AWS không phụ thuộc VPN. Simple AD dựa trên Samba, không tích hợp on-prem và đã đóng với khách hàng mới."
       },
       {
         "type": "single",
@@ -428,21 +492,21 @@
       },
       {
         "type": "single",
-        "q": "Simple AD có hai cỡ. Giới hạn số user của từng cỡ là bao nhiêu?",
+        "q": "Một công ty chuyển các workload phụ thuộc Active Directory (EC2 Windows, RDS SQL Server) lên AWS. Họ muốn giữ đúng một domain on-premises hiện có (cùng user, group, policy, không trust) nhưng không tự quản lý domain controller trong AWS. Nên chọn gì?",
         "options": [
-          "Small ≤ 100 user, Large ≤ 1.000 user",
-          "Small ≤ 1.000 user, Large ≤ 50.000 user",
-          "Small ≤ 5.000 user, Large không giới hạn",
-          "Small ≤ 500 user, Large ≤ 5.000 user"
+          "AWS Managed Microsoft AD Standard với trust hai chiều",
+          "AWS Managed Microsoft AD Hybrid Edition",
+          "AD Connector",
+          "Simple AD đồng bộ user từ on-prem"
         ],
-        "answer": [3],
-        "explain": "Simple AD (Samba 4) có Small tới 500 user và Large tới 5.000 user. Khi cần quy mô và tính năng AD đầy đủ thì chọn AWS Managed Microsoft AD."
+        "answer": [1],
+        "explain": "Hybrid Edition cho domain controller do AWS quản lý join và replicate với chính domain on-prem: một domain, không trust, VPN đứt user vẫn đăng nhập được. Trust là giữa hai domain riêng; AD Connector chỉ proxy và không dùng được cho RDS. Lưu ý Hybrid Edition không chạy với WorkSpaces và IAM Identity Center."
       }
     ],
     "FSx for Lustre": [
       {
         "type": "single",
-        "q": "Một nhóm machine learning chạy training trên hàng trăm Linux EC2 instance, cần file system dùng chung với permission POSIX, throughput hàng trăm GB/s và latency dưới 1 ms. Dữ liệu huấn luyện đang nằm trong S3. Giải pháp nào phù hợp?",
+        "q": "Một nhóm machine learning chạy training trên hàng trăm Linux EC2 instance, cần file system dùng chung với permission POSIX, throughput rất cao và latency dưới 1 ms. Dữ liệu huấn luyện đang nằm trong S3. Giải pháp nào phù hợp?",
         "options": [
           "Amazon EFS với Provisioned Throughput",
           "Amazon FSx for Windows File Server",
@@ -450,7 +514,7 @@
           "Storage Gateway File Gateway"
         ],
         "answer": [2],
-        "explain": "FSx for Lustre dành cho HPC/ML trên Linux, POSIX, throughput hàng trăm GB/s, và có thể gắn S3 làm repository để lazy load. EFS là shared FS đa dụng, không đạt mức hiệu năng này."
+        "explain": "FSx for Lustre dành cho HPC/ML trên Linux, POSIX, throughput tới nhiều TB/s, và có thể gắn S3 làm repository để lazy load. EFS là shared FS đa dụng, không đạt mức hiệu năng này."
       },
       {
         "type": "single",
@@ -462,11 +526,11 @@
           "Persistent kết hợp automatic backup 35 ngày"
         ],
         "answer": [0],
-        "explain": "Scratch dành cho workload tạm thời, hiệu năng thuần túy, không HA và không replication. Persistent dành cho lưu trữ dài hạn; FSx for Lustre không có deployment Multi-AZ."
+        "explain": "Scratch dành cho workload tạm thời, hiệu năng tốt nhất, chỉ chạy với SSD, không replication và không có backup. Multi-AZ không phải deployment type; replicate nhiều AZ là đặc điểm của storage class Intelligent-Tiering."
       },
       {
         "type": "single",
-        "q": "Phát biểu nào đúng về FSx for Lustre deployment type Persistent?",
+        "q": "Phát biểu nào đúng về FSx for Lustre deployment type Persistent dùng storage class SSD?",
         "options": [
           "Replicate dữ liệu sang nhiều AZ nên chịu được lỗi cả AZ",
           "Không có replication, phần cứng lỗi thì mất dữ liệu",
@@ -474,7 +538,7 @@
           "Replicate trong một AZ và self-healing khi lỗi phần cứng, nhưng vẫn có thể mất dữ liệu nếu cả AZ lỗi"
         ],
         "answer": [3],
-        "explain": "Persistent chỉ HA trong một AZ; muốn bảo vệ trước lỗi AZ thì backup sang S3. Không replication là đặc điểm của Scratch."
+        "explain": "Với SSD, dữ liệu chỉ nằm trong một AZ: Persistent replicate trong AZ và self-healing khi lỗi phần cứng, nhưng mất cả AZ vẫn có thể mất dữ liệu. Muốn replicate qua nhiều AZ thì dùng Intelligent-Tiering. Không replication là đặc điểm của Scratch."
       },
       {
         "type": "single",
@@ -482,15 +546,15 @@
         "options": [
           "Toàn bộ được copy ngay khi tạo file system",
           "Được lazy load khi client truy cập lần đầu",
-          "Chỉ khi chạy lệnh hsm_archive",
+          "Chỉ khi chạy export repository task",
           "Mỗi giờ một lần theo lịch đồng bộ mặc định"
         ],
         "answer": [1],
-        "explain": "Object hiện ra trong file system ngay nhưng chỉ được lazy load khi được truy cập lần đầu. hsm_archive dùng để ghi thay đổi ngược về S3, không phải để nạp vào."
+        "explain": "Object hiện ra trong file system ngay nhưng chỉ được lazy load khi được truy cập lần đầu. Export repository task (hoặc automatic export policy) là chiều ngược lại, ghi thay đổi từ Lustre về S3."
       },
       {
         "type": "single",
-        "q": "Theo khóa học, kích thước tối thiểu và bước tăng của một FSx for Lustre file system là bao nhiêu?",
+        "q": "Theo khóa học, với storage class SSD, kích thước tối thiểu và bước tăng của một FSx for Lustre file system là bao nhiêu?",
         "options": [
           "Tối thiểu 100 GiB, tăng theo bước 100 GiB",
           "Tối thiểu 1.17 TiB, tăng theo bước 1.17 TiB",
@@ -498,7 +562,7 @@
           "Tối thiểu 32 GiB, tăng theo bước 1 TiB"
         ],
         "answer": [2],
-        "explain": "FSx for Lustre tối thiểu 1.2 TiB và tăng theo bước 2.4 TiB. 1.17 TiB là kích thước của mỗi OST (Object Storage Target), dễ nhầm."
+        "explain": "Với SSD, FSx for Lustre tối thiểu 1.2 TiB và tăng theo bước 2.4 TiB. Intelligent-Tiering thì tự co giãn theo dung lượng dùng, không phải khai kích thước."
       }
     ],
     "FSx for Windows": [
@@ -561,7 +625,7 @@
           "Một S3 bucket chứa file danh sách user"
         ],
         "answer": [1, 3],
-        "explain": "FSx for Windows tích hợp với AWS Managed Microsoft AD hoặc self-managed AD (kể cả on-prem). Cognito dành cho người dùng ứng dụng web/mobile, IAM dành cho quyền gọi AWS API."
+        "explain": "FSx for Windows tích hợp với AWS Managed Microsoft AD hoặc self-managed AD (kể cả on-prem); Simple AD và AD Connector không được hỗ trợ. Cognito dành cho người dùng ứng dụng web/mobile, IAM dành cho quyền gọi AWS API."
       }
     ],
     "IPSec VPN": [
@@ -686,7 +750,7 @@
           "Mặc định không mã hóa dữ liệu"
         ],
         "answer": [0, 3],
-        "explain": "VPN dựng nhanh và bị giới hạn ~1.25 Gbps. Nó chạy qua public Internet nên latency biến động, luôn mã hóa IPsec, và BGP chỉ cần cho dynamic VPN."
+        "explain": "VPN dựng nhanh và VPN gắn VGW bị giới hạn ~1.25 Gbps mỗi connection (cần hơn thì dùng DX hoặc VPN trên Transit Gateway). Nó chạy qua public Internet nên latency biến động, luôn mã hóa IPsec, và BGP chỉ cần cho dynamic VPN."
       }
     ],
     "Snow Family": [

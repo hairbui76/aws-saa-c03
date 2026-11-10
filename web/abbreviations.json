@@ -201,6 +201,8 @@
   "FSR": "Fast Snapshot Restore",
   "SRT": "Shield Response Team",
   "MFTW": "Managed File Transfer Workflows",
+  "MDT": "Metadata Target",
+  "OST": "Object Storage Target",
   "MSK": "Managed Streaming for Apache Kafka",
   "KPL": "Kinesis Producer Library",
   "KVS": "Kinesis Video Streams",

@@ -2,6 +2,7 @@
 tags: [saa-c03, s17-hybrid-and-migration, storage, data-transfer, networking]
 aliases: [AWS Transfer Family, AWS Transfer for SFTP, Transfer for SFTP]
 lessons: ["0316 AWS Transfer Family"]
+videos: ["289 AWS Transfer Family"]
 ---
 # Transfer Family
 
@@ -29,16 +30,22 @@ lessons: ["0316 AWS Transfer Family"]
   - **Custom IdP** qua [[Lambda]] hoặc [[API Gateway]].
 - **Managed File Transfer Workflows (MFTW):** workflow engine **serverless**. Định nghĩa các bước xử lý tự động khi file được upload (ví dụ gửi notification, gắn tag...), để gắn Transfer Family vào quy trình nghiệp vụ có sẵn.
 - **Quyền truy cập backend:** server dùng **[[IAM Roles]]** để đọc/ghi S3/EFS.
+- **Mỗi server chỉ một loại storage**: S3 **hoặc** EFS, chọn lúc tạo và **không đổi được** sau đó. User cần cả hai thì phải có **hai server**.
 - Có thể dùng **custom DNS name** cho server.
+- Ngoài **managed server** (chức năng chính) còn hai tính năng:
+  - **Connector**: chiều ngược lại với server. Thay vì đối tác kết nối vào bạn, Transfer Family **kết nối ra** server **SFTP** hoặc **AS2** của đối tác để **gửi** file (SFTP còn để **lấy** file về), bạn không quản lý hạ tầng nào.
+  - **Web app**: cho người dùng truy cập S3 **qua trình duyệt**, không cần cài client truyền file.
 
 ## Cách hoạt động / Kiến trúc
 
 ```mermaid
 flowchart LR
-  U["Người dùng ngoài / đối tác (vd medical user)"] -- "SFTP / FTPS / FTP / AS2" --> TS["Transfer Family server (custom DNS tùy chọn)"]
+  U["Người dùng ngoài / đối tác (vd medical user)"] -- "SFTP / FTPS / FTP / AS2" --> TS["Transfer Family server (storage S3, custom DNS tùy chọn)"]
+  U -- "SFTP / FTPS / FTP" --> TS2["Server thứ hai (storage EFS)"]
   TS -- "IAM role" --> S3["S3"]
-  TS -- "IAM role" --> EFS["EFS"]
+  TS2 -- "IAM role" --> EFS["EFS"]
   IDP["Identity: service managed / Directory Service / Custom (Lambda, API GW)"] -.-> TS
+  IDP -.-> TS2
 ```
 
 ### Endpoint types
@@ -52,12 +59,12 @@ flowchart LR
 | Cấu hình mạng | Không cần gì | Cần VPC | Cần VPC |
 
 - **FTP chỉ chạy được internal trong VPC**: không mã hóa nên không được đưa ra internet (không dùng với Public hay VPC Internet).
-- **AS2 chỉ dùng với VPC Internet hoặc VPC Internal**, không dùng Public.
+- **AS2 chỉ dùng với VPC Internet hoặc VPC Internal**, không dùng Public. AS2 **chỉ chạy với S3** (không EFS) và **không có user login**: đối tác dùng **profile, certificate và agreement** riêng của AS2.
 - Hai kiểu VPC đều truy cập được từ mạng doanh nghiệp qua [[Direct Connect]] hoặc [[Site-to-Site VPN]], như thể client nằm trong VPC.
 
 ### Các điểm khác
-- **Multi-AZ**, resilient và scalable.
-- **Giá:** theo **server được provision mỗi giờ** + **lượng dữ liệu truyền**. Không có phí trả trước.
+- **Multi-AZ**: với endpoint kiểu VPC, chọn subnet ở **tối đa 3 AZ**; một subnet nghĩa là một AZ.
+- **Giá:** theo **giờ cho mỗi protocol được bật** trên server + **lượng dữ liệu truyền**. Không có phí trả trước. Tính giờ **từ lúc tạo tới lúc xóa server, kể cả khi server stopped hay idle**.
 - **FTP và FTPS chỉ dùng Directory Service hoặc Custom IdP**, không dùng được service-managed identity.
 
 ## 🎯 Mẹo thi SAA-C03
@@ -68,7 +75,11 @@ flowchart LR
   - **FTP = VPC internal only.**
   - **AS2 = VPC (Internet hoặc Internal)**, không Public.
   - **FTP/FTPS = Directory Service hoặc Custom IdP.**
+  - **AS2 = chỉ S3**, không user login (profile, certificate, agreement).
+  - **Một server = một loại storage** (S3 hoặc EFS), không đổi được sau khi tạo.
   - Cần **IP tĩnh** để đối tác whitelist → endpoint kiểu VPC (VPC Internet có EIP).
+- Cần **đẩy file ra** server SFTP/AS2 **của đối tác** mà không dựng hạ tầng → **Transfer Family connector**. Người dùng cần truy cập S3 **qua trình duyệt**, không cài client → **web app**.
+- Server **stopped vẫn tính tiền** theo giờ; muốn ngừng trả phí thì xóa server.
 - Phân biệt:
   - [[DataSync]]: đồng bộ/migrate khối dữ liệu lớn giữa storage on-prem và AWS (qua agent).
   - [[Storage Gateway]]: hybrid storage lâu dài cho ứng dụng on-prem (NFS/SMB/iSCSI).

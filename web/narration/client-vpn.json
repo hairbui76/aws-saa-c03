@@ -1,0 +1,16 @@
+{
+ "Client VPN": {
+  "sig": "9-1r24h3r",
+  "steps": [
+   "Sơ đồ này nói về AWS Client VPN, nơi từng máy client nối vào VPC qua bản managed của OpenVPN. Ý chính là client được coi như một thứ chạy trong VPC, nên vẫn cần NAT Gateway, Internet Gateway, peering và route như bình thường.",
+   "Client một dùng phần mềm OpenVPN bất kỳ, dựng tunnel mã hóa tới Client VPN endpoint. Endpoint có route table riêng, mặc định chứa route tới toàn bộ CIDR của VPC được gắn.",
+   "Client hai cũng nối vào cùng endpoint. Trước khi vào, client phải xác thực bằng certificate, federated identity hoặc AWS Directory Service.",
+   "Từ endpoint, traffic đi vào Client VPN ENI nằm trong private subnet của VPC A. Mỗi AZ chọn được một subnet, chọn nhiều AZ để HA. Log kết nối được ghi vào CloudWatch Logs, còn metric vào CloudWatch.",
+   "Muốn client ra Internet qua VPN thì thêm default route ra Internet vào route table của endpoint, và VPC A phải có NAT Gateway cùng Internet Gateway, vì ENI nằm trong private subnet.",
+   "Muốn client tới EC2 trong VPC B thì tạo VPC peering giữa A và B, cấu hình routing như bình thường, rồi thêm route tới CIDR của VPC B vào route table của endpoint.",
+   "Mặc định, route table của endpoint thay thế route cục bộ trên máy client, nên mọi traffic đều đi qua VPN và client mất truy cập vào mạng LAN của mình.",
+   "Bật split tunnel thì route của endpoint được thêm vào thay vì thay thế. Traffic Internet và LAN đi đường bình thường, chỉ traffic tới AWS mới vào tunnel. Nhớ là split tunnel phải tự bật.",
+   "Khi đi thi, nhớ: nhân viên làm từ xa cần truy cập private vào VPC thì chọn Client VPN, cả văn phòng thì chọn Site-to-Site VPN. Endpoint gắn một VPC hoặc một Transit Gateway, tính phí theo giờ mỗi subnet và mỗi client connection."
+  ]
+ }
+}
