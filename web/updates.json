@@ -12,9 +12,11 @@
       "kind": "updated",
       "summary": "Danh mục chứng chỉ mới (CloudOps Engineer, Data Engineer, ML Engineer Associate, AI Practitioner, GenAI Developer Pro), lộ trình đi thẳng SAA → SA Pro và hướng AI qua ML Engineer Associate, đề Pro 75 câu; cấu trúc khóa mới (Aus-E-Mart/RooTube, không còn Tech Fundamentals) và cộng đồng chuyển sang Tech Study Discord.",
       "changed": [
+        "🖼️ Sơ đồ",
         "Lộ trình chứng chỉ AWS",
         "Cấu trúc khóa học",
-        "Cộng đồng và liên hệ"
+        "Cộng đồng và liên hệ",
+        "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": [
         "Tài nguyên khóa học (bài 0002, 0003, 0006)",
@@ -25,6 +27,7 @@
       "kind": "updated",
       "summary": "Thêm: không bao giờ để trống câu (bỏ trống bị chấm sai, đoán sai không bị trừ điểm), màn hình review lọc câu chưa trả lời/đã flag, đề Pro hơn 2 phút/câu, lần làm practice test đầu tiên là quan trọng nhất; phần question technique không còn trong khóa mới.",
       "changed": [
+        "🖼️ Sơ đồ",
         "Khái niệm cốt lõi",
         "🎯 Mẹo thi SAA-C03"
       ],
@@ -48,6 +51,7 @@
       "kind": "updated",
       "summary": "Free Tier 12 tháng được thay bằng Free plan/Paid plan có credit (EC2 không còn miễn phí); budget tạo từ template Monthly cost budget với cảnh báo 85% actual, 100% actual, 100% forecasted.",
       "changed": [
+        "🖼️ Sơ đồ",
         "Khái niệm cốt lõi",
         "Cách hoạt động / Kiến trúc",
         "Demo / Lab"
@@ -57,6 +61,7 @@
       "kind": "updated",
       "summary": "Access key được coi là cách cũ vì lưu dạng rõ trong ~/.aws/credentials; thêm lệnh aws login của AWS CLI v2 để đăng nhập qua trình duyệt (có MFA) bằng credential tạm thời.",
       "changed": [
+        "🖼️ Sơ đồ",
         "Cách hoạt động / Kiến trúc",
         "Demo / Lab",
         "🎯 Mẹo thi SAA-C03"

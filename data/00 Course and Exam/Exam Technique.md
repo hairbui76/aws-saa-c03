@@ -6,7 +6,7 @@ videos: ["376 [SHAREDALL] General AWS Exam Technique - 3 Phase Approach"]
 ---
 # Exam Technique
 
-> **TL;DR:** Có hai lớp kỹ thuật. (1) **Exam technique**: chia bài thi thành 3 phase (câu dễ → câu trung bình → câu khó) để không bị câu khó ăn hết thời gian. (2) **Question technique**: loại đáp án vô lý, tìm keyword trong preamble và câu hỏi, bỏ phần chữ lặp giữa các đáp án ("word fluff"), so keyword đáp án với yêu cầu đề. Theo Adrian, phần lớn người trượt là do kỹ thuật làm bài, không phải do thiếu kiến thức.
+> **TL;DR:** **Exam technique**: chia bài thi thành 3 phase (câu dễ → câu trung bình → câu khó) để không bị câu khó ăn hết thời gian, dùng Mark for Review và màn hình review, và **không bao giờ để trống câu nào** (đoán sai không bị trừ điểm). Trước khi thi, làm practice test tới khi đều đặn trên 90%. Phần **question technique** (loại đáp án vô lý, tìm keyword, bỏ "word fluff") thuộc bản khóa cũ, được giữ lại bên dưới để tham khảo.
 
 ## 🖼️ Sơ đồ
 ![[Exam Technique.excalidraw]]

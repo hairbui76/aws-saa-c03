@@ -1,12 +1,14 @@
 {
  "IAM Access Keys and AWS CLI": {
-  "sig": "5-1u0p3w8",
+  "sig": "7-1qi4f0r",
   "steps": [
-   "Sơ đồ này so sánh hai loại long-term credential của IAM user: password dùng cho Console và access key dùng cho CLI hoặc API. Chúng không tự rotate, mỗi user có tối đa hai cặp access key.",
-   "Đây là IAM user iamadmin. Cặp key gồm Access Key ID công khai và Secret Access Key bí mật, secret chỉ hiện đúng một lần lúc tạo. Ta nạp cặp này vào named profile, rồi chạy lệnh như aws s3 ls kèm profile để gọi AWS API.",
-   "Phía còn lại, password dùng để đăng nhập AWS Management Console. Mỗi user chỉ có tối đa một password, kết hợp username và MFA, và password không bắt buộc nếu user chỉ dùng CLI.",
-   "Cặp key thứ hai có thể Active hoặc Inactive, tồn tại chủ yếu để rotate không downtime. Bên CLI còn có default profile, dùng lệnh aws configure không kèm tên, được chọn khi bạn không chỉ định profile.",
-   "Khi đi thi nhớ nhé: aws configure hỏi bốn giá trị, lưu trong thư mục chấm aws. App trên EC2 hoặc Lambda thì dùng IAM Role, đừng nhúng access key. Không tạo key cho root. Lộ secret thì xóa cả cặp và tạo cặp mới."
+   "Sơ đồ này cho thấy IAM user đăng nhập ra sao: password cho Console, còn với CLI thì có hai cách, aws login được khuyến nghị và access key là cách cũ. Password và access key đều là long-term credential, mỗi user tối đa hai cặp key.",
+   "Đây là IAM user iamadmin. Theo cách cũ, cặp key gồm Access Key ID công khai và Secret Access Key bí mật, secret chỉ hiện đúng một lần lúc tạo. Ta nạp cặp này vào named profile rồi chạy aws s3 ls kèm profile để gọi AWS API.",
+   "Phía trên, password kết hợp username và MFA dùng để đăng nhập AWS Management Console. Mỗi user chỉ có tối đa một password.",
+   "Từ phiên đăng nhập Console đó, lệnh aws login mở trình duyệt để bạn đăng nhập có MFA, rồi chia sẻ credential tạm thời cho terminal. Không cần access key, cũng không có file credentials.",
+   "Sau đó CLI gọi AWS API bằng credential tạm thời này. Khi phiên hết hạn hoặc bạn đăng xuất, trên máy không còn gì nguy hiểm.",
+   "Cặp key thứ hai có thể Active hoặc Inactive, tồn tại chủ yếu để rotate không downtime. Bên CLI còn có default profile, dùng lệnh aws configure không kèm tên.",
+   "Khi đi thi nhớ nhé: aws configure lưu secret dạng rõ trong file credentials, nên ưu tiên aws login. App trên EC2 hoặc Lambda thì dùng IAM Role, đừng nhúng access key. Không tạo key cho root. Lộ secret thì xóa cả cặp và tạo cặp mới."
   ]
  },
  "IAM Access Keys and AWS CLI - rotation": {

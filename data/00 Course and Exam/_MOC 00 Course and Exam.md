@@ -11,7 +11,7 @@ Section định hướng của khóa: kỳ thi SAA-C03 trông như thế nào, v
 ## Lộ trình học
 1. [[SAA-C03 Exam Overview]]: format đề (~2 phút/câu), 4 domain, danh mục và lộ trình chứng chỉ AWS (đi thẳng SAA → SA Pro, hướng AI qua ML Engineer Associate), cấu trúc khóa học và cộng đồng; SAA bao trùm Cloud Practitioner nên học SAA trước.
 2. [[Animals4life Scenario]]: tổ chức giả định A4L với hạ tầng, dải IP và vấn đề kinh doanh; ánh xạ nhu cầu sang các dịch vụ AWS sẽ học, luyện đọc đề dạng tình huống.
-3. [[Exam Technique]]: chia bài thi thành 3 phase (dễ → trung bình → khó), loại đáp án vô lý, tìm keyword, bỏ "word fluff" lặp giữa các đáp án.
+3. [[Exam Technique]]: chia bài thi thành 3 phase (dễ → trung bình → khó), không để trống câu nào, ôn bằng practice test tới khi đều đặn trên 90%; phần question technique (keyword, loại "word fluff") là của bản khóa cũ, giữ để tham khảo.
 
 ## Bản đồ khái niệm
 ```mermaid
@@ -21,7 +21,7 @@ flowchart TB
   EXAM --> TECH["Exam Technique"]
   TECH --> PH["3 phase: dễ, trung bình, khó"]
   PH --> BLANK["Không để trống câu nào"]
-  TECH --> QT["Question technique: keyword, loại fluff, loại đáp án vô lý"]
+  TECH -.-> QT["Question technique (bản khóa cũ): keyword, loại fluff, loại đáp án vô lý"]
   QT --> KW["Keyword ràng buộc: cost-effective, best practice, X ngày, highest performance"]
   A4L["Animals4life Scenario"] --> NEEDS["Nhu cầu: global users, cost-conscious, IT team nhỏ"]
   A4L --> CIDR["Dải IP on-prem và cloud khác"]

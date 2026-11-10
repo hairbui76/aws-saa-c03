@@ -6,7 +6,7 @@ videos: ["001 Public Introduction", "002 AWS Certification and Exams", "003 Conn
 ---
 # SAA-C03 Exam Overview
 
-> **TL;DR:** AWS Certified Solutions Architect – Associate (SAA-C03) là chứng chỉ "cửa vào" mà Adrian khuyên **bắt đầu trước tiên**, kể cả với người mới hoàn toàn: nó bao trùm kiến thức Cloud Practitioner và là nền cho mọi chứng chỉ role-based khác. Note này gom lại: format đề, lộ trình chứng chỉ AWS, cấu trúc khóa học và cách dùng tài nguyên học.
+> **TL;DR:** AWS Certified Solutions Architect – Associate (SAA-C03) là chứng chỉ "cửa vào" mà giảng viên khuyên **bắt đầu trước tiên**, kể cả với người mới hoàn toàn: nó bao trùm kiến thức Cloud Practitioner và là nền cho mọi chứng chỉ role-based khác. Note này gom lại: format đề, danh mục và lộ trình chứng chỉ AWS, cấu trúc khóa học và cộng đồng học tập.
 
 ## 🖼️ Sơ đồ
 ![[SAA-C03 Exam Overview.excalidraw]]
@@ -130,7 +130,7 @@ Bài mở trang sample questions chính thức của AWS cho cả hai cấp đ�
 - Quỹ thời gian là ~2 phút/câu cho cả việc đọc câu hỏi, đọc đáp án và quyết định. Lần thi đầu hầu như ai cũng hết giờ, nên cần một quy trình (xem [[Exam Technique]]).
 - Câu hỏi associate thường đúng/sai rõ ràng; dạng "chọn đáp án phù hợp nhất" hiếm hơn nhiều so với Pro. Multi-select ở associate luôn ghi rõ số đáp án cần chọn.
 - Không học riêng Cloud Practitioner nếu mục tiêu là SAA: nội dung SAA đã bao trùm CLF.
-- Đọc sample questions chính thức của AWS để làm quen độ khó. Bài 0004 có mở bộ sample SAA (ví dụ câu CRM chạy trên EC2 sau ALB, câu SQS long polling, câu Storage Gateway). Practice test trả phí của AWS cũng có ích.
+- Đọc sample questions chính thức của AWS để làm quen độ dài và độ khó: câu hỏi associate thường 2–3 dòng, mỗi đáp án không quá khoảng một dòng; câu hỏi Pro dài vài câu tới cả đoạn, mỗi đáp án 2–3 dòng. Practice test chính thức của AWS cũng có ích.
 - Trước khi thi thật, làm practice test đến khi đều đặn đạt trên 90%.
 
 ## Liên kết

@@ -58,7 +58,7 @@
         "q": "Theo phương pháp 3 phase, ở Phase 2 khi gặp một câu được nhận định là rất khó, thí sinh nên làm gì?",
         "options": ["Đánh dấu Mark for Review, bỏ qua và tập trung vào các câu trung bình", "Đoán ngay một đáp án để không bỏ sót câu nào", "Dành thời gian giải bằng được vì câu khó có nhiều điểm hơn", "Quay lại Phase 1 để rà soát các câu dễ"],
         "answer": [0],
-        "explain": "Phase 2 dồn sức cho câu trung bình vì chúng quyết định đậu/trượt; câu khó được Mark for Review để làm ở Phase 3. Adrian khuyên không đoán ở Phase 1 và 2."
+        "explain": "Phase 2 dồn sức cho câu trung bình vì chúng quyết định đậu/trượt; câu khó được Mark for Review để làm ở Phase 3. Giảng viên khuyên không đoán ở Phase 1 và 2."
       },
       {
         "type": "single",
