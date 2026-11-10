@@ -2,6 +2,7 @@
 tags: [saa-c03, s18-security-deployment-and-operations, security, governance, compliance, auditing]
 aliases: [Config, AWS Config Rules, Config Rules, Configuration Item]
 lessons: ["0322 AWS Config"]
+videos: ["296 AWS Config"]
 ---
 # AWS Config
 
@@ -18,10 +19,11 @@ lessons: ["0322 AWS Config"]
 - Khi bật, cấu hình mọi resource được hỗ trợ trong account được theo dõi liên tục. Mỗi thay đổi tạo **Configuration Item (CI)** lưu:
   - **Cấu hình** của resource tại một thời điểm.
   - **Relationship** với resource khác.
-  - **Ai** thực hiện thay đổi.
+  - Một số **sự kiện liên quan**: Config làm việc cùng [[CloudTrail]] nên dựng được **timeline cấu hình** cho thấy ai đổi gì, trước và sau ra sao.
 - Tập hợp mọi CI của một resource gọi là **configuration history**, lưu trong **S3 config bucket** theo định dạng thống nhất. Truy cập trực tiếp từ bucket hoặc qua **AWS Config API**.
 - Ví dụ: thêm rule vào [[Security Groups|Security Group]] đang gắn vào EC2 → Config lưu trạng thái trước, trạng thái sau, việc ai đã đổi và việc SG đó gắn với instance nào.
 - **Không phải sản phẩm phân quyền hay bảo vệ**: không chặn thay đổi. Ví dụ quy định chỉ cho phép một số port trong SG; nếu ai đó mở thêm port, Config **không ngăn** nhưng sẽ **đánh dấu non-compliant**.
+- Tuy vậy Config có thể đóng vai **cảnh báo trước**: một số dịch vụ khác dùng Config để **kiểm tra compliance chủ động (proactive)** và quyết định có deploy resource hay không nếu Config cho biết resource đó sẽ non-compliant.
 - **Regional service**: theo dõi trong một region của một account; có thể cấu hình **aggregation cross-region và cross-account**.
 - Gửi **notification qua [[SNS]]** và **event qua [[EventBridge]]** (→ [[Lambda]]) khi trạng thái compliance thay đổi → dùng cho **automatic remediation**.
 
@@ -33,23 +35,30 @@ flowchart LR
     CFG --> B["S3 Config bucket (configuration history)"]
   end
   subgraph OPT["Optional"]
-    CFG <--> RULES["Config Rules: AWS managed hoặc custom (Lambda)"]
+    CFG <--> RULES["Config Rules: AWS managed hoặc custom (Guard / Lambda)"]
     RULES --> C["Compliant"]
     RULES --> NC["Non-compliant"]
     CFG -->|"configuration stream, compliance notifications"| SNS["SNS → người vận hành / ứng dụng"]
     CFG -->|"thay đổi trạng thái rule"| EB["EventBridge"] -->|"remediation"| L["Lambda"]
-    CFG -->|"remediation"| SSM["Systems Manager (Automation)"]
+    CFG -->|"remediation native"| SSM["SSM Automation documents"]
   end
 ```
 
 - **Phần standard**: bật Config = bật **recorder**, ghi cấu hình resource vào config bucket. Chỉ cần thế đã đủ để xem lại mọi thay đổi theo thời gian.
+  - **Continuous recording** (mặc định): ghi từng thay đổi.
+  - **Periodic recording**: chỉ chụp cấu hình mới nhất **mỗi 24 giờ một lần**. Đánh đổi giữa chi tiết từng thay đổi và chi phí thấp hơn với mức chi tiết theo ngày.
 - **Phần optional (sức mạnh thật)**: **Config Rules**
-  - **AWS managed rules** hoặc **custom rules dùng [[Lambda]]** (Lambda tự đánh giá theo logic bạn code rồi trả kết quả về Config).
+  - **AWS managed rules**: AWS viết sẵn cho việc phổ biến, ví dụ S3 bucket có public không, EBS volume có mã hóa không, root account có bật MFA không.
+  - **Custom rules**, viết theo hai cách:
+    - **Guard**: ngôn ngữ policy-as-code đa dụng của AWS.
+    - **[[Lambda]]**: tự viết code (nhiều ngôn ngữ) đánh giá theo logic của bạn rồi trả kết quả về Config.
+  - Ví dụ custom rule: mọi resource phải có tag `CostCenter` và `Owner`, giá trị CostCenter chỉ được nằm trong danh sách phòng kế toán duyệt.
   - Resource được đánh giá là **compliant** hoặc **non-compliant**.
 - **Remediation**:
   - [[SNS]]: stream thay đổi hoặc thông báo compliance tới người/ứng dụng.
   - [[EventBridge]]: mỗi khi rule đổi trạng thái compliant/non-compliant → event → gọi Lambda sửa tự động. (Về bản chất đây là EventBridge chuyển event của Config tới target, không hẳn là tính năng của Config.)
-  - **Systems Manager (SSM)**: Config tích hợp với SSM để áp dụng bản sửa. **Lambda linh hoạt hơn cho việc cấp account**; **SSM hiệu quả cho cấu hình bên trong instance**.
+  - **Remediation native của Config bằng Systems Manager (SSM) Automation documents**: không cần EventBridge + Lambda. Ví dụ: EC2 thiếu bản vá bảo mật quan trọng → SSM Automation document kích hoạt cài patch. Có sẵn danh sách document do AWS soạn, hoặc tự viết.
+  - (Bản khóa cũ: Lambda linh hoạt hơn cho việc cấp account; SSM hiệu quả cho cấu hình bên trong instance.)
 
 ## Bảng so sánh: Config vs dịch vụ dễ nhầm
 
@@ -64,9 +73,10 @@ flowchart LR
 ## 🎯 Mẹo thi SAA-C03
 - Đề nói **audit thay đổi cấu hình**, **lịch sử cấu hình resource**, "cấu hình SG trông thế nào vào tuần trước", **compliance với tiêu chuẩn tổ chức** → AWS Config.
 - **Bẫy**: Config **không prevent** thay đổi. Nếu đề yêu cầu **ngăn** hành động → IAM policy / [[Service Control Policies|SCP]], không phải Config.
-- **Tự động khắc phục** resource non-compliant → Config Rules + EventBridge + Lambda, hoặc Config remediation bằng SSM Automation.
+- **Tự động khắc phục** resource non-compliant → Config Rules + EventBridge + Lambda, hoặc remediation native của Config bằng **SSM Automation documents** (ví dụ cài patch còn thiếu cho EC2).
 - Config là **regional**; dùng **aggregator** để có cái nhìn cross-region, cross-account.
-- Custom rule viết bằng **Lambda**.
+- Custom rule viết bằng **Lambda** hoặc **Guard** (policy-as-code).
+- Cần giảm chi phí và chấp nhận chi tiết theo ngày → **periodic recording** (24 giờ một lần) thay vì continuous (mặc định).
 - Phân biệt với [[CloudTrail]]: CloudTrail ghi **API call**; Config ghi **trạng thái cấu hình** và quan hệ giữa resource.
 
 ## Liên kết

@@ -2,6 +2,7 @@
 tags: [saa-c03, s18-security-deployment-and-operations, security, networking, firewall]
 aliases: [Application Layer Firewall, L7 Firewall, Layer 7 Firewalls, Application Firewall]
 lessons: ["0318 Application Layer L7 Firewall"]
+videos: ["291 Application Layer (L7) Firewall"]
 ---
 # Layer 7 Firewall
 
@@ -18,12 +19,12 @@ Nhắc lại các tầng của [[OSI Model]] mà firewall có thể "hiểu":
 - **Firewall có thêm Layer 5 (session)**: hiểu request và response thuộc **cùng một session**, nên:
   - Giảm admin overhead: một rule thay vì hai.
   - Bảo mật theo ngữ cảnh: traffic response được xử lý khác với traffic cùng chiều nhưng không phải response. Tương tự cách [[Security Groups]] hoạt động (stateful).
-- **Hạn chế chung của hai loại trên**: không hiểu gì **phía trên** tầng nó hoạt động. Dữ liệu Layer 7 (HTTP header, nội dung...) là **opaque**: ảnh mèo, ảnh chó hay malware đều như nhau. Điều này mở ra nhiều hướng tấn công.
+- **Hạn chế chung của hai loại trên**: không hiểu gì **phía trên** tầng nó hoạt động. Dữ liệu Layer 7 (HTTP header, nội dung...) là **opaque**: ảnh koala, ảnh cá sấu hay malware đều như nhau. Điều này mở ra nhiều hướng tấn công.
 
 ### Layer 7 firewall thêm được gì
 - **Hiểu giao thức Layer 7** cụ thể (ví dụ HTTP): kiến trúc, cách truyền dữ liệu, header, host, data...
 - **Nhận diện request bình thường và bất thường**, từ đó chặn được **protocol-specific attacks**.
-- Dữ liệu L7 có thể bị **inspected, blocked, replaced hoặc tagged**: lọc nội dung người lớn, spam, off-topic, malware, exploit. Thậm chí **thay thế** nội dung (ví dụ ảnh không phù hợp được thay bằng ảnh mèo con).
+- Dữ liệu L7 có thể bị **inspected, blocked, replaced hoặc tagged**: lọc nội dung người lớn, spam, off-topic, malware, exploit. Thậm chí **thay thế** nội dung (ví dụ ảnh không phù hợp được thay bằng ảnh koala).
 - **Nhận diện, chặn, điều chỉnh từng ứng dụng cụ thể** (ví dụ chặn Facebook, chặn dữ liệu doanh nghiệp bị đẩy lên Dropbox, tức có tính chất DLP).
 - **Giữ toàn bộ tính năng L3, L4, L5** và thêm khả năng phản ứng theo phần tử L7: **DNS name, rate (số kết nối/giây), content, header**...
 - Phạm vi giao thức tùy phần mềm firewall: có loại chỉ hiểu HTTP, có loại hiểu cả **SMTP** (email)...
@@ -34,7 +35,7 @@ Với kết nối **HTTPS**, firewall L7 phải **terminate (giải mã)** kết
 ```mermaid
 flowchart LR
   C["Client (laptop)"] -->|"HTTPS #1 (client tưởng nối thẳng tới server)"| FW["Layer 7 Firewall: giải mã, thấy HTTP plaintext, inspect / block / replace / tag"]
-  FW -->|"HTTPS #2 (kết nối mã hóa mới)"| S["Backend server (Catagram)"]
+  FW -->|"HTTPS #2 (kết nối mã hóa mới)"| S["Backend server (cửa hàng Aus-E-Mart)"]
 ```
 
 - Kết nối HTTPS từ client **kết thúc tại firewall**; lớp mã hóa bị gỡ, còn lại HTTP thuần.
@@ -59,5 +60,5 @@ flowchart LR
 
 ## Liên kết
 - Tiên quyết: [[OSI Model]], [[Stateful vs Stateless Firewalls]], [[SSL and TLS]]
-- Liên quan: [[WAF]], [[Shield]], [[Elastic Load Balancer]], [[Gateway Load Balancer]]
+- Liên quan: [[WAF]], [[Shield]], [[Elastic Load Balancer]], [[Gateway Load Balancer]], [[AWS Network Firewall]]
 - Phân biệt với: [[Security Groups]], [[NACL]], [[Compare - Security Groups vs NACL]]

@@ -102,6 +102,6 @@ flowchart TB
 
 ## Liên kết
 - Tiên quyết: [[EC2 Basics]], [[AWS Public vs Private Services]]
-- Liên quan: [[CloudWatch Logs]], [[CloudWatch Agent]], [[EventBridge]], [[SNS]], [[Auto Scaling Groups]], [[AWS Budgets]]
+- Liên quan: [[CloudWatch Logs]], [[CloudWatch Agent]], [[EventBridge]], [[SNS]], [[Auto Scaling Groups]], [[AWS Budgets]], [[Amazon Managed Grafana]], [[Amazon Managed Service for Prometheus]], [[AWS Compute Optimizer]] (dùng metric CloudWatch để rightsizing)
 - Phân biệt với: [[CloudTrail]], [[AWS Config]]
 - MOC: [[_MOC 03 AWS Fundamentals]]

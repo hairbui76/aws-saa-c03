@@ -68,6 +68,6 @@ flowchart LR
 - **5.000 IAM user/account là hard limit**: đáp án "xin tăng quota IAM user" cho ứng dụng hàng triệu người dùng là **sai**; chọn federation / [[Cognito]].
 
 ## Liên kết
-- Liên quan: [[IAM Users and ARNs]] (5.000 user), [[IAM Groups]], [[EC2 Basics]], [[CloudWatch Basics]], [[AWS Organizations]], [[AWS Global Infrastructure]] (region)
+- Liên quan: [[IAM Users and ARNs]] (5.000 user), [[IAM Groups]], [[EC2 Basics]], [[CloudWatch Basics]], [[AWS Organizations]], [[AWS Global Infrastructure]] (region), [[AWS Trusted Advisor]] (service limit check, báo khi dùng quá 80%)
 - Ví dụ quota khác trong khóa: [[S3 Basics]] (số bucket mỗi account)
 - MOC: [[_MOC 03 AWS Fundamentals]]

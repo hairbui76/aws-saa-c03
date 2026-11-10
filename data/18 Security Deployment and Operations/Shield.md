@@ -2,6 +2,7 @@
 tags: [saa-c03, s18-security-deployment-and-operations, security, ddos, networking]
 aliases: [AWS Shield, Shield Standard, Shield Advanced, SRT, Shield Response Team]
 lessons: ["0320 AWS Shield"]
+videos: ["294 AWS Shield"]
 ---
 # Shield
 
@@ -32,7 +33,7 @@ lessons: ["0320 AWS Shield"]
 ### Shield Advanced
 - **Chi phí**: **US$3000/tháng mỗi organization** (không phải mỗi account). Các account trong cùng [[AWS Organizations|AWS Organization]] dùng chung một khoản đầu tư. Cam kết **1 năm** → $36,000/năm, cộng thêm phí **data out**.
 - **Phạm vi bảo vệ rộng hơn**: CloudFront, Route 53, Global Accelerator, mọi thứ gắn **Elastic IP** (ví dụ EC2), **ALB, CLB, NLB**.
-- **Không tự động**: phải **bật protection tường minh** cho từng resource trong Shield Advanced, hoặc qua **AWS Firewall Manager** với Shield Advanced policy. (Câu thi có thể hỏi bảo vệ cần cấu hình hay chạy nền.)
+- **Không tự động**: phải **bật protection tường minh** cho từng resource trong Shield Advanced, hoặc qua **[[AWS Firewall Manager]]** với Shield Advanced policy. (Câu thi có thể hỏi bảo vệ cần cấu hình hay chạy nền.)
 - **Cost protection**: nếu phát sinh chi phí do tấn công lẽ ra Shield Advanced phải giảm thiểu mà không làm được (ví dụ EC2 scale out vì tải độc hại), AWS bù lại. Điều kiện: resource thuộc loại được hỗ trợ **và** đã bật protection cho nó.
 - **Proactive engagement + SRT (Shield Response Team)**:
   - SRT **chủ động liên hệ** khi availability/performance của ứng dụng bị ảnh hưởng bởi tấn công, có thể bắt đầu troubleshoot **trước khi** liên lạc được với bạn.
@@ -80,5 +81,5 @@ flowchart LR
 
 ## Liên kết
 - Tiên quyết: [[DDoS]], [[OSI Model]], [[Layer 7 Firewall]]
-- Liên quan: [[WAF]], [[CloudFront Architecture]], [[Global Accelerator]], [[Route 53 Fundamentals]], [[R53 Health Checks]], [[Elastic Load Balancer]], [[AWS Organizations]]
+- Liên quan: [[WAF]], [[AWS Firewall Manager]], [[CloudFront Architecture]], [[Global Accelerator]], [[Route 53 Fundamentals]], [[R53 Health Checks]], [[Elastic Load Balancer]], [[AWS Organizations]]
 - Phân biệt với: [[GuardDuty]] (phát hiện mối đe dọa, không chặn DDoS), [[WAF]]

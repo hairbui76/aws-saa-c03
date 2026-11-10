@@ -19,9 +19,9 @@
       {
         "type": "multi",
         "q": "Một công ty muốn tự động khắc phục các resource bị AWS Config đánh giá là non-compliant mà không cần người can thiệp. Những cách nào phù hợp? (Chọn 2)",
-        "options": ["Dùng Config Rules, để EventBridge bắt sự kiện thay đổi trạng thái compliance và gọi Lambda sửa lại resource", "Bật CloudTrail Insights để tự động revert thay đổi cấu hình", "Cấu hình Amazon Inspector tự động sửa Security Group", "Dùng Config remediation với Systems Manager Automation", "Thêm resource vào trusted IP list của GuardDuty"],
+        "options": ["Dùng Config Rules, để EventBridge bắt sự kiện thay đổi trạng thái compliance và gọi Lambda sửa lại resource", "Bật CloudTrail Insights để tự động revert thay đổi cấu hình", "Cấu hình Amazon Inspector tự động sửa Security Group", "Dùng remediation native của Config bằng SSM Automation documents", "Thêm resource vào trusted IP list của GuardDuty"],
         "answer": [0, 3],
-        "explain": "Remediation của Config đi qua EventBridge → Lambda (linh hoạt cho việc cấp account) hoặc SSM Automation (hiệu quả cho cấu hình trong instance). CloudTrail Insights chỉ phát hiện hoạt động API bất thường, không revert cấu hình."
+        "explain": "Config đánh dấu non-compliant rồi EventBridge chuyển event tới Lambda để sửa, hoặc dùng remediation native của Config với SSM Automation documents (ví dụ cài patch còn thiếu cho EC2). CloudTrail Insights chỉ phát hiện hoạt động API bất thường, không revert cấu hình."
       },
       {
         "type": "single",
@@ -41,17 +41,17 @@
     "CloudHSM": [
       {
         "type": "single",
-        "q": "Một tổ chức tài chính yêu cầu khóa mã hóa phải nằm trong thiết bị đạt FIPS 140-2 Level 3 toàn phần, single-tenant, và AWS không được có quyền truy cập vào khóa. Giải pháp nào đáp ứng yêu cầu?",
+        "q": "Một tổ chức tài chính cần thiết bị mã hóa đạt FIPS 140-3 Level 3. Ngoài ra họ phải dùng một số thuật toán không được FIPS phê duyệt, muốn HSM single-tenant do chính họ kiểm soát và AWS không được có quyền truy cập vào khóa. Giải pháp nào đáp ứng mọi yêu cầu?",
         "options": ["AWS KMS với customer managed key", "AWS CloudHSM", "AWS KMS với AWS managed key", "AWS Secrets Manager"],
         "answer": [1],
-        "explain": "Từ khóa FIPS 140-2 Level 3 overall + single-tenant + khách hàng toàn quyền kiểm soát khóa chỉ tới CloudHSM. KMS (theo khóa học) là shared service, đạt Level 2 tổng thể và AWS vận hành nó."
+        "explain": "Theo bài mới, cả KMS và CloudHSM đều đạt FIPS 140-3 Level 3, nên yêu cầu FIPS một mình chưa quyết định. Điều đẩy sang CloudHSM là HSM single-tenant tự kiểm soát và nhu cầu thuật toán non-FIPS: CloudHSM chạy được cluster ở non-FIPS mode, KMS thì không."
       },
       {
         "type": "single",
         "q": "Một ứng dụng Java on-premises đang dùng PKCS#11 và Java Cryptography Extensions (JCE) để thao tác với HSM. Công ty muốn chuyển lên AWS mà ít phải sửa code nhất. Dịch vụ nào phù hợp?",
         "options": ["AWS KMS với key policy", "AWS Certificate Manager", "AWS Secrets Manager", "AWS CloudHSM"],
         "answer": [3],
-        "explain": "CloudHSM hỗ trợ API chuẩn công nghiệp PKCS#11, JCE và CNG. KMS chỉ truy cập qua AWS API với quyền IAM nên ứng dụng phải viết lại."
+        "explain": "CloudHSM hỗ trợ API chuẩn công nghiệp PKCS#11, JCE, CNG/KSP và OpenSSL Dynamic Engine. KMS chỉ truy cập qua AWS API với quyền IAM nên ứng dụng phải viết lại."
       },
       {
         "type": "single",
@@ -69,7 +69,7 @@
       },
       {
         "type": "multi",
-        "q": "Trường hợp sử dụng nào phù hợp với CloudHSM nhưng KMS không đáp ứng được theo khóa học? (Chọn 2)",
+        "q": "Trường hợp sử dụng nào phù hợp với CloudHSM nhưng KMS không đáp ứng được theo bài học? (Chọn 2)",
         "options": ["Bật default encryption cho EBS volume", "Offload xử lý SSL/TLS cho web server", "Mã hóa server-side cho S3 bucket (SSE)", "Tự động rotate mật khẩu RDS", "Oracle Transparent Data Encryption (TDE) mà AWS không thể giải mã dữ liệu"],
         "answer": [1, 4],
         "explain": "SSL/TLS offload và Oracle TDE là use case điển hình của CloudHSM. EBS encryption và S3 SSE là tích hợp native của KMS, còn rotate mật khẩu RDS là việc của Secrets Manager."
@@ -93,16 +93,16 @@
       {
         "type": "single",
         "q": "Theo bài giảng, nguồn nào KHÔNG nằm trong các nguồn dữ liệu mà GuardDuty phân tích?",
-        "options": ["DNS logs từ Route 53 resolver", "VPC Flow Logs", "CloudTrail S3 data events", "Access logs của Application Load Balancer"],
+        "options": ["DNS logs từ Route 53", "VPC Flow Logs", "CloudTrail S3 data events", "Access logs của Application Load Balancer"],
         "answer": [3],
-        "explain": "Khóa học liệt kê DNS logs, VPC Flow Logs, CloudTrail event logs, CloudTrail management events và CloudTrail S3 data events. ALB access logs không phải nguồn của GuardDuty."
+        "explain": "Bài giảng liệt kê DNS logs từ Route 53, VPC Flow Logs, CloudTrail management events và CloudTrail S3 data events (khi bật S3 Protection plan). ALB access logs không phải nguồn của GuardDuty."
       },
       {
         "type": "single",
         "q": "Một doanh nghiệp có 30 AWS account và muốn quản lý tập trung GuardDuty cùng toàn bộ findings tại một nơi với ít vận hành nhất. Cách làm nào phù hợp?",
-        "options": ["Chỉ định một administrator (master) account, mời các account khác (hoặc dùng AWS Organizations) để chúng thành member", "Bật GuardDuty riêng ở từng account và đăng nhập từng account để xem findings", "Tạo CloudTrail organization trail và đọc log bằng Athena", "Dùng AWS Config aggregator để gom findings của GuardDuty"],
+        "options": ["Dùng AWS Organizations: management account chỉ định một GuardDuty administrator account, account này bật GuardDuty cho mọi member account", "Bật GuardDuty riêng ở từng account và đăng nhập từng account để xem findings", "Tạo CloudTrail organization trail và đọc log bằng Athena", "Dùng AWS Config aggregator để gom findings của GuardDuty"],
         "answer": [0],
-        "explain": "GuardDuty hỗ trợ mô hình administrator/master + member: account quản lý mời các account khác, hoặc chỉ định delegated administrator qua Organizations. Config aggregator gom cấu hình và compliance, không gom findings của GuardDuty."
+        "explain": "GuardDuty có kiến trúc administrator + member. Cách được khuyên dùng là Organizations: management account chỉ định GuardDuty administrator account, account này bật và quản lý GuardDuty cho mọi member; vẫn có thể mời từng account. Config aggregator gom cấu hình và compliance, không gom findings của GuardDuty."
       },
       {
         "type": "single",
@@ -118,35 +118,35 @@
         "q": "Bộ phận kiểm toán yêu cầu một security report liệt kê các CVE (Common Vulnerabilities and Exposures) có trên hệ điều hành của các EC2 instance. Dịch vụ nào phù hợp?",
         "options": ["Amazon GuardDuty", "Amazon Macie", "Amazon Inspector", "AWS Config"],
         "answer": [2],
-        "explain": "Thấy CVE và security report cho EC2 là Inspector. GuardDuty phát hiện hoạt động bất thường từ log, không quét lỗ hổng phần mềm trong OS."
+        "explain": "Thấy CVE và báo cáo lỗ hổng cho EC2 là Inspector (package vulnerability finding có CVE ID). GuardDuty phát hiện hoạt động bất thường từ log, không quét lỗ hổng phần mềm trong OS."
       },
       {
         "type": "single",
-        "q": "Một công ty muốn biết các EC2 instance có bị lộ ra Internet hay không, port nào bị lộ, xét cả Security Group, NACL, route table và Internet Gateway, nhưng KHÔNG muốn cài thêm agent. Lựa chọn nào phù hợp?",
-        "options": ["Inspector host assessment với rules package CVE", "Cài Inspector agent và chạy rules package CIS Benchmarks", "Bật VPC Flow Logs và phân tích bằng Athena", "Inspector với rules package Network Reachability"],
-        "answer": [3],
-        "explain": "Network Reachability phân tích end-to-end khả năng truy cập từ mạng public và chạy được không cần agent. CVE và CIS là host assessment nên bắt buộc có agent."
+        "q": "Một công ty muốn biết các EC2 instance có đường TCP/UDP nào đang mở từ Internet (qua Internet Gateway), từ VPC peering hoặc qua VPN, xét cả Security Group, NACL và route table, nhưng KHÔNG muốn cài thêm agent. Lựa chọn nào phù hợp?",
+        "options": ["Inspector agent-based scanning dùng SSM Agent", "Inspector network reachability", "Bật VPC Flow Logs và phân tích bằng Athena", "AWS Config managed rule cho Security Group"],
+        "answer": [1],
+        "explain": "Network reachability của Inspector chỉ áp cho EC2, không bao giờ cần agent, tự chạy mỗi 12 giờ và tìm đường mở end-to-end từ rìa VPC. Agent-based scanning là để lấy software inventory bên trong instance."
+      },
+      {
+        "type": "single",
+        "q": "Đội vận hành không được phép cài thêm bất kỳ agent nào lên EC2 nhưng vẫn muốn Amazon Inspector tìm lỗ hổng phần mềm trên các instance. Inspector làm việc này thế nào?",
+        "options": ["Không làm được, Inspector luôn bắt buộc Inspector agent", "Chỉ quét được bằng network reachability", "Agentless scanning: Inspector chụp EBS snapshot của instance rồi phân tích", "Chuyển sang Amazon Macie để quét EBS volume"],
+        "answer": [2],
+        "explain": "Inspector có hai cách quét EC2: agent-based dùng SSM Agent, và agentless chụp EBS snapshot rồi phân tích, không cần agent. Mặc định account dùng hybrid mode kết hợp cả hai. Macie chỉ dành cho dữ liệu trong S3."
       },
       {
         "type": "multi",
-        "q": "Phát biểu nào đúng về agent của Amazon Inspector (Classic)? (Chọn 2)",
-        "options": ["Network Reachability bắt buộc phải có agent mới chạy được", "Inspector quét dữ liệu nhạy cảm trong S3 nên cần agent trên bucket", "Network assessment chạy được không cần agent, thêm agent thì có nhiều thông tin hơn", "Agent chỉ cần cho container, không cần cho EC2", "Host assessment (CVE, CIS Benchmarks, security best practices) bắt buộc có agent"],
-        "answer": [2, 4],
-        "explain": "Network assessment không cần agent (agent cho thêm thông tin như finding có listener hay không), còn host assessment phải nhìn vào bên trong OS nên cần agent. Quét dữ liệu nhạy cảm trong S3 là Macie."
+        "q": "Phát biểu nào đúng về cách Amazon Inspector (bản hiện tại) chạy quét? (Chọn 2)",
+        "options": ["Phải đặt lịch assessment 15 phút, 1 giờ, 8 giờ, 12 giờ hoặc 1 ngày", "Chạy liên tục và tự quét lại khi có package mới, bản vá mới hoặc CVE mới được công bố", "Finding tự đóng khi lỗ hổng đã được khắc phục", "Inspector tự vá lỗ hổng ngay khi phát hiện", "Chỉ quét được EC2, không quét được ECR image hay Lambda"],
+        "answer": [1, 2],
+        "explain": "Inspector hiện tại chạy liên tục, không cần lên lịch như Inspector Classic, tự quét lại khi có thay đổi và tự đóng finding khi đã khắc phục. Inspector chỉ phát hiện, không tự sửa, và quét cả EC2, ECR container image, Lambda function."
       },
       {
         "type": "single",
-        "q": "Trong Inspector Classic, độ dài nào KHÔNG phải là tùy chọn thời gian assessment hợp lệ?",
-        "options": ["15 phút", "7 ngày", "8 giờ", "1 ngày"],
-        "answer": [1],
-        "explain": "Các tùy chọn là 15 phút, 1 giờ, 8 giờ, 12 giờ hoặc 1 ngày. 7 ngày không có trong danh sách."
-      },
-      {
-        "type": "single",
-        "q": "Đội bảo mật muốn kiểm tra cấu hình OS của các EC2 instance so với CIS Benchmarks và xác nhận root login qua SSH đã bị tắt. Giải pháp nào đáp ứng yêu cầu?",
-        "options": ["Amazon Inspector với host assessment (CIS Benchmarks và security best practices), có cài agent", "AWS Config managed rule kiểm tra Security Group", "Amazon GuardDuty với trusted IP list", "Amazon Macie với custom data identifier"],
+        "q": "Đội bảo mật muốn định kỳ so cấu hình hệ điều hành của các EC2 instance với CIS Benchmarks. Giải pháp nào đáp ứng yêu cầu?",
+        "options": ["Amazon Inspector với CIS Benchmark scan chạy on-demand hoặc theo lịch", "AWS Config managed rule kiểm tra Security Group", "Amazon GuardDuty với trusted IP list", "Amazon Macie với custom data identifier"],
         "answer": [0],
-        "explain": "CIS Benchmarks và các best practice như disable root login over SSH là rules package của Inspector, cần agent. AWS Config đánh giá cấu hình resource AWS chứ không nhìn vào bên trong OS."
+        "explain": "So OS của EC2 với CIS Benchmarks là targeted scan của Inspector, chạy on-demand hoặc theo lịch. AWS Config đánh giá cấu hình resource AWS chứ không nhìn vào bên trong OS."
       }
     ],
     "Layer 7 Firewall": [
@@ -199,14 +199,14 @@
         "q": "Một công ty muốn Macie nhận diện mã nhân viên theo định dạng riêng (một chữ cái, gạch ngang, 8 chữ số) trong các object S3. Họ nên làm gì?",
         "options": ["Tạo custom data identifier dùng regex, có thể thêm keywords và ignore words", "Bật thêm managed data identifiers loại Financial", "Viết custom AWS Config rule bằng Lambda", "Thêm định dạng vào trusted IP list"],
         "answer": [0],
-        "explain": "Dữ liệu đặc thù doanh nghiệp cần custom data identifier dựa trên regex, kèm refiner như keywords, maximum match distance, ignore words. Managed identifiers không phủ định dạng riêng như trong demo biển số xe Úc."
+        "explain": "Dữ liệu đặc thù doanh nghiệp cần custom data identifier dựa trên regex, kèm refiner như keywords, maximum match distance, ignore words. Managed identifiers không phủ định dạng riêng của tổ chức."
       },
       {
         "type": "single",
         "q": "Đội bảo mật muốn nhận email ngay khi Macie phát hiện dữ liệu nhạy cảm trong S3, với ít công sức nhất. Kiến trúc nào phù hợp?",
         "options": ["Cấu hình Macie ghi finding vào CloudTrail, dùng metric filter để gửi email", "Cho Lambda chạy mỗi phút để quét bucket rồi gửi email qua SES", "Tạo EventBridge rule với event type Macie Finding, target là SNS topic có subscription email", "Bật AWS Config rule đánh giá bucket rồi gửi thông báo"],
         "answer": [2],
-        "explain": "Findings của Macie được gửi tới EventBridge; rule khớp Macie Finding đẩy sang SNS để gửi email (đúng như demo). Tự viết Lambda quét bucket tốn vận hành và lặp lại việc Macie đã làm."
+        "explain": "Mọi finding của Macie tự động được publish lên EventBridge, không cần bật; rule khớp Macie Finding đẩy sang SNS để gửi email. Tự viết Lambda quét bucket tốn vận hành và lặp lại việc Macie đã làm."
       },
       {
         "type": "single",
@@ -229,7 +229,7 @@
         "q": "Một ứng dụng dùng Amazon RDS và yêu cầu mật khẩu database được tự động xoay vòng mỗi 30 ngày, mật khẩu trong DB luôn khớp với bản ứng dụng lấy về, với chi phí vận hành thấp nhất. Giải pháp nào đáp ứng yêu cầu?",
         "options": ["Lưu mật khẩu trong SSM Parameter Store SecureString và chạy cron job trên EC2 để đổi mật khẩu", "Lưu mật khẩu trong AWS Secrets Manager và bật automatic rotation", "Bật automatic key rotation cho KMS key mã hóa RDS", "Lưu mật khẩu trong EC2 user data và đổi thủ công"],
         "answer": [1],
-        "explain": "Secrets + rotation + RDS là bộ từ khóa của Secrets Manager: Lambda rotate secret và đổi luôn mật khẩu trong RDS. Parameter Store không có rotation sẵn, còn rotate KMS key không đổi mật khẩu DB."
+        "explain": "Secrets + rotation + RDS là bộ từ khóa của Secrets Manager: secret được rotate và mật khẩu trong RDS đổi theo (master password RDS/Aurora còn có managed rotation, không cần Lambda). Parameter Store không có rotation sẵn, còn rotate KMS key không đổi mật khẩu DB."
       },
       {
         "type": "single",
@@ -240,10 +240,10 @@
       },
       {
         "type": "single",
-        "q": "AWS Secrets Manager thực hiện automatic rotation bằng cơ chế nào?",
+        "q": "Với phần lớn loại secret (không thuộc diện managed rotation), AWS Secrets Manager thực hiện automatic rotation bằng cơ chế nào?",
         "options": ["Gọi định kỳ một Lambda function, Lambda dùng execution role để cập nhật secret và dịch vụ tích hợp", "Dùng KMS automatic key rotation hằng năm", "Dùng AWS Config remediation qua SSM Automation", "Tạo EC2 instance tạm thời chạy script đổi mật khẩu"],
         "answer": [0],
-        "explain": "Rotation chạy bằng Lambda được gọi định kỳ, quyền lấy từ execution role. KMS key rotation chỉ đổi key material, không đổi secret."
+        "explain": "Với phần lớn secret, rotation chạy bằng Lambda được gọi định kỳ, quyền lấy từ execution role; riêng master password RDS/Aurora có managed rotation do AWS lo, không cần Lambda. KMS key rotation chỉ đổi key material, không đổi secret."
       },
       {
         "type": "multi",
@@ -310,21 +310,21 @@
         "q": "Action nào KHÔNG dùng được cho rate-based rule trong AWS WAF?",
         "options": ["ALLOW", "BLOCK", "COUNT", "CAPTCHA"],
         "answer": [0],
-        "explain": "Rate-based rule chỉ có BLOCK, COUNT, CAPTCHA vì ý nghĩa của nó là làm gì đó khi vượt ngưỡng; ALLOW vô nghĩa. ALLOW chỉ có ở regular rule."
+        "explain": "Rate-based rule chỉ có BLOCK, COUNT, CAPTCHA, CHALLENGE vì ý nghĩa của nó là làm gì đó khi vượt ngưỡng; ALLOW vô nghĩa. ALLOW chỉ có ở regular rule."
       },
       {
         "type": "multi",
         "q": "Một công ty muốn phân tích log của AWS WAF gần thời gian thực để tự động cập nhật Web ACL khi phát hiện tấn công. Nên gửi WAF logs tới đích nào? (Chọn 2)",
-        "options": ["Ghi log trực tiếp vào S3 bucket", "Amazon CloudWatch Logs", "AWS CloudTrail", "Amazon Kinesis Data Firehose", "VPC Flow Logs"],
+        "options": ["Ghi log trực tiếp vào S3 bucket", "Amazon CloudWatch Logs", "AWS CloudTrail", "Amazon Data Firehose", "VPC Flow Logs"],
         "answer": [1, 3],
-        "explain": "WAF logs gửi được tới S3, CloudWatch Logs hoặc Kinesis Data Firehose; log vào S3 được giao theo lô khoảng 5 phút nên không hợp để phản ứng nhanh. CloudTrail và VPC Flow Logs không phải đích log của WAF."
+        "explain": "WAF logs gửi được tới S3, CloudWatch Logs hoặc Amazon Data Firehose (tên cũ Kinesis Data Firehose); log vào S3 được giao theo lô khoảng 5 phút nên không hợp để phản ứng nhanh. CloudTrail và VPC Flow Logs không phải đích log của WAF."
       },
       {
         "type": "single",
-        "q": "Theo khóa học, khi kiểm tra body của request, AWS WAF inspect bao nhiêu dữ liệu?",
-        "options": ["Toàn bộ body không giới hạn", "1,024 byte đầu tiên", "1 MB đầu tiên", "8,192 byte (8 KB) đầu tiên"],
-        "answer": [3],
-        "explain": "Con số khóa học nhấn mạnh là 8,192 byte đầu. Hiện nay một số dịch vụ như CloudFront mặc định 16 KB, nhưng đáp án thi theo khóa học là 8 KB."
+        "q": "Một công ty muốn AWS WAF kiểm tra xem client có phải trình duyệt thật hay không bằng một bước kiểm tra JavaScript chạy ngầm, không bắt người dùng giải câu đố. Client đã qua kiểm tra thì không bị hỏi lại liên tục. Nên dùng action nào?",
+        "options": ["COUNT", "CAPTCHA", "CHALLENGE", "ALLOW với custom header"],
+        "answer": [2],
+        "explain": "CHALLENGE hoạt động giống CAPTCHA nhưng im lặng: WAF gửi kiểm tra JavaScript chạy nền thay vì câu đố cho người dùng. Cả hai dùng token để nhớ client đã vượt qua. COUNT chỉ đếm, còn ALLOW với custom header không kiểm tra gì."
       },
       {
         "type": "single",
@@ -332,6 +332,302 @@
         "options": ["1", "2", "3", "4"],
         "answer": [1],
         "explain": "Một Web ACL gắn được cho nhiều resource cùng phạm vi, nên 1 Web ACL regional ở eu-west-1 cho cả 3 ALB và 1 Web ACL global cho CloudFront. Web ACL của CloudFront không gắn được cho resource regional và ngược lại, nên 1 là không đủ."
+      }
+    ],
+    "Amazon Managed Grafana": [
+      {
+        "type": "single",
+        "q": "Đội vận hành đã quen dùng Grafana và muốn dashboard gộp metric từ CloudWatch, Azure Monitor và Loki mà không phải tự vận hành server Grafana. Dịch vụ nào phù hợp nhất?",
+        "options": ["Amazon Managed Service for Prometheus", "Amazon CloudWatch dashboard", "AWS Compute Optimizer", "Amazon Managed Grafana"],
+        "answer": [3],
+        "explain": "Managed Grafana là Grafana do AWS quản lý, hỗ trợ nhiều data source cả trong và ngoài AWS. CloudWatch dashboard hợp khi mọi thứ đã nằm trong CloudWatch; AMP chỉ lưu và truy vấn metric Prometheus."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về dữ liệu trong một Amazon Managed Grafana workspace?",
+        "options": ["Workspace lưu dữ liệu 150 ngày rồi tự xóa", "Phải cài agent lên từng nguồn để đẩy dữ liệu vào workspace", "Workspace lưu cấu hình như dashboard, alert rule, data source; dữ liệu được truy vấn tại nguồn khi cần", "Workspace copy toàn bộ metric từ các nguồn về lưu trữ để dashboard chạy nhanh"],
+        "answer": [2],
+        "explain": "Grafana không lưu dữ liệu vận hành; nó truy vấn nguồn bằng ngôn ngữ truy vấn của chính nguồn qua plugin mỗi khi cần, nên không cần agent hay collector. Retention 150 ngày là của Amazon Managed Service for Prometheus."
+      },
+      {
+        "type": "multi",
+        "q": "Một workspace Managed Grafana vừa được kết nối với một VPC để đọc RDS. Sau đó các dashboard CloudWatch và truy vấn tới Azure Monitor đều lỗi. Nguyên nhân và cách sửa phù hợp là gì? (Chọn 2)",
+        "options": ["Phải chuyển user sang IAM user thay vì IAM Identity Center", "Cần NAT Gateway, route table và Security Group phù hợp để workspace ra Internet tới Azure Monitor", "Phải bật VPC peering giữa workspace và CloudWatch", "Grafana không hỗ trợ CloudWatch khi đã có RDS, phải tạo workspace thứ hai ở region khác", "Khi đã kết nối VPC, mọi traffic của workspace đi qua VPC đó, nên cần interface endpoint cho CloudWatch"],
+        "answer": [1, 4],
+        "explain": "Kết nối VPC làm toàn bộ traffic của workspace đi qua các ENI trong VPC: đường PrivateLink tới CloudWatch, AMP, X-Ray không còn như cũ nên cần interface endpoint, và nguồn trên Internet cần NAT Gateway, route table, Security Group. Đổi cách xác thực user không liên quan."
+      },
+      {
+        "type": "single",
+        "q": "Người dùng đăng nhập vào workspace Amazon Managed Grafana bằng cách nào?",
+        "options": ["Dùng Cognito user pool bắt buộc", "Dùng IAM Identity Center hoặc tin trực tiếp một SAML IdP, rồi gán role User, Editor hoặc Admin", "Dùng access key của root account", "Tạo IAM user cho từng người và gán policy Grafana"],
+        "answer": [1],
+        "explain": "User của workspace không cấu hình qua IAM; dùng IAM Identity Center (cần AWS Organizations) hoặc SAML IdP như Okta, Entra ID, rồi gán role trong Managed Grafana. IAM role chỉ dùng để workspace đọc nguồn dữ liệu AWS."
+      },
+      {
+        "type": "single",
+        "q": "Muốn Managed Grafana đọc dữ liệu từ một RDS MySQL database nằm trong private subnet. Điều nào đúng?",
+        "options": ["Dùng plugin MySQL và kết nối workspace với VPC chứa RDS (workspace tạo ENI trong subnet)", "Mỗi workspace kết nối được nhiều VPC cùng lúc nên không cần VPC peering", "RDS có plugin native, chỉ cần chọn RDS trong danh sách", "Phải đặt RDS ở public subnet vì Grafana chỉ dùng public endpoint"],
+        "answer": [0],
+        "explain": "RDS không có plugin native; dùng plugin MySQL hoặc PostgreSQL. Nguồn trong VPC cần kết nối workspace với VPC đó (ENI trong subnet). Một workspace chỉ kết nối được một VPC, VPC khác phải dùng VPC peering hoặc tương tự."
+      }
+    ],
+    "Amazon Managed Service for Prometheus": [
+      {
+        "type": "single",
+        "q": "Một công ty chạy EKS và đội đã quen Prometheus, PromQL. Họ muốn bỏ việc tự vận hành hạ tầng lưu trữ và truy vấn metric Prometheus. Dịch vụ nào phù hợp?",
+        "options": ["Amazon Athena", "Amazon Managed Service for Prometheus (AMP)", "AWS X-Ray", "Amazon CloudWatch Logs Insights"],
+        "answer": [1],
+        "explain": "AMP lưu và truy vấn metric tương thích Prometheus bằng PromQL, AWS lo scaling, HA, bảo trì. Nếu mọi thứ giám sát đã ở CloudWatch thì Container Insights có thể hợp hơn."
+      },
+      {
+        "type": "single",
+        "q": "Sau khi tạo một AMP workspace, dashboard vẫn trống vì không có dữ liệu. Nguyên nhân thường gặp nhất là gì?",
+        "options": ["AMP không tự thu thập dữ liệu; cần collector (ADOT, Prometheus agent, CloudWatch agent hoặc AWS managed collector cho EKS) scrape workload rồi push vào remote write endpoint", "Phải bật VPC Flow Logs cho cluster", "Chưa bật retention 3 năm", "Workspace phải tạo ở us-east-1 mới nhận dữ liệu"],
+        "answer": [0],
+        "explain": "AMP chỉ lưu và truy vấn, không thu thập. Collector do bạn quản lý (hoặc AWS managed collector với EKS) scrape workload rồi push vào remote write endpoint của workspace."
+      },
+      {
+        "type": "single",
+        "q": "Ứng dụng tự viết của công ty gọi remote query endpoint của AMP và bị từ chối. Yêu cầu bảo mật nào có thể đang thiếu?",
+        "options": ["Request phải được ký bằng SigV4", "Request phải đi qua NAT Gateway", "Phải dùng Security Group riêng cho AMP", "Phải bật MFA cho IAM user"],
+        "answer": [0],
+        "explain": "Request tới remote write và remote query endpoint phải ký SigV4. Managed Grafana tự lo việc này, còn collector, Grafana tự quản hay ứng dụng của bạn thì phải tự cấu hình."
+      },
+      {
+        "type": "single",
+        "q": "Dữ liệu ingest vào AMP được giữ bao lâu?",
+        "options": ["Mặc định 7 ngày, tối đa 35 ngày", "Vĩnh viễn, không chỉnh được", "Mặc định 150 ngày, chỉnh được tới tối đa 1.095 ngày (3 năm)", "Mặc định 15 ngày, tối đa 455 ngày"],
+        "answer": [2],
+        "explain": "Retention mặc định của AMP là 150 ngày và tăng được tới 1.095 ngày, tức 3 năm."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về alert và chi phí của AMP? (Chọn 2)",
+        "options": ["AMP chỉ nhận dữ liệu từ EKS, không nhận nguồn ngoài AWS", "Alert rule chạy PromQL theo lịch và bắn alert vào Alert Manager; Alert Manager gom nhóm, suppress và có thể gọi SNS", "AMP tính phí theo lượng dữ liệu thu vào, lưu trữ và truy vấn", "Alert Manager dừng việc đánh giá rule trong maintenance window", "AMP tính phí theo số host được giám sát"],
+        "answer": [1, 2],
+        "explain": "Alert rule đánh giá PromQL theo lịch; Alert Manager chỉ quyết định bạn được báo gì (gom nhóm, suppress), rule vẫn tiếp tục chạy. Chi phí theo dữ liệu thu vào, lưu, truy vấn chứ không theo số host, và AMP nhận mọi nguồn tương thích Prometheus trong hay ngoài AWS."
+      }
+    ],
+    "AWS Compute Optimizer": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn được gợi ý instance type và kích thước cụ thể cho từng EC2 instance dựa trên mức sử dụng thật, để tránh vấn đề hiệu năng và giảm chi phí. Dịch vụ nào phù hợp nhất?",
+        "options": ["AWS Budgets", "AWS Config", "AWS Trusted Advisor", "AWS Compute Optimizer"],
+        "answer": [3],
+        "explain": "Compute Optimizer so cấu hình với metric sử dụng và đưa recommendation từng resource (under-provisioned, over-provisioned, optimized). Trusted Advisor chỉ báo chung chung instance underutilized, không nói nên đổi sang type nào."
+      },
+      {
+        "type": "single",
+        "q": "Một EC2 instance chỉ bận rộn vào cuối tháng để chạy báo cáo. Giữa tháng Compute Optimizer gợi ý downsize nhưng cuối tháng instance lại quá tải. Cách khắc phục phù hợp là gì?",
+        "options": ["Chuyển sang Trusted Advisor", "Tắt Compute Optimizer", "Bật Enhanced Infrastructure Metrics (trả phí) để phân tích 93 ngày thay vì 14 ngày", "Đổi sang Spot Instance"],
+        "answer": [2],
+        "explain": "Phần miễn phí chỉ phân tích 14 ngày gần nhất. Enhanced Infrastructure Metrics nâng lên 93 ngày cho EC2, Auto Scaling Group và RDS, nên thấy được chu kỳ cuối tháng."
+      },
+      {
+        "type": "single",
+        "q": "Recommendation của Compute Optimizer cho EC2 không phản ánh mức dùng memory. Nguyên nhân là gì?",
+        "options": ["Memory chỉ được phân tích với Lambda", "EC2 cần CloudWatch Agent để báo memory utilization; thiếu agent thì recommendation không thấy memory", "Compute Optimizer không hỗ trợ EC2", "Phải bật VPC Flow Logs"],
+        "answer": [1],
+        "explain": "Metric memory của EC2 phải có CloudWatch Agent mới báo về CloudWatch. Không có agent thì Compute Optimizer vẫn chạy nhưng không thấy memory nên kém chính xác."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về việc áp dụng recommendation của AWS Compute Optimizer? (Chọn 2)",
+        "options": ["Compute Optimizer chỉ chạy được trong management account", "Thay đổi tự động không đảo ngược được", "Mọi recommendation đều được Compute Optimizer tự áp dụng", "Thay đổi tự động có thể đảo ngược ngay trong console Compute Optimizer", "Với một số loại như EBS volume, có thể tự áp dụng theo rule lọc theo tag và region, lịch daily, weekly hoặc monthly"],
+        "answer": [3, 4],
+        "explain": "Chỉ một số loại (ví dụ EBS) tự áp dụng được, qua rule theo tag và region với lịch daily, weekly, monthly; thay đổi không bị khóa cứng mà đảo ngược được trong console. Các loại khác bạn tự đổi cấu hình."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty có 50 account trong AWS Organizations và muốn một dashboard Compute Optimizer cho mọi account, mọi region. Họ nên làm gì?",
+        "options": ["Dùng Cost Explorer với hourly granularity", "Opt in Compute Optimizer cho mọi account từ management account của organization", "Bật Trusted Advisor ở từng account", "Tạo CloudTrail organization trail"],
+        "answer": [1],
+        "explain": "Compute Optimizer cần opt in; với Organizations có thể bật cho mọi account từ management account và có một dashboard xuyên account, region. Khi opt in, service-linked role được tạo tự động."
+      }
+    ],
+    "AWS Network Firewall": [
+      {
+        "type": "single",
+        "q": "Một công ty cần lọc traffic vào và ra VPC theo danh sách domain (cho phép server cập nhật phần mềm và dịch vụ AWS, chặn phần còn lại) và cần rule IPS theo chuẩn Suricata. Dịch vụ nào phù hợp?",
+        "options": ["AWS WAF gắn vào Internet Gateway", "Network ACL", "Security Groups", "AWS Network Firewall"],
+        "answer": [3],
+        "explain": "Network Firewall có stateful engine dùng chuẩn Suricata, hỗ trợ domain list (dựa trên HTTP header hoặc SNI) và rule IPS. SG và NACL chỉ lọc theo IP/port; WAF không gắn được vào Internet Gateway."
+      },
+      {
+        "type": "multi",
+        "q": "Khi triển khai AWS Network Firewall để bảo vệ EC2 trong public subnet, cấu hình routing nào đúng? (Chọn 2)",
+        "options": ["Gắn Network Firewall trực tiếp vào ENI của EC2", "Default route 0.0.0.0/0 của public subnet trỏ tới firewall endpoint cùng AZ", "Route table của firewall subnet trỏ 0.0.0.0/0 tới NAT Gateway của public subnet", "Đặt firewall endpoint chung subnet với EC2 để tiết kiệm IP", "Gắn ingress route table vào Internet Gateway, route CIDR của public subnet tới firewall endpoint cùng AZ"],
+        "answer": [1, 4],
+        "explain": "Traffic vào: ingress route table trên IGW đưa tới endpoint; traffic ra: default route của public subnet tới endpoint cùng AZ, rồi route table của firewall subnet đưa 0.0.0.0/0 tới IGW. Endpoint không lọc được traffic của chính subnet chứa nó nên phải ở firewall subnet riêng."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về stateless rule group của AWS Network Firewall?",
+        "options": ["Dùng chuẩn Suricata và hỗ trợ domain list", "Xét từng packet theo 5-tuple, action pass, drop hoặc forward sang stateful engine, xử lý theo priority số nhỏ trước", "Hiểu request và response cùng một kết nối, như Security Group", "Có action reject gửi TCP reset"],
+        "answer": [1],
+        "explain": "Stateless engine xét từng packet riêng lẻ theo 5-tuple, giống NACL; action pass, drop, forward (kèm custom action tùy chọn), xử lý theo priority, gặp khớp là dừng. Suricata, domain list và reject là của stateful engine."
+      },
+      {
+        "type": "multi",
+        "q": "Loại traffic nào AWS Network Firewall KHÔNG inspect được theo bài học? (Chọn 2)",
+        "options": ["Traffic ra Internet từ public subnet", "Traffic từ Internet vào public subnet qua Internet Gateway", "Traffic VPC peering", "DNS do Amazon cung cấp cho EC2 instance", "Traffic HTTP tới EC2"],
+        "answer": [2, 3],
+        "explain": "Bài nêu firewall không inspect được traffic VPC peering, traffic Global Accelerator và DNS do Amazon cung cấp cho EC2. Traffic vào và ra qua IGW là trường hợp Network Firewall được thiết kế để lọc."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư muốn đổi thứ tự đánh giá stateful của một firewall policy từ action order sang strict order và tăng capacity của một rule group đã tạo. Điều gì đúng?",
+        "options": ["Chỉ đổi được capacity, không đổi được thứ tự", "Chỉ đổi được khi firewall ở non-FIPS mode", "Cả hai đổi được bất cứ lúc nào trên console", "Không đổi được: thứ tự stateful cố định khi tạo policy, type và capacity của rule group cố định khi tạo"],
+        "answer": [3],
+        "explain": "Thứ tự đánh giá stateful (action order mặc định hoặc strict order AWS khuyên dùng) được chọn khi tạo policy và không đổi được; type và capacity của rule group cũng không đổi được sau khi tạo. Muốn khác thì tạo mới."
+      }
+    ],
+    "AWS Trusted Advisor": [
+      {
+        "type": "multi",
+        "q": "Một startup đang dùng gói Basic support. Check nào của Trusted Advisor họ dùng được miễn phí? (Chọn 2)",
+        "options": ["Event-driven integration với Trusted Advisor", "MFA on root account", "Service limit check (báo khi dùng quá 80%)", "Toàn bộ check của nhóm operational excellence", "Trusted Advisor API để lấy recommendation bằng code"],
+        "answer": [1, 2],
+        "explain": "Basic và Developer có 6 core check (S3 bucket permissions, SG port mở, STS global endpoint usage, MFA on root, EBS và RDS public snapshot) cộng toàn bộ service limit check. Operational excellence, API và event-driven cần gói trả phí."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty muốn tự động theo dõi service limit và tự mở support case xin tăng limit khi sắp chạm ngưỡng. Họ cần gì?",
+        "options": ["Compute Optimizer với Enhanced Infrastructure Metrics", "Trusted Advisor (service limit check) cùng AWS Support API, với support plan trả phí như Business Support+ hoặc Enterprise Support", "CloudTrail Insights", "Chỉ cần gói Basic support và AWS Config"],
+        "answer": [1],
+        "explain": "Tự động hóa cần Trusted Advisor API và AWS Support API (mở case bằng code), chỉ có với support plan trả phí. Gói Basic chỉ xem check trên console."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào đúng về chi phí của AWS Trusted Advisor?",
+        "options": ["Trusted Advisor có giá riêng theo số check bật", "Trusted Advisor gắn với support plan của account, không mua riêng được", "Mọi check đều miễn phí cho mọi account", "Trusted Advisor tính phí theo số resource được kiểm tra"],
+        "answer": [1],
+        "explain": "Trusted Advisor đi theo support plan: Basic/Developer có bản giới hạn, gói trả phí (Business Support+, Enterprise Support, Unified Operations) mở mọi check, API và event-driven. Không trả tiền riêng cho Trusted Advisor được."
+      },
+      {
+        "type": "single",
+        "q": "Check S3 bucket permissions của Trusted Advisor chỉ báo xanh (OK) cho một bucket khi nào?",
+        "options": ["Khi bucket mã hóa bằng SSE-KMS", "Khi bucket có lifecycle rule", "Khi bucket bật đầy đủ Block Public Access", "Khi bucket có versioning"],
+        "answer": [2],
+        "explain": "Check này xét bucket ACL và bucket policy, và kết quả còn phụ thuộc Block Public Access: bucket chỉ OK khi bật đầy đủ Block Public Access."
+      },
+      {
+        "type": "single",
+        "q": "Trusted Advisor báo một EC2 instance underutilized, nhưng đội muốn biết nên đổi sang instance type nào và tự động áp dụng. Dịch vụ nào phù hợp hơn?",
+        "options": ["AWS Config", "AWS Security Hub", "Amazon Inspector", "AWS Compute Optimizer"],
+        "answer": [3],
+        "explain": "Về utilization, Trusted Advisor chỉ báo rất chung, không nói đổi sang type nào và không tự động hóa. Compute Optimizer đưa recommendation từng resource và tự áp dụng được một số loại."
+      }
+    ],
+    "AWS Security Hub": [
+      {
+        "type": "single",
+        "q": "Một công ty muốn một nơi duy nhất gom findings từ GuardDuty, Inspector, Macie, AWS Config và chấm điểm tư thế bảo mật theo CIS AWS Foundations và PCI DSS. Dịch vụ nào phù hợp?",
+        "options": ["Amazon GuardDuty", "Amazon Detective", "AWS Trusted Advisor", "AWS Security Hub"],
+        "answer": [3],
+        "explain": "Security Hub (CSPM) là điểm gom findings từ nhiều dịch vụ và so môi trường với CIS AWS Foundations, PCI DSS, AWS Foundational Security Best Practices. Detective dùng để điều tra, GuardDuty để phát hiện mối đe dọa."
+      },
+      {
+        "type": "single",
+        "q": "Một đội vừa bật AWS Security Hub hôm nay nhưng không thấy các sự kiện bảo mật xảy ra tuần trước. Vì sao?",
+        "options": ["Security Hub chỉ chạy ở us-east-1", "Phải bật GuardDuty Malware Protection", "Security Hub không retroactive, chỉ ghi nhận từ lúc bật", "Security Hub chỉ giữ dữ liệu 24 giờ"],
+        "answer": [2],
+        "explain": "Security Hub không retroactive: chỉ hoạt động từ thời điểm bật trở đi. Nó cũng là dịch vụ regional nên cần bật ở mọi region để bắt sự kiện ở mọi nơi."
+      },
+      {
+        "type": "single",
+        "q": "Điều kiện nào cần có để phần lớn control của Security Hub CSPM chạy được?",
+        "options": ["Shield Advanced ở mọi account", "CloudTrail organization trail ghi vào S3", "AWS Config bật với resource recording ở mọi account và mọi region bật CSPM", "VPC Flow Logs ở mọi VPC"],
+        "answer": [2],
+        "explain": "Phần lớn control của Security Hub CSPM chạy bằng service-linked AWS Config rule, nên AWS Config phải bật resource recording ở mọi account và region bật CSPM."
+      },
+      {
+        "type": "multi",
+        "q": "Một tổ chức có nhiều account và region muốn xem toàn bộ findings của Security Hub ở một chỗ. Cách nào đúng? (Chọn 2)",
+        "options": ["Định nghĩa home region nhận dữ liệu từ các linked region", "Dùng AWS Config aggregator thay cho Security Hub", "Copy findings bằng S3 Cross-Region Replication", "Security Hub là global nên chỉ cần bật một region", "Dùng một Security Hub administrator account, member account được mời hoặc thêm qua Organizations"],
+        "answer": [0, 4],
+        "explain": "Security Hub regional nhưng có home region gom dữ liệu linked region, và kiến trúc administrator + member riêng (mời hoặc management account của Organizations chỉ định administrator). Cấu trúc này khác management/member của Organizations."
+      },
+      {
+        "type": "single",
+        "q": "Định dạng chung mà Security Hub dùng cho mọi finding nó nhận vào hoặc sinh ra là gì?",
+        "options": ["CSV theo chuẩn CUR", "CEF", "AWS Security Finding Format (ASFF), dạng JSON", "Syslog"],
+        "answer": [2],
+        "explain": "AWS Security Finding Format (ASFF) là chuẩn JSON cho mọi thứ Security Hub nhận vào hoặc sinh ra, bớt việc xử lý nhiều định dạng khác nhau."
+      }
+    ],
+    "AWS Firewall Manager": [
+      {
+        "type": "single",
+        "q": "Một công ty có 80 account trong AWS Organizations muốn áp cùng một bộ rule WAF và rule NACL cho mọi account, kể cả account mới thêm vào, và tự sửa khi có account làm sai. Dịch vụ nào phù hợp?",
+        "options": ["AWS Config aggregator", "AWS Network Firewall", "Service Control Policies", "AWS Firewall Manager"],
+        "answer": [3],
+        "explain": "Firewall Manager quản lý tập trung WAF, Network Firewall, Security Group, NACL, Shield Advanced... cho mọi account trong Organization, account mới nằm trong scope tự nhận policy và có thể bật auto remediation."
+      },
+      {
+        "type": "multi",
+        "q": "Điều kiện nào bắt buộc để dùng AWS Firewall Manager? (Chọn 2)",
+        "options": ["Phải dùng Transit Gateway", "AWS Organizations bật all features", "Mỗi member account phải mua Shield Advanced", "Chỉ cần bật consolidated billing", "AWS Config recording (continuous) ở mọi member account và mọi region có policy"],
+        "answer": [1, 4],
+        "explain": "Firewall Manager cần Organizations all features (consolidated billing là không đủ) và AWS Config recording liên tục ở mọi member account, mọi region policy áp dụng: Config theo dõi và báo trạng thái, Firewall Manager quyết định và sửa."
+      },
+      {
+        "type": "single",
+        "q": "Với Firewall Manager policy loại NACL, Firewall Manager quản lý phần nào của mỗi network ACL?",
+        "options": ["Không quản lý rule, chỉ báo cáo", "Toàn bộ rule, chủ account không sửa được gì", "Chỉ rule đầu và rule cuối; chủ account vẫn quản lý các rule ở giữa", "Chỉ default rule"],
+        "answer": [2],
+        "explain": "Với NACL, rule viết thẳng trong policy và Firewall Manager sở hữu rule đầu và rule cuối của mỗi NACL; các rule ở giữa vẫn do chủ account quản lý."
+      },
+      {
+        "type": "single",
+        "q": "Một kỹ sư tạo Firewall Manager policy WAF cho các CloudFront distribution. Policy này phải tạo ở đâu và phạm vi region nào?",
+        "options": ["Trong Firewall Manager administrator account, region Global", "Trong từng member account, region us-east-1", "Trong management account, region của ALB", "Trong mọi account, mọi region"],
+        "answer": [0],
+        "explain": "Policy luôn tạo trong Firewall Manager administrator account. Policy thường là regional, riêng WAF cho CloudFront là global; WAF cho ALB thì là policy regional."
+      },
+      {
+        "type": "single",
+        "q": "Firewall Manager policy để action mặc định. Khi phát hiện resource không đúng policy, điều gì xảy ra?",
+        "options": ["Firewall Manager chỉ đánh dấu compliant hoặc non-compliant (identify only); muốn tự sửa thì bật automatic remediation", "Firewall Manager xóa resource đó", "Resource bị SCP chặn mọi thay đổi", "AWS Config tự sửa resource"],
+        "answer": [0],
+        "explain": "Mặc định và được AWS khuyên bắt đầu là identify only. Bật automatic remediation thì chính Firewall Manager sửa cấu hình qua service-linked role; AWS Config chỉ báo trạng thái."
+      }
+    ],
+    "Amazon Detective": [
+      {
+        "type": "single",
+        "q": "GuardDuty báo một finding đáng ngờ. Đội bảo mật muốn lần theo xem entity liên quan đã login thất bại ở đâu, gọi những API nào và có traffic mạng bất thường gì, theo cách tương tác. Dịch vụ nào phù hợp?",
+        "options": ["Amazon Inspector", "Amazon Detective", "AWS Security Hub", "AWS Trusted Advisor"],
+        "answer": [1],
+        "explain": "Detective là dịch vụ điều tra bảo mật: gom sự kiện theo thời gian từ CloudTrail, VPC Flow Logs, GuardDuty findings thành graph để lần theo tương tác. GuardDuty phát hiện, Detective điều tra."
+      },
+      {
+        "type": "multi",
+        "q": "Amazon Detective lấy dữ liệu từ những nguồn nào theo bài học? (Chọn 2)",
+        "options": ["S3 server access logs", "CloudWatch Logs của ứng dụng", "VPC Flow Logs (network traffic)", "Trusted Advisor checks", "CloudTrail (login attempt, API call)"],
+        "answer": [2, 4],
+        "explain": "Bài nêu các ví dụ: login attempt và API call từ CloudTrail, network traffic từ VPC Flow Logs, và GuardDuty findings."
+      },
+      {
+        "type": "single",
+        "q": "Phát biểu nào mô tả đúng điểm khác giữa GuardDuty và Detective?",
+        "options": ["GuardDuty phát hiện mối đe dọa và tạo finding; Detective giúp điều tra, lần theo quan hệ của sự kiện, dùng GuardDuty findings làm một nguồn", "Cả hai đều quét lỗ hổng CVE", "Detective chặn traffic độc hại", "GuardDuty điều tra, Detective phát hiện"],
+        "answer": [0],
+        "explain": "GuardDuty phát hiện liên tục và tạo finding; Detective gom dữ liệu thành graph để điều tra, khám phá resource liên quan và xem điều gì bình thường hay bất thường."
+      },
+      {
+        "type": "single",
+        "q": "Một tổ chức dùng AWS Organizations muốn Detective tự thêm mọi account mới gia nhập organization. Cách nào đúng?",
+        "options": ["Detective tự bật cho mọi account mà không cần cấu hình", "Bật Detective riêng ở từng account", "Dùng SCP để ép account bật Detective", "Management account delegate một Detective administrator account; account này thêm account trong org và bật tự thêm account mới"],
+        "answer": [3],
+        "explain": "Detective có kiến trúc administrator + member. Với Organizations, management account delegate Detective administrator; account này thêm được mọi account và có tùy chọn tự thêm account mới, vẫn mời được account ngoài org."
+      },
+      {
+        "type": "single",
+        "q": "Tính năng nào của Amazon Detective giúp trả lời câu hỏi 'mức tải hay sự kiện này có bình thường với môi trường của tôi không'?",
+        "options": ["Automation rules", "Tailored visualization", "Rate-based rule", "Managed data identifiers"],
+        "answer": [1],
+        "explain": "Detective có visualization theo môi trường để thấy một sự kiện hay mức tải là bình thường hay bất thường. Automation rules là của Security Hub, rate-based rule của WAF, managed data identifiers của Macie."
       }
     ]
   }

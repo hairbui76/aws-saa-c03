@@ -1,0 +1,15 @@
+{
+ "Amazon Managed Grafana": {
+  "sig": "8-1wqfgl8",
+  "steps": [
+   "Sơ đồ này nói về Amazon Managed Grafana. Workspace chỉ lưu cấu hình như dashboard, alert và data source; dữ liệu nằm ở nguồn và chỉ được truy vấn khi cần, qua plugin, nên không phải cài agent.",
+   "Người dùng đăng nhập qua IAM Identity Center hoặc một SAML IdP như Okta, Entra ID, không qua IAM, rồi được gán role User, Editor hoặc Admin. Mỗi active user tính phí license, tối thiểu một editor.",
+   "Để đọc nguồn dữ liệu AWS, workspace dùng một IAM role có quyền phù hợp. Nguồn ngoài AWS thì cấu hình credential ngay trong data source.",
+   "Với nguồn nằm trong VPC như RDS hay Loki trên EC2, workspace phải kết nối với VPC đó, và chỉ được một VPC. Grafana tạo ENI trong subnet để truy cập; RDS dùng plugin MySQL hoặc PostgreSQL.",
+   "CloudWatch, AMP và X-Ray là trường hợp đặc biệt: workspace đi tới chúng qua PrivateLink do AWS quản lý trong cùng region, không ra Internet và bạn không phải tạo endpoint nào.",
+   "Các dịch vụ AWS khác như Athena, cùng nguồn ngoài AWS như Azure Monitor, được truy cập qua public endpoint. Nguồn thương mại như Datadog hay Splunk cần enterprise plugin trả thêm phí.",
+   "Managed Grafana có alert rule chạy query theo lịch, và có thể gửi thông báo qua SNS.",
+   "Khi đi thi nhớ: kết nối workspace với VPC thì mọi traffic của workspace đi qua VPC đó, mất đường PrivateLink tới CloudWatch, AMP, X-Ray nên phải tạo interface endpoint, và cần NAT Gateway để ra Internet. Chọn Managed Grafana khi đội đã quen Grafana hoặc cần nguồn CloudWatch không có."
+  ]
+ }
+}

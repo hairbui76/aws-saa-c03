@@ -1,0 +1,14 @@
+{
+ "AWS Network Firewall": {
+  "sig": "7-jkabig",
+  "steps": [
+   "Sơ đồ này nói về AWS Network Firewall. Firewall là dịch vụ regional, còn firewall endpoint, một loại VPC endpoint, nằm trong firewall subnet riêng ở mỗi AZ; route table được sửa để traffic đi vòng qua endpoint.",
+   "Chiều vào: Internet Gateway có ingress route table, đưa traffic tới dải 10.16.32.0 trên 20 sang endpoint A, và dải 10.16.96.0 trên 20 sang endpoint B, tức là endpoint cùng AZ với instance đích.",
+   "Ở AZ thứ hai cũng y như vậy: traffic sạch đi từ firewall subnet sang public subnet chứa instance Aus-E-Mart.",
+   "Endpoint chuyển traffic vào firewall để xử lý theo firewall policy. Một firewall có đúng một policy, một policy dùng được cho nhiều firewall. Đầu tiên là stateless engine, xét từng packet theo 5-tuple, theo thứ tự priority, với action pass, drop hoặc forward.",
+   "Traffic được forward sẽ sang stateful engine dùng chuẩn Suricata, với action pass, drop, reject gửi TCP reset, hoặc alert, hỗ trợ domain list theo HTTP header hoặc SNI và rule IPS. Thứ tự đánh giá là action order mặc định hoặc strict order mà AWS khuyên dùng.",
+   "Nếu được phép, traffic quay lại endpoint và route table của firewall subnet đưa nó tới instance trong public subnet. Lưu ý endpoint không lọc được traffic của chính subnet chứa nó, nên không đặt gì khác ở đó.",
+   "Chiều ra thì ngược lại: public subnet có default route tới endpoint cùng AZ, qua firewall, rồi route table của firewall subnet đưa ra Internet Gateway. Khi đi thi nhớ: lọc domain, IPS Suricata cho traffic vào ra VPC là Network Firewall, và nó không inspect được VPC peering, Global Accelerator hay DNS do Amazon cung cấp."
+  ]
+ }
+}

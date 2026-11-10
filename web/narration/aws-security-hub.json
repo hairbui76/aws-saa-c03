@@ -1,0 +1,13 @@
+{
+ "AWS Security Hub": {
+  "sig": "6-aur2u4",
+  "steps": [
+   "Sơ đồ này nói về AWS Security Hub, cụ thể là khả năng CSPM. Đây là dịch vụ regional, không retroactive, phần lớn control chạy bằng service-linked AWS Config rule, và mọi finding dùng định dạng JSON chung là ASFF.",
+   "Security Hub là điểm gom: các dịch vụ như AWS Config đẩy findings vào theo định dạng ASFF. Vì control dựa vào Config, bạn phải bật Config resource recording ở mọi account và region có bật CSPM.",
+   "Security Hub so môi trường của bạn với các chuẩn: CIS AWS Foundations, PCI DSS và AWS Foundational Security Best Practices.",
+   "Ngoài Config còn rất nhiều nguồn: Macie, Inspector, GuardDuty, IAM Access Analyzer, Firewall Manager và cả partner. Về tổ chức, Security Hub có administrator và member account riêng, qua lời mời hoặc do management account của Organizations chỉ định.",
+   "Kết quả là score và findings; automation rules có thể suppress finding, đổi severity hay thêm note. Findings cũng đi sang EventBridge để khắc phục hoặc thông báo gần thời gian thực.",
+   "Vì là regional, bạn định nghĩa một home region nhận dữ liệu từ các linked region để có cái nhìn gộp nhiều account, nhiều region. Khi đi thi nhớ: gom findings và chấm theo CIS hay PCI DSS là Security Hub, và sự kiện trước lúc bật sẽ không được ghi nhận."
+  ]
+ }
+}

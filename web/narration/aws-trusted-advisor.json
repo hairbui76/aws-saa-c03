@@ -1,0 +1,14 @@
+{
+ "AWS Trusted Advisor": {
+  "sig": "7-1vwqj1k",
+  "steps": [
+   "Sơ đồ này nói về AWS Trusted Advisor, công cụ so cấu hình của bạn với best practice của AWS ở sáu nhóm: cost optimization, performance, security, fault tolerance, service limits và operational excellence.",
+   "Trusted Advisor chạy ở mức account, không cần cài agent. Trên console, màu xanh nghĩa là ổn, màu đỏ nghĩa là nên hành động.",
+   "Với gói support Basic hoặc Developer, bạn chỉ có sáu core check: S3 bucket permissions, Security Group mở port ra mọi IP, STS global endpoint usage, MFA on root account, EBS và RDS public snapshots, cộng toàn bộ service limit check báo khi dùng quá 80 phần trăm.",
+   "Gói trả phí như Business Support Plus, Enterprise Support hay Unified Operations mở ra hàng trăm check ở mọi nhóm, kể cả operational excellence mà bản miễn phí không có.",
+   "Gói trả phí còn có Trusted Advisor API: lấy danh sách check và recommendation, xem resource bị ảnh hưởng, loại trừ resource và cập nhật lifecycle tới khi resolved.",
+   "Kết hợp với AWS Support API để mở, tìm và resolve support case bằng code, cùng tích hợp event-driven. Ví dụ hay gặp: tự động theo dõi service limit rồi tự mở case xin tăng limit.",
+   "Khi đi thi nhớ: Trusted Advisor không mua riêng mà đi theo support plan. Cần mọi check, API hay event-driven thì phải có gói trả phí. Muốn gợi ý instance type cụ thể theo mức dùng thật thì chọn Compute Optimizer."
+  ]
+ }
+}

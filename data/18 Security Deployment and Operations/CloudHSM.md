@@ -2,10 +2,11 @@
 tags: [saa-c03, s18-security-deployment-and-operations, security, encryption, kms]
 aliases: [AWS CloudHSM, Cloud HSM, HSM, Hardware Security Module]
 lessons: ["0321 CloudHSM"]
+videos: ["295 Cloud HSM"]
 ---
 # CloudHSM
 
-> **TL;DR:** CloudHSM là **Hardware Security Module (HSM) single-tenant** do AWS host, đạt **FIPS 140-2 Level 3** toàn phần. Khác [[KMS]] (dịch vụ dùng chung, API AWS, IAM), CloudHSM do **khách hàng toàn quyền quản lý key** (AWS không truy cập được), dùng **API chuẩn công nghiệp (PKCS#11, JCE, CNG)** và **không tích hợp native** với dịch vụ AWS.
+> **TL;DR:** CloudHSM là **Hardware Security Module (HSM) single-tenant** do AWS host, đạt **FIPS 140-3 Level 3** toàn phần. Lúc quay bài mới, [[KMS]] cũng đạt FIPS 140-3 Level 3, nên điều đẩy bạn sang CloudHSM là: cần **HSM single-tenant do mình kiểm soát** (AWS không truy cập được key), cần **thuật toán không thuộc FIPS** (CloudHSM chạy được non-FIPS mode), hoặc cần **API chuẩn công nghiệp (PKCS#11, JCE, CNG/KSP, OpenSSL Dynamic Engine)**. CloudHSM **không tích hợp native** với dịch vụ AWS (chỉ qua KMS custom key store).
 
 ## 🖼️ Sơ đồ
 ![[CloudHSM.excalidraw]]
@@ -18,34 +19,41 @@ lessons: ["0321 CloudHSM"]
 ### Vì sao cần CloudHSM khi đã có KMS
 - [[KMS]] tạo, quản lý key và tích hợp sâu với dịch vụ AWS, nhưng có một điểm đáng lo trong môi trường bảo mật rất khắt khe:
   - Là **shared service**: phần của bạn được cô lập nhưng hạ tầng bên dưới dùng chung với account khác.
-  - AWS quản lý phần cứng và phần mềm của KMS nên có **một mức truy cập nhất định** vào sản phẩm.
+  - AWS quản lý phần cứng và phần mềm của KMS. KMS được thiết kế để **không ai, kể cả nhân viên AWS, xem được key material dạng plaintext**, nhưng ở mức nào đó bạn đang **tin vào kiểm soát của AWS** thay vì tự kiểm soát HSM. (Bản khóa cũ nói AWS có "một mức truy cập nhất định" vào KMS.)
 - Phía sau, KMS dùng **HSM**: thiết bị phần cứng chuẩn công nghiệp chuyên quản lý key và thực hiện thao tác mật mã. Bạn cũng có thể tự chạy HSM on-premises.
 - **CloudHSM = HSM single-tenant chạy trên AWS Cloud.** "HSM" trong đề có thể là CloudHSM hoặc HSM on-premises.
 
 ### Trách nhiệm và quyền truy cập
 - AWS **provision** và **bảo trì phần cứng** (cập nhật phần mềm...), nhưng **không có quyền truy cập** vào vùng lưu và quản lý key: thiết bị **tamper-resistant**, được partition.
 - Chỉ bạn (hoặc người bạn ủy quyền) tương tác được với vùng bảo mật.
-- **Mất quyền truy cập HSM là hết**: có thể provision lại nhưng không có cách dễ để khôi phục dữ liệu/key.
+- **Backup tự động**: CloudHSM tự backup cluster (key, user, policy), nên một HSM bị mất vẫn **khôi phục được vào cluster mới**.
+- Nhưng **AWS không khôi phục được credential của HSM user**: mất credential là không ai ở AWS lấy lại key cho bạn được. An toàn hơn nhưng là con dao hai lưỡi, phải tự giữ quyền truy cập. (Bản khóa cũ chỉ nói "mất quyền truy cập HSM là hết", không nhắc backup.)
 
 ### Ba điểm phân biệt với KMS (nhớ cho thi)
-1. **FIPS 140-2 Level 3**: CloudHSM đạt Level 3 toàn phần; KMS (theo khóa học) **Level 2** tổng thể, một số phần đạt Level 3. Yêu cầu **FIPS 140-2 Level 3 overall** → CloudHSM (hoặc HSM on-prem). (Hiện nay HSM của KMS đã đạt FIPS 140-3 Level 3 và CloudHSM thế hệ mới cũng đạt FIPS 140-3 Level 3; nhưng trong đề, từ khóa "Level 3 + single-tenant + toàn quyền kiểm soát" vẫn chỉ tới CloudHSM.)
-2. **Cách truy cập**: KMS dùng **AWS API** và quyền **IAM**; CloudHSM dùng **API chuẩn công nghiệp**: **PKCS#11**, **JCE (Java Cryptography Extensions)**, **CryptoNG (CNG, Microsoft)**.
+1. **FIPS 140-3** (Federal Information Processing Standards Publication 140-3, chuẩn cho module mật mã): CloudHSM đạt **Level 3**. Bài mới nói mức của KMS từng thay đổi theo thời gian; lúc quay bài, **KMS cũng đạt FIPS 140-3 Level 3** (xem [[KMS]]). Vì vậy yêu cầu "FIPS 140-3 Level 3" thì **cả CloudHSM lẫn KMS đều đáp ứng**. Điều đẩy bạn sang CloudHSM:
+   - cần **HSM single-tenant do chính bạn kiểm soát**;
+   - cần **thuật toán không được FIPS phê duyệt**: CloudHSM chạy được cluster ở **non-FIPS mode**, KMS thì không.
+   - (Bản khóa cũ: CloudHSM FIPS 140-2 Level 3 toàn phần, KMS chỉ Level 2 tổng thể, nên "Level 3 overall" là từ khóa chọn CloudHSM. Bài mới đã bỏ cách phân biệt này.)
+2. **Cách truy cập và phân quyền**:
+   - KMS: mọi thao tác qua **AWS API**, quyền kiểm soát bằng **IAM**.
+   - CloudHSM: **user được tạo và quản lý ngay trong HSM**, gồm **crypto officer** và **crypto user**, không làm trong IAM.
+   - CloudHSM dùng **API chuẩn công nghiệp**: **PKCS#11**, **JCE (Java Cryptography Extensions)**, **Microsoft CNG/KSP** (CryptoNG, Key Storage Provider) và **OpenSSL Dynamic Engine**.
 3. **Tích hợp AWS**: KMS tích hợp native với dịch vụ AWS; CloudHSM mặc định **không**.
 
 ### Điểm giao nhau: KMS Custom Key Store
-- KMS có tính năng **custom key store** dùng CloudHSM cluster làm nơi lưu key. Kết quả: có nhiều lợi ích của CloudHSM (key nằm trong HSM bạn kiểm soát) **kèm** khả năng tích hợp dịch vụ AWS của KMS.
+- KMS có tính năng **custom key store**: trỏ KMS tới một CloudHSM cluster bạn sở hữu; KMS key tạo trong key store đó có **key material được sinh ra và giữ trong HSM của bạn**. Kết quả: có lợi ích của CloudHSM **kèm** khả năng tích hợp dịch vụ AWS của KMS.
 - Trong đề vẫn phân định bằng từ khóa như ở trên.
 
 ## Cách hoạt động / Kiến trúc
 ```mermaid
 flowchart LR
-  subgraph CVPC["Customer VPC (A4L-VPC)"]
+  subgraph CVPC["Customer VPC (AEM-VPC)"]
     subgraph AZA["AZ-A, private subnet"]
-      EC2A["EC2 + CloudHSM client"]
+      EC2A["EC2 + CloudHSM Client SDK"]
       ENIA["ENI HSM-1"]
     end
     subgraph AZB["AZ-B, private subnet"]
-      EC2B["EC2 + CloudHSM client"]
+      EC2B["EC2 + CloudHSM Client SDK"]
       ENIB["ENI HSM-2"]
     end
   end
@@ -56,7 +64,7 @@ flowchart LR
   H1 <-->|"cluster tự replicate key, policy, config"| H2
   H1 --- ENIA
   H2 --- ENIB
-  EC2A -->|"PKCS#11 / JCE / CNG"| ENIA
+  EC2A -->|"PKCS#11 / JCE / CNG/KSP / OpenSSL"| ENIA
   EC2A --> ENIB
   EC2B --> ENIA
   EC2B --> ENIB
@@ -67,17 +75,18 @@ flowchart LR
 - Các HSM trong cluster **tự đồng bộ** key, policy và cấu hình quan trọng; bạn không phải cấu hình việc này.
 - HSM được **inject vào VPC của bạn qua ENI** (mỗi HSM một [[EC2 Network Interfaces IPs and DNS|ENI]]) trong subnet bạn chọn. Dịch vụ trong VPC dùng cluster qua các ENI này.
 - HA thật sự: client phải được cấu hình **cân bằng tải qua mọi ENI**.
-- EC2 phải cài **CloudHSM client** (tiến trình nền) mới truy cập được HSM, sau đó dùng PKCS#11, JCE, CNG.
+- EC2 phải cài **CloudHSM Client SDK** (bộ thư viện ứng dụng nạp vào để nói chuyện với CloudHSM) mới truy cập được HSM; phía trên là phần mềm chuẩn: PKCS#11, JCE, CNG/KSP, OpenSSL Dynamic Engine. (Bản khóa cũ mô tả là CloudHSM client chạy nền.)
+- AWS provision và cập nhật phần mềm, nhưng HSM được **partition, tamper-resistant**; chỉ bạn có quyền truy cập về mặt mật mã.
 
 ## Bảng so sánh: KMS vs CloudHSM
 
 | Tiêu chí | [[KMS]] | CloudHSM |
 |---|---|---|
 | Tenancy | Shared (multi-tenant) | **Single-tenant** |
-| FIPS 140-2 (theo khóa học) | Level 2 tổng thể (một phần Level 3) | **Level 3** |
+| FIPS (bài mới) | 140-3 **Level 3** (lúc quay bài) | 140-3 **Level 3**, chạy được **non-FIPS mode** |
 | Ai kiểm soát key | AWS vận hành, IAM + key policy | **Chỉ khách hàng**; AWS không truy cập được |
-| API | AWS API | **PKCS#11, JCE, CNG** |
-| Phân quyền | IAM | Người dùng/quản trị trong HSM (không phải IAM) |
+| API | AWS API | **PKCS#11, JCE, CNG/KSP, OpenSSL Dynamic Engine** |
+| Phân quyền | IAM | Crypto officer / crypto user tạo trong HSM (không phải IAM) |
 | Tích hợp dịch vụ AWS (S3 SSE, EBS...) | **Native** | **Không** (trừ khi qua KMS custom key store) |
 | HA | Có sẵn (regional) | Tự xây: cluster ≥ 2 HSM ở nhiều AZ |
 | Vị trí | Public service | AWS-managed VPC, ENI trong VPC của bạn |
@@ -85,13 +94,14 @@ flowchart LR
 ## Use cases
 - **Không có tích hợp AWS native**: ví dụ **không dùng được với S3 SSE**. Có thể dùng cho **client-side encryption** (mã hóa object bằng thư viện ở máy local trước khi upload lên S3), nhưng đó không phải tích hợp với S3. Xem [[S3 Encryption]].
 - **Offload SSL/TLS processing** cho web server: web server không phải làm thao tác mật mã, và HSM có phần cứng chuyên dụng tăng tốc nên hiệu quả, kinh tế hơn so với làm trên EC2 thường. KMS **không** làm được việc này. (Xem [[SSL and TLS]].)
-- **Oracle TDE (Transparent Data Encryption)**: Oracle DB dùng CloudHSM để quản lý key và mã hóa; AWS **không thể giải mã** dữ liệu. Hợp với môi trường quy định nghiêm ngặt. (Hiện nay kiểu này áp dụng cho Oracle tự chạy trên EC2; RDS for Oracle dùng TDE với key do RDS/KMS quản lý.)
+- **Oracle TDE (Transparent Data Encryption)**: Oracle DB **tự chạy trên EC2** dùng CloudHSM để quản lý key và mã hóa (vì HSM theo chuẩn, dùng API chuẩn); AWS **không thể giải mã** dữ liệu. Hợp với môi trường quy định nghiêm ngặt. (Bổ sung, bài không nói: RDS for Oracle dùng TDE với key do RDS/KMS quản lý.)
 - **Bảo vệ private key của Certificate Authority (CA)** tự vận hành.
 
 ## 🎯 Mẹo thi SAA-C03
-- **FIPS 140-2 Level 3 (overall)** → CloudHSM (hoặc HSM on-prem). Đây là từ khóa quan trọng nhất.
-- **PKCS#11, JCE, CryptoNG/CNG**, "industry standard APIs" → CloudHSM.
-- **Tích hợp với dịch vụ AWS** (S3 SSE-KMS, EBS encryption...) → KMS.
+- **FIPS 140-3 Level 3** một mình **không còn** tách CloudHSM với KMS: theo bài mới, cả hai đều đạt (bản khóa cũ coi "FIPS 140-2 Level 3 overall" là từ khóa chọn CloudHSM). Chọn CloudHSM khi cần **HSM single-tenant tự kiểm soát** hoặc **thuật toán / chế độ non-FIPS**.
+- **PKCS#11, JCE, CNG/KSP, OpenSSL Dynamic Engine**, "industry standard APIs" → CloudHSM.
+- User của CloudHSM (crypto officer, crypto user) quản lý **trong HSM**, không qua IAM; mất credential thì AWS không khôi phục được.
+- **Tích hợp với dịch vụ AWS** (S3 SSE-KMS, EBS encryption...) → KMS. Mọi thứ đặc thù AWS cần KMS; thứ không đặc thù AWS thì CloudHSM có thể là lựa chọn tốt.
 - **Single-tenant**, "AWS không được có quyền truy cập key", "khách hàng toàn quyền kiểm soát key" → CloudHSM.
 - **SSL/TLS offload cho web server, Oracle TDE, private key của CA** → CloudHSM.
 - **HA**: cần **cluster nhiều HSM ở nhiều AZ**; một HSM đơn lẻ không HA.

@@ -1,0 +1,14 @@
+{
+ "AWS Compute Optimizer": {
+  "sig": "7-1q3ewhj",
+  "steps": [
+   "Sơ đồ này nói về AWS Compute Optimizer. Phần lõi miễn phí, phân tích 14 ngày gần nhất và refresh hằng ngày; gói trả phí Enhanced Infrastructure Metrics nâng lên 93 ngày cho EC2, Auto Scaling Group và RDS.",
+   "Muốn dùng, bạn phải opt in ở mức account, hoặc bật cho mọi account từ management account của Organization. Khi đó một service-linked role được tạo tự động để đọc cấu hình và đưa recommendation.",
+   "Compute Optimizer so cấu hình với metric do CloudWatch thu thập. Lưu ý EC2 cần CloudWatch Agent mới báo được memory, thiếu agent thì recommendation không thấy mức dùng memory.",
+   "Phạm vi rất rộng: EC2, Auto Scaling Group, Lambda, EBS, RDS, DynamoDB, NAT Gateway và còn nữa.",
+   "Mỗi resource được phân loại: under-provisioned có thể gây vấn đề hiệu năng, over-provisioned thừa capacity và tốn tiền, hoặc optimized là vừa khít. Một số loại như EBS có thể tự áp dụng theo rule lọc tag và region, chạy hằng ngày, hằng tuần hay hằng tháng, và đảo ngược được.",
+   "Với các loại còn lại, Compute Optimizer chỉ đưa recommendation, bạn tự đổi cấu hình. Finding mới có thể mất tới 24 giờ mới hiện ra.",
+   "Khi đi thi nhớ: rightsizing từng resource với type cụ thể là Compute Optimizer. Trusted Advisor chỉ báo chung chung là instance underutilized, còn Cost Explorer nghiêng về tiết kiệm và billing như Reserved Instances hay Savings Plans. Workload theo chu kỳ cuối tháng cần cửa sổ 93 ngày."
+  ]
+ }
+}

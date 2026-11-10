@@ -266,5 +266,10 @@
   "DHMC": "Default Host Management Configuration",
   "DCU": "DMS Capacity Unit",
   "MDT": "Metadata Target",
-  "OST": "Object Storage Target"
+  "OST": "Object Storage Target",
+  "CSPM": "Cloud Security Posture Management",
+  "ASFF": "AWS Security Finding Format",
+  "AMP": "Amazon Managed Service for Prometheus",
+  "ADOT": "AWS Distro for OpenTelemetry",
+  "KSP": "Key Storage Provider"
 }
