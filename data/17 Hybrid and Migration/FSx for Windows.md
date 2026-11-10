@@ -2,6 +2,7 @@
 tags: [saa-c03, s17-hybrid-and-migration, storage, file-system, windows]
 aliases: [FSx for Windows File Server, Amazon FSx for Windows, FSx Windows]
 lessons: ["0314 FSx for Windows Servers"]
+videos: ["287 FSx for Windows File Server"]
 ---
 # FSx for Windows
 
@@ -18,23 +19,25 @@ lessons: ["0314 FSx for Windows Servers"]
   - **Windows permission model** (NTFS ACL quen thuộc).
   - **Data deduplication**.
   - **DFS** (Distributed File System): gom nhiều file share vào một cấu trúc chung toàn doanh nghiệp (namespace), hoặc dùng để replicate/scale-out hiệu năng.
-  - **VSS (Volume Shadow Copy)**: người dùng tự xem **Previous Versions** của file/folder và tự restore từ phía client, không cần admin hay thao tác trên AWS.
+  - **VSS (Volume Shadow Copy)**: người dùng tự xem **Previous Versions** của file/folder và tự restore từ phía client, không cần admin hay thao tác trên AWS. Shadow copy **không bật mặc định**: phải dùng **PowerShell** để bật và đặt **lịch** chụp.
   - Mã hóa at-rest bằng [[KMS]], và có thể **bắt buộc mã hóa in-transit**.
 - **Tích hợp directory:** dùng AD làm user store, với hai lựa chọn:
   - AWS Managed Microsoft AD ([[Directory Service]]).
   - **Self-managed AD**, chạy trên AWS hoặc **on-premises**. Không bắt buộc phải tạo directory trong Directory Service. Doanh nghiệp lớn đã có AD sẵn thì nối thẳng vào.
+  - Nếu dùng directory phía AWS thì **bắt buộc là AWS Managed Microsoft AD**: **Simple AD** và **AD Connector không được FSx hỗ trợ**.
+  - Dù Single-AZ hay Multi-AZ, FSx **luôn cần một directory** làm identity store.
 - **Triển khai:** **Single-AZ** hoặc **Multi-AZ** trong một VPC, truy cập qua ENI trong VPC.
   - Single-AZ vẫn **replicate trong AZ** đó, chịu được lỗi phần cứng.
   - Multi-AZ cho HA thật sự giữa các AZ.
 - **Backup:** phía AWS có automatic (scheduled) và on-demand backup. Phía client có VSS.
 - **Truy cập từ:** trong VPC, qua [[VPC Peering]], qua VPN ([[Site-to-Site VPN]]) và qua [[Direct Connect]].
-- **Hiệu năng (theo khóa học):** throughput từ **8 MB/s đến 2 GB/s**, hàng trăm nghìn IOPS, latency **< 1 ms**. (Hiện nay throughput tối đa cao hơn nhiều, cỡ ~12 GB/s với SSD. Đề thi không hỏi con số này.)
+- **Hiệu năng (theo khóa học):** throughput từ **32 MB/s đến 12 GB/s** (ở các region hỗ trợ), **hàng trăm nghìn IOPS**; với storage **HDD**, latency cỡ **vài mili giây (single-digit ms)**. (Bản khóa cũ nêu 8 MB/s–2 GB/s, latency < 1 ms.) Đề thi không hỏi con số này.
 
 ## Cách hoạt động / Kiến trúc
 
 ```mermaid
 flowchart LR
-  subgraph VPC["VPC (A4L)"]
+  subgraph VPC["VPC (Aus-E-Mart)"]
     subgraph AZA["AZ-A"]
       FA["FSx ENI / file server"]
     end
@@ -55,7 +58,7 @@ flowchart LR
   FA -. "hoặc" .-> AD
 ```
 
-- Share được truy cập bằng đường dẫn UNC Windows: `\\<file-system-DNS-name>\<share>`, ví dụ `\\fs-xxxx.animals4life.org\catpics`.
+- Share được truy cập bằng đường dẫn UNC Windows: `\\<file-system-DNS-name>\<share>`, ví dụ `\\fs-xxxx.ausemart.net\prodpics`.
 - Dịch vụ AWS cần storage kiểu Windows dùng được FSx. Ví dụ **Amazon WorkSpaces** (VDI kiểu Citrix): WorkSpaces cần Directory Service để chạy và có thể dùng FSx làm shared file system.
 
 ## Bảng so sánh / số liệu
@@ -65,7 +68,7 @@ flowchart LR
 | Protocol | NFS | **SMB** | Lustre client (POSIX) |
 | Permission | POSIX | Windows ACL | POSIX |
 | Identity | IAM / POSIX | **Active Directory** | POSIX |
-| HA | Regional (multi-AZ) | Single-AZ hoặc Multi-AZ | 1 AZ |
+| HA | Regional (multi-AZ) | Single-AZ hoặc Multi-AZ | SSD: 1 AZ; Intelligent-Tiering: nhiều AZ |
 | Đặc trưng | Shared FS cho Linux | VSS, DFS, dedup | Throughput cực cao, S3 repository |
 
 ## 🎯 Mẹo thi SAA-C03
@@ -79,6 +82,8 @@ flowchart LR
   - **Windows permission model** / NTFS.
   - "Native Windows file server" nhưng **không muốn tự quản lý** EC2 chạy Windows Server.
   - Tích hợp **Directory Service hoặc AD on-premises có sẵn**.
+- Bẫy directory: FSx for Windows chỉ dùng **AWS Managed Microsoft AD** (hoặc self-managed AD); đáp án ghép FSx với **Simple AD** hay **AD Connector** là sai.
+- "User tự restore Previous Versions" → VSS, nhưng nhớ shadow copy **phải tự bật bằng PowerShell** và đặt lịch.
 - Truy cập được từ on-prem qua VPN/DX: phù hợp kịch bản hybrid khi nhân viên văn phòng dùng chung share.
 - Nếu đề nói Windows/SMB thì **không chọn** [[FSx for Lustre]].
 

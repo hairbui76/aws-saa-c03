@@ -1,17 +1,33 @@
 {
  "Direct Connect Public VIF and VPN": {
-  "sig": "10-sr2990",
+  "sig": "10-1xq0hux",
   "steps": [
-   "Sơ đồ này nói về cách mã hóa traffic trên Direct Connect: chạy IPsec VPN qua Public VIF, vì VPN endpoint có public IP nằm trong AWS Public Zone, nhưng tunnel vẫn đưa traffic private vào VPC.",
+   "Sơ đồ này là cách thứ nhất để mã hóa traffic trên Direct Connect: chạy IPsec VPN qua Public VIF, vì VPN endpoint có public IP nằm trong AWS Public Zone, nhưng tunnel vẫn đưa traffic private vào VPC.",
    "Từ phía on-premises, customer router hoặc firewall đóng vai trò customer gateway, có hai đường đi: Direct Connect Public VIF, và public Internet dùng làm backup hoặc dùng tạm trong lúc chờ DX.",
    "Tunnel IPsec qua Public VIF là đường primary, latency thấp và ổn định, tới hai VPN endpoint ở hai AZ. Cùng Public VIF đó còn tới được VGW hoặc TGW ở region khác qua AWS global network.",
    "Từ các VPN endpoint, traffic đã giải mã được chuyển vào VGW hoặc TGW gắn với VPC.",
    "Cuối cùng traffic tới EC2 bằng private IP. Vậy dù đi qua public VIF, kết nối vào VPC vẫn là private và được mã hóa end-to-end.",
-   "Quy tắc chọn VIF rất đơn giản: xem đích là gì. VPN endpoint là public IP, nên phải dùng Public VIF.",
-   "Còn Private VIF chỉ tới được private IP trong VPC, nên không thể chạm tới VPN endpoint. Đây là bẫy hay gặp trong đề thi.",
-   "Phân biệt với MACsec: MACsec chỉ mã hóa một hop ở Layer 2 giữa DX router và thiết bị cross connect, còn IPsec VPN mã hóa end-to-end từ customer gateway tới VGW hoặc TGW.",
+   "Quy tắc chọn VIF rất đơn giản: xem đích là gì. VPN endpoint là public IP, nên dùng Public VIF.",
+   "Private VIF chỉ tới được private IP trong VPC, nên không chạm tới VPN endpoint. Nếu muốn VPN chỉ dùng IP private thì phải đi transit VIF tới Transit Gateway, là cách thứ hai ở sơ đồ sau.",
+   "Phân biệt với MACsec: MACsec chỉ mã hóa một hop ở Layer 2 và chỉ có trên dedicated connection, còn IPsec VPN mã hóa end-to-end từ customer gateway tới VGW hoặc TGW.",
    "Lưu ý khi đi thi: VPN cho bảo mật, DX cho latency ổn định, nhưng throughput vẫn bị giới hạn bởi overhead của VPN, khoảng 1.25 Gbps mỗi tunnel.",
-   "Nhớ thêm rằng VPN là transit agnostic: cấu hình giống hệt nhau dù đi Internet hay Public VIF, nên rất dễ dùng VPN làm cầu nối khi DX đang provision hoặc làm backup cho DX."
+   "Nhớ thêm rằng VPN qua public VIF là transit agnostic: cấu hình giống hệt nhau dù đi Internet hay Public VIF, nên rất dễ dùng VPN làm cầu nối khi DX đang provision hoặc làm backup cho DX."
+  ]
+ },
+ "Direct Connect Public VIF and VPN - transit VIF": {
+  "sig": "11-okkdt",
+  "steps": [
+   "Đây là cách thứ hai: private IP VPN qua transit VIF. IPsec vẫn mã hóa end-to-end, nhưng mọi địa chỉ trên đường đi đều là private, qua transit VIF, Direct Connect Gateway rồi tới Transit Gateway.",
+   "Customer router dùng IP private, đi qua Direct Connect bằng một transit VIF, không phải public VIF hay private VIF, tới AWS DX router trong DX location.",
+   "Transit VIF nối tới Direct Connect Gateway. Đây là tài nguyên global, tạo trong account của bạn nhưng không thuộc region hay VPC nào.",
+   "Direct Connect Gateway được associate với Transit Gateway. Hai VPN tunnel endpoint nằm trên Transit Gateway, dùng IP private lấy từ dải CIDR cấp cho TGW.",
+   "Từ Transit Gateway, traffic đã giải mã đi vào VPC tới EC2 bằng private IP như bình thường.",
+   "Cùng một Direct Connect Gateway có thể associate với Transit Gateway ở region khác, nên cách này cũng chạy được cross region.",
+   "Nhớ rằng chỉ Transit Gateway hỗ trợ private IP VPN. Virtual private gateway không làm được kiểu này.",
+   "Ở đây không có public IP nào: không cần public IP trên customer router, không public VIF, không public zone, và endpoint không tới được từ Internet.",
+   "Khi cấu hình, bạn tạo Site-to-Site VPN trên Transit Gateway với outside IP type là private, và chọn attachment Direct Connect Gateway làm đường vận chuyển.",
+   "Vì private IP chỉ tới được qua DX, cách này phụ thuộc hẳn vào Direct Connect, nên không dùng làm backup như VPN qua Internet.",
+   "Khi đi thi: cần mã hóa qua DX và dùng public endpoint được thì chọn public VIF. Đề yêu cầu chỉ dùng IP private thì chọn transit VIF cộng Direct Connect Gateway cộng Transit Gateway."
   ]
  }
 }

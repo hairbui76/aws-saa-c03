@@ -2,6 +2,7 @@
 tags: [saa-c03, s17-hybrid-and-migration, networking, security, vpn, encryption]
 aliases: [IPSec, IPsec, IKE, IKE Phase 1, IKE Phase 2, Security Association, Policy-based VPN, Route-based VPN]
 lessons: ["0297 IPSec VPN Fundamentals"]
+videos: ["276 IP Sec VPN Fundamentals"]
 ---
 # IPSec VPN
 
@@ -26,13 +27,13 @@ lessons: ["0297 IPSec VPN Fundamentals"]
 ## Cách hoạt động / Kiến trúc
 
 ### IKE Phase 1: chậm và nặng
-1. **Authenticate**: hai peer chứng minh danh tính bằng **pre-shared key (PSK)** hoặc **certificate**. Bước này chỉ xác thực danh tính, chưa trao đổi key mã hóa.
+1. **Authenticate (nền tảng)**: hai peer cần cách chứng minh danh tính, bằng **pre-shared key (PSK)** hoặc **certificate**. Đây là chuyện **danh tính**, không phải key mã hóa dữ liệu. Lưu ý: việc **chứng minh** danh tính thực ra diễn ra **bên trong kênh được bảo vệ mà Phase 1 dựng lên** (sau khi DH đã tạo ra key chung), chứ không gửi trần qua Internet.
 2. **Diffie-Hellman (DH)**:
    - Mỗi bên tạo một **DH private key** và suy ra **public key** tương ứng.
-   - Hai bên trao đổi public key cho nhau.
+   - Hai bên trao đổi public key cho nhau. Public key không nhạy cảm: kẻ tấn công lấy được cũng không suy ngược ra private key hay shared secret. Các public key này **không dùng để mã hóa dữ liệu trực tiếp**.
    - Mỗi bên dùng private key của mình và public key của đối phương để tự tính ra cùng một **DH key**. Key này **không bao giờ được truyền qua mạng**.
 3. Hai bên dùng DH key cùng key material đã trao đổi để tự sinh ra **Phase 1 symmetric key**.
-4. Kết quả là **IKE SA (Phase 1 tunnel)**, dùng để mã hóa các trao đổi tiếp theo.
+4. Kết quả là **IKE SA (Phase 1 tunnel)**, dùng để mã hóa các trao đổi tiếp theo (kể cả phần chứng minh danh tính ở bước 1).
 
 ### IKE Phase 2: nhanh và nhẹ
 - Xây trên nền Phase 1: dùng lại DH key, Phase 1 symmetric key và tunnel Phase 1 đã có.
@@ -45,11 +46,11 @@ lessons: ["0297 IPSec VPN Fundamentals"]
 sequenceDiagram
   participant A as Peer 1 (Site 1)
   participant B as Peer 2 (Site 2)
-  Note over A,B: IKE Phase 1 (chậm, nặng)
-  A->>B: Authenticate (PSK / certificate)
+  Note over A,B: IKE Phase 1 (chậm, nặng), nền tảng: PSK / certificate
   A->>B: DH public key A
   B->>A: DH public key B
   Note over A,B: Mỗi bên tự tính DH key, rồi Phase 1 symmetric key, tạo IKE SA
+  A->>B: Chứng minh danh tính (PSK / certificate) trong kênh đã bảo vệ
   Note over A,B: IKE Phase 2 (nhanh, trên Phase 1)
   A->>B: Danh sách cipher suite hỗ trợ
   B->>A: Chọn suite tốt nhất chung

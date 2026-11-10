@@ -264,5 +264,7 @@
   "EB": "Elastic Beanstalk",
   "PaaS": "Platform as a Service",
   "DHMC": "Default Host Management Configuration",
-  "DCU": "DMS Capacity Unit"
+  "DCU": "DMS Capacity Unit",
+  "MDT": "Metadata Target",
+  "OST": "Object Storage Target"
 }

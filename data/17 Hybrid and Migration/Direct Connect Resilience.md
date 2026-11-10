@@ -2,6 +2,7 @@
 tags: [saa-c03, s17-hybrid-and-migration, networking, direct-connect, high-availability, resilience]
 aliases: [DX Resilience, DX HA, Direct Connect HA]
 lessons: ["0306 Direct Connect DX Resilience"]
+videos: ["281 AWS Direct Connect (DX) - Resilience"]
 ---
 # Direct Connect Resilience
 
@@ -38,9 +39,9 @@ Adrian lưu ý: phần lớn công ty provision DX theo đúng kiểu không res
 | Mức | Thiết kế | Chịu được | Vẫn còn rủi ro |
 |---|---|---|---|
 | **Không resilient** | 1 port, 1 DX location, 1 cross connect, 1 extension, 1 customer router | Không chịu được gì | Cả 7 SPOF ở trên |
-| **Cải thiện** | **2 DX port tại cùng 1 DX location** (AWS tự đặt hai port trên **hai AWS DX router khác nhau**), 2 customer DX router, 2 extension, 2 customer router, nhưng **1 customer premises** | Lỗi **một router** hoặc **một extension** trên một nhánh | Lỗi **cả DX location**, lỗi **cả customer premises**. Thêm rủi ro ẩn: hai extension giữa cùng hai địa điểm thường **đi chung tuyến cáp vật lý**, ví dụ cùng chui dưới một vỉa hè, nên một lần đào đường có thể cắt cả hai |
-| **Tốt hơn** | **2 DX location**, mỗi nơi 1 port, nối về **2 customer premises khác nhau** (lý tưởng là cách xa nhau về địa lý) | Lỗi hardware **hoặc** lỗi cả một location, ở cả phía DX lẫn phía customer. Khi đó chạy ở mức resilience giảm | Mất **cả một location** rồi **thêm một lỗi hardware ở nhánh còn lại** |
-| **Tối đa (extreme)** | **2 DX location × 2 port** trên thiết bị riêng, mỗi location có **2 customer DX router**, extension về **2 customer premises**, mỗi premises có **2 router** | Lỗi cả một DX location **và đồng thời** lỗi một cặp router ở location còn lại. Extension đi giữa các địa điểm khác nhau nên **khác tuyến cáp** | Rất thấp, nhưng chi phí và độ phức tạp cao nhất |
+| **Cải thiện** (AWS gọi là **development and test model** trong *Direct Connect Resiliency Toolkit*) | **2 DX port tại cùng 1 DX location** (AWS tự đặt hai port trên **hai AWS DX router khác nhau**), 2 customer DX router, 2 extension, 2 customer router, nhưng **1 customer premises** | Lỗi **một router** hoặc **một extension** trên một nhánh | Lỗi **cả DX location**, lỗi **cả customer premises**. Thêm rủi ro ẩn: hai extension giữa cùng hai địa điểm thường **đi chung tuyến cáp vật lý**, ví dụ cùng chui dưới một vỉa hè, nên một lần đào đường có thể cắt cả hai |
+| **Tốt hơn** (AWS gọi là **high resiliency model**, đứng sau mức **SLA 99.9%**) | **2 DX location**, mỗi nơi 1 port, nối về **2 customer premises khác nhau** (lý tưởng là cách xa nhau về địa lý) | Lỗi hardware **hoặc** lỗi cả một location, ở cả phía DX lẫn phía customer. Khi đó chạy ở mức resilience giảm | Mất **cả một location** rồi **thêm một lỗi hardware ở nhánh còn lại** |
+| **Tối đa** (AWS gọi là **maximum resiliency**, bắt buộc để có **SLA 99.99%**) | **2 DX location × 2 port** trên thiết bị riêng, mỗi location có **2 customer DX router**, extension về **2 customer premises**, mỗi premises có **2 router** | Lỗi cả một DX location **và đồng thời** lỗi một cặp router ở location còn lại. Extension đi giữa các địa điểm khác nhau nên **khác tuyến cáp** | Rất thấp, nhưng chi phí và độ phức tạp cao nhất |
 
 ```mermaid
 flowchart LR
@@ -61,7 +62,8 @@ flowchart LR
 - **"Direct Connect is NOT resilient by default"**. Một DX = 1 port, 1 router, 1 location, nên là SPOF.
 - Đề yêu cầu **HA/resilient DX** → chọn **nhiều DX connection ở nhiều DX location** (và lý tưởng là nhiều customer premises). Hai DX ở **cùng một location** vẫn còn SPOF là chính location đó.
 - Đề yêu cầu **HA nhưng tiết kiệm chi phí** → **DX primary + Site-to-Site VPN backup**.
-- Đặt hai DX vào cùng một DX location thì AWS sẽ đặt chúng trên **hai AWS DX router khác nhau**.
+- Nhớ tên mô hình trong DX Resiliency Toolkit: **development and test** (2 port, 1 location) → **high resiliency** (2 location, **SLA 99.9%**) → **maximum resiliency** (2 location × 2 port, **SLA 99.99%**).
+- Đặt hai DX vào cùng một DX location (chọn trong connection wizard) thì AWS sẽ đặt chúng trên **hai AWS DX router khác nhau**.
 - Cẩn thận với **rủi ro ẩn**: hai extension giữa cùng hai địa điểm có thể đi chung một tuyến cáp vật lý.
 
 ## Liên kết

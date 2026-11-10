@@ -26,7 +26,9 @@
     "Exam Cheat Sheet: Aurora 256 TiB và storage co giãn lên xuống, Aurora I/O-Optimized, read replica 15/5/3 theo engine, Multi-AZ cluster chỉ MySQL/PostgreSQL, Aurora Global 10 secondary region, DMS Serverless và DMS Schema Conversion, Vault Lock compliance mode và PITR 35 ngày, EFS Elastic mặc định, Max I/O legacy, EC2 Mac",
     "Top mẹo thi và concept map chương 11 và 12: Aurora 256 TiB và I/O-Optimized, Serverless v2, RDS Custom Oracle tới 3/2027, TDE không còn CloudHSM, Multi-AZ cluster semi-synchronous, DMS Serverless và Schema Conversion; EFS Elastic, Max I/O legacy, Vault Lock governance/compliance",
     "Exam Cheat Sheet: AWS PrivateLink (NLB + endpoint service, interface endpoint mỗi AZ), VPC IPAM, interface endpoint TCP/UDP và IPv6, Global Accelerator dual-stack 4 IP, ACM exportable certificate, peering cross-region mới mã hóa",
-    "Top mẹo thi và concept map chương 15, 16: VPC origins, cache policy và s-maxage/max-age, dedicated IP theo certificate, OAC không phải identity, Flow Logs tới Data Firehose, EIGW drop inbound, AWS PrivateLink, VPC IPAM"
+    "Top mẹo thi và concept map chương 15, 16: VPC origins, cache policy và s-maxage/max-age, dedicated IP theo certificate, OAC không phải identity, Flow Logs tới Data Firehose, EIGW drop inbound, AWS PrivateLink, VPC IPAM",
+    "Exam Cheat Sheet: Client VPN (split tunnel), private IP VPN qua transit VIF + TGW, VPN > 1.25 Gbps dùng TGW, DX tới 400 Gbps, mô hình DX resiliency (SLA 99.9% / 99.99%), Directory Service (Managed Microsoft AD mặc định, Hybrid Edition, Simple AD đã đóng), virtual tape 15 TB",
+    "Top mẹo thi và concept map chương 17: thêm Client VPN, private IP VPN, SLA DX, Directory Service theo bài mới, FSx for Lustre SSD / Intelligent-Tiering, DataSync theo task"
   ],
   "missing": [],
   "lessons": {
@@ -1413,6 +1415,152 @@
       "kind": "updated",
       "summary": "Interface endpoint hỗ trợ TCP và UDP, IPv4/IPv6/dual-stack; gateway endpoint miễn phí nay được bài nói rõ; ứng dụng viết cứng tên DNS mặc định cần gateway endpoint hoặc Private DNS.",
       "changed": [
+        "Bảng so sánh",
+        "Khi nào chọn cái nào",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "IPSec VPN": {
+      "kind": "updated",
+      "summary": "Làm rõ thứ tự IKE Phase 1: PSK/certificate là nền tảng danh tính nhưng việc chứng minh diễn ra bên trong kênh đã bảo vệ sau Diffie-Hellman; DH public key không dùng để mã hóa dữ liệu.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cách hoạt động / Kiến trúc"
+      ],
+      "dropped": []
+    },
+    "Site-to-Site VPN": {
+      "kind": "updated",
+      "summary": "Cần hơn 1.25 Gbps thì không dùng được VPN gắn VGW: chọn Direct Connect hoặc VPN tạo trên Transit Gateway; lab Simple Site2Site VPN (pfSense) không còn trong khóa mới.",
+      "changed": [
+        "Bảng so sánh / số liệu: VPN considerations",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Demo / Lab: Simple Site-to-Site VPN (AWS ↔ pfSense)"
+      ]
+    },
+    "Client VPN": {
+      "kind": "new",
+      "summary": "Bài mới: AWS Client VPN (managed OpenVPN) cho từng client vào VPC hoặc Transit Gateway, target network mỗi AZ một subnet, route table của endpoint, NAT Gateway/peering cho client, mặc định full tunnel và split tunnel, xác thực, CloudWatch, cách tính phí."
+    },
+    "Direct Connect": {
+      "kind": "updated",
+      "summary": "Port Direct Connect đặt từ AWS nay có 1, 10, 100 hoặc 400 Gbps (bản cũ tới 100 Gbps).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi"
+      ],
+      "dropped": []
+    },
+    "Direct Connect Resilience": {
+      "kind": "updated",
+      "summary": "Thêm tên mô hình trong DX Resiliency Toolkit: development and test (2 port 1 location), high resiliency (2 location, SLA 99.9%), maximum resiliency (2 location × 2 port, SLA 99.99%).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cách hoạt động / Kiến trúc: các mức tiến hóa",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Direct Connect Public VIF and VPN": {
+      "kind": "updated",
+      "summary": "Thêm cách thứ hai chạy VPN trên DX: private IP VPN qua transit VIF + Direct Connect Gateway + Transit Gateway (chỉ TGW hỗ trợ, không public IP, không làm backup được); MACsec chỉ có trên dedicated connection.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Transit Gateway": {
+      "kind": "updated",
+      "summary": "Peering attachment chỉ dùng static route; có Connect attachment cho SD-WAN; VPN trên TGW vượt được 1.25 Gbps; private IP VPN qua DX chỉ làm được với TGW.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Storage Gateway": {
+      "kind": "updated",
+      "summary": "Virtual tape nay 100 GB–15 TB (bản cũ tới 5 TiB); có VPC endpoint (PrivateLink) cho Storage Gateway; gateway chạy được trong AWS cho DR; các phần tape fundamentals, multi-site File Gateway là của bản khóa cũ.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Snow Family": {
+      "kind": "removed",
+      "summary": "khóa mới không còn bài Snowball / Snowball Edge / Snowmobile"
+    },
+    "Directory Service": {
+      "kind": "updated",
+      "summary": "Simple AD đã đóng với khách hàng mới, mặc định nay là AWS Managed Microsoft AD (Standard, Enterprise, Hybrid Edition mở rộng chính domain on-prem); trust một hoặc hai chiều (Identity Center cần hai chiều); AD Connector không dùng được cho FSx và RDS.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "DataSync": {
+      "kind": "updated",
+      "summary": "Mỗi task ~10 Gbps (bản cũ: mỗi agent); hỗ trợ cả họ FSx, HDFS, object storage, Azure Blob, Google Cloud Storage; AWS ↔ AWS không cần agent; giá thêm phí mỗi lần chạy khi dùng enhanced mode.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "FSx for Windows": {
+      "kind": "updated",
+      "summary": "Phía AWS chỉ dùng AWS Managed Microsoft AD (không Simple AD, AD Connector); VSS phải bật bằng PowerShell; hiệu năng 32 MB/s–12 GB/s, HDD latency vài ms.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "FSx for Lustre": {
+      "kind": "updated",
+      "summary": "Bài mới theo version 2: storage class SSD (1 AZ) và Intelligent-Tiering (nhiều AZ, không gắn S3 repository); Persistent 125/250/500/1000 MB/s/TiB; automatic export / export task thay hsm_archive; backup 0–90 ngày; mỗi server một IP, client ECS/EKS.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Bảng so sánh / số liệu",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Transfer Family": {
+      "kind": "updated",
+      "summary": "Thêm connector (kết nối ra SFTP/AS2 của đối tác) và web app; mỗi server chỉ một loại storage (S3 hoặc EFS); AS2 chỉ S3, không user login; tính phí theo giờ mỗi protocol, kể cả khi server stopped.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": []
+    },
+    "Compare - VPN vs Direct Connect": {
+      "kind": "updated",
+      "summary": "Cần > 1.25 Gbps: DX hoặc VPN trên Transit Gateway; DX tới 400 Gbps; VPN trên DX có thêm cách private IP VPN qua transit VIF.",
+      "changed": [
+        "🖼️ Sơ đồ",
         "Bảng so sánh",
         "Khi nào chọn cái nào",
         "🎯 Mẹo thi SAA-C03"

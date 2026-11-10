@@ -2,6 +2,7 @@
 tags: [saa-c03, s17-hybrid-and-migration, networking, direct-connect, hybrid]
 aliases: [DX, AWS Direct Connect, VIF, Private VIF, Public VIF, Transit VIF, DX Location, Cross Connect]
 lessons: ["0305 Direct Connect DX Concepts"]
+videos: ["280 AWS Direct Connect (DX) - Concepts"]
 ---
 # Direct Connect
 
@@ -12,7 +13,7 @@ lessons: ["0305 Direct Connect DX Concepts"]
 *Mở bằng plugin Excalidraw để chỉnh sửa · ảnh tĩnh: [[Direct Connect.svg]]*
 
 ## Khái niệm cốt lõi
-- **Tốc độ port (dedicated connection)**: **1 Gbps, 10 Gbps, 100 Gbps** theo khóa học; hiện nay có thêm **400 Gbps** ở một số location. Tốc độ thấp hơn thì mua dạng **hosted connection** qua partner, từ 50 Mbps tới vài chục Gbps.
+- **Tốc độ port** khi đặt trực tiếp từ AWS: **1 Gbps, 10 Gbps, 100 Gbps hoặc 400 Gbps** (bản khóa cũ chỉ nêu tới 100 Gbps). (Bổ sung, bài không nói: tốc độ thấp hơn thì mua dạng **hosted connection** qua partner, từ 50 Mbps tới vài chục Gbps.)
 - **Bản chất là port allocation**: AWS cấp port và **ủy quyền** cho bạn nối vào port đó (bằng LOA-CFA). AWS **không** cung cấp đường truyền. Bạn tự nối, hoặc thuê **communications partner** kéo dài kết nối về văn phòng.
 - **Chi phí**:
   - Phí **theo giờ**, tùy DX location và tốc độ port.
@@ -21,7 +22,7 @@ lessons: ["0305 Direct Connect DX Concepts"]
 - **Provisioning time**: AWS cần thời gian cấp port. Sau đó bạn còn phải nối vào DX location, và nếu phải kéo cáp mới từ DX location về văn phòng thì mất thêm **hàng tuần tới hàng tháng**.
 - **Không có resilience sẵn**: đây là một sợi cáp vật lý. Cáp đứt là mất kết nối. Muốn HA thì phải tự thiết kế (xem [[Direct Connect Resilience]]).
 - **Low latency và consistent latency**: không đi qua public Internet, chỉ qua một sợi cáp hoặc vài link riêng.
-- **Băng thông cao nhất** cho hybrid networking. Port là dedicated và không có overhead mã hóa như IPsec, nên gần như đạt được tốc độ tối đa của port.
+- **Băng thông cao nhất** cho hybrid networking: tới **400 Gbps**. Port là dedicated và không có overhead mã hóa như IPsec, nên gần như đạt được tốc độ tối đa của port.
 - **Truy cập được**: AWS **private services** (trong VPC) và AWS **public services** (S3, SQS, Elastic IP...). **Không** truy cập được **public Internet**, trừ khi tự đặt proxy hoặc network appliance.
 - **Không mã hóa mặc định**. Muốn mã hóa thì dùng VPN trên public VIF (xem [[Direct Connect Public VIF and VPN]]) hoặc MACsec (mã hóa Layer 2, hop-by-hop).
 

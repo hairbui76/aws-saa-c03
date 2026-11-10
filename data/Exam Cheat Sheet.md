@@ -47,7 +47,9 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Nhiều VPC + on-prem, transitive, hub-and-spoke | **Transit Gateway** | [[Transit Gateway]] |
 | Kết nối mã hóa tới on-prem trong vài giờ, rẻ | **Site-to-Site VPN** | [[Site-to-Site VPN]] |
 | Latency ổn định, > 1.25 Gbps, không qua Internet | **Direct Connect** | [[Direct Connect]] |
-| Mã hóa traffic chạy trên DX | **IPsec VPN qua public VIF** | [[Direct Connect Public VIF and VPN]] |
+| Mã hóa traffic chạy trên DX | **IPsec VPN qua public VIF**; chỉ dùng IP private → **private IP VPN: transit VIF + DX Gateway + TGW** | [[Direct Connect Public VIF and VPN]] |
+| Nhân viên từ xa, từng laptop vào VPC | **Client VPN** (managed OpenVPN); mất LAN / Internet bị ép qua VPN → bật **split tunnel** | [[Client VPN]] |
+| Directory trong AWS cho FSx / WorkSpaces / RDS | **AWS Managed Microsoft AD** (mặc định); giữ một domain on-prem → **Hybrid Edition**; chỉ proxy → **AD Connector** (không cho FSx, RDS); Simple AD đã đóng với khách hàng mới | [[Directory Service]] |
 | Firewall/IDS/IPS bên thứ ba inline, GENEVE | **Gateway Load Balancer** | [[Gateway Load Balancer]] |
 | Path/host-based routing, nhiều domain HTTPS (SNI) | **ALB** | [[Compare - ALB vs NLB]] |
 | UDP, IP tĩnh, TLS end-to-end tới instance | **NLB** (TCP listener) | [[SSL Offload and Session Stickiness]] |
@@ -212,11 +214,11 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 |---|---|---|
 | Thời gian triển khai | **Vài giờ** | Tuần–tháng |
 | Đường truyền | Qua Internet, mã hóa IPsec | Cáp vật lý riêng, **không mã hóa sẵn** |
-| Băng thông | ~1.25 Gbps/tunnel | 1/10/100 Gbps (nay thêm 400); hosted từ 50 Mbps |
+| Băng thông | ~1.25 Gbps/connection (VGW); hơn thì DX hoặc VPN trên TGW | 1/10/100/400 Gbps; hosted từ 50 Mbps |
 | Latency | Thay đổi | **Thấp, ổn định** |
-| HA | 2 tunnel/connection; full HA cần 2 CGW | Không HA mặc định; nhiều DX ở nhiều location |
+| HA | 2 tunnel/connection; full HA cần 2 CGW | Không HA mặc định; nhiều DX ở nhiều location (high resiliency SLA 99.9%, maximum SLA 99.99%) |
 | Chi phí | Rẻ | Port + data out (data in miễn phí) |
-| Vai trò kết hợp | Backup rẻ cho DX; cầu nối khi chờ DX | VPN over public VIF khi cần mã hóa |
+| Vai trò kết hợp | Backup rẻ cho DX; cầu nối khi chờ DX | VPN over public VIF (hoặc private IP VPN qua transit VIF + TGW) khi cần mã hóa |
 
 ### SQS vs SNS vs Kinesis Data Streams → [[Compare - SQS vs SNS vs Kinesis]]
 | | SQS | SNS | Kinesis Data Streams |
@@ -359,10 +361,11 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 | CloudFront | Default TTL 24 h; cert ACM ở **us-east-1** |
 | ASG | Lifecycle hook timeout 3.600 s (heartbeat gia hạn, tối đa 48 h hoặc 100 lần timeout); health check grace 300 s (mặc định trên console; CLI/API là 0); cooldown 300 s chỉ cho simple scaling (step/target tracking dùng instance warmup) |
 | WAF | Inspect body 8 KB đầu |
-| VPN / BGP | ~1.25 Gbps/tunnel (khóa học; nay TGW có tunnel băng thông lớn + ECMP); BGP TCP 179; private ASN 64512–65534 |
-| Direct Connect | Port 1/10/100 Gbps (nay thêm 400 Gbps) |
+| VPN / BGP | ~1.25 Gbps/VPN connection gắn VGW (hơn thì DX hoặc VPN trên TGW); BGP TCP 179; private ASN 64512–65534 |
+| Direct Connect | Port 1/10/100/400 Gbps; SLA 99.9% (2 location), 99.99% (2 location × 2 port) |
+| DataSync | ~10 Gbps (~100 TB/ngày) mỗi task |
 | Snow | Snowball kinh tế 10 TB–10 PB; Snowmobile ≥ 10 PB (tới 100 PB), một site |
-| Storage Gateway | Stored 16 TB/volume × 32 = 512 TB; Cached 32 TB/volume × 32 = 1 PB |
+| Storage Gateway | Stored 16 TB/volume × 32 = 512 TB; Cached 32 TB/volume × 32 = 1 PB; virtual tape 100 GB–15 TB, VTL 1 PB / 1.500 tape |
 | AWS Backup | Cold storage ≥ 90 ngày; Vault Lock compliance cool-off ≥ 72 h; continuous backup PITR tới 35 ngày |
 | Redshift | Auto snapshot ~8 h hoặc 5 GB; retention 1 ngày mặc định, tối đa 35 |
 | ELB | 4 loại: CLB (v1, legacy), ALB, NLB, GWLB (v2) |
@@ -394,7 +397,7 @@ Ghi chú: bài mới dạy gp3 là mặc định, tới 80,000 IOPS / 2,000 MiB/
 - "Gateway endpoint mỗi AZ" sai; "một interface endpoint là đủ HA" cũng sai ([[Compare - Gateway vs Interface Endpoints]]).
 - Gateway endpoint không dùng được từ on-prem hay VPC peer ([[Gateway VPC Endpoints]]).
 - Direct Connect không mã hóa sẵn, không HA mặc định, không kịp khi đề nói "trong vài ngày" ([[Direct Connect]]).
-- VPN over DX dùng **public VIF**, không phải private VIF ([[Direct Connect Public VIF and VPN]]).
+- VPN over DX dùng **public VIF** (hoặc **transit VIF + TGW** cho private IP VPN), không phải private VIF ([[Direct Connect Public VIF and VPN]]).
 - CNAME không đặt ở apex domain. Dùng Alias ([[CNAME vs Alias]]).
 
 **Compute & HA**

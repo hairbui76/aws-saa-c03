@@ -2,6 +2,7 @@
 tags: [saa-c03, s17-hybrid-and-migration, networking, routing, bgp]
 aliases: [Border Gateway Protocol, ASN, AS Path, AS_PATH, iBGP, eBGP]
 lessons: ["0296 Border Gateway Protocol 101"]
+videos: ["275 Border Gateway Protocol (BGP) 101"]
 ---
 # BGP
 
