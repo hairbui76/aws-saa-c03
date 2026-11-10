@@ -71,3 +71,4 @@ flowchart LR
 - Tiên quyết: [[KMS]], [[IAM Roles]], [[EC2 Instance Roles]]
 - Liên quan: [[CloudWatch Agent]], [[CloudFormation Basics]], [[CFN Template and Pseudo Parameters]], [[EventBridge]], [[Lambda]]
 - Phân biệt với: [[Secrets Manager]] (có rotation, tính phí theo secret), [[EC2 User Data Bootstrapping]] (không an toàn cho secret)
+- Các tính năng khác của Systems Manager: [[Systems Manager]], [[SSM Run Command]], [[SSM Documents]], [[SSM Patch Manager]]

@@ -1,0 +1,19 @@
+{
+ "SSM Documents": {
+  "sig": "12-80jy5n",
+  "steps": [
+   "Sơ đồ này nối từng loại SSM document với tính năng dùng nó. Document viết bằng JSON hoặc YAML, lưu theo region, có parameters và mainSteps, cấu trúc giống template CloudFormation.",
+   "Loại đầu tiên là command document, loại phổ biến nhất.",
+   "Command document được Run Command dùng để chạy lệnh, được State Manager dùng để giữ desired state, và được Maintenance Windows dùng để áp cấu hình theo lịch.",
+   "Loại thứ hai là automation runbook, dành cho các việc bảo trì và triển khai.",
+   "Runbook được Automation, State Manager và Maintenance Windows dùng, ví dụ để tạo hoặc cập nhật AMI.",
+   "Loại thứ ba là package document, ít gặp hơn.",
+   "Distributor dùng package document, một document có đính kèm file zip chứa phần mềm cần cài lên node.",
+   "Loại thứ tư là session document.",
+   "Session Manager dùng nó để định nghĩa kiểu session: port forwarding, SSH tunnel hoặc interactive command.",
+   "Loại cuối là policy document.",
+   "Inventory dùng policy document AWS GatherSoftwareInventory cùng một State Manager association để thu thập thông tin phần mềm trên node.",
+   "Trong console, document nằm ở mục Change Management Tools, chia thành Owned by Amazon, Owned by me và Shared with me. Khi đi thi, bạn không phải viết document, chỉ cần nhận ra loại nào phục vụ tính năng nào."
+  ]
+ }
+}

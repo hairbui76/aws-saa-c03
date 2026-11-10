@@ -39,4 +39,5 @@ flowchart TB
 - Tổng quan: [[R53 Routing Policies]]
 - Phân biệt với: [[R53 Multivalue Routing]], [[R53 Simple Routing]], [[Elastic Load Balancer]]
 - Liên quan: [[R53 Health Checks]], [[EC2 Basics]]
+- Canary / blue-green ở tầng ứng dụng Elastic Beanstalk: [[Elastic Beanstalk Deployment Policies]] (traffic splitting), [[Elastic Beanstalk Cloning and Blue-Green]]
 - Section: [[_MOC 10 Route 53]]

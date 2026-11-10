@@ -4,9 +4,9 @@ aliases: [MOC Machine Learning]
 ---
 # 21 Machine Learning
 
-Section cuối về nội dung kỹ thuật giới thiệu các dịch vụ AI/ML managed của AWS: nhóm ngôn ngữ (Comprehend, Kendra, Lex, Polly, Transcribe, Translate), nhóm thị giác và tài liệu (Rekognition, Textract), nhóm dự báo và gian lận (Forecast, Fraud Detector) và nền tảng tự xây model SageMaker. Đề SAA-C03 chỉ hỏi ở mức "dịch vụ nào cho input/output nào", nên cần nắm từ khóa và cách ghép các dịch vụ thành pipeline. Sau section này là phần ôn thi ở [[_MOC 00 Course and Exam]] và [[Exam Cheat Sheet]].
+Section cuối về nội dung kỹ thuật giới thiệu các dịch vụ AI/ML managed của AWS: nhóm ngôn ngữ (Comprehend, Kendra, Lex, Polly, Transcribe, Translate), nhóm thị giác và tài liệu (Rekognition, Textract), nhóm dự báo và gian lận (Forecast, Fraud Detector) và nền tảng tự xây model SageMaker. Đề SAA-C03 chỉ hỏi ở mức "dịch vụ nào cho input/output nào", nên cần nắm từ khóa và cách ghép các dịch vụ thành pipeline. Trên web, sau chương này là hai chương mới [[_MOC 22 Systems Manager]] và [[_MOC 23 Elastic Beanstalk]] (bản khóa mới dạy hai mục này trước Machine Learning), rồi tới phần ôn thi ở [[_MOC 00 Course and Exam]] và [[Exam Cheat Sheet]].
 
-← [[00 Home]] · Trước: [[_MOC 20 NoSQL and Analytics]] · Tiếp: [[Exam Cheat Sheet]]
+← [[00 Home]] · Trước: [[_MOC 20 NoSQL and Analytics]] · Sau: [[_MOC 22 Systems Manager]]
 
 ## Lộ trình học
 1. [[Comprehend]] — NLP managed: từ text ra entities, key phrases, ngôn ngữ, PII, sentiment, syntax.

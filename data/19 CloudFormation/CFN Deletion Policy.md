@@ -71,4 +71,5 @@ Resources:
 - Tiên quyết: [[CloudFormation Basics]], [[CFN Physical and Logical Resources]]
 - Liên quan: [[EBS Snapshots]], [[RDS Backups and Restore]], [[ElastiCache]], [[Redshift]], [[EBS]], [[CFN Custom Resources]]
 - Phân biệt với: [[CFN Change Sets]] (chỉ xem trước, không bảo vệ dữ liệu), [[CFN DependsOn]] (thứ tự tạo/xóa)
+- Cùng ba lựa chọn Delete / Snapshot / Retain cho RDS gắn trong environment Elastic Beanstalk: [[Elastic Beanstalk and RDS]]
 - Section: [[_MOC 19 CloudFormation]]

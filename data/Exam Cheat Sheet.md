@@ -63,6 +63,11 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Chắc chắn launch được ở một AZ (sự kiện, Black Friday), không cam kết dài hạn | **On-Demand Capacity Reservation** (+ Savings Plans nếu cần giảm giá) | [[Reserved Instances and Savings Plans]] |
 | Tải 24/7, 1–3 năm; chuyển dần EC2 → Fargate → Lambda | **RI / Savings Plans** (Compute SP) | [[Reserved Instances and Savings Plans]] |
 | Memory, disk, app log của EC2/on-prem | **CloudWatch Agent** | [[CloudWatch Agent]] |
+| Developer deploy web app nhanh, chỉ upload code, không quản lý hạ tầng, team nhỏ | **Elastic Beanstalk** ("source bundle" = EB; container trên K8s không tự vận hành EKS → cluster mode) | [[Elastic Beanstalk]] |
+| EB: giữ 100% capacity khi deploy → **rolling + additional batch**; rollback an toàn nhất → **immutable**; canary X% → **traffic splitting** (cần ALB) | **EB deployment policy** | [[Elastic Beanstalk Deployment Policies]] |
+| EB: bản mới không chạy chung bản cũ, không downtime | **Clone + swap environment URL (CNAME)** = blue/green | [[Elastic Beanstalk Cloning and Blue-Green]] |
+| EB: tách RDS đang gắn mà không mất dữ liệu | **Deletion policy Retain → đợi → Decouple database**; production để RDS ngoài EB | [[Elastic Beanstalk and RDS]] |
+| EB Standard: thêm resource / tùy biến cùng code | **`.ebextensions/*.config`** (gốc source bundle, định dạng CloudFormation) | [[Elastic Beanstalk ebextensions]] |
 
 ### Storage (S3/EBS/EFS/FSx)
 | Từ khóa trong đề | Chọn | Note |
@@ -134,6 +139,11 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Chạm giới hạn tài nguyên khi mở rộng / sang region mới | **Service Quotas** → Request increase (theo region; CloudWatch alarm khi gần chạm) | [[Service Quotas]] |
 | Account mới trong Organization cần sẵn quota cao | **Quota request template** | [[Service Quotas]] |
 | Alarm báo nhầm vì spike ngắn | **Evaluation periods + datapoints to alarm** (M of N) | [[CloudWatch Basics]] |
+| Quản lý tập trung fleet EC2 + on-prem: inventory, patch, chạy lệnh | **Systems Manager** (agent + quyền + outbound tới endpoint; on-prem → hybrid activation) | [[Systems Manager]] |
+| EC2 tự thành managed instance, không gắn instance role | **Default Host Management Configuration (DHMC)** (IMDSv2 + agent mới) | [[Systems Manager]] |
+| Shell vào instance private, không port inbound, không bastion | **Session Manager** | [[Systems Manager]] |
+| Chạy lệnh trên nhiều máy không SSH/RDP; theo lịch/event | **Run Command** (+ EventBridge; concurrency, error threshold) | [[SSM Run Command]] |
+| Patch tự động theo lịch, báo cáo compliance | **Patch Manager**: baseline (WHAT) + maintenance window (WHEN) + `AWS-RunPatchBaseline` | [[SSM Patch Manager]] |
 
 ### Migration
 | Từ khóa trong đề | Chọn | Note |

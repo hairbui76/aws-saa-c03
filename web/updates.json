@@ -14,7 +14,9 @@
     "Exam Cheat Sheet: NAT Gateway có chế độ zonal (mỗi AZ một cái, trong public subnet) và regional (một NATGW cho cả VPC, AWS trải qua các AZ); private NAT Gateway cho mạng private chồng lấn",
     "Top mẹo thi và concept map chương 06: thêm NAT Gateway regional, NAT64 + DNS64, NAT instance là legacy; local route đổi được target và bị longest prefix match ghi đè; secondary CIDR, IPAM, IPv6 subnet /44–/64",
     "Exam Cheat Sheet: mốc EBS mới (gp2 16K, io1 64K, gp3 80K / 2,000 MiB/s, io2 Block Express 256K; io2 = Block Express), FSR tối đa 5/region, Spot cảnh báo 2 phút và terminate/stop/hibernate, RI Standard/Convertible, ODCR giá On-Demand (immediate/future, open/targeted), Savings Plans không giữ capacity, Scheduled RI đã deprecated",
-    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans"
+    "Top mẹo thi và concept map chương 07: 6 category instance (HPC), mốc IOPS mới, snapshot archive/lock, EBS status check và simplified automatic recovery, stop protection, IMDSv2, Spot interruption, ODCR + Savings Plans",
+    "Trang chủ và các chỗ liệt kê chương: thêm hai chương mới 22 Systems Manager và 23 Elastic Beanstalk",
+    "Exam Cheat Sheet: thêm Systems Manager (managed node, DHMC, hybrid activation, Session Manager, Run Command, Patch Manager) và Elastic Beanstalk (Standard/Cluster, deployment policy, clone và blue/green, RDS, .ebextensions)"
   ],
   "missing": [],
   "lessons": {
@@ -792,6 +794,42 @@
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []
+    },
+    "Systems Manager": {
+      "kind": "new",
+      "summary": "Bài mới (chương mới 22): Systems Manager quản lý managed node ở AWS, on-prem và cloud khác qua SSM Agent; quyền bằng instance role hoặc Default Host Management Configuration (DHMC), kết nối outbound qua IGW hoặc VPC endpoint; server on-prem tham gia bằng hybrid activation (activation code + ID); các tính năng inventory, patch, Run Command, desired state, Parameter Store, Session Manager."
+    },
+    "SSM Run Command": {
+      "kind": "new",
+      "summary": "Bài mới: Run Command chạy command document trên managed node không cần SSH/RDP, chọn node theo node/tag/resource group, rate control (concurrency, error threshold), output tới CloudWatch Logs/S3, thông báo SNS, làm target của EventBridge rule."
+    },
+    "SSM Documents": {
+      "kind": "new",
+      "summary": "Bài mới: SSM document JSON/YAML theo region, giống template CloudFormation; các loại Command, Automation runbook, Package (Distributor), Session (Session Manager), Policy (Inventory) và tính năng dùng từng loại."
+    },
+    "SSM Patch Manager": {
+      "kind": "new",
+      "summary": "Bài mới: Patch Manager với patch baseline (tự duyệt sau 7 ngày, Ubuntu/Debian ngay), patch group theo tag, maintenance window, Run Command AWS-RunPatchBaseline, concurrency/error threshold, compliance và tên các baseline predefined."
+    },
+    "Elastic Beanstalk": {
+      "kind": "new",
+      "summary": "Bài mới (chương mới 23): Elastic Beanstalk là PaaS cho developer, hai chế độ Standard (EC2, platform, web/worker tier + SQS) và Cluster (container trên EKS); application, version (source bundle trên S3), environment, CNAME swap; database để ngoài environment."
+    },
+    "Elastic Beanstalk Deployment Policies": {
+      "kind": "new",
+      "summary": "Bài mới: các deployment policy All at once, Rolling, Rolling with additional batch, Immutable, Traffic splitting (canary, cần ALB) và blue/green bằng hai environment."
+    },
+    "Elastic Beanstalk Cloning and Blue-Green": {
+      "kind": "new",
+      "summary": "Bài mới: clone environment (copy cấu hình và resource, RDS không có dữ liệu, chỉ đổi platform version cùng branch, không copy unmanaged change), blue/green bằng swap environment domain, lifecycle policy cho application version."
+    },
+    "Elastic Beanstalk and RDS": {
+      "kind": "new",
+      "summary": "Bài mới: RDS trong environment (deletion policy Delete/Snapshot/Retain, environment property RDS_*) hay ngoài EB (tự tạo property, mở security group); tách RDS bằng Retain rồi mới Decouple database."
+    },
+    "Elastic Beanstalk ebextensions": {
+      "kind": "new",
+      "summary": "Bài mới: tùy biến environment Standard bằng thư mục .ebextensions ở gốc source bundle, file .config định dạng CloudFormation với option_settings, Resources và các mục kiểu cfn-init."
     }
   }
 }

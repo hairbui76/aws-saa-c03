@@ -83,4 +83,5 @@ Template tạo EC2 instance giống bài [[EC2 Basics]] nhưng tự động (reg
 - Tiên quyết: [[YAML]], [[JSON]]
 - Liên quan: [[EC2 Basics]], [[IAM Roles]], [[SSM Parameter Store]], [[EC2 Instance Roles]]
 - Học sâu hơn: [[CFN Physical and Logical Resources]], [[CFN Template and Pseudo Parameters]], [[CFN Intrinsic Functions]], [[CFN Mappings]], [[CFN Conditions]], [[CFN Outputs]], [[CFN Change Sets]]
+- Dịch vụ dùng CloudFormation phía sau: [[Elastic Beanstalk]] (tùy biến bằng [[Elastic Beanstalk ebextensions|.ebextensions]]); SSM document có cấu trúc giống template: [[SSM Documents]]
 - MOC: [[_MOC 03 AWS Fundamentals]]

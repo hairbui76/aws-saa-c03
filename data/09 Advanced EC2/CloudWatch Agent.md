@@ -63,3 +63,4 @@ Cài agent trên instance WordPress (A4L) để thu 3 log file và metric OS.
 - Tiên quyết: [[CloudWatch Basics]], [[CloudWatch Logs]], [[EC2 Instance Roles]]
 - Liên quan: [[SSM Parameter Store]], [[EC2 User Data Bootstrapping]], [[Auto Scaling Groups]], [[CloudFormation Basics]], [[VPC Flow Logs]]
 - Phân biệt với: [[CloudTrail]] (ghi API call, không phải log trong OS)
+- Cài agent cho cả fleet bằng Systems Manager: [[SSM Run Command]], [[SSM Documents]] (AWS-ConfigureAWSPackage, AmazonCloudWatch-ManageAgent)

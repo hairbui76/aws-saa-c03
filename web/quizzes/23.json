@@ -1,0 +1,375 @@
+{
+  "chapter": "23 Elastic Beanstalk",
+  "lessons": {
+    "Elastic Beanstalk": [
+      {
+        "type": "single",
+        "q": "Một nhóm 3 developer, không có team hạ tầng, muốn đưa một web app Python lên AWS nhanh, chỉ upload code, không tự quản lý EC2, load balancer hay Auto Scaling. Chọn gì?",
+        "options": [
+          "AWS Elastic Beanstalk",
+          "Amazon EKS tự quản lý",
+          "AWS Lambda với hàng trăm function",
+          "EC2 và tự viết CloudFormation template"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Elastic Beanstalk là PaaS dành cho developer: bạn đưa code, EB dựng và quản lý môi trường (EC2, ASG, load balancer) bằng CloudFormation phía sau. Rất hợp với team nhỏ và web app tiêu chuẩn."
+      },
+      {
+        "type": "single",
+        "q": "Trong Elastic Beanstalk Standard, application version được lưu ở đâu và gọi là gì?",
+        "options": [
+          "Source bundle (zip hoặc WAR) trong bucket S3 mà EB tạo cho account, mỗi region một bucket",
+          "Container image bắt buộc trong ECR",
+          "AMI tùy chỉnh trong EC2",
+          "File ZIP lưu trên EBS của instance"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Ở Standard, mỗi application version là một source bundle zip hoặc WAR lưu trong bucket S3 của EB (mỗi account, mỗi region một bucket). Cluster mode mới dùng container image."
+      },
+      {
+        "type": "single",
+        "q": "Một web app trên Elastic Beanstalk cần xử lý nền các video người dùng upload (encode, resize) tách khỏi tầng web. Thiết kế phù hợp với EB Standard?",
+        "options": [
+          "Environment web server tier đẩy việc vào SQS queue do EB quản lý, environment worker tier xử lý",
+          "Chạy encode ngay trong request của web tier",
+          "Dùng cluster mode để có worker tier",
+          "Đặt việc encode vào user data của instance"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "EB Standard có web tier và worker tier; web tier đặt message vào SQS queue do EB quản lý, worker tier xử lý, mỗi tier scale độc lập. Cluster mode không có tier và không có SQS."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về Elastic Beanstalk cluster mode? (Chọn 2)",
+        "options": [
+          "Ứng dụng chạy thành container trên EKS cluster do EB tạo và vận hành",
+          "Không phải chọn platform và không có web/worker tier",
+          "Mỗi environment luôn có EC2 Auto Scaling Group và SQS queue riêng",
+          "Application version là source bundle WAR",
+          "Hỗ trợ .ebextensions giống Standard"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "explain": "Cluster mode chạy container trên EKS do EB quản lý, version là container image, không chọn platform, không có tier hay SQS, ALB tùy chọn. .ebextensions chỉ dành cho Standard."
+      },
+      {
+        "type": "single",
+        "q": "Vì sao database của ứng dụng nên đặt ngoài environment Elastic Beanstalk?",
+        "options": [
+          "Environment là thứ dùng xong bỏ (clone, swap, xóa); DB trong environment blue thì sau CNAME swap dữ liệu khách hàng nằm sai chỗ",
+          "EB không hỗ trợ RDS",
+          "Để giảm số EC2 instance",
+          "Vì CNAME swap chỉ chạy được khi không có RDS"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Thứ bền trong EB là application và các version; environment bị clone, swap, xóa. Đặt DB (vd RDS) ngoài EB và trỏ tới bằng environment variable để dữ liệu không bị kẹt trong một environment."
+      }
+    ],
+    "Elastic Beanstalk Deployment Policies": [
+      {
+        "type": "single",
+        "q": "Một environment production cần deploy version mới mà KHÔNG giảm capacity, chấp nhận tốn thêm một ít chi phí, vẫn nâng cấp theo batch. Chọn deployment policy nào?",
+        "options": [
+          "All at once",
+          "Rolling",
+          "Rolling with additional batch",
+          "Immutable"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Rolling with additional batch thêm một batch instance mới trước nên luôn giữ 100% capacity, chỉ tốn thêm phần batch phụ. Rolling thường làm giảm capacity theo kích thước batch."
+      },
+      {
+        "type": "single",
+        "q": "Đội phát triển muốn đưa 10% traffic sang version mới để canary test, nếu healthy trong thời gian đánh giá thì chuyển hết, nếu lỗi thì tự quay lại. Chọn gì và cần điều kiện gì?",
+        "options": [
+          "Traffic splitting; environment phải có Application Load Balancer",
+          "Rolling; batch size 10%",
+          "All at once; bật enhanced health",
+          "Immutable; environment single instance"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Traffic splitting dựng instance mới trong ASG tạm và chia % traffic giữa bản cũ và mới để canary test; hết evaluation time mà healthy thì chuyển toàn bộ, nếu không thì trả traffic về và xóa hạ tầng mới. Cần ALB, không làm được với single instance."
+      },
+      {
+        "type": "single",
+        "q": "Deployment policy nào cho rollback nhanh và an toàn nhất vì instance đang chạy không bị đụng tới cho tới cuối quá trình?",
+        "options": [
+          "All at once",
+          "Rolling",
+          "Rolling with additional batch",
+          "Immutable"
+        ],
+        "answer": [
+          3
+        ],
+        "explain": "Immutable tạo ASG tạm với đủ bộ instance mới; qua health check mới chuyển vào ASG gốc và terminate instance cũ. Chi phí gấp đôi tạm thời nhưng rollback nhanh, rủi ro thấp nhất."
+      },
+      {
+        "type": "multi",
+        "q": "Phát biểu nào đúng về deployment policy All at once? (Chọn 2)",
+        "options": [
+          "Là mặc định cho đa số environment tạo bằng console",
+          "Gây outage trong lúc deploy, hợp với dev/test",
+          "Luôn giữ 100% capacity",
+          "Tự động rollback khi lỗi",
+          "Bắt buộc có Application Load Balancer"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "explain": "All at once deploy lên mọi instance cùng lúc: nhanh, đơn giản, là mặc định khi tạo bằng console, nhưng gây outage và lỗi thì phải deploy lại version cũ bằng tay."
+      },
+      {
+        "type": "single",
+        "q": "Với deployment policy Rolling, nếu một batch thất bại giữa chừng thì sao?",
+        "options": [
+          "EB tự rollback mọi batch về version cũ",
+          "Deployment dừng; batch đã xong chạy bản mới, phần còn lại chạy bản cũ; muốn rollback phải deploy lại version cũ",
+          "EB chuyển sang immutable",
+          "Toàn bộ environment bị terminate"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Rolling không tự rollback: batch lỗi làm deployment dừng, các batch đã nâng chạy bản mới, phần còn lại chạy bản cũ. Rollback bằng cách deploy lại version trước."
+      }
+    ],
+    "Elastic Beanstalk Cloning and Blue-Green": [
+      {
+        "type": "single",
+        "q": "Đội QA cần một environment giống hệt production (option setting, environment variable, resource) để test, làm nhanh nhất. Chọn gì?",
+        "options": [
+          "Clone environment production (console hoặc eb clone)",
+          "Tạo environment mới và cấu hình tay từng option",
+          "Snapshot EBS của instance production",
+          "Tạo CloudFormation StackSet"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Environment cloning tạo bản sao đầy đủ environment có sẵn, kể cả resource AWS gắn kèm, không phải cấu hình lại. Làm qua console hoặc EB CLI eb clone."
+      },
+      {
+        "type": "single",
+        "q": "Environment production có RDS instance bên trong. Sau khi clone environment đó, RDS của bản clone thế nào?",
+        "options": [
+          "Bản clone dùng chung RDS với production",
+          "Bản clone có RDS instance mới nhưng không có dữ liệu từ RDS gốc",
+          "Bản clone có RDS với toàn bộ dữ liệu được copy",
+          "Không clone được environment có RDS"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Clone có tạo RDS instance đã định nghĩa trong environment, nhưng Elastic Beanstalk không clone dữ liệu từ RDS sang bản clone."
+      },
+      {
+        "type": "single",
+        "q": "Version mới của ứng dụng thay đổi lớn, không thể chạy song song với bản cũ trong cùng environment. Cần phát hành không downtime và rollback tức thì. Cách nào?",
+        "options": [
+          "Rolling deployment với batch 1 instance",
+          "Blue/green: clone environment, deploy bản mới lên bản clone, rồi swap environment domain (CNAME)",
+          "All at once trong giờ thấp điểm",
+          "Xóa environment cũ rồi tạo lại"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Blue/green dùng hai environment: clone prod, deploy bản mới, test, rồi swap CNAME. Lỗi thì swap lại. Vì là thay đổi DNS nên giữ environment cũ tới khi bản ghi DNS cũ hết hạn."
+      },
+      {
+        "type": "multi",
+        "q": "Khi clone một environment Elastic Beanstalk, những gì đổi được ngay lúc clone? (Chọn 2)",
+        "options": [
+          "Tên environment và URL prefix",
+          "Platform version (trong cùng platform branch)",
+          "Chuyển sang platform branch khác bất kỳ",
+          "Chuyển từ Standard sang cluster mode",
+          "Copy các unmanaged change làm ngoài EB"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "explain": "Lúc clone đổi được tên, URL prefix, mô tả, platform version (cùng branch) và service role. Platform branch khác thì phải tạo environment mới bằng tay; unmanaged change không được copy."
+      },
+      {
+        "type": "single",
+        "q": "Bucket S3 của Elastic Beanstalk chất đống hàng trăm application version cũ. Cách tự động giữ số version trong tầm kiểm soát?",
+        "options": [
+          "Application version lifecycle policy theo tuổi hoặc tổng số version, tùy chọn xóa source bundle khỏi S3",
+          "S3 Object Lock",
+          "Xóa application rồi tạo lại mỗi tháng",
+          "Bật S3 Versioning"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Lifecycle policy của application version tự xóa version cũ theo tuổi hoặc theo số lượng và có thể xóa luôn source bundle trong S3; không xóa version đang được deploy."
+      }
+    ],
+    "Elastic Beanstalk and RDS": [
+      {
+        "type": "single",
+        "q": "RDS instance được tạo bên trong environment Elastic Beanstalk. Muốn xóa environment nhưng vẫn giữ RDS instance chạy tiếp, database deletion policy phải là gì?",
+        "options": [
+          "Delete",
+          "Snapshot",
+          "Retain",
+          "Decouple"
+        ],
+        "answer": [
+          2
+        ],
+        "explain": "Deletion policy có Delete (xóa, mất dữ liệu), Snapshot (chụp rồi xóa) và Retain (giữ instance chạy ngoài EB). Muốn giữ RDS chạy tiếp thì chọn Retain."
+      },
+      {
+        "type": "single",
+        "q": "Cần tách một RDS đang gắn với environment ra ngoài mà không mất dữ liệu. Trình tự đúng?",
+        "options": [
+          "Chọn Decouple database và đặt deletion policy Retain trong cùng một lần apply",
+          "Đặt deletion policy = Retain, apply và đợi xong, rồi mới chọn Decouple database",
+          "Chọn Decouple database trước, sau đó đặt Retain",
+          "Xóa environment rồi restore RDS từ backup"
+        ],
+        "answer": [
+          1
+        ],
+        "explain": "Phải đặt Retain, apply và đợi hoàn tất rồi mới Decouple. Làm cùng lúc hoặc decouple trước thì policy cũ (Delete hoặc Snapshot) đang có hiệu lực và RDS có thể bị xóa."
+      },
+      {
+        "type": "multi",
+        "q": "Ứng dụng trên Elastic Beanstalk dùng một RDS instance tạo ngoài EB. Cần làm gì để kết nối được? (Chọn 2)",
+        "options": [
+          "Tự tạo environment property như RDS_HOSTNAME, RDS_PORT, RDS_DB_NAME, RDS_USERNAME, RDS_PASSWORD",
+          "Cho phép instance của environment trong security group của RDS",
+          "Bật Multi-AZ cho environment",
+          "Chuyển environment sang worker tier",
+          "Đặt RDS vào cùng Auto Scaling Group"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "explain": "Với RDS ngoài EB, environment property không được tạo sẵn nên phải tự tạo, và phải mở security group của RDS cho instance của environment."
+      },
+      {
+        "type": "single",
+        "q": "Khi RDS được tạo bên trong environment Elastic Beanstalk, code ứng dụng lấy thông tin kết nối bằng cách nào?",
+        "options": [
+          "EB tự cung cấp environment property RDS_HOSTNAME, RDS_PORT, RDS_DB_NAME, RDS_USERNAME, RDS_PASSWORD",
+          "Phải đọc từ CloudTrail",
+          "Phải hard-code endpoint vào source bundle",
+          "Chỉ lấy được qua Session Manager"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "RDS gắn với environment thì EB tự tạo các environment property RDS_HOSTNAME, RDS_PORT, RDS_DB_NAME, RDS_USERNAME và RDS_PASSWORD cho code dùng."
+      },
+      {
+        "type": "single",
+        "q": "Vì sao RDS gắn trong environment thường chỉ nên dùng cho dev/test nhỏ?",
+        "options": [
+          "Vì RDS gắn với vòng đời environment và mỗi environment có DB, dữ liệu riêng",
+          "Vì RDS trong environment không hỗ trợ MySQL",
+          "Vì environment property không hoạt động trong production",
+          "Vì EB tính phí gấp đôi cho RDS bên trong"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "RDS trong environment bị xử lý theo deletion policy khi environment bị xóa và mỗi environment có dữ liệu riêng, nên dễ mất hoặc lệch dữ liệu khi clone, swap, xóa. Production thường để RDS ngoài EB."
+      }
+    ],
+    "Elastic Beanstalk ebextensions": [
+      {
+        "type": "single",
+        "q": "Developer muốn environment Elastic Beanstalk Standard tạo thêm một ElastiCache cluster, và cấu hình này được version cùng code ứng dụng. Cách nào?",
+        "options": [
+          "Thêm file .config vào thư mục .ebextensions ở gốc source bundle, khai báo trong mục Resources",
+          "Sửa trực tiếp CloudFormation stack mà EB tạo",
+          "Đặt script vào user data",
+          "Dùng cluster mode"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": ".ebextensions cho phép tùy biến environment Standard: file .config định dạng CloudFormation trong thư mục .ebextensions ở gốc source bundle; mục Resources tạo resource mới như ElastiCache."
+      },
+      {
+        "type": "single",
+        "q": "File nào được Elastic Beanstalk coi là file cấu hình ebextensions?",
+        "options": [
+          "File JSON hoặc YAML có đuôi .config trong thư mục .ebextensions ở gốc source bundle",
+          "Mọi file .yaml ở bất kỳ đâu trong source bundle",
+          "File Dockerfile",
+          "File template.yaml trong bucket S3 của EB"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "Thư mục .ebextensions phải ở gốc source bundle (zip hoặc WAR); mọi file JSON hoặc YAML đuôi .config trong đó là file cấu hình ebextensions."
+      },
+      {
+        "type": "single",
+        "q": "Trong file .config của .ebextensions, mục nào dùng để đặt option cho resource của environment?",
+        "options": [
+          "option_settings",
+          "Outputs",
+          "Mappings",
+          "Conditions"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": "option_settings đặt option cho resource; Resources tạo resource mới; ngoài ra có packages, sources, files, users, groups, commands, container_commands và services."
+      },
+      {
+        "type": "single",
+        "q": ".ebextensions áp dụng cho loại environment nào?",
+        "options": [
+          "Chỉ Elastic Beanstalk Standard",
+          "Chỉ cluster mode",
+          "Cả Standard và cluster mode",
+          "Chỉ worker tier"
+        ],
+        "answer": [
+          0
+        ],
+        "explain": ".ebextensions tùy biến CloudFormation stack của environment Standard; cluster mode không dùng tính năng này."
+      },
+      {
+        "type": "multi",
+        "q": "Những mục nào có thể dùng trong file .config của .ebextensions để làm việc trên instance? (Chọn 2)",
+        "options": [
+          "packages",
+          "commands",
+          "Fn::Transform bắt buộc",
+          "StackSets",
+          "DeletionPolicy của toàn environment"
+        ],
+        "answer": [
+          0,
+          1
+        ],
+        "explain": "Như cfn-init, .ebextensions có packages, sources, files, users, groups, commands, container_commands và services để cài gói, tạo file, chạy lệnh, tạo user trên instance."
+      }
+    ]
+  }
+}
