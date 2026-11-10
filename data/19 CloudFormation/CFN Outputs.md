@@ -23,12 +23,12 @@ videos: ["314 [ASSOCIATESHARED] CloudFormation Outputs"]
 ## Cách hoạt động / Kiến trúc
 ```yaml
 Outputs:
-  WordpressURL:
-    Description: "Instance Web URL"
-    Value: !Join [ '', [ 'https://', !GetAtt Instance.DNSName ] ]
+  WebStoreURL:
+    Description: "Aus-E-Mart Web Store URL"
+    Value: !Join [ '', [ 'https://', !GetAtt Instance.PublicDnsName ] ]
 ```
 - **`Description`**: hiện trên CLI/console và được trả cho stack cha. Best practice là viết mô tả rõ cho người chưa đọc template.
-- **`Value`**: thứ stack phơi ra. Ở đây ghép chuỗi literal `https://` với thuộc tính `DNSName` của logical resource `Instance` bằng `!Join` và `!GetAtt` ([[CFN Intrinsic Functions]]). Kết quả là URL truy cập WordPress.
+- **`Value`**: thứ stack phơi ra. Ở đây ghép chuỗi literal `https://` với thuộc tính **`PublicDnsName`** của logical resource `Instance` bằng `!Join` và `!GetAtt` ([[CFN Intrinsic Functions]]). Kết quả là URL truy cập web store. (Bản khóa cũ ghi `Instance.DNSName`; slide mới dùng `PublicDnsName`. Bổ sung theo tài liệu AWS: EC2 không có thuộc tính tên `DNSName`.)
 - **`Export: Name: ...`** (thêm khi cần): đưa giá trị vào danh sách export của region để stack khác `ImportValue`.
 
 ## 🎯 Mẹo thi SAA-C03

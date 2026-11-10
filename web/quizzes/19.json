@@ -86,9 +86,9 @@
       {
         "type": "single",
         "q": "Một stack ở eu-west-1 cần dùng VPC ID mà một stack ở us-east-1 đã export. Phát biểu nào đúng?",
-        "options": ["Fn::ImportValue hoạt động bình thường giữa các region của cùng account", "Chỉ cần đổi export name thành dạng ARN đầy đủ là import được", "Fn::ImportValue không dùng được giữa hai region; stack ở eu-west-1 có thể đọc output của stack us-east-1 bằng Fn::GetStackOutput, chỉ định Region: us-east-1", "Dùng Ref với tên export để lấy giá trị từ region khác"],
+        "options": ["Fn::ImportValue hoạt động bình thường giữa các region của cùng account", "Chỉ cần đổi export name thành dạng ARN đầy đủ là import được", "Fn::ImportValue không dùng được giữa hai region; theo bài giảng mới, stack ở eu-west-1 có thể đọc output của stack us-east-1 bằng Fn::GetStackOutput, chỉ định Region: us-east-1", "Dùng Ref với tên export để lấy giá trị từ region khác"],
         "answer": [2],
-        "explain": "Danh sách exports là riêng cho từng region của từng account, nên ImportValue không hỗ trợ cross-region hay cross-account. Hàm Fn::GetStackOutput đọc thẳng output của stack khác theo StackName và OutputName, có tham số Region (và RoleArn khi khác account), cần quyền cloudformation:DescribeStacks."
+        "explain": "Danh sách exports là riêng cho từng region của từng account, nên ImportValue không hỗ trợ cross-region hay cross-account. Theo bài giảng mới (chưa đối chiếu tài liệu AWS), hàm Fn::GetStackOutput đọc thẳng output của stack khác theo StackName và OutputName, có tham số Region (và RoleArn khi khác account), cần quyền cloudformation:DescribeStacks."
       },
       {
         "type": "single",
@@ -338,7 +338,7 @@
       {
         "type": "single",
         "q": "Sau khi stack WordPress tạo xong, đội vận hành muốn thấy ngay URL truy cập trang web trên tab Outputs của console. Khai báo nào phù hợp?",
-        "options": ["Thêm parameter WordpressURL với Default là DNS name", "Thêm metadata AWS::CloudFormation::Init chứa URL", "Thêm output WordpressURL với Value: !Join ['', ['https://', !GetAtt Instance.DNSName]]", "Thêm mapping chứa URL theo region"],
+        "options": ["Thêm parameter WordpressURL với Default là DNS name", "Thêm metadata AWS::CloudFormation::Init chứa URL", "Thêm output WordpressURL với Value: !Join ['', ['https://', !GetAtt Instance.PublicDnsName]]", "Thêm mapping chứa URL theo region"],
         "answer": [2],
         "explain": "Outputs hiện giá trị trên console và CLI sau khi stack tạo xong; Join + GetAtt ghép thành URL động. Parameter là input, không thể biết trước DNS name của instance."
       },
@@ -599,7 +599,7 @@
         "q": "Một đội muốn khai báo ngay trong template CloudFormation những gói cần cài, file cần tạo và service phải chạy trên EC2, theo kiểu desired state và idempotent thay vì viết script bash dài. Giải pháp nào phù hợp?",
         "options": ["Viết toàn bộ script trong UserData", "Dùng custom resource gọi Lambda cài phần mềm", "Dùng Mappings chứa danh sách gói", "Khai báo AWS::CloudFormation::Init trong Metadata của instance và gọi cfn-init từ user data"],
         "answer": [3],
-        "explain": "cfn-init đọc AWS::CloudFormation::Init và đưa instance về desired state, idempotent sẵn. User data là procedural, phải tự viết logic kiểm tra đã cài hay chưa."
+        "explain": "cfn-init đọc AWS::CloudFormation::Init và đưa instance về desired state, idempotent sẵn (bản khóa cũ nêu, bài mới không nói). User data là procedural, phải tự viết logic kiểm tra đã cài hay chưa."
       },
       {
         "type": "single",

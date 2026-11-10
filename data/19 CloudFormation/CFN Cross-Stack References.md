@@ -136,7 +136,7 @@ flowchart LR
 - **Template không phải stack**: template dùng để tạo một hoặc nhiều stack, mỗi stack là duy nhất. Reuse **template** → nested stacks. Reuse **stack/resource** → cross-stack references.
 - Từ khóa cho cross-stack: "shared services VPC", "nhiều ứng dụng ngắn hạn dùng chung hạ tầng", "service-oriented", "vòng đời khác nhau (long vs short)", "tham chiếu resource của stack khác", "export/import".
 - Export name **duy nhất trong region của account**; `Fn::ImportValue` **thay cho `Ref`**; ImportValue **không cross-region, không cross-account**.
-- Cần đọc output của stack ở **region khác hoặc account khác**, hoặc không muốn Export (không muốn hai stack bị khóa vào nhau) → **`Fn::GetStackOutput`** (StackName, OutputName, tùy chọn Region, RoleArn), nhớ quyền **`cloudformation:DescribeStacks`**.
+- Cần đọc output của stack ở **region khác hoặc account khác**, hoặc không muốn Export (không muốn hai stack bị khóa vào nhau) → **`Fn::GetStackOutput`** (StackName, OutputName, tùy chọn Region, RoleArn), nhớ quyền **`cloudformation:DescribeStacks`** (theo bài giảng mới; chưa đối chiếu tài liệu AWS).
 - Export đang được import thì **không xóa được**: đây là ràng buộc của Export/ImportValue. Bài giới thiệu GetStackOutput là cách đơn giản hơn khi chỉ cần **lấy giá trị** mà không phụ thuộc chặt vào stack kia.
 - Đề cho tình huống cần nhiều account/region dùng chung template → [[CFN StackSets]], không phải cross-stack.
 - Nhập tay ID vào parameter là giá trị tĩnh, không phải tham chiếu: đáp án đúng khi đề hỏi "tham chiếu động" là Export/ImportValue (hoặc GetStackOutput).

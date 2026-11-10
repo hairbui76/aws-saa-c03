@@ -3,7 +3,7 @@
   "sig": "8-1cxpjki",
   "steps": [
    "Sơ đồ này nói về section Outputs trong CloudFormation, phần tùy chọn giúp stack trả giá trị ra sau khi tạo xong. Ta sẽ xem giá trị đó đi tới những ai.",
-   "Bên trong stack, output WordpressURL dùng GetAtt lấy thuộc tính DNSName của EC2 Instance, rồi dùng Join ghép thêm https phía trước để thành URL truy cập WordPress. Phần Export là tùy chọn.",
+   "Bên trong stack, output WordpressURL dùng GetAtt lấy thuộc tính PublicDnsName của EC2 Instance, rồi dùng Join ghép thêm https phía trước để thành URL truy cập WordPress. Phần Export là tùy chọn.",
    "Nơi nhận đầu tiên là console, ở tab Outputs, hoặc CLI. Người dùng mở ra là thấy ngay URL, IP hay endpoint mà không cần đọc template, nên Description cần viết rõ ràng.",
    "Nơi thứ hai là stack cha khi dùng nested stack. Stack cha đọc giá trị bằng GetAtt WPStack chấm Outputs chấm WordpressURL, và trường hợp này không cần Export.",
    "Nơi thứ ba là một stack độc lập khác. Muốn vậy, output phải được Export với một tên trong region, rồi stack kia gọi ImportValue theo tên đó.",

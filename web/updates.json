@@ -901,6 +901,24 @@
         "🎯 Mẹo thi SAA-C03"
       ],
       "dropped": []
+    },
+    "CFN Outputs": {
+      "kind": "updated",
+      "summary": "Ví dụ output dùng thuộc tính PublicDnsName của EC2 (!GetAtt Instance.PublicDnsName); bản cũ ghi DNSName, không phải thuộc tính EC2.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cách hoạt động / Kiến trúc"
+      ],
+      "dropped": []
+    },
+    "CFN Intrinsic Functions": {
+      "kind": "updated",
+      "summary": "Ví dụ Join tạo URL dùng thuộc tính PublicDnsName của EC2 (!GetAtt Instance.PublicDnsName); bản cũ ghi DNSName, không phải thuộc tính EC2.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Cách hoạt động / Kiến trúc"
+      ],
+      "dropped": []
     }
   }
 }
