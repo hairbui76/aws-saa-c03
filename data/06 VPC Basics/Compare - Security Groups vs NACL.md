@@ -30,7 +30,7 @@ videos: ["114 [ASSOCIATESHARED] Network Access Control Lists (NACLs)", "115 [ASS
 | Số lượng gắn | Một ENI gắn được nhiều SG (rule các SG **gộp lại**, xét chung). Một SG dùng cho nhiều ENI | **Mỗi subnet đúng 1 NACL** (default hoặc custom). **Một NACL gắn được nhiều subnet** |
 | Mặc định | SG mới: không có inbound rule, outbound allow all *(bổ sung theo tài liệu AWS)* | **Default NACL** của VPC: allow all vào/ra, nên coi như không có tác dụng. **Custom NACL mới tạo: chỉ có implicit deny**, nên gắn vào subnet là **chặn hết** |
 | Scale với ASG / IP thay đổi | Rất tốt nhờ tham chiếu SG | Kém, phải sửa CIDR thủ công |
-| Lọc traffic của [[NAT Gateway]] | **Không** (NATGW không gắn được SG) | **Có** với NATGW **zonal**, qua NACL của subnet chứa NATGW |
+| Lọc traffic của [[NAT Gateway]] | **Không** (NATGW không gắn được SG) | **Có**: bài nêu NACL áp dụng cho NATGW **zonal** (nằm trong subnet), qua NACL của subnet chứa NATGW; với NATGW regional bài không nói |
 | AWS khuyến nghị dùng chính | Có | Bổ sung khi cần deny |
 
 ## Số rule cần cho một luồng: ví dụ Web → App
@@ -65,7 +65,7 @@ Packet vào phải qua **cả hai**: NACL ở biên subnet trước, sau đó t�
 - **Cho phép traffic tới resource**, nhất là kiến trúc nhiều tầng hoặc instance co giãn: dùng **SG**. Tham chiếu SG của tầng trước, dùng self-reference cho cluster.
 - **Chặn một IP hoặc dải IP cụ thể** (kẻ tấn công, mạng xấu): dùng **NACL deny**, đánh số rule nhỏ hơn rule allow.
 - **Kiểm soát thô ở cấp subnet** (ví dụ chặn toàn bộ một port cho cả subnet): dùng NACL.
-- **Lọc traffic qua NAT Gateway** (zonal): chỉ NACL của subnet chứa nó.
+- **Lọc traffic qua NAT Gateway**: không dùng được SG; với NATGW zonal thì dùng NACL của subnet chứa nó (bài không nói về NATGW regional).
 - Chặn ở tầng ứng dụng (HTTP header, SQLi, rate limit): không phải SG hay NACL mà là [[WAF]] (xem [[Layer 7 Firewall]]).
 
 ## 🎯 Mẹo thi SAA-C03

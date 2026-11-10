@@ -615,15 +615,15 @@
       },
       {
         "type": "single",
-        "q": "Một VPC có dải IPv6 /56. Subnet IPv6 được phép có kích thước nào, và nếu chia theo kích thước điển hình /64 thì VPC chứa được tối đa bao nhiêu subnet IPv6?",
+        "q": "Một VPC có dải IPv6 /56. Subnet IPv6 trong VPC này được phép có kích thước nào, và nếu chia theo kích thước điển hình /64 thì VPC chứa được tối đa bao nhiêu subnet IPv6?",
         "options": [
           "Chỉ đúng /64; 16 subnet",
-          "Từ /44 đến /64 theo bước 4; 256 subnet /64",
+          "/56, /60 hoặc /64; 256 subnet /64",
           "Từ /16 đến /28; 256 subnet /64",
-          "Chỉ đúng /56; 1 subnet"
+          "Từ /44 đến /64; 16 subnet /64"
         ],
         "answer": [1],
-        "explain": "CIDR IPv6 của subnet là tập con của dải IPv6 của VPC, từ /44 đến /64 theo bước 4 (/44, /48, /52...). Điển hình là /64: /56 chia thành /64 chênh 8 bit, tức 256 subnet (hex 00 → FF). /16 đến /28 là giới hạn của IPv4."
+        "explain": "Theo bài giảng, subnet IPv6 có kích thước từ /44 đến /64 theo bước 4, nhưng phải nằm trong dải IPv6 của VPC, nên với VPC /56 chỉ còn /56, /60 hoặc /64. Điển hình là /64: /56 chia thành /64 chênh 8 bit, tức 256 subnet (hex 00 → FF). /16 đến /28 là giới hạn của IPv4."
       }
     ]
   }

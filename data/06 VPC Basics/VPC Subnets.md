@@ -22,7 +22,7 @@ videos: ["106 [ASSOCIATESHARED] VPC Subnets", "107 [SHAREDALL] [DEMO] Implement 
   - phải là tập con của CIDR của VPC: thuộc **primary hoặc một secondary CIDR** của VPC (xem [[Custom VPC]]);
   - **không được chồng lấn** với subnet khác trong cùng VPC (cũng hay ra thi).
   - Kích thước subnet: /28 đến /16.
-- **IPv6** (tùy chọn, chỉ khi VPC đã có IPv6): CIDR IPv6 của subnet là tập con của một dải IPv6 của VPC, kích thước từ **/44 đến /64, bước 4** (/44, /48, /52, /56, /60, /64). Điển hình là **/64**: cắt /64 từ /56 của VPC ⇒ một VPC /56 chứa **256** subnet /64 (giá trị hex 00 → FF).
+- **IPv6** (tùy chọn, chỉ khi VPC đã có IPv6): CIDR IPv6 của subnet là tập con của một dải IPv6 của VPC, kích thước từ **/44 đến /64, bước 4** (/44, /48, /52, /56, /60, /64), nhưng không lớn hơn dải của VPC (VPC /56 thì chỉ còn /56, /60, /64). Điển hình là **/64**: cắt /64 từ /56 của VPC ⇒ một VPC /56 chứa **256** subnet /64 (giá trị hex 00 → FF).
 - Subnet có thể **dual-stack** (cả IPv4 và IPv6), chỉ IPv4, hoặc chỉ IPv6 (demo cho thấy tạo được subnet không có IPv4).
 - Mặc định **các subnet trong cùng VPC nói chuyện tự do với nhau**: cách ly của VPC nằm ở **biên VPC**, không phải giữa các subnet (route `local`, xem [[VPC Routing and Internet Gateway]]).
 - Quy ước màu trên sơ đồ AWS: **xanh dương = private subnet**, **xanh lá = public subnet**.

@@ -72,7 +72,7 @@ Khi tạo NATGW, việc đầu tiên là chọn **availability mode**:
 | Đường ra IGW | Nằm trong public subnet đã có route `0.0.0.0/0 → IGW` | NATGW **tự tạo route table riêng** trỏ `0.0.0.0/0 → IGW`, không cần public subnet |
 | Route của private subnet | **Mỗi AZ một route table** `0.0.0.0/0 → NATGW cùng AZ` | **Một route table** `0.0.0.0/0 → NATGW` gắn được cho private subnet ở **mọi AZ** |
 | Connectivity type | **Public** hoặc **private** | Hiện **chỉ public** |
-| NACL | Lọc được bằng NACL của subnet chứa NATGW | Không nằm trong subnet của mình |
+| NACL | Lọc được bằng NACL của subnet chứa NATGW | Bài không nói (chỉ nêu NACL cho NATGW zonal) |
 
 - Chi phí (theo demo, lúc quay bài): **như nhau** cho cùng quy mô. Regional tự trải 3 AZ, mỗi AZ một NATGW, thì trả như tự dựng 3 NATGW zonal.
 - Giảng viên đánh giá: regional đơn giản hơn nhiều, nên gần như luôn dùng NATGW (thay vì NAT instance), nhất là khi đã có regional mode.
@@ -185,7 +185,7 @@ Rút ra: với NATGW regional chỉ cần **1 NATGW + 1 route table** cho mọi 
 ## 🎯 Mẹo thi SAA-C03
 - NATGW **zonal** (public) đặt trong **public subnet**, không bao giờ đặt trong private subnet. Route của private subnet trỏ `0.0.0.0/0 → NATGW`. Route của public subnet trỏ `0.0.0.0/0 → IGW`.
 - Với NATGW **zonal**, đáp án "một NAT Gateway là đủ cho HA toàn region" là **sai**: muốn resilient phải có **1 NATGW mỗi AZ + route table riêng mỗi AZ**. NATGW **regional** thì AWS tự trải qua các AZ: một NATGW, một route table cho mọi private subnet, ít vận hành nhất.
-- **NATGW không hỗ trợ Security Group**, chỉ dùng **NACL** (với NATGW zonal là NACL của subnet chứa nó). Bản khóa cũ nhấn mạnh ý này "comes up all the time".
+- **NATGW không hỗ trợ Security Group**. Bài nêu NACL áp dụng cho **NATGW zonal** (nằm trong subnet) qua NACL của subnet chứa nó; với NATGW regional bài không nói. Bản khóa cũ nhấn mạnh ý "không SG, chỉ NACL" là "comes up all the time".
 - **NATGW không làm bastion và không port forwarding** được vì không truy cập được OS. Cần mấy việc đó thì dùng NAT instance (legacy) hoặc [[Bastion Host]] riêng.
 - NAT instance thì **phải disable Source/Destination Check**.
 - NATGW tính tiền theo **giờ chạy và GB dữ liệu xử lý**. Nhớ có hai thành phần, không cần nhớ giá cụ thể. *(Bản khóa cũ: cần rẻ nhất cho môi trường test thì NAT instance là ứng viên.)*

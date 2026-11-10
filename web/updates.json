@@ -584,7 +584,7 @@
     },
     "Compare - Security Groups vs NACL": {
       "kind": "updated",
-      "summary": "SG hỗ trợ prefix list và gộp rule khi ENI gắn nhiều SG; NACL chỉ lọc được NAT Gateway kiểu zonal (nằm trong subnet).",
+      "summary": "SG hỗ trợ prefix list và gộp rule khi ENI gắn nhiều SG; ghi rõ NACL áp dụng cho NAT Gateway kiểu zonal (nằm trong subnet).",
       "changed": [
         "Bảng so sánh nhiều chiều",
         "Khi nào chọn cái nào"
