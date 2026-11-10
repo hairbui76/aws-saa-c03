@@ -1,11 +1,12 @@
 ---
 tags: [saa-c03, s03-aws-fundamentals, global-infrastructure, resilience]
-aliases: [Region, Regions, Availability Zone, AZ, Edge Location, Service Resilience, Global vs Regional vs AZ resilient]
+aliases: [Region, Regions, Availability Zone, AZ, Edge Location, Service Resilience, Global vs Regional vs AZ resilient, Wavelength Zone, AWS Wavelength, AWS Outposts, Outposts]
 lessons: ["0053 AWS Global Infrastructure"]
+videos: ["019 [ASSOCIATESHARED] AWS Global Infrastructure"]
 ---
 # AWS Global Infrastructure
 
-> **TL;DR:** AWS là tập hợp các khối hạ tầng (**Region**, **Availability Zone**, **Edge Location**) nối với nhau bằng mạng toàn cầu tốc độ cao. Hiểu ba khối này và ba mức độ resilience của dịch vụ (**global / region / AZ**) là nền tảng để thiết kế hệ thống chịu lỗi và trả lời rất nhiều câu hỏi thi.
+> **TL;DR:** AWS là tập hợp các khối hạ tầng (**Region**, **Availability Zone**, **Edge Location**) nối với nhau bằng mạng toàn cầu tốc độ cao. Hiểu ba khối này và ba mức độ resilience của dịch vụ (**global / region / AZ**) là nền tảng để thiết kế hệ thống chịu lỗi và trả lời rất nhiều câu hỏi thi. Ngoài ra có ba lựa chọn bổ sung khi cần AWS ở gần hơn: **Local Zone** (thành phố lớn), **Wavelength Zone** (mạng 5G) và **Outposts** (data center của bạn).
 
 ## 🖼️ Sơ đồ
 ![[AWS Global Infrastructure.excalidraw]]
@@ -40,6 +41,15 @@ lessons: ["0053 AWS Global Infrastructure"]
 - Phân tán thành phần qua nhiều AZ để có resilience: 6 server ở Sydney → đặt 2 server/AZ; mất 1 AZ thì còn 4/6 server chạy.
 - Một số dịch vụ như **VPC** trải rộng nhiều AZ để có resilience (subnet nằm trong một AZ, xem [[Default VPC]]).
 
+### Lựa chọn bổ sung: Local Zone, Wavelength Zone, Outposts
+Region và AZ là mặc định. Cuối bài, giảng viên giới thiệu ba lựa chọn ít dùng hằng ngày nhưng giải quyết bài toán thực tế khi AWS cần ở **gần người dùng hơn** hoặc **gần hạ tầng của bạn hơn**:
+
+| Lựa chọn | Là gì | Dùng khi |
+|---|---|---|
+| **Local Zone** | Hạ tầng AWS đặt ở **thành phố lớn**, là phần mở rộng của một **parent region**; như một "mini region" nhưng **không phải region đầy đủ**, chỉ có một số dịch vụ (EC2, storage...). AWS xây ở nơi có đủ nhu cầu độ trễ thấp nhưng chưa đủ để mở cả region. | Ứng dụng cần độ trễ cực thấp với người dùng trong thành phố: game server, virtual desktop (VDI). Chi tiết: [[AWS Local Zones]] |
+| **Wavelength Zone** | Hạ tầng AWS đặt **bên trong mạng 5G của nhà mạng**. Thiết bị di động không phải đi qua Internet về region; compute chạy ngay ở **mobile edge**. Không có mọi dịch vụ. | Ứng dụng di động, IoT qua 5G, ví dụ công ty giao hàng giám sát xe tải qua 5G |
+| **Outposts** | **Phần cứng AWS lắp trong data center của bạn**: "phiên bản AWS riêng" chạy on-premises, dùng cùng công cụ AWS. | Workload hybrid, quy định ngành (y tế, chính phủ) không cho đặt dữ liệu ở public cloud, cần dữ liệu ở tại chỗ (local residency) |
+
 ## Cách hoạt động / Kiến trúc
 ```mermaid
 flowchart TB
@@ -72,11 +82,12 @@ flowchart TB
 - Trong console: EC2 bắt buộc chọn region (dropdown góc trên phải). Mở IAM hoặc Route 53 thì phần chọn region hiển thị "Global" vì đây là dịch vụ global.
 
 ## 🎯 Mẹo thi SAA-C03
-- Với mỗi dịch vụ, luôn hỏi: **global, regional hay AZ resilient?** Adrian nhấn mạnh biết điều này giúp trả lời rất nhiều câu hỏi. Ví dụ: EC2/EBS là AZ, S3/VPC/RDS là region, IAM/Route 53/CloudFront là global.
+- Với mỗi dịch vụ, luôn hỏi: **global, regional hay AZ resilient?** Giảng viên nhấn mạnh biết điều này giúp trả lời rất nhiều câu hỏi. Ví dụ: EC2/EBS là AZ, S3/VPC/RDS là region, IAM/Route 53/CloudFront là global.
 - Kịch bản "chịu được mất một AZ" → trải tài nguyên **qua nhiều AZ** trong region. "Chịu được mất cả region / thảm họa diện rộng" → **multi-region**.
 - "Dữ liệu phải ở trong quốc gia/khu vực X (data sovereignty, compliance)" → chọn **region** ở đó; dữ liệu mặc định không rời region.
 - "Phân phối nội dung latency thấp cho người dùng toàn cầu" → **edge location** (CloudFront). Đừng nhầm edge location với region.
 - AZ **không bằng** data center. Đừng chọn đáp án nói vậy.
+- Độ trễ cực thấp cho người dùng ở **một thành phố** (game, VDI) → **Local Zone**; ứng dụng di động/IoT cần compute ở **mạng 5G** → **Wavelength Zone**; dữ liệu/workload **phải ở on-premises** nhưng muốn dùng AWS → **Outposts**.
 - Tên AZ như `us-east-1a` được ánh xạ khác nhau giữa các account; muốn định danh chính xác giữa nhiều account thì dùng **AZ ID** (ví dụ `use1-az1`). (Bổ sung ngoài bài giảng.)
 
 ## Liên kết

@@ -2,6 +2,7 @@
 tags: [saa-c03, s03-aws-fundamentals, networking, dns]
 aliases: [DNS Records, NS record, A record, AAAA record, CNAME, MX record, TXT record, DNS TTL]
 lessons: ["0068 DNS Record Types"]
+videos: ["035 [ASSOCIATESHARED] DNS Record Types"]
 ---
 # DNS Record Types
 

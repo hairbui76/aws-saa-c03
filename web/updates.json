@@ -4,7 +4,9 @@
   "title": "Cập nhật theo bản khóa SAA-C03 mới (376 video)",
   "pages": [
     "Exam Cheat Sheet: thêm mẹo không để trống câu nào khi làm bài",
-    "Top mẹo thi chương 00 và 01: thêm mẹo không để trống câu, ưu tiên credential ngắn hạn (aws login) thay access key"
+    "Top mẹo thi chương 00 và 01: thêm mẹo không để trống câu, ưu tiên credential ngắn hạn (aws login) thay access key",
+    "Exam Cheat Sheet: object S3 tối đa 50 TB, Local Zone / Wavelength Zone / Outposts, Service Quotas (xin tăng theo region, quota request template, 5.000 IAM user là hard limit), alarm CloudWatch M of N",
+    "Top mẹo thi và concept map chương 03: thêm Wavelength Zone, Outposts, Service Quotas, S3 50 TB, alarm M of N"
   ],
   "missing": [],
   "lessons": {
@@ -150,6 +152,80 @@
     "YAML": {
       "kind": "removed",
       "summary": "khóa mới bỏ phần Tech Fundamentals, không còn bài nào dạy chủ đề này"
+    },
+    "AWS Global Infrastructure": {
+      "kind": "updated",
+      "summary": "Thêm ba lựa chọn hạ tầng bổ sung: Local Zone (mini region ở thành phố lớn), Wavelength Zone (compute trong mạng 5G của nhà mạng) và Outposts (phần cứng AWS đặt on-premises); phần demo trang infrastructure.aws không còn trong khóa mới.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Demo / Lab"
+      ]
+    },
+    "AWS Local Zones": {
+      "kind": "updated",
+      "summary": "Khóa mới không còn bài riêng: Local Zone được giới thiệu trong bài Global Infrastructure như mini region mở rộng parent region ở thành phố lớn, chỉ có một số dịch vụ (EC2, storage), dùng cho game server, VDI, và được đặt cạnh Wavelength Zone, Outposts; phần mở rộng VPC và EBS snapshot không còn trong khóa.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "🎯 Mẹo thi SAA-C03"
+      ],
+      "dropped": [
+        "Cách hoạt động / Kiến trúc"
+      ]
+    },
+    "EC2 Basics": {
+      "kind": "updated",
+      "summary": "Thêm kiến trúc instance (CPU, memory thuộc instance; EBS và ENI là tài nguyên riêng, cờ Delete on Termination); demo: EC2 không còn free tier nên chọn t2.nano, AMI Amazon Linux 2023, gợi ý rule SG My IP, kết nối bằng EC2 Instance Connect, terminate xóa EBS và ENI nhưng không xóa SG.",
+      "changed": [
+        "Khái niệm cốt lõi",
+        "Demo / Lab"
+      ]
+    },
+    "S3 Basics": {
+      "kind": "updated",
+      "summary": "Object tối đa nay là 50 TB (trước 5 TB); khóa mới bỏ con số 100/1000 bucket mỗi account (quota hiện nay mặc định 10.000); console S3 có bộ chọn region, trang tạo bucket có Bucket type (General purpose/Directory) và Copy settings from existing bucket.",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Bảng so sánh / số liệu",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "CloudFormation Basics": {
+      "kind": "updated",
+      "summary": "Demo: Create stack có thêm Infrastructure Composer (thiết kế kéo thả) và Sync from Git; template lấy AMI Amazon Linux 2023 qua SSM public parameter, không còn tham số key pair, kết nối bằng Session Manager.",
+      "changed": [
+        "Demo / Lab"
+      ]
+    },
+    "CloudWatch Basics": {
+      "kind": "updated",
+      "summary": "CloudWatch được trình bày là nền tảng observability gồm Metrics, Alarms, Logs (Logs Insights, Live Tail, anomaly detection, metric filter, stream sang Lambda/Kinesis/EventBridge); EventBridge (trước là CloudWatch Events) là dịch vụ riêng; alarm đánh giá theo period, evaluation periods và datapoints to alarm (M of N).",
+      "changed": [
+        "🖼️ Sơ đồ",
+        "Khái niệm cốt lõi",
+        "Cách hoạt động / Kiến trúc",
+        "Demo / Lab",
+        "🎯 Mẹo thi SAA-C03"
+      ]
+    },
+    "Route 53 Fundamentals": {
+      "kind": "updated",
+      "summary": "Demo đăng ký domain thêm transfer lock (chặn chuyển domain sang registrar khác), theo dõi yêu cầu ở mục Requests và bước xác nhận qua email; kịch bản đổi sang ausemart.org / ausemart.net.",
+      "changed": [
+        "Demo / Lab"
+      ]
+    },
+    "Service Quotas": {
+      "kind": "new",
+      "summary": "Bài mới: service quota theo region hoặc theo account, soft limit và hard limit (5.000 IAM user mỗi account), xin tăng qua Service Quotas console, cảnh báo bằng CloudWatch alarm, Automatic Management và quota request template cho AWS Organizations."
+    },
+    "Shared Responsibility Model": {
+      "kind": "removed",
+      "summary": "khóa mới không còn bài Shared Responsibility Model"
     }
   }
 }

@@ -2,6 +2,7 @@
 tags: [saa-c03, s03-aws-fundamentals, networking, vpc]
 aliases: [VPC Basics, Default VPC Facts, Virtual Private Cloud]
 lessons: ["0054 AWS Default Virtual Private Cloud VPC"]
+videos: ["020 [ASSOCIATESHARED] AWS Default Virtual Private Cloud (VPC)", "021 [ASSOCIATESHARED] [DEMO] Explore the Default VPC"]
 ---
 # Default VPC
 

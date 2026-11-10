@@ -2,6 +2,7 @@
 tags: [saa-c03, s03-aws-fundamentals, networking, dns, route53]
 aliases: [Route 53, R53, Route53, Hosted Zone, Amazon Route 53]
 lessons: ["0066 Route53 R53 Fundamentals", "0067 DEMO Registering a Domain"]
+videos: ["033 [ASSOCIATESHARED] Route 53 (R53) Fundamentals", "034 [SHAREDALL] [DEMO] Registering a Domain with Route 53"]
 ---
 # Route 53 Fundamentals
 
@@ -26,7 +27,7 @@ lessons: ["0066 Route53 R53 Fundamentals", "0067 DEMO Registering a Domain"]
 
 ## Cách hoạt động / Kiến trúc
 
-### Quy trình đăng ký domain (ví dụ `animalsforlife.org`)
+### Quy trình đăng ký domain (ví dụ `ausemart.org` của Aus-E-Mart)
 1. R53 hỏi registry của TLD (`.org` → PIR) xem domain còn trống không.
 2. R53 tạo **zone file** (hosted zone) cho domain.
 3. R53 cấp phát **4 managed name server** và đặt zone file lên đó.
@@ -38,7 +39,7 @@ sequenceDiagram
     participant R53 as "Route 53"
     participant REG as "Registry .org (PIR)"
     participant NS as "4 managed name servers"
-    U->>R53: Register animalsforlife.org
+    U->>R53: Register ausemart.org
     R53->>REG: Domain còn trống?
     REG-->>R53: Có
     R53->>R53: Tạo hosted zone (zone file)
@@ -58,13 +59,14 @@ DNS bản chất là một chuỗi **delegation**: root → `.org` (PIR) → nam
 - Các kịch bản phối hợp này được đào sâu ở [[R53 Interoperability]].
 
 ## Demo / Lab
-Demo đăng ký `animalsforlife.org` trong account GENERAL (kịch bản [[Animals4life Scenario]]):
-- Route 53 console → *Registered domains* → *Register domain*; nhập tên, kiểm tra tính khả dụng (tra cơ sở dữ liệu của registry `.org`). Giá khác nhau theo TLD; có gợi ý tên thay thế nếu tên đã bị lấy. Thời hạn mặc định 1 năm.
-- Registry thường yêu cầu **3 contact**: *registrant* (người đăng ký), *technical*, *admin* (billing/gia hạn). Có thể dùng chung một người; bật **privacy protection** để ẩn thông tin liên hệ khỏi WHOIS.
-- Tùy chọn **auto-renew** — nên bật cho domain production.
-- Sau khi đặt, domain ở trạng thái *pending* (đang chờ PIR thêm vào zone `.org`, có thể nhận vài email xác nhận). Khi xong, domain chuyển sang *Registered domains* và hiển thị **4 name server** AWS đã cấp, đã được ghi vào zone `.org`.
-- Song song, R53 đã tạo **hosted zone** `animalsforlife.org` (giao diện GUI của zone file) — nơi tạo các record DNS.
-- Đăng ký domain tốn tiền (không bắt buộc cho khóa học). Ngoài ra mỗi hosted zone có phí hàng tháng (hiện ~0,50 USD/zone/tháng — số liệu theo bảng giá AWS, không nêu trong bài).
+Demo đăng ký `ausemart.net` cho kịch bản Aus-E-Mart (tùy chọn, tốn tiền; không làm vẫn theo được các demo sau):
+- Route 53 là dịch vụ global nên region đang chọn không quan trọng. Menu trái: *Hosted zones* (nơi chứa DNS record), *Domains → Registered domains / Requests*.
+- *Registered domains* → tìm tên, kiểm tra tính khả dụng (tên `.com` đã có chủ thì chọn đuôi khác như `.net`, `.org`, `.io`); giá khác nhau theo TLD → *Proceed to checkout*. Thời hạn 1 năm, bật **auto-renew** để tự gia hạn mỗi năm.
+- Điền **contact** (loại: person, company, association, public body, reseller) và các contact **admin, tech, billing**. Bật **privacy protection** để thông tin liên hệ không bị công khai.
+- Sau khi đặt, theo dõi ở *Requests*. Kiểm tra email (cả spam): một số TLD yêu cầu xác nhận qua email, không làm thì đăng ký có thể thất bại. Demo mất khoảng 5–10 phút.
+- Domain xong hiện ở *Registered domains* với ngày hết hạn, auto-renew và **transfer lock**. Transfer lock bật thì domain **không bị chuyển sang registrar khác**, thêm một lớp bảo vệ. Trang domain còn có DNSSEC, tags và danh sách **name server**.
+- Song song, R53 đã tự tạo **hosted zone** cho domain (nơi tạo record `www`, TXT...), được cấp **4 name server** đúng bằng các name server ghi trong domain. Nếu domain mua ở registrar khác (GoDaddy, Namecheap...) thì phải tự trỏ NS về 4 name server của hosted zone; ngược lại, *Edit name servers* trong Registered domains để trỏ đi nơi khác. Registered domains và hosted zones nên được xem như hai sản phẩm riêng.
+- Ngoài phí đăng ký, mỗi hosted zone có phí hàng tháng (hiện ~0,50 USD/zone/tháng — số liệu theo bảng giá AWS, không nêu trong bài).
 
 ## 🎯 Mẹo thi SAA-C03
 - R53 là **global service**, globally resilient, không gắn với region — nếu đề hỏi dịch vụ nào chịu được lỗi cả region cho DNS thì đó là R53.
@@ -76,4 +78,4 @@ Demo đăng ký `animalsforlife.org` trong account GENERAL (kịch bản [[Anima
 ## Liên kết
 - Tiên quyết: [[DNS Fundamentals]], [[AWS Public vs Private Services]], [[AWS Global Infrastructure]]
 - Liên quan: [[DNS Record Types]], [[R53 Public Hosted Zones]], [[R53 Private Hosted Zones]], [[R53 Routing Policies]], [[CNAME vs Alias]], [[R53 Interoperability]], [[R53 DNSSEC]]
-- Bối cảnh: [[Animals4life Scenario]], [[_MOC 03 AWS Fundamentals]]
+- MOC: [[_MOC 03 AWS Fundamentals]]

@@ -2,6 +2,7 @@
 tags: [saa-c03, s03-aws-fundamentals, resilience, architecture]
 aliases: [High Availability, Fault Tolerance, Disaster Recovery, HA, FT, DR]
 lessons: ["0065 High Availability vs Fault Tolerance vs Disaster Recovery"]
+videos: ["032 [ASSOCIATESHARED] High-Availability vs Fault-Tolerance vs Disaster Recovery"]
 ---
 # HA vs FT vs DR
 

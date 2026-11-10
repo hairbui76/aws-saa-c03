@@ -2,6 +2,7 @@
 tags: [saa-c03, s03-aws-fundamentals, networking, security]
 aliases: [Public vs Private Services, AWS Public Zone, AWS Private Zone, Network Zones]
 lessons: ["0052 AWS Public vs Private Services"]
+videos: ["018 [ASSOCIATESHARED] AWS Public vs Private Services"]
 ---
 # AWS Public vs Private Services
 

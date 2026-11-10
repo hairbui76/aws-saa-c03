@@ -104,6 +104,9 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | TCP/UDP toàn cầu, 2 anycast static IP, failover không phụ thuộc TTL | **Global Accelerator** | [[Global Accelerator]] |
 | User chỉ được vào S3 qua CloudFront | **OAC** + bucket policy | [[CloudFront OAI and OAC]] |
 | Active-passive, trang bảo trì trên S3 | **R53 Failover routing** | [[R53 Failover Routing]] |
+| Độ trễ cực thấp cho user ở một thành phố lớn (game, VDI) | **Local Zone** | [[AWS Local Zones]] |
+| Compute ở mobile edge trong mạng 5G | **Wavelength Zone** | [[AWS Global Infrastructure]] |
+| Dùng AWS nhưng workload/dữ liệu phải ở on-premises | **Outposts** | [[AWS Global Infrastructure]] |
 
 ### Monitoring / Governance / IaC
 | Từ khóa trong đề | Chọn | Note |
@@ -112,6 +115,9 @@ aliases: [Cheat Sheet, Ôn nhanh SAA-C03]
 | Stack chỉ hoàn tất khi bootstrap EC2 xong | **CreationPolicy + cfn-signal** | [[CFN Wait Conditions and cfn-signal]] |
 | Xóa stack nhưng giữ DB/dữ liệu | **DeletionPolicy Retain/Snapshot** | [[CFN Deletion Policy]] |
 | Cảnh báo khi chi phí **dự báo** vượt mức | **AWS Budgets** | [[AWS Budgets]] |
+| Chạm giới hạn tài nguyên khi mở rộng / sang region mới | **Service Quotas** → Request increase (theo region; CloudWatch alarm khi gần chạm) | [[Service Quotas]] |
+| Account mới trong Organization cần sẵn quota cao | **Quota request template** | [[Service Quotas]] |
+| Alarm báo nhầm vì spike ngắn | **Evaluation periods + datapoints to alarm** (M of N) | [[CloudWatch Basics]] |
 
 ### Migration
 | Từ khóa trong đề | Chọn | Note |
@@ -285,13 +291,13 @@ Ghi chú: khóa học nói gp2 là mặc định; nay gp3 là mặc định và 
 
 | Chủ đề | Con số |
 |---|---|
-| IAM | 5.000 user/account; user ≤ 10 group; 300 group/account (nay xin tăng tới 500); 2 access key/user |
+| IAM | 5.000 user/account (hard limit, Service Quotas không cho tăng); user ≤ 10 group; 300 group/account (nay xin tăng tới 500); 2 access key/user |
 | VPC | CIDR /28 → /16; mỗi subnet trừ **5 IP** (/28 → 11); router +1, DNS +2; default VPC 172.31.0.0/16, /20 mỗi AZ |
 | LB subnet | Nên /27 (cần ≥ 8 IP trống) |
 | EC2 | Metadata 169.254.169.254; user data ≤ 16 KB, chạy 1 lần; spread PG 7 instance/AZ |
 | EBS | gp2/gp3 16K IOPS → io1/io2 64K → Block Express 256K → Instance Store hàng trăm nghìn+ |
-| S3 | Object 0–5 TB; single PUT ≤ 5 GB; multipart nên dùng từ 100 MB; RTC 15 phút; 200 OK = đã lưu durable |
-| S3 bucket | Khóa học: 100 soft / 1.000 hard; nay: 10.000 mặc định (từ 11/2024) |
+| S3 | Object 0–50 TB (khóa cũ: 5 TB); single PUT ≤ 5 GB; multipart nên dùng từ 100 MB; RTC 15 phút; 200 OK = đã lưu durable |
+| S3 bucket | Khóa cũ: 100 soft / 1.000 hard (khóa mới không nêu); nay: 10.000 mặc định (từ 11/2024) |
 | S3 lifecycle | ≥ 30 ngày ở Standard trước khi sang IA; min duration 30/90/180 ngày |
 | S3 Object Lock | Khóa học: chỉ bật khi tạo bucket; nay (11/2023): bật được cho bucket có sẵn đã bật versioning |
 | S3 encryption | Khóa học: không header thì không mã hóa; nay (01/2023): mặc định SSE-S3 |

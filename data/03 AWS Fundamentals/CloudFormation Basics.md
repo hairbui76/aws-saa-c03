@@ -2,6 +2,7 @@
 tags: [saa-c03, s03-aws-fundamentals, cloudformation, iac, automation]
 aliases: [CloudFormation, CFN, CFN Basics, Infrastructure as Code, Stack, Template]
 lessons: ["0060 CloudFormation CFN Basics", "0061 DEMO Simple Automation With CFN"]
+videos: ["027 [ASSOCIATESHARED] CloudFormation (CFN) Basics", "028 [ASSOCIATESHARED] [DEMO] Simple Automation With CloudFormation (CFN)"]
 ---
 # CloudFormation Basics
 
@@ -53,21 +54,22 @@ flowchart LR
 - Dựng nhanh môi trường dùng một lần (khóa học dùng CFN để dựng hạ tầng nền cho các demo).
 
 ## Demo / Lab
-Template `ec2instance.yaml` tạo EC2 instance giống bài [[EC2 Basics]] nhưng tự động:
-- **Parameters**:
-  - `KeyName`: key pair trong region (phải tạo `A4L` trước).
-  - `LatestAmiId`: kiểu parameter đặc biệt đọc **SSM Parameter Store public parameter**, tự lấy **AMI Amazon Linux 2 mới nhất** của region đang deploy → template **portable** giữa các region. Xem [[SSM Parameter Store]].
-  - `SSHandWebLocation`: dải IP được phép truy cập (có default).
-- **Resources**: Security Group mở **22 (SSH)** và **80 (HTTP)**; EC2 instance (`AWS::EC2::Instance`, `t2.micro`, `KeyName`/`ImageId` dùng `!Ref` parameter, SG tham chiếu logical resource SG); thêm **IAM Role + Instance Profile** để dùng Session Manager.
-- **Outputs**: InstanceId, AZ, PublicDNS, PublicIP, lấy bằng hàm `Ref` (giá trị mặc định của resource, với EC2 là instance ID) và `Fn::GetAtt` (lấy thuộc tính khác như AZ, PublicDnsName, PublicIp). Xem [[CFN Intrinsic Functions]].
-- Các bước: CloudFormation console → Create stack → **Upload a template file**. CFN tự lưu template vào một bucket S3 có tên bắt đầu bằng `cf-templates-...` (đó là nguồn gốc các bucket lạ này).
-  - Đặt tên stack `cfndemo1`, parameters hiện thành ô nhập trên UI (có sẵn default).
-  - Phải tick **capabilities** (`CAPABILITY_IAM`) vì template tạo **IAM resource**. CFN coi đây là thay đổi rủi ro cao, cần xác nhận rõ.
-  - Tab **Events**: mỗi resource có `CREATE_IN_PROGRESS` → `CREATE_COMPLETE`; lỗi hiển thị chữ đỏ. Stack chuyển `CREATE_COMPLETE`.
-  - Tab **Outputs** khớp với template; tab **Resources** liệt kê logical ID ↔ physical ID (bấm vào để mở tài nguyên thật).
-- Áp lại cùng template thì có thêm một instance y hệt; áp ở region khác vẫn chạy.
-- **Session Manager**: connect không cần key pair/SSH, nhờ instance role. Adrian gọi đây là cách tốt hơn. Xem [[EC2 Instance Roles]].
-- **Delete stack**: CFN terminate instance và xóa mọi resource đã tạo, rồi xóa stack.
+Template tạo EC2 instance giống bài [[EC2 Basics]] nhưng tự động (region `us-east-1`):
+- **Create stack** có các lựa chọn nguồn template: dùng template có sẵn hoặc thiết kế bằng **Infrastructure Composer** (kéo thả trực quan). Với template có sẵn: lấy **sample template** trong repo GitHub của AWS, chỉ tới **S3 URL**, **Sync from Git** (đồng bộ từ repo Git của bạn), hoặc **Upload a template file** (cách demo dùng).
+- Upload xong, console hiện **S3 URL**: CFN tự lưu template vào một bucket S3 có tên bắt đầu bằng `cf-templates-...` (đó là nguồn gốc các bucket lạ này; xóa được khi không cần).
+- Template gồm ba section **Parameters, Resources, Outputs**:
+  - **Parameters**:
+    - `LatestAmiId`: kiểu parameter đặc biệt đọc **SSM Parameter Store public parameter**, tự lấy **AMI Amazon Linux 2023 mới nhất** của region đang deploy → template **portable** giữa các region. Xem [[SSM Parameter Store]].
+    - `SSHandWebLocation`: dải IP được phép truy cập, default `0.0.0.0/0`.
+    - Không có tham số key pair: demo kết nối bằng Session Manager.
+  - **Resources**: EC2 instance (`AWS::EC2::Instance`, `ImageId` dùng `!Ref LatestAmiId`), Security Group (`InstanceSecurityGroup`) mở **22 (SSH)** và **80 (HTTP)** cho `SSHandWebLocation`, instance tham chiếu logical resource SG; thêm **SessionManagerRole + SessionManagerInstanceProfile** để dùng Session Manager.
+  - **Outputs**: InstanceId, AZ, PublicDNS, PublicIP, lấy bằng hàm `Ref` (giá trị mặc định của resource, với EC2 là instance ID) và `Fn::GetAtt` (lấy thuộc tính khác như AZ, PublicDnsName, PublicIp). Xem [[CFN Intrinsic Functions]].
+- Đặt tên stack; parameters hiện thành ô nhập trên UI (có sẵn default, sửa được lúc deploy).
+- Phải tick ô xác nhận **capabilities** (`CAPABILITY_IAM`) vì template tạo **IAM resource**: CFN báo bạn kiểm tra kỹ thay đổi về quyền. Rồi Submit.
+- Tab **Events**: mỗi resource có `CREATE_IN_PROGRESS` → `CREATE_COMPLETE`; stack chuyển `CREATE_COMPLETE`. Tab **Outputs** khớp với template; tab **Resources** liệt kê logical ID ↔ physical ID (bấm vào để mở tài nguyên thật).
+- Tạo thêm stack từ cùng template thì có thêm một bộ physical resource y hệt; deploy ở region khác vẫn chạy.
+- **Session Manager**: right-click instance → Connect, có shell ngay trong trình duyệt mà không cần key pair, access key hay SSH, nhờ IAM role do template tạo. Xem [[EC2 Instance Roles]].
+- **Delete stack**: CFN xóa mọi physical resource đã tạo (instance, SG, role), rồi xóa stack.
 
 ## 🎯 Mẹo thi SAA-C03
 - **`Resources` là section bắt buộc duy nhất.**

@@ -2,16 +2,24 @@
 tags: [saa-c03, s03-aws-fundamentals, global-infrastructure, networking, compute]
 aliases: [Local Zones, Local Zone, LZ]
 lessons: ["0375 AWS Local Zones"]
+videos: ["019 [ASSOCIATESHARED] AWS Global Infrastructure"]
 ---
 # AWS Local Zones
 
-> **TL;DR:** Local Zone là một "AZ đặt gần bạn" — hạ tầng AWS ở một thành phố, gắn với một **parent region**, để chạy tài nguyên với **độ trễ cực thấp** tới người dùng/văn phòng ở đó. Đổi lại nó chỉ là **một zone**, không có resilience sẵn, và không phải dịch vụ nào cũng hỗ trợ.
+> **TL;DR:** Local Zone là hạ tầng AWS đặt ở một **thành phố lớn**, phần mở rộng của một **parent region** (khóa mới gọi là "mini region" chỉ có một số dịch vụ như EC2, storage; bản khóa cũ ví như "AZ đặt gần bạn"), để chạy tài nguyên với **độ trễ cực thấp** tới người dùng/văn phòng ở đó. Đổi lại nó chỉ là **một zone**, không có resilience sẵn, và không phải dịch vụ nào cũng hỗ trợ.
 
 ## 🖼️ Sơ đồ
 ![[AWS Local Zones.excalidraw]]
 *Mở bằng plugin Excalidraw để chỉnh sửa · ảnh tĩnh: [[AWS Local Zones.svg]]*
 
 ## Khái niệm cốt lõi
+- **Theo khóa mới** (Local Zone được giới thiệu ở cuối bài [[AWS Global Infrastructure]], không còn bài riêng):
+  - Local Zone là hạ tầng AWS đặt ở **thành phố lớn**, là **phần mở rộng của parent region**. Có thể coi như một **"mini AWS region"** giúp người dùng ở đó truy cập dịch vụ nhanh hơn.
+  - **Không phải region đầy đủ**: chỉ có **một số dịch vụ** như EC2 và storage.
+  - Use case kinh điển: ứng dụng mà vài ms độ trễ cũng làm trải nghiệm "giật", ví dụ **game server**, **virtual desktop infrastructure (VDI)**.
+  - AWS tự xây Local Zone ở nơi có **đủ nhu cầu** cho dịch vụ độ trễ thấp nhưng **chưa đủ** để mở cả một region.
+  - Hai lựa chọn "đưa AWS lại gần" khác được giới thiệu cùng lúc: **Wavelength Zone** (trong mạng 5G) và **Outposts** (phần cứng AWS trong data center của bạn).
+- Các ý dưới đây (vấn đề giải quyết, cách đặt tên, Direct Connect, private networking) là từ bài Local Zones riêng của bản khóa cũ.
 - **Vấn đề giải quyết:** kiến trúc region + AZ thông thường scale tốt và chịu lỗi AZ tốt, nhưng các AZ có thể cách văn phòng/người dùng **hàng trăm km**. Dù đi cáp quang, kể cả qua [[Direct Connect]], khoảng cách vật lý vẫn gây độ trễ vài ms — đáng kể với ứng dụng nhạy độ trễ (ví dụ giao dịch tài chính).
 - **Parent region:** mỗi Local Zone gắn với một region "cha" trong cùng vùng địa lý.
 - **Cách đặt tên:** `<tên region>-<mã thành phố quốc tế>-<số>`:
@@ -60,6 +68,7 @@ flowchart LR
 - **Direct Connect tới Local Zone được hỗ trợ** — dùng cho nhu cầu hiệu năng cực cao.
 - **EBS snapshot đi về parent region** (lưu trên S3 của region cha).
 - Không phải dịch vụ nào cũng có ở Local Zone; nhiều cái opt-in → luôn kiểm tra tài liệu AWS cho khu vực cụ thể.
+- Phân biệt ba lựa chọn: **Local Zone** = gần người dùng ở **thành phố lớn** (game, VDI); **Wavelength Zone** = compute trong **mạng 5G** cho ứng dụng di động/IoT; **Outposts** = phần cứng AWS **on-premises** cho workload hybrid hoặc quy định bắt dữ liệu ở tại chỗ.
 
 ## Liên kết
 - Tiên quyết: [[AWS Global Infrastructure]], [[EC2 Architecture and Resilience]], [[VPC Sizing and Structure]]

@@ -2,6 +2,7 @@
 tags: [saa-c03, s03-aws-fundamentals, compute, ec2]
 aliases: [EC2, Elastic Compute Cloud, EC2 Instance, Instance States, SSH Key Pair]
 lessons: ["0055 Elastic Compute Cloud EC2 Basics", "0056 DEMO My First EC2 Instance PART1", "0057 DEMO My First EC2 Instance PART2"]
+videos: ["022 [ASSOCIATESHARED] Elastic Compute Cloud (EC2) Basics", "023 [ASSOCIATESHARED] [DEMO] My First EC2 Instance - PART1", "024 [ASSOCIATESHARED] [DEMO] My First EC2 Instance - PART2"]
 ---
 # EC2 Basics
 
@@ -17,10 +18,14 @@ lessons: ["0055 Elastic Compute Cloud EC2 Basics", "0056 DEMO My First EC2 Insta
 ## Khái niệm cốt lõi
 - **IaaS** (xem [[Cloud Service Models]]): đơn vị tiêu thụ là **instance**, tức một OS được cấu hình theo cách nhất định với lượng tài nguyên nhất định. Bạn quản lý từ **OS trở lên**; AWS lo virtualization, phần cứng, mạng vật lý, storage vật lý, facilities.
 - **Private service**: chạy trong AWS Private Zone (xem [[AWS Public vs Private Services]]). Instance launch vào **một subnet** của VPC, chọn lúc launch. Muốn public access thì phải cấu hình, và VPC phải hỗ trợ (Default VPC làm sẵn; custom VPC phải tự làm).
-- **AZ resilient**: subnet nằm trong một AZ, nên AZ hỏng thì instance nhiều khả năng hỏng theo. Adrian dặn nhớ ngay từ đầu.
+- **AZ resilient**: subnet nằm trong một AZ, nên AZ hỏng thì instance nhiều khả năng hỏng theo. Giảng viên dặn nhớ ngay từ đầu.
 - **Instance type/size** quyết định CPU, memory, network, và các khả năng thêm (GPU, storage/networking nâng cao, chip chuyên dụng). Một số thông số đổi được sau khi launch. Xem [[EC2 Instance Types]].
 - **Billing on-demand**: tính **theo giây hoặc theo giờ** tùy phần mềm chạy trên instance. Gồm ba phần: tiền chạy instance (CPU + memory), tiền **storage**, và tiền **license phần mềm thương mại** (nếu có). Xem [[EC2 Purchase Options]].
 - **Storage**: hai loại phổ biến là **local host storage** (đĩa trên EC2 host, xem [[Instance Store]]) và **EBS** (network storage, xem [[EBS]]).
+- **Kiến trúc một instance**: không phải mọi thứ đều "nằm trong" instance.
+  - **CPU và memory** là một phần của chính instance. **Local storage** (instance store) cũng vậy: xóa instance là mất.
+  - **Disk EBS** và **networking** là **tài nguyên AWS riêng** gắn vào instance: EBS volume, và card mạng là **Elastic Network Interface (ENI)** (xem [[EC2 Network Interfaces IPs and DNS]]).
+  - Terminate thì mặc định EBS volume và ENI đi kèm bị xóa theo; volume được giữ lại nếu cờ **Delete on Termination** tắt.
 
 ### Instance states và chi phí
 Ba trạng thái chính: **running**, **stopped**, **terminated** (trạng thái trung gian: pending, stopping, shutting-down).
@@ -64,14 +69,17 @@ stateDiagram-v2
 - Định dạng private key: `.pem` (macOS/Linux/Windows hiện đại có OpenSSH) hoặc `.ppk` (PuTTY).
 
 ## Demo / Lab
-1. Region **us-east-1**, EC2 console → **Key pairs** → Create key pair tên `A4L`, định dạng `.pem` → tải private key.
-2. **Launch instance** "My First EC2 Instance": AMI **Amazon Linux 2** (free tier, 64-bit x86), instance type **t2.micro** (free tier), chọn key pair `A4L`.
-3. Network: **default VPC**, subnet *No preference* (chọn subnet = chọn AZ), **Auto-assign public IP = Enable**. Tạo Security Group mới cho phép **SSH (22) từ 0.0.0.0/0** (chấp nhận được trong demo vì chỉ người có private key mới đăng nhập được).
-4. Storage mặc định do AMI quy định: root volume **8 GiB gp2**. Phần *Advanced details* (user data...) dùng ở bài sau.
-5. Instance đi từ **pending → running**, status check *initializing* → **2/2 checks passed** (mất khoảng 3 phút). Instance có private IP, public IPv4 và public DNS. Các tab: Details, Security, Networking, Storage, Status checks, Monitoring (metric CloudWatch).
-6. **Connect** có ba cách: **EC2 Instance Connect** (terminal qua trình duyệt), **Session Manager** (cần cấu hình thêm), **SSH client**: `ssh -i "A4L.pem" ec2-user@<public-DNS>`.
-   - Lỗi **"unprotected private key file"** nếu file key quá mở quyền → `chmod 400 A4L.pem` (macOS/Linux; Windows chỉnh quyền file theo cách khác).
-7. Dọn dẹp: **Terminate** instance, chờ terminated rồi xóa Security Group (nếu xóa sớm sẽ lỗi vì SG còn gắn với instance). Không động vào default VPC và default SG.
+1. Region **us-east-1**, EC2 console → **Key pairs** → Create key pair tên `AEM` (Aus-E-Mart), type **RSA**, định dạng `.pem` → tải private key (chỉ tải được một lần). Windows hiện nay đa số có SSH trong terminal nên dùng `.pem` được; dùng PuTTY thì chọn `.ppk`.
+2. **Launch instances** "My First EC2 Instance": AMI **Amazon Linux 2023** (bản mặc định; AMI khác như Windows, macOS, Red Hat, SUSE, Debian... có thể làm tăng giá). **EC2 không còn trong free tier** (t2.micro trước đây miễn phí) nên chọn loại rẻ như **t2.nano** và terminate ngay sau demo. Chọn key pair `AEM`.
+3. Network (Edit): **default VPC**, subnet *No preference* (chọn subnet = chọn AZ), **Auto-assign public IP = Enable**. Tạo Security Group mới `MyFirstInstanceSG` cho phép **SSH (22) từ Anywhere 0.0.0.0/0**. AWS cảnh báo rule này; cách an toàn hơn là chọn **My IP** (chỉ IP hiện tại của bạn). Demo vẫn chấp nhận Anywhere vì instance chạy ngắn và cần private key mới đăng nhập được.
+4. Storage mặc định do AMI quy định (8 GiB). Phần *Advanced details* (join domain, IAM...) dùng ở bài sau.
+5. Instance đi từ **pending → running**, status checks chạy đến khi đạt **2/2 checks passed**. Instance có private IP, public IPv4 và public DNS. Các tab: Details, Status and alarms, Monitoring (metric CloudWatch), Security (SG, IAM role), Networking, Storage, Tags.
+6. **Connect** có ba cách:
+   - **EC2 Instance Connect**: SSH ngay trong trình duyệt với user `ec2-user` (cách demo dùng).
+   - **SSM Session Manager**: cần cấu hình thêm, học ở bài sau.
+   - **SSH client**: console hướng dẫn đổi quyền file key rồi chạy `ssh -i "AEM.pem" ec2-user@<public-DNS>`. Lỗi **"unprotected private key file"** nếu file key quá mở quyền → `chmod 400 AEM.pem` (macOS/Linux; Windows chỉnh quyền file theo cách khác).
+7. Tài nguyên đi kèm instance: **EBS volume** và **network interface (ENI)** là tài nguyên riêng, mặc định bị xóa khi terminate. **Security Group không bị xóa** theo instance.
+8. Dọn dẹp: **Terminate (delete) instance**; tùy instance type có thể chọn bỏ qua OS shutdown. Instance terminated còn hiện trong danh sách khoảng một giờ rồi AWS tự xóa. Kiểm tra volume và ENI đã bị xóa, rồi xóa Security Group `MyFirstInstanceSG` (xóa trước khi instance terminate xong sẽ lỗi vì SG còn gắn với instance). Không động vào default VPC và default SG.
 
 ## 🎯 Mẹo thi SAA-C03
 - EC2 là **AZ resilient**. Muốn chịu lỗi AZ thì chạy nhiều instance ở **nhiều AZ** (thường cùng [[Auto Scaling Groups]] + [[Elastic Load Balancer]]).
@@ -83,6 +91,6 @@ stateDiagram-v2
 
 ## Liên kết
 - Tiên quyết: [[Cloud Service Models]], [[Default VPC]], [[AWS Global Infrastructure]]
-- Liên quan: [[AMI]], [[EBS]], [[Instance Store]], [[Security Groups]], [[EC2 Instance Connect and SSH]], [[CloudWatch Basics]]
+- Liên quan: [[AMI]], [[EBS]], [[Instance Store]], [[Security Groups]], [[EC2 Instance Connect and SSH]], [[CloudWatch Basics]], [[Service Quotas]] (giới hạn vCPU on-demand theo region)
 - Học sâu hơn: [[EC2 Architecture and Resilience]], [[EC2 Instance Types]], [[EC2 Purchase Options]], [[EC2 Shutdown Terminate and Termination Protection]]
 - MOC: [[_MOC 03 AWS Fundamentals]]

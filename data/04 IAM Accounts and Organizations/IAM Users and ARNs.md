@@ -2,6 +2,7 @@
 tags: [saa-c03, s04-iam-accounts-and-organizations, security, iam, identity]
 aliases: [IAM User, IAM Users, ARN, Amazon Resource Name, Principal, Authentication vs Authorization]
 lessons: ["0070 IAM Users and ARNs", "0071 DEMO Simple Identity Permissions in AWS"]
+videos: ["036 Amazon Resource Names (ARNs)", "037 [DEMO] Exploring Amazon Resource Names (ARNs)"]
 ---
 # IAM Users and ARNs
 

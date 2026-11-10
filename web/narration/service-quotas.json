@@ -1,0 +1,15 @@
+{
+ "Service Quotas": {
+  "sig": "8-o70yt9",
+  "steps": [
+   "Sơ đồ này nói về service quota, tức mỗi account được dùng bao nhiêu tài nguyên. Phần lớn quota tính theo region, dịch vụ global thì tính theo account. Đa số tăng được, nhưng có vài hard limit.",
+   "Bên trái là Service Quotas console, nơi xem usage, giá trị mặc định và giá trị đang áp dụng. Bạn nên đặt một CloudWatch alarm để được cảnh báo trước khi usage chạm quota.",
+   "Khi cần thêm, bạn bấm Request increase. Trong demo, quota vCPU cho On-Demand Standard instances ở us-east-1 đã được nâng từ mặc định 5 lên 64. Tăng nhỏ thường được duyệt tự động.",
+   "Automatic Management có thể chỉ gửi thông báo, hoặc tự động xin tăng quota thay bạn, theo các region và ngoại lệ mà bạn cấu hình.",
+   "Nếu dùng AWS Organizations, quota request template giúp mọi member account mới gia nhập organization được tự động xin tăng những quota đã khai báo sẵn.",
+   "Quota theo region nên mỗi region có giá trị riêng. Ở Singapore, nơi chưa dùng EC2, quota vẫn ở mức mặc định 5 dù us-east-1 đã được tăng.",
+   "IAM là dịch vụ global nên quota tính theo account. Users per account bằng 5000 là hard limit, trong console không hề có nút Request increase cho quota này.",
+   "Khi đi thi, nhớ: hard limit như 5000 IAM user không xin tăng được, ứng dụng nhiều người dùng phải dùng identity provider hoặc federation. Account mới có quota thấp, hãy xin tăng trước khi mở region mới hay region DR."
+  ]
+ }
+}

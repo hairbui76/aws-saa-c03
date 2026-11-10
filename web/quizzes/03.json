@@ -221,7 +221,7 @@
         "options": [
           "Sao chép AMI sang từng region và sửa template thủ công mỗi lần deploy",
           "Đưa AMI ID vào section Outputs để các stack khác dùng lại",
-          "Dùng parameter đọc SSM Parameter Store public parameter để tự lấy AMI Amazon Linux 2 mới nhất của region đang deploy",
+          "Dùng parameter đọc SSM Parameter Store public parameter để tự lấy AMI Amazon Linux mới nhất của region đang deploy",
           "Tạo một template riêng cho mỗi region"
         ],
         "answer": [2],
@@ -466,9 +466,9 @@
       },
       {
         "type": "single",
-        "q": "Một kỹ sư cần đăng nhập vào EC2 instance Windows vừa launch với key pair A4L. Cách kết nối đúng là gì?",
+        "q": "Một kỹ sư cần đăng nhập vào EC2 instance Windows vừa launch với key pair AEM. Cách kết nối đúng là gì?",
         "options": [
-          "SSH qua port 22 bằng private key A4L.pem",
+          "SSH qua port 22 bằng private key AEM.pem",
           "RDP qua port 22, dùng private key để xác thực trực tiếp",
           "SSH qua port 3389 với user ec2-user",
           "RDP qua port 3389, dùng private key để giải mã mật khẩu local Administrator rồi đăng nhập bằng user/password"
@@ -638,7 +638,7 @@
           "Gắn một EBS volume cho mỗi người dùng"
         ],
         "answer": [2],
-        "explain": "Số bucket mỗi account bị giới hạn (theo khóa học 100 soft / 1000 hard) nên không thể tạo một bucket mỗi user. Một bucket chia theo prefix kèm IAM policy theo prefix scale tốt."
+        "explain": "Số bucket mỗi account có quota (bản khóa cũ: 100 soft / 1000 hard; nay mặc định 10.000) nên không thể tạo một bucket mỗi user. Một bucket chia theo prefix kèm IAM policy theo prefix scale tốt."
       },
       {
         "type": "single",
@@ -646,11 +646,11 @@
         "options": [
           "5 GB",
           "5 TB",
-          "160 TB",
+          "50 TB",
           "Không giới hạn"
         ],
-        "answer": [1],
-        "explain": "Một object có kích thước từ 0 byte đến 5 TB. Không giới hạn là số object trong một bucket, không phải kích thước object."
+        "answer": [2],
+        "explain": "Theo khóa mới, một object có kích thước từ 0 byte đến 50 TB (bản khóa cũ và tài liệu cũ ghi 5 TB). Không giới hạn là số object trong một bucket, không phải kích thước object."
       },
       {
         "type": "single",
@@ -688,6 +688,69 @@
         ],
         "answer": [0, 3],
         "explain": "Tên bucket dài 3–63 ký tự, chỉ gồm chữ thường, số, dấu chấm, gạch ngang, bắt đầu/kết thúc bằng chữ thường hoặc số và không có dạng địa chỉ IP. `Koala_Campaign` có chữ hoa và gạch dưới; `ab` quá ngắn."
+      }
+    ],
+    "Service Quotas": [
+      {
+        "type": "single",
+        "q": "Một công ty chuẩn bị dùng region ap-southeast-1 làm region DR. Ở us-east-1 họ đã được tăng quota Running On-Demand Standard instances lên 64 vCPU. Khi diễn tập DR, việc launch instance ở ap-southeast-1 bị lỗi vì vượt giới hạn vCPU. Nguyên nhân và cách xử lý phù hợp nhất là gì?",
+        "options": [
+          "Quota EC2 là theo account nên lỗi do vùng DR dùng instance type khác; đổi sang instance type nhỏ hơn",
+          "Quota EC2 thường theo region; ap-southeast-1 vẫn ở mức mặc định nên cần Request increase ở region đó, tốt nhất là làm trước khi cần",
+          "Phải tạo AWS account mới cho region DR vì mỗi account chỉ dùng được một region",
+          "Bật Automatic Management ở us-east-1 sẽ tự đồng bộ quota sang mọi region"
+        ],
+        "answer": [1],
+        "explain": "Phần lớn quota là theo region: tăng ở us-east-1 không ảnh hưởng region khác, region chưa dùng vẫn ở mức mặc định (ví dụ 5 vCPU). Nên xin tăng quota ở region mới hoặc region DR trước khi cần."
+      },
+      {
+        "type": "single",
+        "q": "Một ứng dụng web có 2 triệu người dùng. Một kỹ sư đề xuất tạo IAM user cho mỗi người dùng và xin tăng quota IAM user qua Service Quotas. Nhận định nào đúng?",
+        "options": [
+          "Đề xuất khả thi vì mọi quota đều xin tăng được qua Service Quotas console",
+          "Chỉ cần mở support request thay vì dùng Service Quotas console",
+          "Không khả thi: 5.000 IAM user mỗi account là hard limit; ứng dụng nên dùng identity provider/federation (ví dụ Cognito)",
+          "Chia người dùng ra nhiều region vì quota IAM user tính theo region"
+        ],
+        "answer": [2],
+        "explain": "Một số quota là hard limit, không thể tăng; 5.000 IAM user mỗi account là ví dụ kinh điển. IAM là dịch vụ global nên quota này theo account, không theo region. Ứng dụng nhiều người dùng phải dùng identity provider khác."
+      },
+      {
+        "type": "single",
+        "q": "Đội vận hành muốn được cảnh báo khi số vCPU EC2 đang chạy sắp chạm service quota, trước khi các lần launch mới bị lỗi. Cách nào phù hợp?",
+        "options": [
+          "Tạo CloudWatch alarm trên usage của quota trong Service Quotas",
+          "Bật AWS CloudTrail để ghi lại API RunInstances",
+          "Bật detailed monitoring cho mọi EC2 instance",
+          "Tạo AWS Budgets cảnh báo khi chi phí EC2 tăng"
+        ],
+        "answer": [0],
+        "explain": "Service Quotas tích hợp CloudWatch: đặt alarm để cảnh báo khi usage gần chạm quota. CloudTrail ghi lại ai gọi API gì, detailed monitoring chỉ tăng tần suất metric hiệu năng, còn Budgets theo dõi chi phí chứ không theo dõi quota."
+      },
+      {
+        "type": "single",
+        "q": "Một công ty dùng AWS Organizations và thường xuyên tạo account mới cho các team. Mỗi account mới đều phải xin tăng cùng một số quota EC2 ở us-east-1. Cách nào giảm công sức vận hành nhiều nhất?",
+        "options": [
+          "Viết script gửi support request cho từng account sau khi tạo",
+          "Dùng Service Control Policy để nâng quota cho mọi account",
+          "Dùng quota request template của Service Quotas để member account mới tự động được xin tăng quota",
+          "Dùng chung một account cho mọi team để không cần xin tăng quota"
+        ],
+        "answer": [2],
+        "explain": "Quota request template (tính năng Organization trong Service Quotas) tự động gửi yêu cầu tăng các quota đã khai báo cho mọi member account mới. SCP chỉ giới hạn quyền, không thay đổi quota."
+      },
+      {
+        "type": "multi",
+        "q": "Những phát biểu nào về AWS Service Quotas là đúng? (Chọn 2)",
+        "options": [
+          "Account mới có quota đặt thấp để bảo vệ AWS và các khách hàng khác",
+          "Mọi yêu cầu tăng quota đều phải mở support ticket và chờ người duyệt",
+          "Automatic Management có thể chỉ gửi thông báo hoặc tự động xin tăng quota thay bạn",
+          "Quota là giá trị cố định giống nhau cho mọi account và không ai thay đổi được",
+          "Service quota chỉ áp dụng cho account dùng Free plan"
+        ],
+        "answer": [0, 2],
+        "explain": "Quota mặc định thấp để bảo vệ hạ tầng AWS và khách hàng khác; phần lớn là soft limit, xin tăng qua console/CLI và tăng nhỏ thường được duyệt tự động. Automatic Management có thể notify hoặc tự adjust. Quota áp cho mọi account."
       }
     ],
     "Shared Responsibility Model": [

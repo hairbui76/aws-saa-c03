@@ -236,5 +236,7 @@
   "UTC": "Coordinated Universal Time",
   "SDLC": "Software Development Life Cycle",
   "KVM": "Kernel-based Virtual Machine",
-  "CAPTCHA": "Completely Automated Public Turing test to tell Computers and Humans Apart"
+  "CAPTCHA": "Completely Automated Public Turing test to tell Computers and Humans Apart",
+  "vCPU": "virtual CPU",
+  "IoT": "Internet of Things"
 }
