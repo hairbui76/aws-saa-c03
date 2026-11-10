@@ -1,6 +1,8 @@
 // Update-batch library: validates web/updates.json against the notes and derives
 // the data the UI needs (index for the "what's new" popup, per-lesson markers).
-// Pure functions only; build-content.mjs does the file IO.
+// build-content.mjs does the rest of the file IO; only indexVideos touches the disk here.
+import fs from 'node:fs';
+import path from 'node:path';
 
 export const slugify = (s) =>
   s
@@ -143,4 +145,37 @@ export function lessonUpdate(batch, name) {
     changed: (u.changed ?? []).map(toHeading),
     dropped: (u.dropped ?? []).map(toHeading),
   };
+}
+
+// "123 Tiêu đề" (exactly 3 digits, one space) -> {num, title}; anything else, including old
+// 4-digit numbers, -> null.
+export function parseVideoRef(s) {
+  const m = typeof s === 'string' ? s.match(/^(\d{3}) (\S.*)$/) : null;
+  return m ? { num: m[1], title: m[2] } : null;
+}
+
+// Walks `dir` and maps each 3-digit lecture number to its mp4 path relative to `dir` (with "/").
+// Missing directory -> empty map.
+export function indexVideos(dir) {
+  const out = new Map();
+  const walk = (rel) => {
+    const abs = path.join(dir, rel);
+    let entries;
+    try {
+      entries = fs.readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      const sub = rel ? `${rel}/${e.name}` : e.name;
+      const isDir = e.isDirectory() || (e.isSymbolicLink() && fs.statSync(path.join(dir, sub), { throwIfNoEntry: false })?.isDirectory());
+      if (isDir) walk(sub);
+      else {
+        const m = e.name.match(/^(\d{3})_.*\.mp4$/);
+        if (m && !out.has(m[1])) out.set(m[1], sub);
+      }
+    }
+  };
+  walk('');
+  return out;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { LessonUpdate, UpdateKind } from './updates';
 
 export type LessonRef = {
   id: string;
@@ -8,6 +9,8 @@ export type LessonRef = {
   /** questions from the practice tests on this lesson; pm = those whose main topic it is */
   pq?: number;
   pm?: number;
+  /** set when the update batch touches this lesson */
+  u?: UpdateKind;
 };
 export type ChapterSummary = { id: string; num: string; title: string; description: string; lessons: LessonRef[] };
 export type Chapter = ChapterSummary & { body: string };
@@ -68,6 +71,7 @@ export type Lesson = {
   quiz: Question[];
   prev: { id: string; title: string } | null;
   next: { id: string; title: string } | null;
+  update?: LessonUpdate;
 };
 export type CheatSheet = { title: string; body: string };
 

@@ -20,7 +20,7 @@ function useVideosAvailable(sample?: string | null) {
   const [ok, setOk] = useState(false);
   useEffect(() => {
     if (!sample) return;
-    videosOk ??= fetch(`videos/${encodeURIComponent(sample)}`, { method: 'HEAD' })
+    videosOk ??= fetch(sample, { method: 'HEAD' })
       .then((r) => r.ok && (r.headers.get('content-type') || '').includes('video'))
       .catch(() => false);
     videosOk.then(setOk);
@@ -159,7 +159,7 @@ export default function LessonPage() {
                       <summary>
                         <MonitorPlay size={16} /> <b>{l.num}</b> {l.title}
                       </summary>
-                      <video controls preload="none" src={`videos/${encodeURIComponent(l.video)}`} />
+                      <video controls preload="none" src={l.video} />
                     </details>
                   ) : (
                     <span>

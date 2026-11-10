@@ -5,16 +5,19 @@
 //   public/content/l/<lesson>.json   lesson body, diagrams, quiz (own questions + practice-test ones), prev/next
 //   public/content/cheat-sheet.json
 //   public/content/practice.json     every practice test whole, for the #/practice page
+//   public/content/updates.json      the update batch (web/updates.json) as the "what's new" popup reads it; only when a batch exists
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { slugify } from './lib/updates.mjs';
+import { slugify, noteHeadings, validateBatch, buildUpdatesIndex, lessonUpdate, parseVideoRef, indexVideos } from './lib/updates.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const WEB = path.resolve(here, '..');
 const DATA = path.resolve(WEB, '../data');
 const VIDEOS = path.resolve(WEB, '../videos');
+const VIDEOS_NEW = path.resolve(WEB, '../videos-new');
+const UPDATES = process.env.SAA_UPDATES || path.resolve(WEB, 'updates.json');
 const QUIZZES = path.resolve(WEB, 'quizzes');
 const NARRATION = path.resolve(WEB, 'narration');
 const AUDIO = path.resolve(WEB, 'public/audio');
@@ -260,6 +263,8 @@ if (fs.existsSync(VIDEOS)) {
   }
 }
 
+const videoNewByNum = indexVideos(VIDEOS_NEW);
+
 // ---------- quizzes ----------
 const quizByLesson = new Map();
 if (fs.existsSync(QUIZZES)) {
@@ -359,6 +364,40 @@ if (fs.existsSync(BANKS)) {
     practiceByLesson.set(id, list.sort((a, b) => a.rank - b.rank).map((x) => x.question));
 }
 
+// ---------- update batch ----------
+// web/updates.json (or $SAA_UPDATES) lists what changed against the new course; no file = no batch.
+let batch = null;
+if (fs.existsSync(UPDATES)) {
+  try {
+    batch = JSON.parse(fs.readFileSync(UPDATES, 'utf8'));
+  } catch (e) {
+    console.error(`updates.json: không đọc được ${UPDATES}: ${e.message}`);
+    process.exit(1);
+  }
+}
+{
+  const refErrors = [];
+  const notes = chapters.flatMap((ch) =>
+    ch.lessons.map((l) => {
+      const videos = [].concat(l.meta.videos || []).map(String);
+      for (const v of videos) if (!parseVideoRef(v)) refErrors.push(`${l.name}: videos "${v}" không có dạng "NNN Tiêu đề" (3 chữ số)`);
+      return {
+        name: l.name,
+        chapterId: ch.id,
+        headings: noteHeadings(l.body),
+        videos,
+        quizCount: (quizByLesson.get(l.name.toLowerCase()) || []).length,
+        diagramCount: (l.body.match(/!\[\[[^\]]+?\.excalidraw\]\]/g) || []).length,
+      };
+    })
+  );
+  const errors = [...refErrors, ...(batch ? validateBatch(batch, notes) : [])];
+  if (errors.length) {
+    for (const e of errors) console.error(e);
+    process.exit(1);
+  }
+}
+
 // ---------- pass 2: build output ----------
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'l'), { recursive: true });
@@ -433,6 +472,7 @@ for (const ch of chapters) {
       title: l.name,
       summary: summaries.get(l.name.toLowerCase()) || '',
       quiz: (quizByLesson.get(l.name.toLowerCase()) || []).length + (practiceByLesson.get(l.id) || []).length,
+      ...(batch?.lessons?.[l.name]?.kind ? { u: batch.lessons[l.name].kind } : {}),
       // practice-test questions on this lesson (pm: those whose main topic it is); the UI marks these lessons
       ...(practiceByLesson.has(l.id) ? { pq: practiceByLesson.get(l.id).length, pm: practiceMain.get(l.id) || 0 } : {}),
     })),
@@ -483,15 +523,25 @@ flatOrder.forEach(({ ch, l }, i) => {
       if (!thumbs[ch.id]) thumbs[ch.id] = d;
     }
   }
-  const lectures = [].concat(l.meta.lessons || []).map((s) => {
-    const num = String(s).slice(0, 4);
-    return { num, title: String(s).slice(5), video: videoByNum.get(num) || null };
-  });
+  const urlPath = (...segs) => segs.flatMap((s) => s.split('/')).map(encodeURIComponent).join('/');
+  // a note with `videos` points at the new course (3-digit numbers); otherwise `lessons` at the old one
+  const lectures = l.meta.videos
+    ? [].concat(l.meta.videos).map((s) => {
+        const ref = parseVideoRef(String(s));
+        const file = ref && videoNewByNum.get(ref.num);
+        return { num: ref.num, title: ref.title, video: file ? urlPath('videos-new', file) : null };
+      })
+    : [].concat(l.meta.lessons || []).map((s) => {
+        const num = String(s).slice(0, 4);
+        const file = videoByNum.get(num);
+        return { num, title: String(s).slice(5), video: file ? urlPath('videos', file) : null };
+      });
   // end-of-lesson test: the lesson's own questions first, then the practice-test questions on it
   const quiz = [...(quizByLesson.get(l.name.toLowerCase()) || []), ...(practiceByLesson.get(l.id) || [])];
   quizCount += quiz.length;
   const prev = flatOrder[i - 1];
   const next = flatOrder[i + 1];
+  const update = lessonUpdate(batch, l.name);
   write(`l/${l.id}.json`, {
     id: l.id,
     title,
@@ -506,6 +556,7 @@ flatOrder.forEach(({ ch, l }, i) => {
     quiz,
     prev: prev ? { id: prev.l.id, title: prev.l.name } : null,
     next: next ? { id: next.l.id, title: next.l.name } : null,
+    ...(update ? { update } : {}),
   });
   index.search.push({ id: l.id, t: l.name, a: [].concat(l.meta.aliases || []).join(' · '), c: ch.id, d: tldr.slice(0, 220) });
 });
@@ -521,6 +572,8 @@ flatOrder.forEach(({ ch, l }, i) => {
 write('index.json', index);
 if (practiceAll.questions.length) write('practice.json', practiceAll);
 write('thumbs.json', thumbs);
+const updatesIndex = buildUpdatesIndex(batch, chapters);
+if (updatesIndex) write('updates.json', updatesIndex);
 
 const lessonTotal = flatOrder.length;
 const withQuiz = flatOrder.filter(({ l }) => quizByLesson.has(l.name.toLowerCase())).length;
@@ -539,4 +592,9 @@ console.log(
       (orphan.length ? ` (! unknown lesson ids: ${orphan.join(', ')})` : '')
   );
 }
+console.log(
+  updatesIndex
+    ? `updates: ${updatesIndex.counts.new} mới, ${updatesIndex.counts.updated} cập nhật, ${updatesIndex.counts.removed} không còn trong khóa`
+    : 'updates: không có đợt cập nhật'
+);
 if (unresolved.size) console.log(`  unresolved wikilinks (rendered bold): ${[...unresolved].slice(0, 15).join(', ')}${unresolved.size > 15 ? '…' : ''}`);

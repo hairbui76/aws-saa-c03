@@ -4,12 +4,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sirv from 'sirv';
 
-// Serves the original course videos (../videos, not part of the build) at /videos/
-// so lessons can embed the matching lecture while running locally.
+// Serves the course videos (../videos: original course; ../videos-new: the current one; neither is
+// part of the build) at /videos/ and /videos-new/ so lessons can embed the matching lecture locally.
 function localVideos(): Plugin {
-  const dir = path.resolve(__dirname, '../videos');
+  const mounts = { '/videos': path.resolve(__dirname, '../videos'), '/videos-new': path.resolve(__dirname, '../videos-new') };
   const mount = (server: ViteDevServer | PreviewServer) => {
-    if (fs.existsSync(dir)) server.middlewares.use('/videos', sirv(dir, { dev: true }));
+    for (const [url, dir] of Object.entries(mounts)) if (fs.existsSync(dir)) server.middlewares.use(url, sirv(dir, { dev: true }));
   };
   return { name: 'local-videos', configureServer: mount, configurePreviewServer: mount };
 }
