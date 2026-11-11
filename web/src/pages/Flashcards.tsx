@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowLeftRight, BookOpen, ChevronLeft, ChevronRight, Layers, RotateCcw, Search, Shuffle, Sparkles, Target } from 'lucide-react';
 import { useIndex } from '../lib/content';
@@ -8,12 +8,6 @@ import { Sketch, SketchBar } from '../components/Sketch';
 import LessonLink from '../components/LessonLink';
 
 const NEW_LIMITS = [10, 20, 30, 50];
-const RATINGS: { r: FlashRating; label: string; cls: string }[] = [
-  { r: 0, label: 'Quên', cls: 'again' },
-  { r: 1, label: 'Khó', cls: 'hard' },
-  { r: 2, label: 'Nhớ', cls: 'good' },
-  { r: 3, label: 'Dễ', cls: 'easy' },
-];
 const MODE_TITLE: Record<Mode, string> = { review: 'Ôn hôm nay', new: 'Học thẻ mới', browse: 'Xem tự do', hard: 'Thẻ hay quên' };
 
 // small per-viewer preferences
@@ -102,8 +96,8 @@ export default function FlashcardsPage() {
         <div>
           <h1>Flashcard thuật ngữ</h1>
           <p className="muted">
-            {data.cards.length} thẻ thuật ngữ theo chương và {data.abbr.length} từ viết tắt. Lật thẻ, tự chấm mức nhớ; thẻ nhớ tốt
-            sẽ được hẹn ôn lại sau 1, 3, 7, 16 rồi 35 ngày, thẻ quên quay lại ngay trong lượt.
+            {data.cards.length} thẻ thuật ngữ theo chương và {data.abbr.length} từ viết tắt. Xem thẻ rồi quẹt phải nếu nhớ, quẹt trái nếu
+            quên. Thẻ nhớ được hẹn ôn lại sau 1, 3, 7, 16 rồi 35 ngày, thẻ quên quay lại ngay trong lượt.
           </p>
           <div className="fl-stats">
             <span>
@@ -254,6 +248,8 @@ function LessonChips({ ids }: { ids: string[] }) {
   );
 }
 
+const FLY_MS = 220;
+
 function Study({
   session,
   setSession,
@@ -278,6 +274,14 @@ function Study({
   const done = session.idx >= session.ids.length;
   const c = done ? undefined : byId.get(session.ids[session.idx]);
 
+  // swipe: dx follows the finger; fly = the card is leaving (-1 left / 1 right)
+  const [dx, setDx] = useState(0);
+  const [fly, setFly] = useState<0 | -1 | 1>(0);
+  const [dragging, setDragging] = useState(false);
+  const drag = useRef<{ x: number; y: number; on: boolean } | null>(null);
+  const dragged = useRef(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
   const flip = useCallback(() => setSession({ ...session, flipped: !session.flipped }), [session, setSession]);
   const move = useCallback(
     (d: number) => {
@@ -288,7 +292,7 @@ function Study({
   );
   const rate = useCallback(
     (r: FlashRating) => {
-      if (!c || !session.flipped) return;
+      if (!c) return;
       rateFlash(c.id, r);
       const ids = session.ids.slice();
       // forgotten: see it again a few cards later in this session
@@ -300,25 +304,84 @@ function Study({
     [c, session, setSession]
   );
 
+  /** left = forgot, right = remembered (browse: either way = next card) */
+  const swipe = useCallback(
+    (dir: -1 | 1) => {
+      if (fly || !c) return;
+      setFly(dir);
+      setDx(dir * (window.innerWidth + 200));
+      window.setTimeout(() => {
+        setFly(0);
+        setDx(0);
+        if (browse) move(1);
+        else rate(dir < 0 ? 0 : 2);
+      }, FLY_MS);
+    },
+    [fly, c, browse, move, rate]
+  );
+
+  const threshold = () => Math.min(120, (cardRef.current?.offsetWidth ?? 400) * 0.25);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    dragged.current = false;
+    if (fly || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if ((e.target as HTMLElement).closest('a, button')) return;
+    drag.current = { x: e.clientX, y: e.clientY, on: false };
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d) return;
+    const x = e.clientX - d.x;
+    const y = e.clientY - d.y;
+    if (!d.on) {
+      if (Math.abs(x) > 10 && Math.abs(x) > Math.abs(y)) {
+        d.on = true;
+        setDragging(true);
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      } else if (Math.abs(y) > 10) drag.current = null; // a scroll, not a swipe
+      return;
+    }
+    setDx(x);
+  };
+  const onPointerEnd = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d?.on) return;
+    dragged.current = true;
+    setDragging(false);
+    if (Math.abs(dx) > threshold()) swipe(dx < 0 ? -1 : 1);
+    else setDx(0);
+  };
+  const onClick = () => {
+    if (dragged.current) {
+      dragged.current = false;
+      return;
+    }
+    if (!fly) flip();
+  };
+
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if ((e.target as HTMLElement).closest('input, textarea, select, .chat, .modal')) return;
       if (e.key === 'Escape') onExit();
-      else if (done) return;
+      else if (done || fly) return;
       else if (e.key === ' ' || e.key === 'Enter') flip();
-      else if (browse && e.key === 'ArrowRight') move(1);
-      else if (browse && e.key === 'ArrowLeft') move(-1);
-      else if (!browse && session.flipped && '1234'.includes(e.key)) rate((Number(e.key) - 1) as FlashRating);
-      else return;
+      else if (e.key === 'ArrowRight') swipe(1);
+      else if (e.key === 'ArrowLeft') {
+        if (browse) move(-1);
+        else swipe(-1);
+      } else return;
       e.preventDefault();
     };
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
-  }, [browse, done, flip, move, rate, onExit, session.flipped]);
+  }, [browse, done, fly, flip, move, swipe, onExit]);
 
   const total = session.ids.length;
   const ch = c?.kind === 'term' ? data.decks.find((d) => d.id === c.d) : undefined;
+  const lean = fly ? fly : Math.max(-1, Math.min(1, dx / threshold()));
+  const nextGood = c ? fmtInterval(nextFlashState(st[c.id], 2).due - Date.now()) : '';
 
   return (
     <div className="page flash fl-study">
@@ -338,7 +401,7 @@ function Study({
           <h2>🎉 Xong lượt này!</h2>
           {!browse && (
             <p>
-              Quên <b>{session.tally[0]}</b> · Khó <b>{session.tally[1]}</b> · Nhớ <b>{session.tally[2]}</b> · Dễ <b>{session.tally[3]}</b>
+              Nhớ <b>{session.tally[1] + session.tally[2] + session.tally[3]}</b> · Quên <b>{session.tally[0]}</b>
             </p>
           )}
           <div className="row wrap">
@@ -352,27 +415,51 @@ function Study({
         </Sketch>
       ) : (
         <>
-          <div
-            className={`fl-card ${session.flipped ? 'flipped' : ''}`}
-            onClick={flip}
-            role="button"
-            tabIndex={0}
-            aria-label={session.flipped ? 'Mặt sau, bấm để lật lại' : 'Bấm để lật thẻ'}
-          >
-            <div className="fl-face fl-front">
-              <span className="fl-chip muted small">
-                {c.kind === 'abbr' ? 'Viết tắt' : ch ? `Chương ${ch.title}` : ''}
-                {st[c.id] ? (st[c.id].box >= FLASH_KNOWN_BOX ? ' · đã thuộc' : ' · đang học') : ' · thẻ mới'}
-              </span>
-              {reverse ? (
-                <p className="fl-q">{c.kind === 'abbr' ? c.f : c.def}</p>
-              ) : (
-                <b className="fl-big">{c.t}</b>
+          <div className="fl-deck">
+            {session.idx + 1 < total && <div className="fl-under" aria-hidden />}
+            <div
+              key={`${session.idx}:${c.id}`}
+              ref={cardRef}
+              className={`fl-swipe ${dragging ? 'dragging' : ''} ${fly ? 'flying' : ''}`}
+              style={dx ? { transform: `translateX(${dx}px) rotate(${dx / 22}deg)` } : undefined}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerEnd}
+              onPointerCancel={onPointerEnd}
+            >
+              <div
+                className={`fl-card ${session.flipped ? 'flipped' : ''}`}
+                onClick={onClick}
+                role="button"
+                tabIndex={0}
+                aria-label={session.flipped ? 'Mặt sau, bấm để lật lại' : 'Bấm để xem mặt sau'}
+              >
+                <div className="fl-face fl-front">
+                  <span className="fl-chip muted small">
+                    {c.kind === 'abbr' ? 'Viết tắt' : ch ? `Chương ${ch.title}` : ''}
+                    {st[c.id] ? (st[c.id].box >= FLASH_KNOWN_BOX ? ' · đã thuộc' : ' · đang học') : ' · thẻ mới'}
+                  </span>
+                  {reverse ? <p className="fl-q">{c.kind === 'abbr' ? c.f : c.def}</p> : <b className="fl-big">{c.t}</b>}
+                  <span className="muted small fl-hint">
+                    {reverse ? 'Thuật ngữ nào? · ' : ''}
+                    <span className="fl-hint-key">Bấm hoặc Space để xem thẻ</span>
+                    <span className="fl-hint-touch">Chạm để xem thẻ · quẹt trái quên, phải nhớ</span>
+                  </span>
+                </div>
+                <div className="fl-face fl-back">
+                  <Back c={c} data={data} byId={byId} />
+                </div>
+              </div>
+              {!browse && (
+                <>
+                  <span className="fl-stamp again" style={{ opacity: Math.max(0, -lean) }} aria-hidden>
+                    Quên
+                  </span>
+                  <span className="fl-stamp good" style={{ opacity: Math.max(0, lean) }} aria-hidden>
+                    Nhớ
+                  </span>
+                </>
               )}
-              <span className="muted small fl-hint">{reverse ? 'Thuật ngữ nào?' : 'Nhớ nghĩa rồi bấm để lật'} · Space</span>
-            </div>
-            <div className="fl-face fl-back">
-              <Back c={c} data={data} byId={byId} />
             </div>
           </div>
 
@@ -385,28 +472,34 @@ function Study({
                 <button className="btn" onClick={flip}>
                   Lật thẻ
                 </button>
-                <button className="btn primary" onClick={() => move(1)}>
+                <button className="btn primary" onClick={() => swipe(1)}>
                   Sau <ChevronRight size={16} />
                 </button>
               </>
-            ) : session.flipped ? (
-              RATINGS.map(({ r, label, cls }, i) => {
-                const next = nextFlashState(st[c.id], r);
-                return (
-                  <button key={r} className={`btn fl-rate ${cls}`} onClick={() => rate(r)} title={`Phím ${i + 1}`}>
-                    <b>{label}</b>
-                    <span className="small">{r === 0 ? 'ngay trong lượt' : fmtInterval(next.due - Date.now())}</span>
-                  </button>
-                );
-              })
             ) : (
-              <button className="btn primary fl-flip" onClick={flip}>
-                Lật thẻ <kbd>Space</kbd>
-              </button>
+              <>
+                <button className="btn fl-rate again" onClick={() => swipe(-1)} title="Quẹt trái hoặc phím ←">
+                  <b>
+                    <ChevronLeft size={16} /> Quên
+                  </b>
+                  <span className="small">gặp lại trong lượt</span>
+                </button>
+                <button className="btn fl-flip" onClick={flip} title="Space">
+                  {session.flipped ? 'Mặt trước' : 'Xem thẻ'} <kbd>Space</kbd>
+                </button>
+                <button className="btn fl-rate good" onClick={() => swipe(1)} title="Quẹt phải hoặc phím →">
+                  <b>
+                    Nhớ <ChevronRight size={16} />
+                  </b>
+                  <span className="small">ôn lại sau {nextGood}</span>
+                </button>
+              </>
             )}
           </div>
           <p className="muted small fl-keys">
-            {browse ? 'Space lật · ← → chuyển thẻ · Esc thoát' : 'Space lật · 1 Quên · 2 Khó · 3 Nhớ · 4 Dễ · Esc thoát'}
+            {browse
+              ? 'Quẹt hoặc → thẻ sau · ← thẻ trước · Space lật · Esc thoát'
+              : 'Quẹt trái / ← Quên · Quẹt phải / → Nhớ · Space xem thẻ · Esc thoát'}
           </p>
         </>
       )}
