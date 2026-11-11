@@ -5,6 +5,7 @@
 //   public/content/l/<lesson>.json   lesson body, diagrams, quiz (own questions + practice-test ones), prev/next
 //   public/content/cheat-sheet.json
 //   public/content/practice.json     every practice test whole, for the #/practice page
+//   public/content/flashcards.json   term cards (web/flashcards/<chapter>.json) + the acronym deck, for #/flashcards
 //   public/content/updates.json      the update batch (web/updates.json) as the "what's new" popup reads it; only when a batch exists
 import fs from 'node:fs';
 import path from 'node:path';
@@ -130,6 +131,7 @@ const ABBR = Object.fromEntries(
   Object.entries(JSON.parse(fs.readFileSync(path.resolve(WEB, 'abbreviations.json'), 'utf8'))).filter(([k]) => !k.startsWith('_'))
 );
 let abbrExpanded = 0;
+const abbrFirstLesson = new Map(); // acronym -> first lesson id that uses it
 // inline code, links, raw HTML, bare URLs and Obsidian block ids are left as they are
 const PROTECTED = /(`[^`\n]*`|\[[^\]\n]*\]\([^)\n]*\)|<[^>\n]+>|https?:\/\/[^\s)]+|\^[a-z0-9]{6,})/;
 const ACRONYM = /(?<![\p{L}\p{N}_\-/.$])([A-Z][A-Z0-9]*[A-Z0-9])(s?)(?![\p{L}\p{N}_\-/])/gu;
@@ -473,6 +475,8 @@ flatOrder.forEach(({ ch, l }, i) => {
     seenAbbr,
     abbrCtx
   );
+  // the acronym deck links each acronym to the first lesson (in course order) that uses it
+  for (const tok of seenAbbr) if (!abbrFirstLesson.has(tok)) abbrFirstLesson.set(tok, l.id);
   const diagrams = {};
   let narration = {};
   try {
@@ -546,8 +550,65 @@ flatOrder.forEach(({ ch, l }, i) => {
   write('cheat-sheet.json', { title, body: expandAbbr(transformMarkdown(rest, new Set()), new Set()) });
 }
 
-write('index.json', index);
 if (practiceAll.questions.length) write('practice.json', practiceAll);
+
+// ---------- flashcards ----------
+// web/flashcards/<NN>.json: {chapter, cards: [{term, full, def, tip, lessons}]} written per chapter.
+// A term already carded in an earlier chapter is dropped (first chapter wins); unknown lessons are dropped.
+const FLASH = path.resolve(WEB, 'flashcards');
+const flash = { decks: [], cards: [], abbr: [] };
+let flashDropped = 0;
+{
+  const known = new Map(flatOrder.map(({ ch, l }) => [l.id, ch.id]));
+  const seenTerm = new Set();
+  const files = fs.existsSync(FLASH) ? fs.readdirSync(FLASH).filter((f) => /^\d\d\.json$/.test(f)).sort() : [];
+  for (const f of files) {
+    const data = JSON.parse(fs.readFileSync(path.join(FLASH, f), 'utf8'));
+    const ch = chapters.find((c) => c.id === data.chapter);
+    if (!ch) {
+      console.warn(`! flashcards/${f}: unknown chapter ${data.chapter}`);
+      continue;
+    }
+    let n = 0;
+    for (const c of data.cards) {
+      const key = normQ(c.term);
+      const lessons = (c.lessons || []).filter((id) => known.has(id));
+      if (seenTerm.has(key) || !lessons.length) {
+        flashDropped++;
+        continue;
+      }
+      seenTerm.add(key);
+      flash.cards.push({
+        id: `${ch.id}:${slugify(c.term)}`,
+        d: ch.id,
+        t: c.term.trim(),
+        ...(c.full ? { f: c.full.trim() } : {}),
+        def: c.def.trim(),
+        ...(c.tip ? { tip: c.tip.trim() } : {}),
+        l: lessons,
+      });
+      n++;
+    }
+    if (n) flash.decks.push({ id: ch.id, title: `${ch.num} ${ch.title}`, count: n });
+  }
+  // acronyms used in the lessons, with their full form; the term card (if any) adds the explanation
+  const byTerm = new Map(flash.cards.map((c) => [normQ(c.t), c]));
+  for (const [tok, full] of Object.entries(ABBR)) {
+    const first = abbrFirstLesson.get(tok);
+    if (!first) continue;
+    const card = byTerm.get(normQ(tok));
+    flash.abbr.push({ id: `abbr:${tok}`, t: tok, f: full, l: [first], ...(card ? { ref: card.id } : {}) });
+  }
+  flash.abbr.sort((a, b) => a.t.localeCompare(b.t));
+}
+if (flash.cards.length || flash.abbr.length) write('flashcards.json', flash);
+// lessons list how many term cards point at them (the lesson page links to those cards)
+{
+  const perLesson = new Map();
+  for (const c of flash.cards) for (const id of c.l) perLesson.set(id, (perLesson.get(id) || 0) + 1);
+  for (const ch of index.chapters) for (const l of ch.lessons) if (perLesson.has(l.id)) l.fc = perLesson.get(l.id);
+}
+write('index.json', index);
 write('thumbs.json', thumbs);
 const updatesIndex = buildUpdatesIndex(batch, chapters);
 if (updatesIndex) write('updates.json', updatesIndex);
@@ -555,6 +616,9 @@ if (updatesIndex) write('updates.json', updatesIndex);
 const lessonTotal = flatOrder.length;
 const withQuiz = flatOrder.filter(({ l }) => quizByLesson.has(l.name.toLowerCase())).length;
 console.log(`  acronyms: spelled out ${abbrExpanded} first uses`);
+console.log(
+  `  flashcards: ${flash.cards.length} term cards in ${flash.decks.length} chapters (${flashDropped} repeated/unlinked dropped), ${flash.abbr.length} acronyms`
+);
 console.log(
   `content: ${chapters.length} chapters, ${lessonTotal} lessons, ${diagramCount} diagrams, ` +
     `${quizCount} quiz questions (${withQuiz}/${lessonTotal} lessons), ${narrated} narrated diagrams (${voiced} voice clips), ` +

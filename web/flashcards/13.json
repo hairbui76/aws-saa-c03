@@ -1,0 +1,537 @@
+{
+ "chapter": "13",
+ "cards": [
+  {
+   "term": "Web Tier",
+   "full": null,
+   "def": "Điểm vào regional của ứng dụng (ALB, API Gateway): che giấu hạ tầng phía sau để compute có thể scale, hỏng hoặc thay đổi mà khách không biết.",
+   "tip": "Global layer (Route 53, CloudFront) đưa khách tới region; web tier là điểm vào trong region.",
+   "lessons": [
+    "regional-and-global-architecture"
+   ]
+  },
+  {
+   "term": "ELB",
+   "full": "Elastic Load Balancing",
+   "def": "Họ load balancer managed (CLB, ALB, NLB, GWLB) nhận kết nối từ client và phân phối tới backend đã đăng ký; mỗi LB là một DNS name trỏ tới nhiều node, ít nhất một node mỗi AZ, tự scale.",
+   "tip": "Trỏ domain riêng vào ELB → Route 53 Alias record, không dùng IP.",
+   "lessons": [
+    "elastic-load-balancer"
+   ]
+  },
+  {
+   "term": "CLB",
+   "full": "Classic Load Balancer",
+   "def": "Load balancer thế hệ v1 (2009): không thật sự layer 7, không SNI nên chỉ 1 SSL cert mỗi LB, thiếu target group và rule.",
+   "tip": "Thấy CLB trong đáp án → gần như luôn loại, trừ hệ thống legacy. Gộp nhiều CLB thành một ALB dùng SNI.",
+   "lessons": [
+    "elastic-load-balancer",
+    "compare-alb-vs-nlb"
+   ]
+  },
+  {
+   "term": "Internet-facing Load Balancer",
+   "full": null,
+   "def": "LB có node mang public IPv4 (và private IP) để nhận traffic từ Internet; vẫn chuyển được tới instance private không có public IP.",
+   "tip": "Khác biệt duy nhất với internal LB là IP của node. Backend có thể nằm hoàn toàn trong private subnet.",
+   "lessons": [
+    "elastic-load-balancer"
+   ]
+  },
+  {
+   "term": "Internal Load Balancer",
+   "full": null,
+   "def": "LB mà node chỉ có private IP, dùng giữa các tier bên trong VPC (ví dụ web tier → app tier) để các tier lỏng lẻo và scale độc lập.",
+   "tip": "Internal LB cho HA + scale ngang nhưng giao tiếp vẫn đồng bộ, không decouple như SQS.",
+   "lessons": [
+    "elastic-load-balancer",
+    "event-driven-architecture"
+   ]
+  },
+  {
+   "term": "Cross-Zone Load Balancing",
+   "full": null,
+   "def": "Cho mỗi node LB phân phối đều tới mọi target ở mọi AZ, thay vì chỉ target cùng AZ, tránh lệch tải khi số instance giữa các AZ không đều.",
+   "tip": "ALB mặc định bật; NLB/GWLB mặc định tắt (bật có thể tốn phí inter-AZ). Đề nói tải lệch giữa AZ → bật cross-zone.",
+   "lessons": [
+    "elastic-load-balancer"
+   ]
+  },
+  {
+   "term": "Load Balancer Subnet Size",
+   "full": null,
+   "def": "Mỗi subnet đặt node LB cần ít nhất 8 IP trống; /28 đủ về kỹ thuật nhưng AWS khuyến nghị /27 trở lên để LB có chỗ scale. Chọn một subnet mỗi AZ.",
+   "tip": "Đáp án có /27 → chọn /27; chỉ có /28 thì /28. Nhớ '8+ free IP'.",
+   "lessons": [
+    "elastic-load-balancer"
+   ]
+  },
+  {
+   "term": "Listener",
+   "full": null,
+   "def": "Cấu hình protocol/port LB lắng nghe ở phía client và cách chuyển traffic tới target (protocol/port phía backend); quyết định LB làm gì với traffic.",
+   "tip": "ALB listener chỉ HTTP/HTTPS; NLB listener TCP, TLS, UDP, TCP_UDP, QUIC.",
+   "lessons": [
+    "elastic-load-balancer",
+    "compare-alb-vs-nlb"
+   ]
+  },
+  {
+   "term": "Target Group",
+   "full": null,
+   "def": "Nhóm backend (instance, IP, Lambda với ALB) mà rule của LB chuyển traffic tới; health check và stickiness cấu hình ở đây, ASG gắn vào để tự đăng ký instance.",
+   "tip": "Một ALB nhiều target group + rule → một LB phục vụ nhiều ứng dụng (consolidation).",
+   "lessons": [
+    "compare-alb-vs-nlb",
+    "auto-scaling-groups"
+   ]
+  },
+  {
+   "term": "ALB",
+   "full": "Application Load Balancer",
+   "def": "Load balancer layer 7 cho HTTP/HTTPS/WebSocket (HTTP/2, gRPC): đọc host, path, header, cookie để route; luôn terminate kết nối và mở kết nối mới tới target (EC2, IP, Lambda).",
+   "tip": "Path/host-based routing, nhiều domain một LB, auth Cognito/OIDC, cookie stickiness → ALB. Cần SSL end-to-end không đứt → không phải ALB.",
+   "lessons": [
+    "compare-alb-vs-nlb"
+   ]
+  },
+  {
+   "term": "NLB",
+   "full": "Network Load Balancer",
+   "def": "Load balancer layer 4 (TCP, TLS, UDP, TCP_UDP, QUIC): hàng triệu request/giây, latency rất thấp, mỗi AZ một IP tĩnh (gắn được Elastic IP), TCP listener chuyển thẳng nên giữ mã hóa end-to-end.",
+   "tip": "Chọn NLB khi: unbroken encryption, static IP để whitelist, hiệu năng cực cao, giao thức không phải HTTP, PrivateLink. Còn lại → ALB.",
+   "lessons": [
+    "compare-alb-vs-nlb"
+   ]
+  },
+  {
+   "term": "ALB Listener Rules",
+   "full": null,
+   "def": "Rule xét theo priority trên listener ALB, điều kiện host-header, http-header, method, path-pattern, query-string, source-ip; rule cuối là default (catch-all).",
+   "tip": "'/api' và '/images' đi backend khác nhau → path-pattern; nhiều domain → host-header.",
+   "lessons": [
+    "compare-alb-vs-nlb"
+   ]
+  },
+  {
+   "term": "ALB Rule Actions",
+   "full": null,
+   "def": "Hành động của rule ALB: forward tới target group, redirect sang URL/domain khác, fixed-response trả mã cố định, authenticate-oidc/authenticate-cognito, jwt-validation.",
+   "tip": "Xác thực người dùng ngay tại LB → ALB authenticate-cognito/oidc; kiểm tra JWT access token tại LB → jwt-validation.",
+   "lessons": [
+    "compare-alb-vs-nlb"
+   ]
+  },
+  {
+   "term": "NLB Static IP",
+   "full": null,
+   "def": "NLB có một IP tĩnh ở mỗi AZ và gắn được Elastic IP; ALB chỉ có DNS name với IP thay đổi.",
+   "tip": "Khách cần whitelist IP cố định của LB → NLB (hoặc Global Accelerator cho anycast IP tĩnh).",
+   "lessons": [
+    "compare-alb-vs-nlb"
+   ]
+  },
+  {
+   "term": "Launch Template",
+   "full": null,
+   "def": "Tài liệu định nghĩa trước cấu hình EC2 (AMI, instance type, storage, key pair, network, SG, user data, IAM role) dùng cho ASG hoặc launch instance trực tiếp; có versioning.",
+   "tip": "ASG = when & where, Launch Template = what. Đổi AMI/instance type của ASG → tạo version mới của LT.",
+   "lessons": [
+    "launch-templates"
+   ]
+  },
+  {
+   "term": "Launch Configuration",
+   "full": null,
+   "def": "Bản legacy của Launch Template: immutable, không versioning, chỉ dùng cho ASG, không hỗ trợ mixed instance types; account mới không tạo được nữa.",
+   "tip": "Đáp án dùng Launch Template thường đúng hơn Launch Configuration. Sửa LC = tạo LC mới rồi gắn vào ASG.",
+   "lessons": [
+    "launch-templates"
+   ]
+  },
+  {
+   "term": "Launch Template Versions",
+   "full": null,
+   "def": "LT không sửa được, mỗi thay đổi tạo version mới; ASG trỏ tới một version cụ thể hoặc Default/Latest để version mới tự áp dụng cho instance launch sau.",
+   "tip": "Muốn ASG tự dùng cấu hình mới cho instance tương lai → trỏ tới Latest (hoặc Default).",
+   "lessons": [
+    "launch-templates",
+    "lab-architecture-evolution"
+   ]
+  },
+  {
+   "term": "ASG",
+   "full": "Auto Scaling Group",
+   "def": "Tự động giữ số EC2 đang chạy bằng desired capacity trong khoảng min–max, lấy cấu hình từ Launch Template, trải instance trên nhiều subnet/AZ và tự thay instance hỏng. ASG miễn phí.",
+   "tip": "ASG + ELB = elasticity + abstraction. Chỉ trả tiền cho EC2/EBS mà ASG tạo.",
+   "lessons": [
+    "auto-scaling-groups"
+   ]
+  },
+  {
+   "term": "ASG Min/Desired/Max",
+   "full": null,
+   "def": "Ba giá trị cốt lõi của ASG (viết dạng 1:2:4), ràng buộc min ≤ desired ≤ max; ASG launch/terminate để số instance bằng desired, scaling policy chỉ chỉnh desired.",
+   "tip": "Min và max là ranh giới cứng: max = desired thì không scale out được.",
+   "lessons": [
+    "auto-scaling-groups",
+    "asg-scaling-policies"
+   ]
+  },
+  {
+   "term": "ASG AZ Balancing",
+   "full": null,
+   "def": "ASG cân số instance giữa các AZ: Balanced best effort (mặc định) launch sang AZ khác nếu AZ đích lỗi; Balanced only cứ thử lại đúng AZ đó.",
+   "tip": "Không muốn ASG tự cân lại instance giữa AZ → suspend process AZRebalance.",
+   "lessons": [
+    "auto-scaling-groups"
+   ]
+  },
+  {
+   "term": "ASG Self-Healing",
+   "full": null,
+   "def": "ASG terminate instance fail health check (hoặc bị terminate tay) rồi launch instance mới từ Launch Template, có thể ở AZ khác, để giữ desired capacity.",
+   "tip": "HA giá rẻ cho một instance → ASG min=max=desired=1 trải nhiều AZ.",
+   "lessons": [
+    "auto-scaling-groups"
+   ]
+  },
+  {
+   "term": "ASG Scaling Processes",
+   "full": null,
+   "def": "Các process của ASG có thể suspend/resume: Launch, Terminate, AddToLoadBalancer, AlarmNotification, AZRebalance, HealthCheck, ReplaceUnhealthy, ScheduledActions, InstanceRefresh.",
+   "tip": "Tạm ngừng ASG thay instance unhealthy → suspend ReplaceUnhealthy; ngừng scale out → suspend Launch.",
+   "lessons": [
+    "auto-scaling-groups",
+    "asg-scaling-policies"
+   ]
+  },
+  {
+   "term": "ASG Standby State",
+   "full": null,
+   "def": "Trạng thái đặt cho từng instance trong ASG: instance Standby vẫn chạy nhưng ASG không đụng tới (không health check, không thay), dùng khi bảo trì; đưa về InService sau.",
+   "tip": "Cần bảo trì một instance mà ASG không terminate nó → đặt Standby.",
+   "lessons": [
+    "auto-scaling-groups"
+   ]
+  },
+  {
+   "term": "Scheduled Scaling",
+   "full": null,
+   "def": "Đổi min/desired/max của ASG theo lịch định trước, cho các giai đoạn tải cao/thấp biết trước như đợt sale, giờ hành chính.",
+   "tip": "Đề nói 'biết trước thời điểm tải cao' → Scheduled scaling.",
+   "lessons": [
+    "asg-scaling-policies",
+    "auto-scaling-groups"
+   ]
+  },
+  {
+   "term": "Simple Scaling",
+   "full": null,
+   "def": "Dynamic policy: CloudWatch alarm vào ALARM thì thêm/bớt một lượng cố định (ví dụ CPU > 50% thì +1), bất kể vượt ngưỡng bao xa; dùng cooldown giữa các lần scale.",
+   "tip": "Simple vs Step → Step tốt hơn; chỉ chọn Simple khi đề ưu tiên tuyệt đối sự đơn giản.",
+   "lessons": [
+    "asg-scaling-policies"
+   ]
+  },
+  {
+   "term": "Step Scaling",
+   "full": null,
+   "def": "Dynamic policy với các step adjustment: lệch khỏi ngưỡng càng xa thì thêm/bớt càng nhiều (60% +1, 70% +2, 80% +3), phản ứng tương xứng với mức thay đổi tải.",
+   "tip": "Tải biến động mạnh, cần phản ứng theo mức độ → Step scaling (AWS khuyến nghị thay cho Simple).",
+   "lessons": [
+    "asg-scaling-policies"
+   ]
+  },
+  {
+   "term": "Target Tracking Scaling",
+   "full": null,
+   "def": "Dynamic policy đặt giá trị mục tiêu cho một metric (CPU trung bình, network in/out, ALBRequestCountPerTarget, custom), ASG tự tính lượng điều chỉnh để giữ metric quanh mục tiêu.",
+   "tip": "Đề nói 'giữ CPU trung bình ~50%' hoặc 'giữ request mỗi target ổn định' → Target tracking.",
+   "lessons": [
+    "asg-scaling-policies"
+   ]
+  },
+  {
+   "term": "ALBRequestCountPerTarget",
+   "full": null,
+   "def": "Metric định sẵn cho target tracking: số request trung bình mỗi target trong target group của ALB, giúp scale theo lưu lượng thực tế của ứng dụng web.",
+   "tip": "Scale ASG sau ALB theo số request → target tracking với ALBRequestCountPerTarget.",
+   "lessons": [
+    "asg-scaling-policies"
+   ]
+  },
+  {
+   "term": "ApproximateNumberOfMessagesVisible",
+   "full": null,
+   "def": "Metric SQS cho số message đang chờ trong queue; dùng làm nguồn scaling cho worker ASG: queue dài thì thêm worker, queue cạn thì thu về (có thể tới 0).",
+   "tip": "Số message SQS tăng, cần thêm consumer → scale ASG theo ApproximateNumberOfMessagesVisible (hoặc backlog per instance).",
+   "lessons": [
+    "asg-scaling-policies",
+    "event-driven-architecture"
+   ]
+  },
+  {
+   "term": "Predictive Scaling",
+   "full": null,
+   "def": "Kiểu scaling dùng ML phân tích lịch sử metric để dự báo tải có chu kỳ và tăng capacity trước khi tải tới.",
+   "tip": "Tải lặp lại theo chu kỳ, muốn scale trước khi tải tới → Predictive scaling.",
+   "lessons": [
+    "asg-scaling-policies"
+   ]
+  },
+  {
+   "term": "Scaling Cooldown",
+   "full": null,
+   "def": "Khoảng chờ sau một scaling action trước khi action tiếp theo được thực hiện, để metric kịp phản ánh kết quả; chỉ áp dụng cho simple scaling, mặc định 300 giây.",
+   "tip": "Cooldown (300s) = simple scaling; step và target tracking dùng instance warmup.",
+   "lessons": [
+    "asg-scaling-policies"
+   ]
+  },
+  {
+   "term": "Instance Warmup",
+   "full": null,
+   "def": "Thời gian một instance mới cần trước khi được tính vào metric của ASG; dùng cho step và target tracking. Trong lúc warmup vẫn scale out được nhưng scale in bị chặn.",
+   "tip": "Tránh scale dồn dập do instance mới chưa sẵn sàng → đặt instance warmup phù hợp.",
+   "lessons": [
+    "asg-scaling-policies"
+   ]
+  },
+  {
+   "term": "ASG Lifecycle Hook",
+   "full": null,
+   "def": "Tạm dừng instance ở trạng thái Wait khi ASG launch hoặc terminate để chạy hành động tùy chỉnh; thông báo qua EventBridge, SNS, SQS hoặc Lambda. Timeout mặc định 3600s, sau đó CONTINUE hoặc ABANDON.",
+   "tip": "Lấy log/backup trước khi ASG terminate, hoặc cài đặt xong mới nhận traffic → lifecycle hook.",
+   "lessons": [
+    "asg-lifecycle-hooks"
+   ]
+  },
+  {
+   "term": "Pending:Wait",
+   "full": null,
+   "def": "Trạng thái lifecycle hook khi scale out: instance dừng giữa Pending và InService để nạp dữ liệu, cấu hình; chỉ vào InService và target group khi xong.",
+   "tip": "'Nạp/index dữ liệu xong mới nhận traffic' → launch hook (Pending:Wait).",
+   "lessons": [
+    "asg-lifecycle-hooks"
+   ]
+  },
+  {
+   "term": "Terminating:Wait",
+   "full": null,
+   "def": "Trạng thái lifecycle hook khi scale in: instance dừng trước khi bị hủy để backup log/dữ liệu, deregister khỏi hệ thống ngoài, thường qua SSM Run Command hoặc script.",
+   "tip": "'Lấy log trước khi ASG terminate instance' → terminate hook (Terminating:Wait).",
+   "lessons": [
+    "asg-lifecycle-hooks"
+   ]
+  },
+  {
+   "term": "CompleteLifecycleAction",
+   "full": null,
+   "def": "API báo cho ASG rằng hành động tùy chỉnh đã xong, để instance rời trạng thái Wait ngay (CONTINUE hoặc ABANDON) thay vì chờ hết timeout.",
+   "tip": "Kết thúc lifecycle hook sớm → gọi CompleteLifecycleAction.",
+   "lessons": [
+    "asg-lifecycle-hooks"
+   ]
+  },
+  {
+   "term": "Lifecycle Hook Heartbeat",
+   "full": null,
+   "def": "Ghi heartbeat (RecordLifecycleActionHeartbeat) để khởi động lại timeout của lifecycle hook khi việc cần lâu hơn; tối đa 48 giờ hoặc 100 lần heartbeat timeout, lấy cái nhỏ hơn.",
+   "tip": "Dọn dẹp lâu hơn 1 giờ → heartbeat, giới hạn 48 giờ.",
+   "lessons": [
+    "asg-lifecycle-hooks"
+   ]
+  },
+  {
+   "term": "ASG EC2 Health Check",
+   "full": null,
+   "def": "Health check mặc định của ASG: instance unhealthy nếu không ở trạng thái running hoặc fail system/instance status check; không phát hiện được ứng dụng bên trong đã chết.",
+   "tip": "'App lỗi nhưng ASG không thay instance' → ASG đang dùng EC2 check, cần bật ELB health check.",
+   "lessons": [
+    "asg-health-checks"
+   ]
+  },
+  {
+   "term": "ASG ELB Health Check",
+   "full": null,
+   "def": "Health check bật thêm cho ASG: instance chỉ healthy khi running và pass health check của target group (ALB kiểm tra path, mã HTTP) nên ASG thay được instance có app hỏng.",
+   "tip": "Cần health check hiểu logic ứng dụng → ALB health check + bật ELB health check trên ASG.",
+   "lessons": [
+    "asg-health-checks"
+   ]
+  },
+  {
+   "term": "ASG EBS Health Check",
+   "full": null,
+   "def": "Health check bật thêm cho instance Nitro: EBS status check fail (volume không truy cập được, lỗi IO) thì ASG đánh dấu unhealthy và thay instance.",
+   "tip": "EBS volume lỗi IO mà ASG không thay instance → bật EBS health check.",
+   "lessons": [
+    "asg-health-checks"
+   ]
+  },
+  {
+   "term": "ASG Custom Health Check",
+   "full": null,
+   "def": "Hệ thống bên ngoài (script giám sát, công cụ bên thứ ba) tự đánh dấu instance healthy/unhealthy qua API SetInstanceHealth theo tiêu chí riêng của doanh nghiệp.",
+   "tip": "Tiêu chí sức khỏe đặc thù từ công cụ giám sát ngoài → custom health check.",
+   "lessons": [
+    "asg-health-checks"
+   ]
+  },
+  {
+   "term": "Health Check Grace Period",
+   "full": null,
+   "def": "Khoảng chờ sau khi instance launch trước khi health check của ASG có hiệu lực, để OS boot, chạy user data và app khởi động; mặc định 300 giây trên console.",
+   "tip": "'Instance bị launch rồi terminate liên tục' → grace period quá ngắn so với thời gian bootstrap; tăng lên.",
+   "lessons": [
+    "asg-health-checks"
+   ]
+  },
+  {
+   "term": "SSL Bridging",
+   "full": null,
+   "def": "LB terminate HTTPS của client (cần cert), đọc HTTP để route, rồi mở kết nối HTTPS mới tới backend; instance cũng cần cert và tốn CPU cho crypto. Mặc định của ALB.",
+   "tip": "Cần route theo nội dung HTTP mà vẫn mã hóa tới backend → bridging (ALB HTTPS listener + HTTPS target group).",
+   "lessons": [
+    "ssl-offload-and-session-stickiness"
+   ]
+  },
+  {
+   "term": "SSL Pass-through",
+   "full": null,
+   "def": "NLB với TCP listener chuyển nguyên kết nối mã hóa tới instance, không giải mã; mã hóa end-to-end và AWS không bao giờ chạm vào certificate.",
+   "tip": "Đề nói 'end-to-end encryption', 'không để cert trên LB', 'CloudHSM giữ key' → NLB TCP listener (pass-through).",
+   "lessons": [
+    "ssl-offload-and-session-stickiness"
+   ]
+  },
+  {
+   "term": "SSL Offload",
+   "full": null,
+   "def": "LB terminate HTTPS (cert trên LB, thường từ ACM) rồi gửi HTTP thường tới backend; instance không cần cert, không làm crypto, chặng LB → EC2 đi plaintext trong AWS.",
+   "tip": "Đề nói 'giảm tải CPU do SSL trên EC2', 'instance không cần cert' → SSL offload.",
+   "lessons": [
+    "ssl-offload-and-session-stickiness"
+   ]
+  },
+  {
+   "term": "Session Stickiness",
+   "full": null,
+   "def": "LB khóa một user vào cùng một backend instance bằng cookie để app lưu session trên server; user chỉ bị chuyển khi instance fail hoặc cookie hết hạn. Gây tải không đều.",
+   "tip": "User mất giỏ hàng/bị logout qua LB → bật stickiness; giải pháp scalable hơn là đưa session ra DynamoDB/ElastiCache.",
+   "lessons": [
+    "ssl-offload-and-session-stickiness"
+   ]
+  },
+  {
+   "term": "AWSALB Cookie",
+   "full": null,
+   "def": "Cookie do ALB sinh ra để thực hiện stickiness, thời hạn 1 giây tới 7 ngày, cấu hình trong attributes của target group; ALB cũng hỗ trợ application-based cookie.",
+   "tip": "Cookie stickiness chỉ có trên ALB (và CLB); NLB chỉ có stickiness theo source IP.",
+   "lessons": [
+    "ssl-offload-and-session-stickiness"
+   ]
+  },
+  {
+   "term": "Stateless Application Tier",
+   "full": null,
+   "def": "Instance không giữ state cục bộ: DB đưa lên RDS/Aurora, file dùng chung lên EFS/S3, session ra ngoài, config vào Parameter Store, nhờ đó scale ngang và self-heal không mất dữ liệu.",
+   "tip": "Đề nói 'instance lưu file/DB local, cần auto scaling' → tách state ra trước, rồi mới ALB + ASG.",
+   "lessons": [
+    "lab-architecture-evolution",
+    "efs"
+   ]
+  },
+  {
+   "term": "GWLB",
+   "full": "Gateway Load Balancer",
+   "def": "Load balancer L3/L4 để chạy và scale security appliance bên thứ ba (firewall, IDS/IPS, DPI) inline và transparent; gói tin được bọc GENEVE và trả về đúng luồng ban đầu.",
+   "tip": "Đề nói 'third-party virtual appliances, firewall, IDS/IPS cần scale và HA' → Gateway Load Balancer.",
+   "lessons": [
+    "gateway-load-balancer"
+   ]
+  },
+  {
+   "term": "GWLB Endpoint",
+   "full": null,
+   "def": "Endpoint đặt trong VPC ứng dụng để đưa traffic sang GWLB (có thể ở VPC/account khác); khác interface endpoint ở chỗ làm được next hop trong route table.",
+   "tip": "Chèn appliance vào luồng traffic bằng route table → route tới GWLB Endpoint.",
+   "lessons": [
+    "gateway-load-balancer"
+   ]
+  },
+  {
+   "term": "GENEVE",
+   "full": null,
+   "def": "Giao thức tunneling (UDP 6081) mà GWLB dùng để đóng gói gói tin gửi tới appliance, giữ nguyên source/destination IP, port và nội dung, kể cả khi dải IP trùng.",
+   "tip": "Thấy GENEVE hoặc UDP 6081 trong đề → đáp án là GWLB.",
+   "lessons": [
+    "gateway-load-balancer"
+   ]
+  },
+  {
+   "term": "Ingress Routing",
+   "full": null,
+   "def": "Gắn route table vào Internet Gateway (edge association) để traffic đi vào từ Internet được đẩy tới GWLB Endpoint hoặc appliance trước khi tới subnet đích.",
+   "tip": "Kiểm tra cả traffic đi vào từ Internet bằng appliance → ingress routing trên IGW tới GWLBE.",
+   "lessons": [
+    "gateway-load-balancer"
+   ]
+  },
+  {
+   "term": "Monolithic Architecture",
+   "full": null,
+   "def": "Mọi thành phần trong một code base/khối: fail together, scale together (thường chỉ scale dọc), bills together vì luôn chạy kể cả khi idle.",
+   "tip": "Monolith là phương án kém cost-effective nhất trong các lựa chọn kiến trúc.",
+   "lessons": [
+    "event-driven-architecture"
+   ]
+  },
+  {
+   "term": "Queue-based Decoupling",
+   "full": null,
+   "def": "Đặt queue giữa hai tier: bên ghi gửi message rồi xong việc, bên đọc poll và xử lý bất đồng bộ; hai tier không phụ thuộc sức khỏe nhau và chịu được backlog.",
+   "tip": "Đề nói 'decouple', 'tier A không phụ thuộc tier B sẵn sàng', 'chịu đột biến tải' → SQS giữa hai tier.",
+   "lessons": [
+    "event-driven-architecture"
+   ]
+  },
+  {
+   "term": "Worker Fleet",
+   "full": null,
+   "def": "Mẫu ASG worker (min 0) scale theo độ dài queue: có message thì launch instance poll queue xử lý, hết message thì thu về 0; dữ liệu lớn để S3, message chỉ chứa con trỏ.",
+   "tip": "Xử lý job không đều, muốn không tốn tiền khi idle → SQS + ASG min 0 scale theo queue length.",
+   "lessons": [
+    "event-driven-architecture"
+   ]
+  },
+  {
+   "term": "Microservices",
+   "full": null,
+   "def": "Ứng dụng chia thành nhiều service nhỏ, tự chủ, có logic, dữ liệu và I/O riêng; mỗi service đóng vai producer, consumer hoặc cả hai của event.",
+   "tip": "Nhiều microservice mà mỗi cặp một queue thì phức tạp → dùng event bus (EventBridge).",
+   "lessons": [
+    "event-driven-architecture"
+   ]
+  },
+  {
+   "term": "Event Router",
+   "full": null,
+   "def": "Điểm trao đổi trung tâm, highly available: nhận event từ event bus và quyết định giao cho consumer nào, nhờ đó các component không cần biết nhau. Trên AWS là EventBridge.",
+   "tip": "Nhiều producer/consumer, định tuyến event theo pattern, không muốn mỗi cặp một queue → EventBridge.",
+   "lessons": [
+    "event-driven-architecture"
+   ]
+  },
+  {
+   "term": "Event-Driven Architecture",
+   "full": null,
+   "def": "Kiến trúc trong đó producer phát event, event router giao cho consumer; mặc định gần như không dùng tài nguyên, chỉ scale lên khi có event. Nền tảng của serverless.",
+   "tip": "'Chỉ trả tiền khi có việc, không server chạy liên tục' → event-driven + serverless (Lambda, EventBridge, S3 Events).",
+   "lessons": [
+    "event-driven-architecture"
+   ]
+  }
+ ]
+}

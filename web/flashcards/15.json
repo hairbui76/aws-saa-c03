@@ -1,0 +1,347 @@
+{
+ "chapter": "15",
+ "cards": [
+  {
+   "term": "CloudFront",
+   "full": null,
+   "def": "CDN của AWS: cache nội dung ở edge location gần người dùng và chuyển dữ liệu qua mạng toàn cầu AWS, giảm latency và tải cho origin. Chỉ cache chiều download; upload đi thẳng tới origin.",
+   "tip": "CloudFront cache read, không cache write. Edge location không chạy được EC2.",
+   "lessons": [
+    "cloudfront-architecture"
+   ]
+  },
+  {
+   "term": "CloudFront Distribution",
+   "full": null,
+   "def": "Đơn vị cấu hình của CloudFront, được deploy ra các edge location; có domain mặc định *.cloudfront.net, chứa origin, behavior và các setting như price class, WAF, alternate domain name, cert.",
+   "tip": "WAF, price class, CNAME, SSL cert, security policy đặt ở distribution; caching và restrict viewer access đặt ở behavior.",
+   "lessons": [
+    "cloudfront-architecture",
+    "cloudfront-behaviors"
+   ]
+  },
+  {
+   "term": "Regional Edge Cache",
+   "full": null,
+   "def": "Tầng cache lớn hơn và ít hơn edge location, phục vụ nhiều edge trong cùng vùng; edge miss thì hỏi REC trước khi origin fetch, hợp với object ít truy cập.",
+   "tip": "Luồng cache miss: edge → regional edge cache → origin.",
+   "lessons": [
+    "cloudfront-architecture"
+   ]
+  },
+  {
+   "term": "CloudFront Behavior",
+   "full": null,
+   "def": "Cấu hình con của distribution, chọn theo path pattern (default '*', cụ thể như 'img/*' được ưu tiên); quyết định origin, viewer protocol policy, allowed methods, cache policy/TTL, restrict viewer access, Lambda@Edge.",
+   "tip": "Mọi caching control và restrict viewer access nằm ở behavior: một distribution có thể có phần public và phần private theo path.",
+   "lessons": [
+    "cloudfront-behaviors"
+   ]
+  },
+  {
+   "term": "CloudFront Price Class",
+   "full": null,
+   "def": "Setting của distribution chọn nhóm edge location được dùng: tất cả edge (nhanh nhất, đắt nhất), chỉ Bắc Mỹ + châu Âu (rẻ nhất), hoặc thêm châu Á, Trung Đông, châu Phi.",
+   "tip": "Người dùng chủ yếu ở Mỹ/châu Âu, cần giảm chi phí CloudFront → chọn price class hẹp hơn.",
+   "lessons": [
+    "cloudfront-behaviors"
+   ]
+  },
+  {
+   "term": "Viewer Protocol Policy",
+   "full": null,
+   "def": "Setting của behavior cho chặng viewer ↔ edge: HTTP and HTTPS, Redirect HTTP to HTTPS, hoặc HTTPS only (từ chối hẳn HTTP).",
+   "tip": "Muốn ép HTTPS cho viewer → Redirect HTTP to HTTPS hoặc HTTPS only trên behavior.",
+   "lessons": [
+    "cloudfront-behaviors",
+    "cloudfront-and-ssl"
+   ]
+  },
+  {
+   "term": "CloudFront Cache Policy",
+   "full": null,
+   "def": "Nhóm setting dùng lại được gắn vào behavior, định nghĩa cache key (headers, cookies, query strings) và Minimum/Default/Maximum TTL; ví dụ managed policy CachingOptimized, CachingDisabled.",
+   "tip": "Phần động không cache, phần tĩnh cache lâu trong cùng distribution → mỗi behavior một cache policy.",
+   "lessons": [
+    "cloudfront-behaviors",
+    "cloudfront-ttl-and-invalidations"
+   ]
+  },
+  {
+   "term": "CloudFront Default TTL",
+   "full": null,
+   "def": "Thời gian cache áp cho object không tự khai báo TTL, đặt trong cache policy của behavior; mặc định 24 giờ (86400 giây).",
+   "tip": "Nhớ: default TTL = 24 giờ.",
+   "lessons": [
+    "cloudfront-ttl-and-invalidations"
+   ]
+  },
+  {
+   "term": "Minimum and Maximum TTL",
+   "full": null,
+   "def": "Giới hạn dưới và trên cho TTL per-object lấy từ header: giá trị nhỏ hơn min thì dùng min, lớn hơn max thì dùng max; min TTL > 0 ép cache ít nhất chừng đó.",
+   "tip": "Min TTL = 0 và origin không gửi header → nội dung không được cache.",
+   "lessons": [
+    "cloudfront-ttl-and-invalidations"
+   ]
+  },
+  {
+   "term": "Cache-Control max-age",
+   "full": null,
+   "def": "Header đặt TTL per-object bằng giây, áp dụng cho mọi cache (trình duyệt lẫn CloudFront); AWS khuyến nghị dùng thay Expires, có cả hai thì CloudFront dùng max-age.",
+   "tip": "S3 origin đặt header qua object metadata; custom origin do app/web server chèn.",
+   "lessons": [
+    "cloudfront-ttl-and-invalidations"
+   ]
+  },
+  {
+   "term": "Cache-Control s-maxage",
+   "full": null,
+   "def": "Header TTL tính bằng giây chỉ dành cho shared cache như CloudFront; đặt cùng max-age thì CloudFront dùng s-maxage còn trình duyệt dùng max-age.",
+   "tip": "Muốn edge cache lâu nhưng trình duyệt cache ngắn → s-maxage=86400, max-age=60.",
+   "lessons": [
+    "cloudfront-ttl-and-invalidations"
+   ]
+  },
+  {
+   "term": "CloudFront Invalidation",
+   "full": null,
+   "def": "Ép mọi edge location của distribution hết hạn ngay các object khớp path pattern (/images/*, /*) bất kể TTL; không tức thời và có phí khi vượt hạn mức.",
+   "tip": "User thấy nội dung cũ sau khi cập nhật origin → invalidation (sửa lỗi), không phải quy trình cập nhật thường xuyên.",
+   "lessons": [
+    "cloudfront-ttl-and-invalidations"
+   ]
+  },
+  {
+   "term": "Versioned File Names",
+   "full": null,
+   "def": "Upload file mới với tên khác (whiskers_v2.jpg) rồi cập nhật app trỏ sang tên mới thay vì ghi đè; không cần invalidation, giữ được mọi phiên bản, rẻ hơn.",
+   "tip": "Cách cost-effective để cập nhật nội dung thường xuyên → versioned file names, không phải invalidation hay S3 versioning.",
+   "lessons": [
+    "cloudfront-ttl-and-invalidations"
+   ]
+  },
+  {
+   "term": "ACM",
+   "full": "AWS Certificate Manager",
+   "def": "Dịch vụ tạo, lưu, tự gia hạn và deploy SSL/TLS certificate cho dịch vụ tích hợp (CloudFront, ALB/NLB, API Gateway, EKS); regional: cert chỉ dùng trong region của nó.",
+   "tip": "ACM không tích hợp EC2 → đặt ALB phía trước. Cert cho CloudFront luôn ở us-east-1.",
+   "lessons": [
+    "acm"
+   ]
+  },
+  {
+   "term": "ACM Public vs Private Certificate",
+   "full": null,
+   "def": "Public cert do CA của AWS ký, được trình duyệt tin sẵn; private cert do CA trong AWS Private CA ký, chỉ tin trong nội bộ tổ chức, client phải được cấu hình để tin CA đó.",
+   "tip": "Ứng dụng nội bộ cần cert do CA riêng của công ty ký → AWS Private CA.",
+   "lessons": [
+    "acm"
+   ]
+  },
+  {
+   "term": "ACM DNS Validation",
+   "full": null,
+   "def": "Cách chứng minh sở hữu domain khi ACM cấp cert bằng cách thêm CNAME record (tự tạo nếu domain ở Route 53); cert do ACM tạo được tự động gia hạn.",
+   "tip": "ACM generate thì tự gia hạn; cert import thì bạn tự gia hạn rồi import lại.",
+   "lessons": [
+    "acm"
+   ]
+  },
+  {
+   "term": "ACM Exportable Certificate",
+   "full": null,
+   "def": "Cert public request từ ACM với tùy chọn cho phép export để cài lên nơi không tích hợp ACM (EC2, server on-prem); bạn tự cài và tự gia hạn, có tính phí.",
+   "tip": "Exportable cert không phải đáp án 'ít vận hành'; muốn tự động → ALB/CloudFront phía trước.",
+   "lessons": [
+    "acm",
+    "cloudfront-and-ssl"
+   ]
+  },
+  {
+   "term": "Alternate Domain Name",
+   "full": null,
+   "def": "Tên miền riêng (CNAME) gắn vào distribution thay cho *.cloudfront.net; bắt buộc có cert public khớp tên (ACM us-east-1 hoặc import), rồi trỏ DNS (Route 53 Alias) về distribution.",
+   "tip": "Tên alternate domain = tên trên cert = tên DNS record. Cần cert khớp tên kể cả khi không dùng HTTPS.",
+   "lessons": [
+    "cloudfront-and-ssl"
+   ]
+  },
+  {
+   "term": "SNI",
+   "full": "Server Name Indication",
+   "def": "Extension của TLS cho client gửi tên miền ngay trong TLS handshake, để server chọn đúng cert và nhiều site HTTPS dùng chung một IP. CloudFront dùng SNI miễn phí theo mặc định.",
+   "tip": "Nhiều domain HTTPS trên một ALB/CloudFront → SNI. Trình duyệt quá cũ không hỗ trợ SNI → cần dedicated IP.",
+   "lessons": [
+    "cloudfront-and-ssl",
+    "compare-alb-vs-nlb"
+   ]
+  },
+  {
+   "term": "CloudFront Dedicated IP Custom SSL",
+   "full": null,
+   "def": "Chế độ CloudFront cấp IP riêng ở mỗi edge location để phục vụ client cũ không hỗ trợ SNI; khoảng $600/tháng cho mỗi certificate.",
+   "tip": "Đề nói phải hỗ trợ trình duyệt cũ không có SNI → dedicated IP (có phí); còn lại SNI miễn phí.",
+   "lessons": [
+    "cloudfront-and-ssl"
+   ]
+  },
+  {
+   "term": "Origin Protocol Policy",
+   "full": null,
+   "def": "Setting của custom origin cho chặng edge ↔ origin: HTTP only, HTTPS only hoặc Match viewer; S3 origin không chọn được, luôn dùng cùng protocol với viewer.",
+   "tip": "CloudFront lỗi dù origin chạy tốt → kiểm tra origin protocol (gọi HTTPS tới origin chỉ có HTTP). Cert origin phải public, không self-signed.",
+   "lessons": [
+    "cloudfront-origins",
+    "cloudfront-and-ssl"
+   ]
+  },
+  {
+   "term": "S3 Origin",
+   "full": null,
+   "def": "Origin là S3 bucket (REST endpoint) chọn từ danh sách bucket: đơn giản, hỗ trợ OAC/OAI để khóa bucket, không cấu hình port hay origin protocol.",
+   "tip": "Chỉ S3 origin dùng được OAC/OAI.",
+   "lessons": [
+    "cloudfront-origins"
+   ]
+  },
+  {
+   "term": "Custom Origin",
+   "full": null,
+   "def": "Mọi web server có tên DNS mà CloudFront tới được (EC2, ALB, on-prem, S3 static website endpoint): cấu hình được port, origin protocol policy, minimum origin SSL protocol.",
+   "tip": "S3 static website endpoint làm origin = custom origin → không dùng được OAC/OAI.",
+   "lessons": [
+    "cloudfront-origins"
+   ]
+  },
+  {
+   "term": "CloudFront VPC Origins",
+   "full": null,
+   "def": "Cho phép ALB, NLB hoặc EC2 nằm trong private subnet làm origin của CloudFront mà không cần mở origin ra Internet.",
+   "tip": "Origin trong private subnet, không muốn public → VPC origin.",
+   "lessons": [
+    "cloudfront-origins",
+    "cloudfront-architecture"
+   ]
+  },
+  {
+   "term": "Origin Group",
+   "full": null,
+   "def": "Nhóm primary và secondary origin trong một distribution; behavior dùng origin group để tự failover sang secondary khi primary trả lỗi theo failover criteria.",
+   "tip": "Cần failover/HA giữa các origin của CloudFront → origin group.",
+   "lessons": [
+    "cloudfront-origins"
+   ]
+  },
+  {
+   "term": "OAC",
+   "full": "Origin Access Control",
+   "def": "Cách khuyến nghị khóa S3 origin để chỉ CloudFront truy cập: CloudFront ký request bằng SigV4, bucket policy cho cloudfront.amazonaws.com với AWS:SourceArn = đúng distribution; chạy khi Block Public Access bật.",
+   "tip": "'User chỉ truy cập S3 qua CloudFront, không trực tiếp bucket' → OAC + bucket policy. Bucket SSE-KMS → OAC (OAI không hỗ trợ).",
+   "lessons": [
+    "cloudfront-oai-and-oac"
+   ]
+  },
+  {
+   "term": "OAI",
+   "full": "Origin Access Identity",
+   "def": "Cách legacy khóa S3 origin: một identity đặc biệt gắn vào distribution và được allow trong bucket policy; mọi distribution gắn OAI đó đều có quyền, không hỗ trợ SSE-KMS.",
+   "tip": "Gặp OAI ở đề cũ = cùng mục đích với OAC. Thiết kế mới chọn OAC.",
+   "lessons": [
+    "cloudfront-oai-and-oac"
+   ]
+  },
+  {
+   "term": "CloudFront Custom Origin Header",
+   "full": null,
+   "def": "Header bí mật CloudFront chèn vào request gửi custom origin; origin chỉ phục vụ request có header đó, kết hợp HTTPS hai chặng để không bị lộ.",
+   "tip": "Bảo vệ custom origin (EC2/ALB/on-prem) → custom header và/hoặc chỉ cho IP range (prefix list) của CloudFront.",
+   "lessons": [
+    "cloudfront-oai-and-oac",
+    "cloudfront-origins"
+   ]
+  },
+  {
+   "term": "Signed URL",
+   "full": null,
+   "def": "URL chứa chữ ký (query string) cấp quyền truy cập đúng một object trên behavior private của CloudFront, có thời hạn; dùng được cả khi client không hỗ trợ cookie.",
+   "tip": "Truy cập 1 object hoặc client không hỗ trợ cookie → signed URL.",
+   "lessons": [
+    "cloudfront-private-distributions"
+   ]
+  },
+  {
+   "term": "Signed Cookie",
+   "full": null,
+   "def": "Cookie chứa chữ ký cấp quyền truy cập nhiều object (cả path, mọi file một loại) trên behavior private của CloudFront mà vẫn giữ nguyên URL của ứng dụng.",
+   "tip": "Nhiều object / cả nhóm file, hoặc muốn giữ nguyên URL → signed cookie.",
+   "lessons": [
+    "cloudfront-private-distributions"
+   ]
+  },
+  {
+   "term": "Trusted Key Group",
+   "full": null,
+   "def": "Cách mới để chỉ định signer cho behavior private: gom public key vào key group, app ký bằng private key tương ứng; quản lý bằng IAM và CloudFront API, không cần root user.",
+   "tip": "Thấy 'trusted key group' hoặc 'trusted signer' → behavior private, cần signed URL/cookie. Thiết kế mới dùng key group.",
+   "lessons": [
+    "cloudfront-private-distributions"
+   ]
+  },
+  {
+   "term": "Lambda@Edge",
+   "full": null,
+   "def": "Tính năng của CloudFront chạy Lambda nhẹ tại edge ở 4 điểm: viewer request, origin request, origin response, viewer response; chỉ Node.js/Python, không VPC, không layers, tạo ở us-east-1.",
+   "tip": "Viewer side: 128 MB, 5s; origin side: 30s. Lambda@Edge không vào được VPC.",
+   "lessons": [
+    "lambda-edge"
+   ]
+  },
+  {
+   "term": "Viewer Request Trigger",
+   "full": null,
+   "def": "Điểm chạy Lambda@Edge ngay sau khi edge nhận request từ viewer, chạy với mọi request nên phải rất nhẹ (5s); dùng cho A/B testing, kiểm tra token, rewrite URL.",
+   "tip": "A/B testing không đổi URL người dùng thấy → viewer request.",
+   "lessons": [
+    "lambda-edge"
+   ]
+  },
+  {
+   "term": "Origin Request Trigger",
+   "full": null,
+   "def": "Điểm chạy Lambda@Edge trước khi CloudFront gửi request tới origin, chỉ xảy ra khi cache miss (timeout 30s); dùng chọn origin hoặc nội dung theo thiết bị, quốc gia.",
+   "tip": "Migration dần giữa S3 origin, nội dung theo thiết bị/quốc gia → origin request.",
+   "lessons": [
+    "lambda-edge"
+   ]
+  },
+  {
+   "term": "CloudFront Functions",
+   "full": null,
+   "def": "Function JavaScript rút gọn chạy ở edge location, chỉ viewer request/response, dưới 1 ms, không network, không đọc body; rẻ cho thao tác header, rewrite URL ở khối lượng cực lớn.",
+   "tip": "Logic đơn giản, cực nhiều request → CloudFront Functions; logic phức tạp, gọi dịch vụ khác, origin trigger → Lambda@Edge.",
+   "lessons": [
+    "lambda-edge"
+   ]
+  },
+  {
+   "term": "Global Accelerator",
+   "full": null,
+   "def": "Network product cấp 2 anycast IP tĩnh (dual-stack 4) trỏ tới ALB, NLB, EC2, Elastic IP ở một hay nhiều region; người dùng vào edge gần nhất rồi đi trên AWS global backbone. Mọi TCP/UDP, không cache.",
+   "tip": "TCP/UDP non-HTTP (game, VoIP, IoT) cần hiệu năng toàn cầu, IP tĩnh để whitelist, failover region nhanh không phụ thuộc DNS TTL → Global Accelerator.",
+   "lessons": [
+    "global-accelerator"
+   ]
+  },
+  {
+   "term": "Global Accelerator vs CloudFront",
+   "full": null,
+   "def": "Global Accelerator đưa mạng AWS tới gần khách (L4, mọi TCP/UDP, không cache, IP tĩnh); CloudFront đưa nội dung tới gần khách (HTTP/HTTPS, cache, behaviors, signed URL, Lambda@Edge).",
+   "tip": "Đề nhắc caching/HTTP/signed URL → CloudFront. Đề nhắc TCP/UDP, non-HTTP, static IP → Global Accelerator.",
+   "lessons": [
+    "global-accelerator",
+    "cloudfront-architecture"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,268 @@
+{
+  "chapter": "21",
+  "cards": [
+    {
+      "term": "Amazon Comprehend",
+      "full": null,
+      "def": "NLP managed: từ text trích entities, key phrases, ngôn ngữ, PII, sentiment, syntax mà không cần tự train model.",
+      "tip": "Sentiment, key phrases, entity từ text → Comprehend. Audio → Transcribe trước; ảnh scan → Textract trước.",
+      "lessons": [
+        "comprehend"
+      ]
+    },
+    {
+      "term": "Comprehend Custom Classification",
+      "full": null,
+      "def": "Train model riêng theo domain để phân loại tài liệu theo nhãn của bạn; tương tự custom entity recognition cho entity đặc thù.",
+      "tip": null,
+      "lessons": [
+        "comprehend"
+      ]
+    },
+    {
+      "term": "Comprehend Medical",
+      "full": null,
+      "def": "Biến thể Comprehend cho văn bản y tế, trích thông tin sức khỏe như thuốc, chẩn đoán, PHI.",
+      "tip": null,
+      "lessons": [
+        "comprehend"
+      ]
+    },
+    {
+      "term": "Targeted Sentiment",
+      "full": null,
+      "def": "Phân tích sentiment cho từng entity hay khía cạnh trong văn bản (giao hàng tốt, sản phẩm lỗi) thay vì một kết quả cho cả document.",
+      "tip": null,
+      "lessons": [
+        "comprehend"
+      ]
+    },
+    {
+      "term": "Amazon Kendra",
+      "full": null,
+      "def": "Intelligent search bằng ML: người dùng hỏi bằng ngôn ngữ tự nhiên, nhận câu trả lời từ kho tài liệu (S3, SharePoint, Confluence, DB qua connector); là backend service gọi bằng API.",
+      "tip": "Search ngôn ngữ tự nhiên trên tài liệu nội bộ → Kendra; phân tích sentiment/entity → Comprehend.",
+      "lessons": [
+        "kendra"
+      ]
+    },
+    {
+      "term": "Amazon Lex",
+      "full": null,
+      "def": "Backend xây chatbot/voice bot hội thoại bằng text hoặc giọng nói cho một việc cụ thể, cung cấp ASR + NLU; fulfillment thường bằng Lambda.",
+      "tip": "Chatbot, conversational interface, 'Lex for Alexa' → Lex. Contact center thông minh → Amazon Connect + Lex.",
+      "lessons": [
+        "lex"
+      ]
+    },
+    {
+      "term": "Lex Intent",
+      "full": null,
+      "def": "Hành động người dùng muốn làm (đặt pizza, đặt lịch), có sample utterances mô tả các cách nói và fulfillment (thường Lambda) để thực hiện.",
+      "tip": "Dù bật LLM của Bedrock, Lex vẫn chỉ chọn trong các intent đã định nghĩa.",
+      "lessons": [
+        "lex"
+      ]
+    },
+    {
+      "term": "Lex Slot",
+      "full": null,
+      "def": "Tham số của intent cần thu thập từ người dùng (size, loại đế, thời gian), có thể bắt buộc; bot hỏi tiếp cho tới khi đủ slot.",
+      "tip": null,
+      "lessons": [
+        "lex"
+      ]
+    },
+    {
+      "term": "NLU",
+      "full": "Natural Language Understanding",
+      "def": "Năng lực hiểu ý định từ câu người dùng nói hoặc gõ, kể cả cách diễn đạt khác nhau và câu bổ sung cho ý trước (intent chaining).",
+      "tip": null,
+      "lessons": [
+        "lex"
+      ]
+    },
+    {
+      "term": "ASR",
+      "full": "Automatic Speech Recognition",
+      "def": "Chuyển giọng nói thành text; là lõi của Transcribe và là một phần của Lex.",
+      "tip": "Chỉ cần chép lời cuộc gọi/bản ghi → Transcribe; hội thoại hai chiều → Lex.",
+      "lessons": [
+        "transcribe",
+        "lex"
+      ]
+    },
+    {
+      "term": "Amazon Polly",
+      "full": null,
+      "def": "Text-to-speech nghe tự nhiên, giọng nói ra cùng ngôn ngữ với text; 4 engine Standard, Neural, Long-form, Generative; output MP3, Ogg Vorbis hoặc PCM.",
+      "tip": "Polly không dịch: đọc nội dung tiếng Anh bằng tiếng Tây Ban Nha → Translate rồi Polly.",
+      "lessons": [
+        "polly"
+      ]
+    },
+    {
+      "term": "SSML",
+      "full": "Speech Synthesis Markup Language",
+      "def": "Markup điều khiển cách Polly đọc: nhấn giọng, phát âm, ngắt nghỉ, thì thầm, tốc độ, phong cách.",
+      "tip": "Cần kiểm soát phát âm/nhấn giọng của Polly → SSML.",
+      "lessons": [
+        "polly"
+      ]
+    },
+    {
+      "term": "Polly Engines",
+      "full": null,
+      "def": "Standard (rẻ nhất), Neural (tự nhiên hơn), Long-form (đọc bài viết, tài liệu dài đúng nhấn giọng), Generative (giống người nhất, hợp hội thoại).",
+      "tip": null,
+      "lessons": [
+        "polly"
+      ]
+    },
+    {
+      "term": "Amazon Rekognition",
+      "full": null,
+      "def": "Phân tích ảnh/video pre-trained bằng deep learning: đối tượng, cảnh, khuôn mặt (phát hiện, so sánh), text trong ảnh, hoạt động, kiểm duyệt nội dung; gọi API là có kết quả.",
+      "tip": "Phân tích ảnh/video → Rekognition; video live từ camera → Kinesis Video Streams + Lambda + Rekognition.",
+      "lessons": [
+        "rekognition"
+      ]
+    },
+    {
+      "term": "Rekognition Custom Labels",
+      "full": null,
+      "def": "Train Rekognition nhận diện đối tượng riêng (logo, linh kiện, sản phẩm) bằng vài trăm ảnh đã gắn nhãn, không cần chuyên môn ML.",
+      "tip": null,
+      "lessons": [
+        "rekognition"
+      ]
+    },
+    {
+      "term": "Content Moderation",
+      "full": null,
+      "def": "API của Rekognition phát hiện nội dung không an toàn hoặc không phù hợp trong ảnh, video do người dùng upload.",
+      "tip": "Kiểm duyệt ảnh người dùng upload → Rekognition content moderation.",
+      "lessons": [
+        "rekognition"
+      ]
+    },
+    {
+      "term": "Amazon Textract",
+      "full": null,
+      "def": "Trích text, chữ viết tay và cấu trúc (form key-value, bảng) từ tài liệu scan/PDF, có phân tích chuyên biệt cho hóa đơn, biên lai và giấy tờ tùy thân.",
+      "tip": "OCR có cấu trúc, form, bảng, hóa đơn → Textract; text trong ảnh tự nhiên (biển số) → Rekognition, tối đa 100 từ mỗi ảnh.",
+      "lessons": [
+        "textract"
+      ]
+    },
+    {
+      "term": "Textract Asynchronous API",
+      "full": null,
+      "def": "Tài liệu nhiều trang (PDF/TIFF tới 3000 trang) xử lý bất đồng bộ: start job, nhận thông báo qua SNS khi xong, rồi lấy kết quả; tài liệu một trang dùng synchronous API.",
+      "tip": null,
+      "lessons": [
+        "textract"
+      ]
+    },
+    {
+      "term": "Amazon Transcribe",
+      "full": null,
+      "def": "ASR managed: audio → text, tính phí theo giây; có custom vocabulary, nhận diện người nói, lọc nội dung, PII redaction, Transcribe Medical.",
+      "tip": "Speech-to-text, phụ đề, transcript cuộc họp/cuộc gọi → Transcribe. Audio tiếng Nhật thành text tiếng Anh → Transcribe + Translate.",
+      "lessons": [
+        "transcribe"
+      ]
+    },
+    {
+      "term": "PII Redaction",
+      "full": null,
+      "def": "Tính năng Transcribe tự ẩn thông tin cá nhân (số thẻ, số an sinh xã hội, tên...) trong transcript đầu ra.",
+      "tip": null,
+      "lessons": [
+        "transcribe"
+      ]
+    },
+    {
+      "term": "Transcribe Call Analytics",
+      "full": null,
+      "def": "Phân tích cuộc gọi contact center: transcript kèm sentiment, chủ đề, vấn đề của khách hàng.",
+      "tip": "Phân tích cảm xúc khách trong cuộc gọi → Transcribe Call Analytics hoặc Transcribe + Comprehend.",
+      "lessons": [
+        "transcribe"
+      ]
+    },
+    {
+      "term": "Amazon Translate",
+      "full": null,
+      "def": "Neural machine translation dịch text → text giữa các ngôn ngữ theo ý nghĩa và ngữ cảnh, không thay từng từ; thường là một bước trong pipeline.",
+      "tip": "Polly và Transcribe không dịch: thấy đổi ngôn ngữ là cần Translate (dịch rồi đọc → Translate + Polly).",
+      "lessons": [
+        "translate"
+      ]
+    },
+    {
+      "term": "Amazon Forecast",
+      "full": null,
+      "def": "Dự báo chuỗi thời gian (nhu cầu, tồn kho, nhân sự, traffic) từ dữ liệu lịch sử + related data, trả về forecast và forecast explainability (nội dung bản khóa cũ).",
+      "tip": "'Forecast' không phải dự báo thời tiết. Scale EC2 theo dự báo → ASG predictive scaling đơn giản hơn.",
+      "lessons": [
+        "forecast"
+      ]
+    },
+    {
+      "term": "Amazon Fraud Detector",
+      "full": null,
+      "def": "Phát hiện gian lận online ở tầng nghiệp vụ (đăng ký tài khoản giả, thanh toán, guest checkout, account takeover): model từ dữ liệu lịch sử chấm điểm, rules quyết định phản ứng.",
+      "tip": "Gian lận thanh toán/đăng ký → Fraud Detector; mối đe dọa trên hạ tầng AWS → GuardDuty.",
+      "lessons": [
+        "fraud-detector"
+      ]
+    },
+    {
+      "term": "Fraud Detector Model Types",
+      "full": null,
+      "def": "Online Fraud Insights (ít lịch sử, tài khoản mới), Transaction Fraud Insights (có lịch sử giao dịch), Account Takeover Insights (đăng nhập bất thường).",
+      "tip": null,
+      "lessons": [
+        "fraud-detector"
+      ]
+    },
+    {
+      "term": "Amazon SageMaker AI",
+      "full": null,
+      "def": "Nền tảng ML managed cho toàn vòng đời: chuẩn bị dữ liệu, train, đánh giá, deploy, giám sát model của bạn; bản thân miễn phí nhưng mọi thứ chạy trong nó tính tiền.",
+      "tip": "Data scientist build/train/deploy custom model → SageMaker AI; LLM có sẵn → Bedrock; có AI service chuyên dụng → dùng service đó.",
+      "lessons": [
+        "sagemaker"
+      ]
+    },
+    {
+      "term": "SageMaker AI Studio",
+      "full": null,
+      "def": "IDE web cho ML (notebook, thí nghiệm, pipeline); chạy trong SageMaker AI Domain, vùng cô lập cho một dự án gồm EFS, users, VPC.",
+      "tip": null,
+      "lessons": [
+        "sagemaker"
+      ]
+    },
+    {
+      "term": "SageMaker AI Endpoint",
+      "full": null,
+      "def": "Hosting model đã train (kể cả LLM mã nguồn mở tự host) thành API inference cho ứng dụng; endpoint chạy liên tục tính tiền theo instance.",
+      "tip": "Chi phí lớn: endpoint chạy liên tục, instance ml.* GPU; chạy quanh năm → SageMaker AI Savings Plans.",
+      "lessons": [
+        "sagemaker"
+      ]
+    },
+    {
+      "term": "Amazon Bedrock",
+      "full": null,
+      "def": "Dịch vụ dùng foundation model/LLM có sẵn của Amazon và bên thứ ba qua API serverless, không quản hạ tầng và không phải train model từ đầu.",
+      "tip": "Cần generative AI, LLM có sẵn → Bedrock, không phải SageMaker AI.",
+      "lessons": [
+        "sagemaker",
+        "lex"
+      ]
+    }
+  ]
+}

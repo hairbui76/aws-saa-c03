@@ -1,0 +1,366 @@
+{
+ "chapter": "06",
+ "cards": [
+  {
+   "term": "VPC IPv4 CIDR size",
+   "full": null,
+   "def": "Kích thước dải IPv4 chính của một VPC: nhỏ nhất /28 (16 IP), lớn nhất /16 (65,536 IP). Chọn sai kích thước về sau rất khó sửa.",
+   "tip": "Nhớ cứng: VPC /28 → /16. Subnet cũng /28 → /16; IP dùng được luôn trừ 5.",
+   "lessons": [
+    "vpc-sizing-and-structure",
+    "custom-vpc"
+   ]
+  },
+  {
+   "term": "IP Plan",
+   "full": null,
+   "def": "Kế hoạch phân bổ dải IP cho cả doanh nghiệp trước khi tạo VPC: loại các dải đang dùng, chừa chỗ tăng trưởng, chia theo region → account → VPC, rồi chia mỗi VPC theo AZ × tier.",
+   "tip": "Số subnet = số tier × số AZ. Ví dụ 4 tier × 4 AZ = 16 subnet ⇒ prefix subnet = prefix VPC + 4 (VPC /16 → subnet /20).",
+   "lessons": [
+    "vpc-sizing-and-structure"
+   ]
+  },
+  {
+   "term": "Custom VPC",
+   "full": null,
+   "def": "Mạng riêng do bạn tự thiết kế trong một region, trải trên mọi AZ của region đó. Mặc định không có subnet, không có IGW, không gì vào/ra được nếu chưa cấu hình rõ ràng.",
+   "tip": "VPC là regional, subnet mới là AZ-level. Production dùng custom VPC, không dùng default VPC (172.31.0.0/16).",
+   "lessons": [
+    "custom-vpc",
+    "default-vpc"
+   ]
+  },
+  {
+   "term": "Secondary IPv4 CIDR",
+   "full": null,
+   "def": "Dải IPv4 bổ sung thêm vào VPC sau khi tạo. Quota mặc định 5 CIDR IPv4 mỗi VPC tính cả primary, tăng được tới 50; dải mới không được chồng lấn CIDR đã có của VPC.",
+   "tip": "VPC đang dùng 10.x không thêm được 172.16.0.0/12 hay 192.168.0.0/16 (các dải RFC 1918 khác).",
+   "lessons": [
+    "custom-vpc"
+   ]
+  },
+  {
+   "term": "Amazon-provided IPv6 CIDR",
+   "full": null,
+   "def": "Dải IPv6 /56 do AWS cấp cho VPC (không tự gõ dải như IPv4); nguồn khác là IPAM pool hoặc BYOIP. Địa chỉ IPv6 mặc định publicly routable, không chia private/public.",
+   "tip": "VPC IPv6 = /56; subnet IPv6 /44–/64, điển hình /64 ⇒ một VPC /56 chứa 256 subnet /64.",
+   "lessons": [
+    "custom-vpc",
+    "vpc-subnets"
+   ]
+  },
+  {
+   "term": "enableDnsHostnames",
+   "full": null,
+   "def": "Thuộc tính VPC quyết định instance có public IP có được cấp public DNS hostname hay không. Mặc định tắt ở custom VPC, bật ở default VPC.",
+   "tip": "Đề: \"instance có public IP nhưng không có public DNS name\" → bật enableDnsHostnames.",
+   "lessons": [
+    "custom-vpc"
+   ]
+  },
+  {
+   "term": "enableDnsSupport",
+   "full": null,
+   "def": "Thuộc tính VPC bật DNS resolution trong VPC, cho phép dùng Route 53 Resolver ở địa chỉ VPC+2. Mặc định bật; là điều kiện cho private hosted zone và private DNS của interface endpoint.",
+   "tip": "Không phân giải được DNS/private hosted zone trong VPC → kiểm tra enableDnsSupport (và enableDnsHostnames).",
+   "lessons": [
+    "custom-vpc",
+    "r53-private-hosted-zones"
+   ]
+  },
+  {
+   "term": "VPC DNS Resolver (VPC+2)",
+   "full": null,
+   "def": "DNS resolver do Route 53 cung cấp sẵn cho mọi VPC, nằm ở địa chỉ base IP của VPC cộng 2 (VPC 10.0.0.0 → 10.0.0.2), cũng phục vụ ở 169.254.169.253.",
+   "tip": "DNS trong VPC luôn ở network + 2; AWS giữ địa chỉ +2 ở mọi subnet.",
+   "lessons": [
+    "custom-vpc",
+    "r53-public-hosted-zones"
+   ]
+  },
+  {
+   "term": "Dedicated Tenancy (VPC)",
+   "full": null,
+   "def": "Tùy chọn tenancy ở mức VPC buộc mọi instance trong VPC chạy trên phần cứng dedicated, đắt hơn đáng kể. Default tenancy vẫn cho chọn dedicated ở từng instance.",
+   "tip": "Chỉ vài instance cần dedicated → để VPC default, chọn dedicated ở instance. Đổi VPC dedicated → default được, ngược lại thì không.",
+   "lessons": [
+    "custom-vpc",
+    "dedicated-hosts"
+   ]
+  },
+  {
+   "term": "Subnet",
+   "full": null,
+   "def": "Phần của VPC nằm trong đúng một AZ, là nơi tài nguyên thực sự chạy. CIDR của subnet phải nằm trong CIDR của VPC và không chồng lấn subnet khác; subnet mới tạo luôn là private.",
+   "tip": "1 subnet = đúng 1 AZ; đáp án nói subnet trải nhiều AZ là sai. Muốn HA: đặt tài nguyên ở nhiều subnet thuộc nhiều AZ.",
+   "lessons": [
+    "vpc-subnets"
+   ]
+  },
+  {
+   "term": "Subnet Reserved IP Addresses",
+   "full": null,
+   "def": "Năm địa chỉ AWS giữ lại trong mọi subnet: network address, +1 (VPC Router), +2 (DNS), +3 (dự phòng tương lai) và broadcast address cuối dải.",
+   "tip": "IP dùng được = tổng − 5: /28 → 11, /27 → 27, /24 → 251, /20 → 4,091.",
+   "lessons": [
+    "vpc-subnets"
+   ]
+  },
+  {
+   "term": "DHCP Options Set",
+   "full": null,
+   "def": "Bộ cấu hình DHCP gắn cho VPC (DNS server, NTP server, NetBIOS...) áp xuống mọi subnet. Mỗi VPC gắn một option set tại một thời điểm và option set không sửa được.",
+   "tip": "Đổi DNS/NTP server cho VPC → tạo DHCP option set mới rồi gắn vào VPC (không sửa set cũ).",
+   "lessons": [
+    "vpc-subnets"
+   ]
+  },
+  {
+   "term": "Auto-assign Public IPv4",
+   "full": null,
+   "def": "Thiết lập theo subnet: tài nguyên launch vào subnet tự nhận thêm một public IPv4 bên cạnh private IP. Là một bước để làm subnet thành public; public IPv4 tính phí theo giờ.",
+   "tip": "Subnet public cần: IGW gắn VPC + route 0.0.0.0/0 → IGW + public IP (auto-assign hoặc Elastic IP).",
+   "lessons": [
+    "vpc-subnets",
+    "vpc-routing-and-internet-gateway"
+   ]
+  },
+  {
+   "term": "VPC Router",
+   "full": null,
+   "def": "Router có sẵn, highly available trong mọi VPC, có interface ở địa chỉ network+1 của mỗi subnet. Nó chỉ định tuyến theo route table, không lọc traffic theo port hay nguồn.",
+   "tip": "Lọc traffic là việc của NACL/Security Group, không phải route table.",
+   "lessons": [
+    "vpc-routing-and-internet-gateway"
+   ]
+  },
+  {
+   "term": "Main Route Table",
+   "full": null,
+   "def": "Route table mặc định của VPC, áp cho mọi subnet không được associate với route table nào khác. Gắn custom route table vào subnet thì subnet thôi dùng main route table.",
+   "tip": "Cẩn thận thêm route ra IGW vào main route table: mọi subnet \"mặc định\" sẽ thành public. Quên associate → subnet vẫn dùng main RT.",
+   "lessons": [
+    "vpc-routing-and-internet-gateway",
+    "nat-gateway"
+   ]
+  },
+  {
+   "term": "Local Route",
+   "full": null,
+   "def": "Route luôn có trong mọi route table, khớp CIDR của VPC để traffic nội VPC đi thẳng giữa các subnet. Không xóa được, nhưng đổi được target (instance, ENI, load balancer) hoặc bị ghi đè bằng route cụ thể hơn.",
+   "tip": "Mặc định mọi subnet trong VPC nói chuyện với nhau nhờ local route; muốn chặn thì dùng NACL/SG.",
+   "lessons": [
+    "vpc-routing-and-internet-gateway"
+   ]
+  },
+  {
+   "term": "Internet Gateway",
+   "full": null,
+   "def": "Gateway managed, regionally resilient, nối VPC với Internet và AWS public zone. Quan hệ 1:1 (một VPC tối đa một IGW); làm static NAT 1:1 giữa private IP và public IPv4 của tài nguyên.",
+   "tip": "IGW phủ mọi AZ: đáp án \"tạo một IGW cho mỗi AZ\" là sai. OS không bao giờ thấy public IPv4 (IGW dịch địa chỉ).",
+   "lessons": [
+    "vpc-routing-and-internet-gateway",
+    "nat-fundamentals"
+   ]
+  },
+  {
+   "term": "Public Subnet",
+   "full": null,
+   "def": "Subnet có route table chứa default route (0.0.0.0/0, ::/0) trỏ tới Internet Gateway, và tài nguyên trong đó có public IP. Thiếu một điều kiện là không ra/vào Internet được.",
+   "tip": "Bastion, NAT Gateway zonal, public load balancer đặt ở public subnet; app/db tier để private.",
+   "lessons": [
+    "vpc-routing-and-internet-gateway"
+   ]
+  },
+  {
+   "term": "Bastion Host",
+   "full": null,
+   "def": "Còn gọi là jumpbox: EC2 instance đặt trong public subnet làm điểm vào duy nhất cho SSH/RDP từ bên ngoài, từ đó admin nhảy tiếp vào instance private. Là cách cũ, phải tự vá và quản lý key.",
+   "tip": "SG của instance private chỉ cho SSH từ SG của bastion. Đề hỏi cách an toàn/ít vận hành nhất, không mở port inbound → Session Manager hoặc EC2 Instance Connect Endpoint.",
+   "lessons": [
+    "bastion-host",
+    "systems-manager"
+   ]
+  },
+  {
+   "term": "Stateless Firewall",
+   "full": null,
+   "def": "Firewall không hiểu trạng thái kết nối: request và response là hai luồng độc lập nên mỗi kết nối cần 2 rule, và thường phải mở cả dải ephemeral port cho response.",
+   "tip": "Trên AWS: NACL là stateless. \"Đã mở inbound mà không có phản hồi\" → thiếu rule outbound ephemeral.",
+   "lessons": [
+    "stateful-vs-stateless-firewalls",
+    "nacl"
+   ]
+  },
+  {
+   "term": "Stateful Firewall",
+   "full": null,
+   "def": "Firewall liên kết được response với request đã cho phép, nên chỉ cần rule cho request; response tự động được cho qua, không cần mở dải ephemeral port.",
+   "tip": "Trên AWS: Security Group là stateful. Đề mô tả phải mở 1024–65535 outbound → đang nói về NACL, không phải SG.",
+   "lessons": [
+    "stateful-vs-stateless-firewalls",
+    "security-groups"
+   ]
+  },
+  {
+   "term": "Ephemeral Ports",
+   "full": null,
+   "def": "Cổng tạm client chọn làm source port khi gửi request (thường 1024–65535, tùy OS); response từ server quay về đúng cổng này. Firewall stateless phải mở dải này cho response.",
+   "tip": "Rule NACL cho response: TCP 1024–65535 (ELB, NAT Gateway dùng dải này; Linux 32768–60999, Windows 49152–65535).",
+   "lessons": [
+    "stateful-vs-stateless-firewalls",
+    "nacl"
+   ]
+  },
+  {
+   "term": "NACL",
+   "full": "Network Access Control List",
+   "def": "Firewall stateless gắn ở biên subnet, lọc traffic vào/ra subnet theo IP/CIDR, port, protocol; có cả ALLOW và DENY tường minh. Không ảnh hưởng traffic giữa hai tài nguyên cùng subnet.",
+   "tip": "Chặn một IP/dải IP độc hại cụ thể → NACL (SG không có deny). Mỗi subnet đúng 1 NACL; một NACL gắn nhiều subnet.",
+   "lessons": [
+    "nacl",
+    "compare-security-groups-vs-nacl"
+   ]
+  },
+  {
+   "term": "NACL Rule Evaluation Order",
+   "full": null,
+   "def": "Rule NACL xét theo rule number từ nhỏ đến lớn; gặp rule khớp đầu tiên thì ALLOW/DENY và dừng. Không rule nào khớp thì rule * (implicit deny) chặn.",
+   "tip": "Allow số 100 và deny số 200 cùng khớp một IP → kết quả ALLOW. Muốn chặn IP xấu: đặt DENY ở số nhỏ hơn rule allow.",
+   "lessons": [
+    "nacl"
+   ]
+  },
+  {
+   "term": "Default NACL",
+   "full": null,
+   "def": "NACL tạo cùng VPC, gắn cho mọi subnet chưa gắn NACL khác; có rule 100 ALLOW all ở cả inbound lẫn outbound nên coi như không chặn gì.",
+   "tip": "Default NACL cho qua hết; custom NACL mới tạo thì chặn hết.",
+   "lessons": [
+    "nacl"
+   ]
+  },
+  {
+   "term": "Custom NACL",
+   "full": null,
+   "def": "NACL do bạn tạo, ban đầu chỉ có rule * DENY ở cả hai chiều và chưa gắn subnet nào. Gắn vào subnet đang chạy khi chưa thêm rule sẽ cắt toàn bộ kết nối.",
+   "tip": "Gắn custom NACL mới tạo vào subnet → mọi traffic bị chặn cho tới khi thêm rule allow (cả ephemeral).",
+   "lessons": [
+    "nacl"
+   ]
+  },
+  {
+   "term": "Security Group",
+   "full": null,
+   "def": "Firewall stateful gắn vào ENI (không phải instance hay subnet), chỉ có rule allow cộng implicit deny. Rule tham chiếu được IP/CIDR, prefix list, SG khác hoặc chính nó; nhiều SG trên một ENI thì rule gộp lại.",
+   "tip": "SG không có explicit deny → không chặn được một IP cụ thể. \"Attached to ENI/instance\" = SG; \"attached to subnet\" = NACL.",
+   "lessons": [
+    "security-groups",
+    "compare-security-groups-vs-nacl"
+   ]
+  },
+  {
+   "term": "Security Group Referencing",
+   "full": null,
+   "def": "Dùng một SG làm source/destination trong rule của SG khác, nghĩa là \"mọi tài nguyên đang gắn SG đó\". Không phải quản lý IP, tự áp dụng cho instance mới khi scale.",
+   "tip": "Tầng app chỉ nhận traffic từ tầng web → inbound rule của SG-app lấy source = SG-web (không hard-code IP/CIDR).",
+   "lessons": [
+    "security-groups"
+   ]
+  },
+  {
+   "term": "Self-referencing Security Group",
+   "full": null,
+   "def": "Rule trong SG lấy chính SG đó làm source, cho mọi tài nguyên gắn SG này nói chuyện tự do với nhau; tự xử lý khi instance được thêm/bớt hoặc đổi IP.",
+   "tip": "Các instance cùng cluster/ASG cần giao tiếp nội bộ → self-referencing SG.",
+   "lessons": [
+    "security-groups"
+   ]
+  },
+  {
+   "term": "Managed Prefix List",
+   "full": null,
+   "def": "Danh sách dải CIDR dùng chung, do bạn (customer-managed) hoặc AWS (AWS-managed) duy trì, dùng làm source/destination trong SG hoặc route table thay cho việc gõ từng dải.",
+   "tip": "Cho phép EC2 Instance Connect vào SG → chọn AWS-managed prefix list của dịch vụ EC2 Instance Connect.",
+   "lessons": [
+    "security-groups",
+    "ec2-instance-connect-and-ssh"
+   ]
+  },
+  {
+   "term": "Security Groups vs NACL",
+   "full": null,
+   "def": "Mô hình chuẩn dùng cả hai: SG (ENI, stateful, chỉ allow, tham chiếu SG) để cho phép traffic cần thiết; NACL (subnet, stateless, allow + deny, theo số thứ tự) để chặn bad actor.",
+   "tip": "Hai instance cùng subnet không nói chuyện được → nghi SG (NACL không lọc nội subnet). Lọc HTTP/SQLi → WAF, không phải SG/NACL.",
+   "lessons": [
+    "compare-security-groups-vs-nacl"
+   ]
+  },
+  {
+   "term": "NAT Gateway",
+   "full": null,
+   "def": "Dịch vụ NAT managed làm IP masquerading: cho tài nguyên IPv4 private đi ra Internet/AWS public zone (outbound only) mà Internet không khởi tạo kết nối vào được. Tính phí theo giờ + GB xử lý, scale tới 100 Gbps.",
+   "tip": "Private subnet cần tải patch nhưng không được truy cập từ Internet → NAT Gateway. NATGW không gắn được Security Group, không làm bastion/port forwarding.",
+   "lessons": [
+    "nat-gateway",
+    "nat-fundamentals"
+   ]
+  },
+  {
+   "term": "Zonal NAT Gateway",
+   "full": null,
+   "def": "Chế độ NATGW cổ điển: đặt trong một public subnet (một AZ) với Elastic IP, chỉ AZ-resilient. Muốn HA phải có 1 NATGW và 1 route table private cho mỗi AZ; lọc được bằng NACL của subnet chứa nó.",
+   "tip": "Đáp án \"một NAT Gateway (zonal) đủ cho HA toàn region\" là sai: cần mỗi AZ một NATGW + route table riêng.",
+   "lessons": [
+    "nat-gateway"
+   ]
+  },
+  {
+   "term": "Regional NAT Gateway",
+   "full": null,
+   "def": "Chế độ NATGW mới: chỉ chọn VPC, AWS tự trải NATGW qua các AZ có nhu cầu, tự quản public IP và tự tạo route ra IGW. Một route table private dùng chung cho mọi AZ; hiện chỉ connectivity public.",
+   "tip": "Ít vận hành nhất cho NAT nhiều AZ → regional NATGW: 1 NATGW + 1 route table, không cần public subnet cho NAT.",
+   "lessons": [
+    "nat-gateway"
+   ]
+  },
+  {
+   "term": "Private NAT Gateway",
+   "full": null,
+   "def": "NATGW với connectivity type private: đặt trong private subnet, dùng private IP, làm NAT giữa các mạng private (VPC ↔ VPC, VPC ↔ on-prem), hữu ích khi dải IP chồng lấn. Chỉ có ở chế độ zonal.",
+   "tip": "Nối hai mạng private có CIDR chồng lấn → private NAT Gateway.",
+   "lessons": [
+    "nat-gateway"
+   ]
+  },
+  {
+   "term": "NAT Instance",
+   "full": null,
+   "def": "EC2 tự cấu hình làm NAT (legacy). Bạn tự vá, tự lo HA; đổi lại gắn được SG, làm được port forwarding và kiêm bastion, chi phí cố định có thể rẻ hơn cho môi trường test.",
+   "tip": "NAT instance bắt buộc tắt Source/Destination Check. Mặc định chọn NAT Gateway; NAT instance khi cần port forwarding/bastion/rẻ nhất.",
+   "lessons": [
+    "nat-gateway"
+   ]
+  },
+  {
+   "term": "Source/Destination Check",
+   "full": null,
+   "def": "Thiết lập trên ENI: khi bật, EC2 drop mọi packet mà nó không phải source hoặc destination. Phải tắt để instance làm NAT instance, router hoặc network appliance.",
+   "tip": "Đề hỏi NAT instance không chuyển được traffic → disable Source/Destination Check.",
+   "lessons": [
+    "nat-gateway",
+    "ec2-network-interfaces-ips-and-dns"
+   ]
+  },
+  {
+   "term": "NAT64 and DNS64",
+   "full": null,
+   "def": "NAT Gateway hỗ trợ NAT64, kết hợp DNS64 bật trên VPC, để workload IPv6-only gọi được dịch vụ chỉ có IPv4. Đây không phải cách cho IPv6 ra Internet IPv6.",
+   "tip": "IPv6 + NAT Gateway thường là đáp án sai; ngoại lệ duy nhất là IPv6-only cần gọi dịch vụ IPv4-only.",
+   "lessons": [
+    "nat-gateway",
+    "egress-only-internet-gateway"
+   ]
+  }
+ ]
+}

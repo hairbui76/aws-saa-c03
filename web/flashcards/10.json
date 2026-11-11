@@ -1,0 +1,280 @@
+{
+ "chapter": "10",
+ "cards": [
+  {
+   "term": "Public Hosted Zone",
+   "full": null,
+   "def": "Zone file của một domain do Route 53 host trên 4 name server riêng, resolve được từ Internet (qua delegation NS ở zone TLD) và từ VPC qua Resolver VPC+2. Tạo tự động khi đăng ký domain bằng R53.",
+   "tip": "Public hosted zone có 4 name server. Domain không resolve → kiểm tra NS record ở registrar/TLD có khớp 4 NS của zone.",
+   "lessons": [
+    "r53-public-hosted-zones",
+    "route-53-fundamentals"
+   ]
+  },
+  {
+   "term": "Private Hosted Zone",
+   "full": null,
+   "def": "Hosted zone chỉ resolve được trong các VPC đã associate, không lộ ra Internet; tên zone không cần là domain bạn sở hữu. VPC cần bật enableDnsSupport và enableDnsHostnames.",
+   "tip": "Không resolve được record private → kiểm tra VPC đã associate chưa và hai thuộc tính DNS của VPC.",
+   "lessons": [
+    "r53-private-hosted-zones"
+   ]
+  },
+  {
+   "term": "Cross-account VPC Association",
+   "full": null,
+   "def": "Associate private hosted zone với VPC ở account khác: chỉ làm được qua CLI/API (không có trên console) bằng VPC association authorization ở account sở hữu zone rồi associate từ account sở hữu VPC.",
+   "tip": "Private zone + VPC khác account → CLI/API, không qua console.",
+   "lessons": [
+    "r53-private-hosted-zones"
+   ]
+  },
+  {
+   "term": "Split-view DNS",
+   "full": null,
+   "def": "Còn gọi là split-horizon: public và private hosted zone trùng tên; trong VPC đã associate trả lời từ private zone, từ Internet trả lời từ public zone. Private zone thường là superset chứa thêm record nội bộ.",
+   "tip": "Cùng tên miền nhưng người trong và ngoài thấy record khác nhau → split-view DNS.",
+   "lessons": [
+    "r53-private-hosted-zones"
+   ]
+  },
+  {
+   "term": "Zone Apex",
+   "full": null,
+   "def": "Tên gốc của domain không có subdomain (naked domain, ví dụ example.com). Chuẩn DNS không cho phép đặt CNAME tại đây.",
+   "tip": "Trỏ apex vào ELB/CloudFront/S3 website/API Gateway → Alias record (không dùng CNAME).",
+   "lessons": [
+    "cname-vs-alias"
+   ]
+  },
+  {
+   "term": "Alias Record",
+   "full": null,
+   "def": "Phần mở rộng riêng của Route 53 ánh xạ tên tới tài nguyên AWS (ELB, CloudFront, S3 website, API Gateway, Global Accelerator...) hoặc record cùng zone; dùng được ở apex, query tới tài nguyên AWS miễn phí.",
+   "tip": "Type alias phải khớp type đích (ELB → A alias, thêm AAAA nếu IPv6). Alias chỉ có khi Route 53 host zone.",
+   "lessons": [
+    "cname-vs-alias"
+   ]
+  },
+  {
+   "term": "CNAME vs Alias",
+   "full": null,
+   "def": "CNAME là record chuẩn ánh xạ tên → tên, không dùng ở apex và query tính phí. Alias là của Route 53, trỏ tên → tài nguyên AWS, dùng được ở apex và miễn phí với tài nguyên AWS.",
+   "tip": "Với tài nguyên AWS mặc định chọn Alias.",
+   "lessons": [
+    "cname-vs-alias",
+    "dns-record-types"
+   ]
+  },
+  {
+   "term": "Route 53 Routing Policies",
+   "full": null,
+   "def": "Bảy cách Route 53 chọn record trả về: Simple, Failover, Multivalue, Weighted, Latency, Geolocation, Geoproximity (hiện có thêm IP-based). Mọi policy trừ Simple đều hỗ trợ health check.",
+   "tip": "Failover qua DNS không tức thời: phụ thuộc health check và TTL mà client cache.",
+   "lessons": [
+    "r53-routing-policies"
+   ]
+  },
+  {
+   "term": "Record Set Identifier",
+   "full": null,
+   "def": "ID duy nhất bắt buộc cho mỗi record trong nhóm nhiều record cùng tên (failover, weighted, latency, geo...), để Route 53 phân biệt chúng.",
+   "tip": null,
+   "lessons": [
+    "r53-routing-policies",
+    "r53-failover-routing"
+   ]
+  },
+  {
+   "term": "Simple Routing",
+   "full": null,
+   "def": "Policy một record mỗi tên, record có thể nhiều value; Route 53 trả mọi value theo thứ tự ngẫu nhiên, client tự chọn. Là policy duy nhất không hỗ trợ health check.",
+   "tip": "Một service duy nhất, không cần health check → Simple. Đề hỏi policy nào không có health check → Simple.",
+   "lessons": [
+    "r53-simple-routing"
+   ]
+  },
+  {
+   "term": "Route 53 Health Check",
+   "full": null,
+   "def": "Đối tượng tạo riêng rồi để record tham chiếu, do fleet health checker toàn cầu chạy (mặc định 30s, Fast 10s, failure threshold 3). Healthy nếu ≥ 18% checker báo healthy.",
+   "tip": "Health check báo unhealthy dù app chạy → firewall/SG/WAF đang chặn IP health checker. Không đổi được protocol sau khi tạo.",
+   "lessons": [
+    "r53-health-checks"
+   ]
+  },
+  {
+   "term": "Health Check String Matching",
+   "full": null,
+   "def": "Kiểu endpoint check HTTP/HTTPS: ngoài status 2xx/3xx, chuỗi tìm kiếm phải xuất hiện trọn vẹn trong 5,120 byte đầu của response body; chính xác nhất vì kiểm tra cả nội dung.",
+   "tip": "Cần kiểm tra nội dung trang chứ không chỉ server sống → HTTP/HTTPS + string matching.",
+   "lessons": [
+    "r53-health-checks"
+   ]
+  },
+  {
+   "term": "CloudWatch Alarm Health Check",
+   "full": null,
+   "def": "Health check Route 53 lấy trạng thái từ một CloudWatch alarm, nên dựa được trên metric nội bộ (RAM, disk qua CloudWatch Agent) hoặc tài nguyên private mà checker không với tới.",
+   "tip": "Health check cho tài nguyên private hoặc theo metric nội bộ → CloudWatch alarm health check.",
+   "lessons": [
+    "r53-health-checks",
+    "cloudwatch-agent"
+   ]
+  },
+  {
+   "term": "Calculated Health Check",
+   "full": null,
+   "def": "Health check gộp trạng thái của nhiều health check con thành sức khỏe tổng của ứng dụng (\"check của các check\").",
+   "tip": "Sức khỏe tổng của nhiều thành phần → calculated health check.",
+   "lessons": [
+    "r53-health-checks"
+   ]
+  },
+  {
+   "term": "Failover Routing",
+   "full": null,
+   "def": "Policy với hai record cùng tên Primary/Secondary; health check gắn vào primary, primary unhealthy thì trả secondary. Mô hình active-passive, thường dự phòng bằng trang tĩnh trên S3.",
+   "tip": "Active-passive, trang bảo trì/static site trên S3 khi site chính lỗi → Failover (secondary là Alias tới S3 website endpoint).",
+   "lessons": [
+    "r53-failover-routing"
+   ]
+  },
+  {
+   "term": "Multivalue Answer Routing",
+   "full": null,
+   "def": "Policy nhiều record cùng tên, mỗi record có health check riêng; trả tối đa 8 record healthy (hơn 8 thì chọn ngẫu nhiên 8). Active-active đơn giản, không thay load balancer; không dùng cho NS, CNAME, Alias.",
+   "tip": "Trả nhiều IP chỉ những IP healthy, tối đa 8 → Multivalue. Mọi record unhealthy thì vẫn trả tối đa 8.",
+   "lessons": [
+    "r53-multivalue-routing"
+   ]
+  },
+  {
+   "term": "Weighted Routing",
+   "full": null,
+   "def": "Policy nhiều record cùng tên, mỗi record có weight 0–255; xác suất trả = weight / tổng weight. Weight 0 là tắt record (trừ khi tất cả đều 0); record unhealthy thì chọn lại.",
+   "tip": "X% traffic tới phiên bản mới, canary, A/B → Weighted.",
+   "lessons": [
+    "r53-weighted-routing"
+   ]
+  },
+  {
+   "term": "Latency-based Routing",
+   "full": null,
+   "def": "Policy mỗi record gắn một AWS region (một record mỗi region); Route 53 tra database latency giữa vị trí user và các region rồi trả region có latency ước tính thấp nhất còn healthy.",
+   "tip": "Lowest latency, best performance cho user toàn cầu, app nhiều region → Latency routing.",
+   "lessons": [
+    "r53-latency-routing"
+   ]
+  },
+  {
+   "term": "Geolocation Routing",
+   "full": null,
+   "def": "Policy trả record khớp vị trí user theo thứ tự state (US) → country → continent → default; không khớp và không có default thì NO ANSWER. Không phải \"gần nhất\".",
+   "tip": "Giới hạn nội dung theo quốc gia, ngôn ngữ theo vùng, tuân thủ luật → Geolocation. Muốn ai cũng nhận câu trả lời → thêm record default.",
+   "lessons": [
+    "r53-geolocation-routing"
+   ]
+  },
+  {
+   "term": "Geoproximity Routing",
+   "full": null,
+   "def": "Policy trả tài nguyên gần user nhất theo khoảng cách địa lý; tài nguyên khai báo bằng AWS region hoặc lat/long (ngoài AWS), có thể điều chỉnh vùng phục vụ bằng bias.",
+   "tip": "Route theo khoảng cách và muốn dịch chuyển traffic giữa các vùng → Geoproximity + bias.",
+   "lessons": [
+    "r53-geoproximity-routing"
+   ]
+  },
+  {
+   "term": "Geoproximity Bias",
+   "full": null,
+   "def": "Giá trị +1 đến +99 (mở rộng) hoặc -1 đến -99 (thu hẹp) vùng địa lý mà một tài nguyên phục vụ trong geoproximity routing, làm co giãn vùng của các tài nguyên lân cận.",
+   "tip": "Từ khóa \"bias\", \"expand/shrink geographic region\" → chắc chắn geoproximity.",
+   "lessons": [
+    "r53-geoproximity-routing"
+   ]
+  },
+  {
+   "term": "DNS Hosting",
+   "full": null,
+   "def": "Vai trò cung cấp name server và zone file để quản lý record. Có thể để Route 53 host zone còn registrar là bên thứ ba: tạo public hosted zone rồi nhập 4 NS vào registrar đó.",
+   "tip": "Domain đăng ký ở GoDaddy/Hover, muốn quản lý DNS bằng R53 → tạo public hosted zone + cập nhật NS ở registrar (không cần transfer).",
+   "lessons": [
+    "r53-interoperability"
+   ]
+  },
+  {
+   "term": "Route 53 DNSSEC Signing",
+   "full": null,
+   "def": "Bật ký DNSSEC cho hosted zone: Route 53 tạo KSK từ asymmetric KMS key ở us-east-1, tự quản ZSK, công bố DNSKEY/RRSIG; sau đó thêm DS record ở zone cha để lập chain of trust.",
+   "tip": "KMS key cho DNSSEC của R53 bắt buộc ở us-east-1 (asymmetric ECC_NIST_P256). ZSK không dùng KMS.",
+   "lessons": [
+    "r53-dnssec",
+    "dnssec"
+   ]
+  },
+  {
+   "term": "DNSSEC CloudWatch Alarms",
+   "full": null,
+   "def": "Hai metric cần alarm khi dùng DNSSEC trên Route 53: DNSSECInternalFailure và DNSSECKeySigningKeysNeedingAction, báo lỗi KSK hoặc lỗi tương tác với KMS cần xử lý khẩn.",
+   "tip": null,
+   "lessons": [
+    "r53-dnssec"
+   ]
+  },
+  {
+   "term": "Resolver DNSSEC Validation",
+   "full": null,
+   "def": "Bật trên VPC để Route 53 Resolver kiểm tra chữ ký DNSSEC: record của zone có DNSSEC mà fail validation sẽ không được trả về; zone không ký thì không bị ảnh hưởng.",
+   "tip": "DNSSEC bảo đảm tính toàn vẹn và nguồn gốc của response (chống spoofing/cache poisoning), không mã hóa query.",
+   "lessons": [
+    "r53-dnssec"
+   ]
+  },
+  {
+   "term": "Route 53 Resolver DNS Firewall",
+   "full": null,
+   "def": "Lọc DNS query đi qua VPC Resolver theo domain name với action ALLOW/BLOCK/ALERT, chặn malware phone home và rò rỉ dữ liệu qua DNS. Không chặn IP, không cắt kết nối đã có.",
+   "tip": "Chặn instance phân giải domain độc hại/C&C, chỉ cho resolve domain đã duyệt → DNS Firewall. Chặn IP → NACL; lọc HTTP → WAF.",
+   "lessons": [
+    "r53-resolver-dns-firewall"
+   ]
+  },
+  {
+   "term": "DNS Firewall Rule Group",
+   "full": null,
+   "def": "Tập rule (mỗi rule = một domain list + một action), xét theo priority số nhỏ trước, khớp thì dừng, không khớp thì cho qua. Chỉ có hiệu lực khi associate với VPC cùng region.",
+   "tip": "Một rule group dùng cho nhiều VPC; một VPC associate nhiều rule group theo priority.",
+   "lessons": [
+    "r53-resolver-dns-firewall"
+   ]
+  },
+  {
+   "term": "DNS Firewall Fail Mode",
+   "full": null,
+   "def": "Thiết lập trên VPC quyết định khi DNS Firewall không phản hồi: fail closed (mặc định, chặn mọi DNS query của VPC) hoặc fail open (cho query đi qua, ưu tiên availability).",
+   "tip": "Fail closed là mặc định; ưu tiên availability → chọn fail open.",
+   "lessons": [
+    "r53-resolver-dns-firewall"
+   ]
+  },
+  {
+   "term": "DNS Walled Garden",
+   "full": null,
+   "def": "Mẫu DNS Firewall chặn mọi thứ trừ domain đã duyệt: rule ALLOW domain list đã duyệt ở priority cao nhất, rule BLOCK wildcard * ở cuối.",
+   "tip": "Chỉ cho resolve danh sách domain đã duyệt (ví dụ VPC payment gateway) → walled garden.",
+   "lessons": [
+    "r53-resolver-dns-firewall"
+   ]
+  },
+  {
+   "term": "DNS Firewall Advanced Rules",
+   "full": null,
+   "def": "Rule phát hiện theo pattern/hành vi thay vì domain list, chống DGA (malware sinh hàng nghìn domain dùng một lần) và DNS tunneling (giấu dữ liệu trong DNS query).",
+   "tip": "Chống DGA hoặc DNS tunneling → DNS Firewall advanced rules.",
+   "lessons": [
+    "r53-resolver-dns-firewall"
+   ]
+  }
+ ]
+}

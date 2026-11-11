@@ -1,0 +1,642 @@
+{
+  "chapter": "02",
+  "cards": [
+    {
+      "term": "NIST SP 800-145",
+      "full": null,
+      "def": "Tài liệu của NIST định nghĩa cloud computing: một hệ thống chỉ là cloud khi thỏa đủ 5 đặc tính thiết yếu — on-demand self-service, broad network access, resource pooling, rapid elasticity, measured service.",
+      "tip": "Thiếu một đặc tính là không phải cloud; private cloud cũng phải đủ 5.",
+      "lessons": [
+        "cloud-computing-definition"
+      ]
+    },
+    {
+      "term": "On-demand self-service",
+      "full": null,
+      "def": "Khách hàng tự cấp phát và giải phóng tài nguyên (compute, storage...) bất cứ lúc nào qua console/API mà không cần tương tác với người của nhà cung cấp.",
+      "tip": "Đáp án cần mở ticket hoặc chờ cấp phát thủ công thường kém 'cloud-native'.",
+      "lessons": [
+        "cloud-computing-definition"
+      ]
+    },
+    {
+      "term": "Broad network access",
+      "full": null,
+      "def": "Năng lực được cung cấp qua mạng và truy cập bằng cơ chế chuẩn (HTTPS, API, CLI, SDK) từ nhiều loại thiết bị client khác nhau.",
+      "tip": null,
+      "lessons": [
+        "cloud-computing-definition"
+      ]
+    },
+    {
+      "term": "Resource pooling",
+      "full": null,
+      "def": "Tài nguyên vật lý của nhà cung cấp được gom thành pool dùng chung cho nhiều khách (multi-tenant); khách không biết vị trí chính xác, chỉ chọn ở mức trừu tượng như region/AZ.",
+      "tip": "Pooling + economies of scale là lý do cloud rẻ hơn tự đầu tư.",
+      "lessons": [
+        "cloud-computing-definition"
+      ]
+    },
+    {
+      "term": "Rapid elasticity",
+      "full": null,
+      "def": "Tài nguyên tăng/giảm nhanh, thường tự động, bám theo tải thực tế (scale out khi tải tăng, scale in khi tải giảm); với khách, năng lực có vẻ vô hạn.",
+      "tip": "Đề nói 'tự scale theo tải' → giải pháp elastic như Auto Scaling, không phải provision dư cố định.",
+      "lessons": [
+        "cloud-computing-definition"
+      ]
+    },
+    {
+      "term": "Measured service",
+      "full": null,
+      "def": "Mức sử dụng tài nguyên được đo, giám sát và tính tiền theo đúng lượng dùng (pay-as-you-go), minh bạch cho cả nhà cung cấp lẫn khách.",
+      "tip": "Đề nhấn mạnh 'chỉ trả cho phần dùng' → chọn dịch vụ tính theo mức dùng thay vì mua trước công suất.",
+      "lessons": [
+        "cloud-computing-definition"
+      ]
+    },
+    {
+      "term": "Private cloud",
+      "full": null,
+      "def": "Cloud thật (đủ 5 đặc tính NIST) chạy on-premises dành riêng cho một tổ chức, ví dụ AWS Outposts; hạ tầng ảo hóa truyền thống không tự động là private cloud.",
+      "tip": "'Chạy dịch vụ AWS trong data center của mình với cùng API/công cụ' → AWS Outposts.",
+      "lessons": [
+        "cloud-deployment-models"
+      ]
+    },
+    {
+      "term": "Multi-cloud",
+      "full": null,
+      "def": "Dùng nhiều public cloud provider cùng lúc (ví dụ AWS + Azure) cho một hệ thống, thường để tăng resilience hoặc tránh phụ thuộc một vendor.",
+      "tip": "Lớp trừu tượng chung giữa các cloud dễ làm mất tính năng riêng của từng vendor.",
+      "lessons": [
+        "cloud-deployment-models"
+      ]
+    },
+    {
+      "term": "Hybrid cloud",
+      "full": null,
+      "def": "Public cloud và private cloud đúng nghĩa phối hợp như một môi trường thống nhất, dùng chung công cụ, API và cách quản lý.",
+      "tip": "Public cloud + data center truyền thống chỉ là hybrid environment/hybrid networking, KHÔNG phải hybrid cloud.",
+      "lessons": [
+        "cloud-deployment-models"
+      ]
+    },
+    {
+      "term": "Hybrid networking",
+      "full": null,
+      "def": "Kết nối public cloud với hạ tầng on-premises truyền thống (không phải private cloud) qua Site-to-Site VPN hoặc Direct Connect; thường bị gọi nhầm là hybrid cloud.",
+      "tip": "Đề nói 'kết nối VPC với data center on-prem' → hybrid networking (VPN, Direct Connect), không phải private cloud.",
+      "lessons": [
+        "cloud-deployment-models"
+      ]
+    },
+    {
+      "term": "Unit of consumption",
+      "full": null,
+      "def": "Ranh giới trong infrastructure stack: thứ bạn trả tiền và từ đó trở lên bạn quản lý, phần bên dưới do vendor quản lý; các service model khác nhau ở vị trí ranh giới này.",
+      "tip": "IaaS: unit là máy ảo; PaaS: runtime/container; SaaS: ứng dụng.",
+      "lessons": [
+        "cloud-service-models"
+      ]
+    },
+    {
+      "term": "IaaS",
+      "full": "Infrastructure as a Service",
+      "def": "Vendor quản lý facilities, phần cứng, mạng, ảo hóa; bạn trả theo máy ảo và tự quản OS, runtime, ứng dụng, dữ liệu. Ví dụ EC2.",
+      "tip": "Cần toàn quyền với OS → IaaS (EC2), đổi lại phải tự patch OS.",
+      "lessons": [
+        "cloud-service-models",
+        "shared-responsibility-model"
+      ]
+    },
+    {
+      "term": "PaaS",
+      "full": "Platform as a Service",
+      "def": "Vendor quản lý tới tầng runtime/platform; bạn chỉ lo code ứng dụng và dữ liệu. Ví dụ Elastic Beanstalk và nhiều dịch vụ managed.",
+      "tip": "'Giảm operational overhead, không muốn quản lý OS/patching' → dịch vụ managed tầng cao (PaaS/FaaS như RDS, Lambda, Fargate).",
+      "lessons": [
+        "cloud-service-models"
+      ]
+    },
+    {
+      "term": "SaaS",
+      "full": "Software as a Service",
+      "def": "Vendor quản lý toàn bộ stack, khách chỉ dùng ứng dụng hoàn chỉnh (ví dụ Netflix, Dropbox, Office 365) và chịu trách nhiệm dữ liệu, quyền truy cập của mình.",
+      "tip": null,
+      "lessons": [
+        "cloud-service-models"
+      ]
+    },
+    {
+      "term": "YAML",
+      "full": "YAML Ain't Markup Language",
+      "def": "Ngôn ngữ serialize dữ liệu dễ đọc, thể hiện cấu trúc bằng thụt lề dấu cách: cặp key: value, list (dấu -) và dictionary lồng nhau; một trong hai định dạng template CloudFormation.",
+      "tip": "CloudFormation nhận YAML hoặc JSON; IAM/resource policy chỉ viết bằng JSON.",
+      "lessons": [
+        "yaml"
+      ]
+    },
+    {
+      "term": "JSON",
+      "full": "JavaScript Object Notation",
+      "def": "Định dạng trao đổi dữ liệu nhẹ: object {} chứa cặp 'key': value, array [] chứa danh sách giá trị, không phụ thuộc thụt lề; dùng cho CloudFormation template và mọi policy document.",
+      "tip": "Phải đọc hiểu policy JSON: Version, Statement (array), Effect, Action, Resource, Condition.",
+      "lessons": [
+        "json"
+      ]
+    },
+    {
+      "term": "Encryption at rest",
+      "full": null,
+      "def": "Mã hóa dữ liệu khi lưu trữ (đĩa, object, database) để chống truy cập vật lý hay trộm thiết bị; thường chỉ một bên giữ khóa.",
+      "tip": "EBS/S3/RDS encryption, KMS → at rest; không thay thế kiểm soát truy cập logic bằng IAM.",
+      "lessons": [
+        "encryption-fundamentals"
+      ]
+    },
+    {
+      "term": "Encryption in transit",
+      "full": null,
+      "def": "Mã hóa dữ liệu khi truyền giữa các bên qua mạng, như một đường hầm chống nghe lén và can thiệp; ví dụ TLS/HTTPS, VPN IPsec.",
+      "tip": "Đề đòi 'encrypt in transit' → TLS/HTTPS; ép trên S3 bằng điều kiện aws:SecureTransport.",
+      "lessons": [
+        "encryption-fundamentals",
+        "ssl-and-tls"
+      ]
+    },
+    {
+      "term": "Symmetric encryption",
+      "full": null,
+      "def": "Dùng cùng một khóa để mã hóa và giải mã; nhanh, hợp với dữ liệu lớn (ví dụ AES-256) nhưng khó trao đổi khóa an toàn giữa hai bên.",
+      "tip": "KMS key mặc định là symmetric AES-256; S3/EBS dùng data key symmetric theo envelope encryption.",
+      "lessons": [
+        "encryption-fundamentals"
+      ]
+    },
+    {
+      "term": "Asymmetric encryption",
+      "full": null,
+      "def": "Dùng cặp khóa: public key công khai để mã hóa, private key giữ bí mật để giải mã; giải quyết bài toán trao đổi khóa nhưng chậm, nên thường dùng để thỏa thuận một symmetric key.",
+      "tip": "EC2 key pair (SSH) là asymmetric; TLS dùng asymmetric lúc handshake rồi chuyển sang symmetric.",
+      "lessons": [
+        "encryption-fundamentals"
+      ]
+    },
+    {
+      "term": "TLS",
+      "full": "Transport Layer Security",
+      "def": "Giao thức kế thừa SSL bảo vệ kết nối client–server trên TCP: privacy (mã hóa), xác thực server qua certificate do CA ký và data integrity.",
+      "tip": "Đề ghi 'SSL/TLS' hay 'encryption in transit' → TLS/HTTPS; nên dùng TLS 1.2 trở lên.",
+      "lessons": [
+        "ssl-and-tls"
+      ]
+    },
+    {
+      "term": "TLS handshake",
+      "full": null,
+      "def": "Ba pha thiết lập phiên TLS: thỏa thuận cipher suite, server gửi certificate để client xác thực qua CA, rồi trao đổi khóa asymmetric để tạo session key symmetric cho dữ liệu.",
+      "tip": "Asymmetric chỉ dùng lúc đầu; dữ liệu thật mã hóa bằng symmetric vì nhanh hơn.",
+      "lessons": [
+        "ssl-and-tls"
+      ]
+    },
+    {
+      "term": "CA",
+      "full": "Certificate Authority",
+      "def": "Bên thứ ba đáng tin cậy ký certificate để chứng nhận public key thuộc về đúng DNS name; client tin CA vì CA có sẵn trong trust store của OS/trình duyệt.",
+      "tip": "Certificate phải khớp DNS name → cần cert cho custom domain trên ALB/CloudFront (cấp qua ACM).",
+      "lessons": [
+        "ssl-and-tls",
+        "digital-signatures"
+      ]
+    },
+    {
+      "term": "Hash function",
+      "full": null,
+      "def": "Hàm một chiều biến dữ liệu kích thước bất kỳ thành giá trị độ dài cố định; cùng input luôn ra cùng hash, đổi 1 byte là hash khác hẳn, không suy ngược được dữ liệu gốc.",
+      "tip": "Hash = integrity, không phải confidentiality; muốn lấy lại dữ liệu thì phải dùng encryption.",
+      "lessons": [
+        "hashing"
+      ]
+    },
+    {
+      "term": "Hash collision",
+      "full": null,
+      "def": "Hai dữ liệu khác nhau cho ra cùng một giá trị hash, phá vỡ khả năng dùng hash để chứng minh toàn vẹn; MD5 đã bị chứng minh có collision.",
+      "tip": "Không dùng MD5 cho bảo mật; chọn SHA-256 trở lên.",
+      "lessons": [
+        "hashing"
+      ]
+    },
+    {
+      "term": "SHA-256",
+      "full": null,
+      "def": "Thuật toán hash họ SHA-2 cho giá trị 256 bit, hiện được coi là an toàn; dùng kiểm tra file tải về, chữ ký số, certificate và CloudTrail log file validation.",
+      "tip": "CloudTrail log file integrity validation = SHA-256 + chữ ký số.",
+      "lessons": [
+        "hashing",
+        "cloudtrail"
+      ]
+    },
+    {
+      "term": "Digital signature",
+      "full": null,
+      "def": "Người gửi hash dữ liệu rồi ký hash bằng private key; người nhận dùng public key kiểm tra chữ ký và so với hash tự tính, chứng minh integrity (what) và authenticity (who).",
+      "tip": "Private key ký, public key verify — ngược với mã hóa (public key mã hóa, private key giải mã).",
+      "lessons": [
+        "digital-signatures",
+        "hashing"
+      ]
+    },
+    {
+      "term": "OSI model",
+      "full": "Open Systems Interconnection model",
+      "def": "Khung khái niệm 7 tầng chia networking: Physical, Data Link, Network, Transport, Session, Presentation, Application (L1→L7); dữ liệu đi xuống stack khi gửi và lên stack khi nhận.",
+      "tip": "Thiết bị Layer X hiểu mọi tầng ≤ X: NLB = L4, ALB/WAF = L7, Security Group/NACL = L3–L4.",
+      "lessons": [
+        "osi-model"
+      ]
+    },
+    {
+      "term": "Application layer (Layer 7)",
+      "full": null,
+      "def": "Tầng trên cùng của OSI, nơi giao thức ứng dụng như HTTP, DNS, SMTP hoạt động; thiết bị L7 đọc được header, path, nội dung request để ra quyết định.",
+      "tip": "'Route theo path/host header, inspect HTTP' → ALB/WAF (L7); 'TCP/UDP, IP tĩnh, latency cực thấp' → NLB (L4).",
+      "lessons": [
+        "osi-model"
+      ]
+    },
+    {
+      "term": "Physical layer (Layer 1)",
+      "full": null,
+      "def": "Chuẩn truyền và nhận bit thô (0/1) qua môi trường vật lý dùng chung như cáp đồng, cáp quang, Wi-Fi; không có địa chỉ, không kiểm soát truy cập môi trường, không phát hiện collision.",
+      "tip": "Direct Connect là kết nối vật lý (cáp quang 1/10/100 Gbps) nên cần thời gian lắp đặt, khác VPN chạy logic trên Internet.",
+      "lessons": [
+        "layer-1-physical"
+      ]
+    },
+    {
+      "term": "Data Link layer (Layer 2)",
+      "full": null,
+      "def": "Chạy trên L1, thêm frame, MAC address, media access control (CSMA) và collision detection (CD), cho phép gửi giữa hai thiết bị (unicast) hoặc broadcast trong một mạng cục bộ.",
+      "tip": "VPC không cung cấp broadcast/multicast L2 cho khách (multicast chỉ qua Transit Gateway).",
+      "lessons": [
+        "layer-2-data-link"
+      ]
+    },
+    {
+      "term": "MAC address",
+      "full": "Media Access Control address",
+      "def": "Địa chỉ phần cứng 48 bit gắn với card mạng, duy nhất toàn cầu (phần đầu là OUI của hãng sản xuất), dùng định danh thiết bị ở Layer 2.",
+      "tip": "Mỗi ENI của EC2 có MAC riêng; chuyển ENI sang instance khác thì MAC đi theo (hữu ích cho license theo MAC).",
+      "lessons": [
+        "layer-2-data-link"
+      ]
+    },
+    {
+      "term": "Switch",
+      "full": null,
+      "def": "Thiết bị Layer 2 học MAC address theo từng port (MAC table) và chỉ forward frame hợp lệ tới đúng port đích; mỗi port là một collision domain riêng nên mạng scale tốt hơn hub.",
+      "tip": null,
+      "lessons": [
+        "layer-2-data-link"
+      ]
+    },
+    {
+      "term": "Network layer (Layer 3)",
+      "full": null,
+      "def": "Tầng IP bắc qua nhiều mạng L2 khác nhau: thêm IP address định danh xuyên mạng, route table và router để chuyển packet từng hop tới đích.",
+      "tip": "L3 không đảm bảo thứ tự hay việc packet tới nơi và không có port; các việc đó do L4 (TCP) lo.",
+      "lessons": [
+        "layer-3-network"
+      ]
+    },
+    {
+      "term": "IP packet",
+      "full": null,
+      "def": "Đơn vị dữ liệu L3 chứa source/destination IP, protocol (ICMP 1, TCP 6, UDP 17), TTL và payload; được bọc vào frame mới ở mỗi hop, còn IP nguồn/đích giữ nguyên.",
+      "tip": "Số protocol 1/6/17 gặp khi viết rule NACL hoặc đọc VPC Flow Logs.",
+      "lessons": [
+        "layer-3-network"
+      ]
+    },
+    {
+      "term": "Subnet mask",
+      "full": null,
+      "def": "Dãy 32 bit (ví dụ 255.255.255.0 tương đương /24) cho biết phần nào của IP là network, phần nào là host; giúp thiết bị biết đích là local hay phải gửi qua default gateway.",
+      "tip": "/24 ↔ 255.255.255.0; /16 ↔ 255.255.0.0.",
+      "lessons": [
+        "layer-3-network",
+        "subnetting"
+      ]
+    },
+    {
+      "term": "Route table",
+      "full": null,
+      "def": "Bảng các route (đích dạng CIDR → next hop/target) mà router dùng để quyết định chuyển packet đi đâu; khớp nhiều route thì chọn route cụ thể nhất.",
+      "tip": "VPC route table luôn có local route cho CIDR của VPC; 0.0.0.0/0 tới IGW làm subnet thành public.",
+      "lessons": [
+        "layer-3-network"
+      ]
+    },
+    {
+      "term": "Longest prefix match",
+      "full": null,
+      "def": "Quy tắc chọn route: khi nhiều route cùng khớp đích, route có prefix dài nhất (cụ thể nhất) thắng; 0.0.0.0/0 khớp mọi đích nhưng ưu tiên thấp nhất.",
+      "tip": "Route /24 tới peering connection thắng route 0.0.0.0/0 tới IGW.",
+      "lessons": [
+        "layer-3-network"
+      ]
+    },
+    {
+      "term": "TCP",
+      "full": "Transmission Control Protocol",
+      "def": "Giao thức L4 connection-oriented, tin cậy, có thứ tự: segment mang port, sequence number, acknowledgement, window, biến các IP packet rời rạc thành kênh hai chiều giữa hai ứng dụng.",
+      "tip": "Đề nhấn mạnh tin cậy/đúng thứ tự → TCP; NLB cân bằng tải ở L4 (TCP/UDP).",
+      "lessons": [
+        "layer-4-transport"
+      ]
+    },
+    {
+      "term": "UDP",
+      "full": "User Datagram Protocol",
+      "def": "Giao thức L4 không kết nối, không đảm bảo packet tới nơi hay đúng thứ tự nhưng nhanh, overhead thấp; hợp với DNS, streaming, game, VoIP.",
+      "tip": "Đề nhấn mạnh tốc độ/độ trễ thấp, chấp nhận mất gói → UDP.",
+      "lessons": [
+        "layer-4-transport"
+      ]
+    },
+    {
+      "term": "Three-way handshake",
+      "full": null,
+      "def": "Cách TCP mở kết nối: client gửi SYN, server đáp SYN-ACK, client gửi ACK; hai bên thống nhất sequence number trước khi truyền dữ liệu.",
+      "tip": "SYN flood lạm dụng bước này: gửi SYN giả rồi không bao giờ hoàn tất ACK.",
+      "lessons": [
+        "layer-4-transport",
+        "ddos"
+      ]
+    },
+    {
+      "term": "Well-known port",
+      "full": null,
+      "def": "Port cố định server lắng nghe cho một dịch vụ (22 SSH, 80 HTTP, 443 HTTPS); client kết nối từ một ephemeral port ngẫu nhiên và phản hồi quay về đúng port đó.",
+      "tip": "Một kết nối = (src IP, src port, dst IP, dst port); chiều phản hồi đảo port — lý do NACL phải mở ephemeral port.",
+      "lessons": [
+        "layer-4-transport"
+      ]
+    },
+    {
+      "term": "NAT",
+      "full": "Network Address Translation",
+      "def": "Dịch IPv4 private sang public (và ngược lại) khi packet đi qua thiết bị NAT, giúp máy chỉ có IP private ra được Internet và tiết kiệm IPv4 public.",
+      "tip": "IPv6 không dùng NAT; outbound-only cho IPv6 → Egress-Only Internet Gateway.",
+      "lessons": [
+        "nat-fundamentals"
+      ]
+    },
+    {
+      "term": "Static NAT",
+      "full": null,
+      "def": "Ánh xạ cố định 1:1 giữa một IP private và một IP public; đây là cách Internet Gateway cấp public IPv4 cho instance (OS không bao giờ thấy IP public).",
+      "tip": "IGW = static NAT 1:1 cho instance có public IPv4.",
+      "lessons": [
+        "nat-fundamentals"
+      ]
+    },
+    {
+      "term": "PAT",
+      "full": "Port Address Translation",
+      "def": "NAT many:1 (overloading): nhiều thiết bị private dùng chung một IP public, phân biệt bằng port nguồn trong bảng NAT; bên ngoài không tự khởi tạo kết nối vào được.",
+      "tip": "NAT Gateway dùng PAT → private subnet ra Internet mà Internet không vào được.",
+      "lessons": [
+        "nat-fundamentals"
+      ]
+    },
+    {
+      "term": "CIDR",
+      "full": "Classless Inter-Domain Routing",
+      "def": "Cách biểu diễn dải IP bằng địa chỉ mạng + prefix (ví dụ 10.16.0.0/16) thay cho class cứng nhắc; prefix càng lớn thì dải càng ít địa chỉ.",
+      "tip": "/16 = 65.536 IP, /24 = 256, /28 = 16; VPC IPv4 cho phép /28 tới /16.",
+      "lessons": [
+        "subnetting",
+        "decimal-and-binary-conversion"
+      ]
+    },
+    {
+      "term": "RFC 1918",
+      "full": null,
+      "def": "Chuẩn quy định ba dải IPv4 private không route trên Internet: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16; dùng cho mạng nội bộ và VPC.",
+      "tip": "Default VPC luôn là 172.31.0.0/16 (nằm trong 172.16.0.0/12).",
+      "lessons": [
+        "subnetting"
+      ]
+    },
+    {
+      "term": "Subnetting",
+      "full": null,
+      "def": "Chia một dải IP lớn thành các mạng con nhỏ hơn, thường bằng cách chia đôi liên tục (prefix tăng 1 mỗi lần): một /16 thành hai /17, bốn /18...",
+      "tip": "Một /16 chia được 16 subnet /20 hoặc 256 subnet /24.",
+      "lessons": [
+        "subnetting"
+      ]
+    },
+    {
+      "term": "Overlapping CIDR",
+      "full": null,
+      "def": "Hai mạng dùng dải IP chồng lấn nhau thì không route trực tiếp được với nhau, chặn VPC peering, Transit Gateway, VPN, Direct Connect giữa chúng.",
+      "tip": "'Chọn CIDR cho VPC mới' → loại mọi đáp án trùng dải on-prem hoặc VPC đã có.",
+      "lessons": [
+        "subnetting",
+        "decimal-and-binary-conversion",
+        "animals4life-scenario"
+      ]
+    },
+    {
+      "term": "IPv6",
+      "full": null,
+      "def": "Địa chỉ 128 bit với không gian khổng lồ nên không cần NAT; trên AWS mọi IPv6 đều public-routable, outbound-only được kiểm soát bằng Egress-Only Internet Gateway.",
+      "tip": "Default route IPv6 là ::/0, IPv4 là 0.0.0.0/0.",
+      "lessons": [
+        "subnetting",
+        "nat-fundamentals"
+      ]
+    },
+    {
+      "term": "DDoS",
+      "full": "Distributed Denial of Service",
+      "def": "Tấn công tạo lượng lớn traffic giả từ rất nhiều nguồn (thường là botnet) cạnh tranh với traffic hợp lệ, làm quá tải server, phần mềm hoặc đường truyền.",
+      "tip": "Không chặn DDoS bằng NACL/SG; dùng Shield + WAF + CloudFront/Route 53 + ASG sau ELB.",
+      "lessons": [
+        "ddos"
+      ]
+    },
+    {
+      "term": "HTTP flood",
+      "full": null,
+      "def": "Tấn công tầng ứng dụng (L7): botnet gửi hàng loạt request HTTP rẻ với kẻ tấn công nhưng tốn tài nguyên server để xử lý.",
+      "tip": "'HTTP flood / Layer 7' → WAF rate-based rule + Shield Advanced.",
+      "lessons": [
+        "ddos"
+      ]
+    },
+    {
+      "term": "SYN flood",
+      "full": null,
+      "def": "Tấn công protocol (L4): gửi hàng loạt SYN với IP nguồn giả, server mở các kết nối dở dang chờ ACK không bao giờ tới cho tới khi cạn tài nguyên.",
+      "tip": "SYN flood, UDP reflection (L3/L4) → Shield Standard (miễn phí, tự bật cho mọi khách).",
+      "lessons": [
+        "ddos"
+      ]
+    },
+    {
+      "term": "DNS amplification",
+      "full": null,
+      "def": "Tấn công volumetric: gửi query nhỏ tới DNS server công khai với IP nguồn giả là nạn nhân, response lớn hơn nhiều dội về làm nghẽn đường truyền của nạn nhân.",
+      "tip": "Nguồn traffic là DNS server hợp lệ nên chặn theo IP không hiệu quả.",
+      "lessons": [
+        "ddos"
+      ]
+    },
+    {
+      "term": "DNS",
+      "full": "Domain Name System",
+      "def": "Hệ thống 'danh bạ' phân tán toàn cầu chuyển tên miền thành IP; được thiết kế phân cấp root → TLD → domain, mỗi phần là một zone host trên nhiều name server.",
+      "tip": "Chuỗi delegation root → TLD → domain dùng NS record.",
+      "lessons": [
+        "dns-fundamentals"
+      ]
+    },
+    {
+      "term": "TLD",
+      "full": "Top-Level Domain",
+      "def": "Tầng ngay dưới root (.com, .org, .vn...) do một registry quản lý; zone TLD chứa NS record trỏ tới name server của từng domain đã đăng ký.",
+      "tip": null,
+      "lessons": [
+        "dns-fundamentals"
+      ]
+    },
+    {
+      "term": "DNS resolver",
+      "full": null,
+      "def": "Máy chủ (thường của ISP hoặc trong VPC) nhận query của client, 'walk the tree' từ root → TLD → name server authoritative, rồi cache kết quả theo TTL.",
+      "tip": "Trong VPC, resolver là Route 53 Resolver tại địa chỉ VPC base + 2.",
+      "lessons": [
+        "dns-fundamentals"
+      ]
+    },
+    {
+      "term": "Domain registrar",
+      "full": null,
+      "def": "Tổ chức cho bạn đăng ký domain và thay bạn cập nhật NS record vào zone TLD của registry; tách biệt với DNS hosting (nơi host zone của domain).",
+      "tip": "Domain mua ở registrar ngoài vẫn dùng Route 53: tạo hosted zone rồi đổi NS ở registrar sang 4 name server của R53.",
+      "lessons": [
+        "dns-fundamentals",
+        "route-53-fundamentals"
+      ]
+    },
+    {
+      "term": "DNSSEC",
+      "full": "DNS Security Extensions",
+      "def": "Lớp bảo mật phủ lên DNS, dùng chữ ký số và hashing để cung cấp data origin authentication và data integrity; không mã hóa nội dung query.",
+      "tip": "'Chống DNS spoofing/cache poisoning' → bật DNSSEC signing trên hosted zone Route 53.",
+      "lessons": [
+        "dnssec"
+      ]
+    },
+    {
+      "term": "ZSK",
+      "full": "Zone Signing Key",
+      "def": "Cặp khóa của zone dùng để ký các RRset (tạo RRSIG); public ZSK được công bố trong record DNSKEY, đổi ZSK không cần báo zone cha.",
+      "tip": "Trên Route 53, ZSK do Route 53 tự quản lý.",
+      "lessons": [
+        "dnssec"
+      ]
+    },
+    {
+      "term": "KSK",
+      "full": "Key Signing Key",
+      "def": "Cặp khóa dùng để ký RRset DNSKEY (chứa public ZSK và KSK); hash của public KSK được đặt trong DS record ở zone cha để nối chain of trust.",
+      "tip": "Route 53: KSK tạo từ KMS customer managed key asymmetric ở us-east-1.",
+      "lessons": [
+        "dnssec"
+      ]
+    },
+    {
+      "term": "DS record",
+      "full": "Delegation Signer record",
+      "def": "Record ở zone cha chứa hash public KSK của zone con; zone cha ký DS bằng khóa của mình nên tạo liên kết tin cậy xuống zone con.",
+      "tip": "Bật DNSSEC trên Route 53 xong phải thêm DS record vào zone cha (qua registrar) mới hoàn tất chain of trust.",
+      "lessons": [
+        "dnssec"
+      ]
+    },
+    {
+      "term": "Chain of trust",
+      "full": null,
+      "def": "Chuỗi xác thực DNSSEC từ root zone xuống TLD rồi tới domain: mỗi zone cha giữ và ký DS record của con; tin trust anchor (KSK của root) là tin được cả chuỗi.",
+      "tip": "Nhớ: ZSK ký record, KSK ký key, DS ở zone cha chứa hash KSK của con.",
+      "lessons": [
+        "dnssec"
+      ]
+    },
+    {
+      "term": "RPO",
+      "full": "Recovery Point Objective",
+      "def": "Lượng dữ liệu tối đa (tính bằng thời gian) doanh nghiệp chấp nhận mất khi có sự cố; trường hợp xấu nhất bằng khoảng cách giữa hai lần backup thành công.",
+      "tip": "'Mất tối đa X phút dữ liệu' → RPO; quyết định bởi tần suất backup/replication.",
+      "lessons": [
+        "rpo-and-rto"
+      ]
+    },
+    {
+      "term": "RTO",
+      "full": "Recovery Time Objective",
+      "def": "Thời gian tối đa hệ thống được phép ngừng, tính end-to-end từ lúc sự cố xảy ra tới khi hệ thống đã kiểm thử được bàn giao lại cho doanh nghiệp.",
+      "tip": "'Phải khôi phục trong X giờ' → RTO; giảm bằng hạ tầng dựng sẵn, AMI, IaC, tự động hóa.",
+      "lessons": [
+        "rpo-and-rto"
+      ]
+    },
+    {
+      "term": "Backup and Restore",
+      "full": null,
+      "def": "Chiến lược DR rẻ nhất: chỉ sao lưu dữ liệu (snapshot, AWS Backup) sang nơi khác, khi có sự cố mới dựng lại hạ tầng; RPO/RTO tính bằng giờ.",
+      "tip": "Rẻ → đắt: Backup & Restore → Pilot Light → Warm Standby → Multi-site Active/Active.",
+      "lessons": [
+        "rpo-and-rto",
+        "ha-vs-ft-vs-dr"
+      ]
+    },
+    {
+      "term": "Pilot Light",
+      "full": null,
+      "def": "Chiến lược DR giữ sẵn phần lõi ở site dự phòng (dữ liệu replicate, database chạy nhỏ), phần còn lại tắt và chỉ bật/scale khi có sự cố; RTO khoảng chục phút.",
+      "tip": "Khác Warm Standby: pilot light chỉ chạy phần lõi, chưa phục vụ traffic được ngay.",
+      "lessons": [
+        "rpo-and-rto",
+        "ha-vs-ft-vs-dr"
+      ]
+    },
+    {
+      "term": "Warm Standby",
+      "full": null,
+      "def": "Chiến lược DR chạy sẵn một bản thu nhỏ nhưng đầy đủ chức năng của hệ thống ở site dự phòng, khi có sự cố thì scale lên nhận toàn bộ tải; RTO tính bằng phút.",
+      "tip": null,
+      "lessons": [
+        "rpo-and-rto",
+        "ha-vs-ft-vs-dr"
+      ]
+    },
+    {
+      "term": "Multi-site Active/Active",
+      "full": null,
+      "def": "Chiến lược DR chạy đầy đủ hệ thống ở nhiều region cùng phục vụ traffic; RPO/RTO gần 0 nhưng đắt nhất.",
+      "tip": "Đề đòi RPO/RTO gần 0 → active/active nhiều region (ví dụ Aurora Global Database, DynamoDB Global Tables).",
+      "lessons": [
+        "rpo-and-rto",
+        "ha-vs-ft-vs-dr"
+      ]
+    }
+  ]
+}

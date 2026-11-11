@@ -16,6 +16,7 @@ import CheatSheetPage from './pages/CheatSheet';
 import NotesPage from './pages/Notes';
 import RoadmapPage from './pages/Roadmap';
 import PracticePage, { PracticeResult, PracticeRun } from './pages/Practice';
+import FlashcardsPage from './pages/Flashcards';
 
 type Ui = { openSettings: () => void; openSearch: () => void; openWhatsNew?: () => void };
 const UiContext = createContext<Ui>({ openSettings: () => {}, openSearch: () => {} });
@@ -42,6 +43,7 @@ function Header() {
           Bài học
         </NavLink>
         <NavLink to="/practice">Luyện đề</NavLink>
+        <NavLink to="/flashcards">Flashcard</NavLink>
         <NavLink to="/roadmap">Lộ trình</NavLink>
         <NavLink to="/notes">Ghi chú</NavLink>
         <NavLink to="/cheat-sheet">Cheat Sheet</NavLink>
@@ -135,6 +137,7 @@ export default function App() {
           <Route path="/roadmap" element={<RoadmapPage />} />
           <Route path="/notes" element={<NotesPage />} />
           <Route path="/practice" element={<PracticePage />} />
+          <Route path="/flashcards" element={<FlashcardsPage />} />
           <Route path="/practice/run" element={<PracticeRun />} />
           <Route path="/practice/r/:id" element={<PracticeResult />} />
           <Route path="*" element={<Home />} />

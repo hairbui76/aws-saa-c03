@@ -1,0 +1,403 @@
+{
+  "chapter": "19",
+  "cards": [
+    {
+      "term": "Logical Resource",
+      "full": null,
+      "def": "Resource khai báo trong template CloudFormation (logical ID, Type, Properties) mô tả cái cần có; stack tạo physical resource tương ứng và giữ hai bên đồng bộ.",
+      "tip": "Bỏ logical resource khỏi template rồi update stack → physical resource bị xóa.",
+      "lessons": [
+        "cfn-physical-and-logical-resources"
+      ]
+    },
+    {
+      "term": "Physical Resource",
+      "full": null,
+      "def": "Resource thật trong account (EC2 instance, bucket...) do stack tạo từ logical resource; xóa stack thì mặc định physical resource bị xóa theo.",
+      "tip": "Muốn giữ dữ liệu khi xóa stack → DeletionPolicy Retain/Snapshot.",
+      "lessons": [
+        "cfn-physical-and-logical-resources"
+      ]
+    },
+    {
+      "term": "Portable Template",
+      "full": null,
+      "def": "Template không đặt cứng giá trị theo region/account (tên bucket, AMI ID) nên tạo được nhiều stack ở mọi region; đạt được bằng parameter, pseudo parameter, Mappings, SSM parameter.",
+      "tip": "Template chỉ chạy được một lần hoặc một region → nghi ngay giá trị hard-code.",
+      "lessons": [
+        "cfn-physical-and-logical-resources",
+        "cfn-template-and-pseudo-parameters"
+      ]
+    },
+    {
+      "term": "Template Parameters",
+      "full": null,
+      "def": "Input từ bên ngoài nhập lúc create/update stack, có Type, Default, AllowedValues, Min/MaxLength, NoEcho; template dùng giá trị bằng Ref.",
+      "tip": "'Giới hạn người dùng chỉ chọn một vài instance type' → AllowedValues.",
+      "lessons": [
+        "cfn-template-and-pseudo-parameters"
+      ]
+    },
+    {
+      "term": "Pseudo Parameters",
+      "full": null,
+      "def": "Giá trị AWS tự cung cấp theo môi trường, không cần khai báo, có tiền tố AWS:: như AWS::Region, AWS::AccountId, AWS::StackName, AWS::StackId.",
+      "tip": "Thường dùng AWS::Region làm key của FindInMap để tra AMI theo region.",
+      "lessons": [
+        "cfn-template-and-pseudo-parameters"
+      ]
+    },
+    {
+      "term": "NoEcho",
+      "full": null,
+      "def": "Thuộc tính của parameter ẩn giá trị nhập (hiện dạng ***) trên console và kết quả API.",
+      "tip": "'Ẩn mật khẩu nhập vào template' → NoEcho; secret thật nên dùng dynamic reference tới Secrets Manager/Parameter Store.",
+      "lessons": [
+        "cfn-template-and-pseudo-parameters"
+      ]
+    },
+    {
+      "term": "SSM Parameter Types in CloudFormation",
+      "full": null,
+      "def": "Kiểu parameter như AWS::SSM::Parameter::Value<AWS::EC2::Image::Id> đọc giá trị từ Parameter Store lúc deploy, ví dụ public parameter chứa AMI Amazon Linux mới nhất của từng region.",
+      "tip": "'Template chạy mọi region, luôn dùng AMI mới nhất' → SSM parameter type trỏ tới public parameter.",
+      "lessons": [
+        "cfn-template-and-pseudo-parameters",
+        "ssm-parameter-store"
+      ]
+    },
+    {
+      "term": "Intrinsic Functions",
+      "full": null,
+      "def": "Hàm có sẵn của CloudFormation giúp template lấy dữ liệu lúc runtime: Ref, GetAtt, GetAZs, Select, Join, Split, Sub, Base64, Cidr, FindInMap, ImportValue, If...",
+      "tip": null,
+      "lessons": [
+        "cfn-intrinsic-functions"
+      ]
+    },
+    {
+      "term": "Ref",
+      "full": null,
+      "def": "Intrinsic function trả giá trị chính của resource (thường là ID) hoặc giá trị của parameter; chỉ dùng trong cùng stack và tự tạo implicit dependency.",
+      "tip": "Lấy ID → Ref; lấy thuộc tính phụ (DNS name, public IP, ARN) → GetAtt.",
+      "lessons": [
+        "cfn-intrinsic-functions"
+      ]
+    },
+    {
+      "term": "Fn::GetAtt",
+      "full": null,
+      "def": "Lấy thuộc tính phụ của resource như PublicIp, PublicDnsName, Arn; cũng dùng để stack cha đọc output stack con dạng NestedStack.Outputs.Name.",
+      "tip": "Hỏi lấy DNS name hay public IP của instance trong template → GetAtt.",
+      "lessons": [
+        "cfn-intrinsic-functions"
+      ]
+    },
+    {
+      "term": "Fn::GetAZs",
+      "full": null,
+      "def": "Trả danh sách AZ của region hiện tại; thường kết hợp Fn::Select để chọn AZ theo index thay vì đặt cứng tên AZ.",
+      "tip": "'Không hard-code AZ' → !Select [0, !GetAZs ''].",
+      "lessons": [
+        "cfn-intrinsic-functions"
+      ]
+    },
+    {
+      "term": "Fn::Sub",
+      "full": null,
+      "def": "Thay các biến ${Var} trong chuỗi bằng giá trị parameter, resource hoặc pseudo parameter; Fn::Join thì ghép một list bằng ký tự phân tách.",
+      "tip": "User data EC2 thường viết bằng Base64 + Sub.",
+      "lessons": [
+        "cfn-intrinsic-functions"
+      ]
+    },
+    {
+      "term": "Fn::Base64",
+      "full": null,
+      "def": "Mã hóa chuỗi sang Base64, chủ yếu dùng cho UserData của EC2 vì EC2 nhận user data ở dạng Base64.",
+      "tip": null,
+      "lessons": [
+        "cfn-intrinsic-functions"
+      ]
+    },
+    {
+      "term": "Fn::Cidr",
+      "full": null,
+      "def": "Sinh danh sách CIDR block con từ CIDR của VPC (theo số lượng và số bit), dùng để tự chia subnet trong template.",
+      "tip": "'Tự chia CIDR cho subnet, không nhập tay' → Fn::Cidr.",
+      "lessons": [
+        "cfn-intrinsic-functions"
+      ]
+    },
+    {
+      "term": "CloudFormation Mappings",
+      "full": null,
+      "def": "Section Mappings là bảng tra tĩnh luôn hai cấp, ánh xạ key sang value, ví dụ AMI theo region và kiến trúc, instance size theo môi trường và tầng.",
+      "tip": "Mappings dùng để tra giá trị; bật hay tắt việc tạo resource là việc của Conditions. Cần AMI luôn mới nhất → SSM parameter.",
+      "lessons": [
+        "cfn-mappings"
+      ]
+    },
+    {
+      "term": "Fn::FindInMap",
+      "full": null,
+      "def": "Đọc giá trị từ Mappings, cần đủ 3 tham số: tên mapping, top-level key, second-level key; top-level key thường là AWS::Region.",
+      "tip": null,
+      "lessons": [
+        "cfn-mappings"
+      ]
+    },
+    {
+      "term": "CloudFormation Outputs",
+      "full": null,
+      "def": "Section tùy chọn trả giá trị sau khi stack tạo xong (URL, endpoint, ID resource); hiện trên console/CLI, được stack cha đọc, hoặc Export cho stack khác dùng.",
+      "tip": "Hiện URL/endpoint sau deploy → Outputs; stack độc lập dùng giá trị → Outputs + Export, bên dùng gọi ImportValue.",
+      "lessons": [
+        "cfn-outputs"
+      ]
+    },
+    {
+      "term": "CloudFormation Conditions",
+      "full": null,
+      "def": "Section định nghĩa điều kiện true/false bằng Fn::Equals, And, Or, Not; resource gắn Condition false thì không được tạo. Conditions được đánh giá trước Resources.",
+      "tip": "Một template cho dev và prod, prod có thêm resource → Parameter + Conditions.",
+      "lessons": [
+        "cfn-conditions"
+      ]
+    },
+    {
+      "term": "Fn::If",
+      "full": null,
+      "def": "Chọn một trong hai giá trị cho property tùy condition đúng hay sai, ví dụ instance type lớn hơn cho prod; kết hợp AWS::NoValue để bỏ hẳn property.",
+      "tip": null,
+      "lessons": [
+        "cfn-conditions"
+      ]
+    },
+    {
+      "term": "DependsOn",
+      "full": null,
+      "def": "Khai báo explicit dependency khi CloudFormation không tự suy ra thứ tự từ Ref/GetAtt (implicit dependency): resource chỉ được tạo sau và xóa trước resource nó phụ thuộc.",
+      "tip": "Elastic IP lỗi khi tạo/xóa stack có IGW → thêm DependsOn tới IGW attachment (VPCGatewayAttachment).",
+      "lessons": [
+        "cfn-dependson"
+      ]
+    },
+    {
+      "term": "CreationPolicy",
+      "full": null,
+      "def": "Thuộc tính trên EC2/ASG khiến CloudFormation chờ đủ Count tín hiệu thành công từ cfn-signal trong Timeout (tối đa 12 giờ) mới đánh dấu CREATE_COMPLETE; hết hạn hay tín hiệu lỗi thì fail.",
+      "tip": "'Stack chỉ complete khi bootstrapping thành công', 'ASG cần N instance báo khỏe' → CreationPolicy + cfn-signal.",
+      "lessons": [
+        "cfn-wait-conditions-and-cfn-signal"
+      ]
+    },
+    {
+      "term": "WaitCondition",
+      "full": null,
+      "def": "Resource riêng chờ tín hiệu gửi tới presigned URL của WaitConditionHandle, có thể kèm dữ liệu đọc qua GetAtt Data; dùng khi phải chờ hệ thống bên ngoài.",
+      "tip": "'Chờ hệ thống on-prem xác nhận rồi mới tạo phần còn lại' → WaitCondition + WaitConditionHandle.",
+      "lessons": [
+        "cfn-wait-conditions-and-cfn-signal"
+      ]
+    },
+    {
+      "term": "cfn-signal",
+      "full": null,
+      "def": "Helper script chạy trên EC2 gửi tín hiệu success hoặc failure (thường theo exit code của cfn-init) về CreationPolicy hoặc WaitConditionHandle.",
+      "tip": "cfn-init áp cấu hình, cfn-signal báo kết quả, cfn-hup theo dõi thay đổi.",
+      "lessons": [
+        "cfn-wait-conditions-and-cfn-signal"
+      ]
+    },
+    {
+      "term": "Nested Stacks",
+      "full": null,
+      "def": "Root stack tạo stack con bằng resource AWS::CloudFormation::Stack, mỗi stack con từ một template riêng; reuse template dạng module, vượt giới hạn 500 resource mỗi stack.",
+      "tip": "Chỉ dùng khi các phần cùng lifecycle. Reuse template (code) → nested stacks; dùng resource thật của stack khác → cross-stack.",
+      "lessons": [
+        "cfn-nested-stacks"
+      ]
+    },
+    {
+      "term": "Stack Resource Limit",
+      "full": null,
+      "def": "Một stack CloudFormation chứa tối đa 500 resource; hạ tầng lớn hơn phải chia thành nhiều stack, ví dụ nested stacks.",
+      "tip": "Từ khóa 'vượt giới hạn 500 resource của một stack' → nested stacks.",
+      "lessons": [
+        "cfn-nested-stacks"
+      ]
+    },
+    {
+      "term": "Cross-Stack References",
+      "full": null,
+      "def": "Stack nguồn Export output với tên duy nhất trong region của account, stack khác lấy bằng Fn::ImportValue; dùng cho shared services như shared VPC và các phần có vòng đời khác nhau.",
+      "tip": "Export/ImportValue chỉ cùng account + region; export đang được import thì không xóa được stack nguồn.",
+      "lessons": [
+        "cfn-cross-stack-references"
+      ]
+    },
+    {
+      "term": "Fn::ImportValue",
+      "full": null,
+      "def": "Lấy giá trị đã Export từ stack khác, dùng thay cho Ref; không hoạt động cross-region hay cross-account.",
+      "tip": "Nhập tay ID vào parameter chỉ là giá trị tĩnh; 'tham chiếu động resource của stack khác' → Export + ImportValue.",
+      "lessons": [
+        "cfn-cross-stack-references"
+      ]
+    },
+    {
+      "term": "CloudFormation StackSets",
+      "full": null,
+      "def": "Dùng một template để create, update, delete stack trên nhiều account và nhiều region từ admin account; CloudFormation assume role vào target account để thực hiện.",
+      "tip": "'Deploy cùng cấu hình ra mọi account/region trong Organization, account mới tự có' → StackSets service-managed + automatic deployment.",
+      "lessons": [
+        "cfn-stacksets"
+      ]
+    },
+    {
+      "term": "Stack Instance",
+      "full": null,
+      "def": "Tham chiếu tới một stack trong một target account + region thuộc StackSet; cấu trúc StackSet → stack instance → stack → resource.",
+      "tip": "Xóa stack instance mặc định xóa luôn stack và resource ở target; muốn giữ thì chọn retain stacks.",
+      "lessons": [
+        "cfn-stacksets"
+      ]
+    },
+    {
+      "term": "Service-managed Permissions",
+      "full": null,
+      "def": "Mô hình quyền của StackSets dựa trên AWS Organizations: role được tạo tự động, hỗ trợ automatic deployment cho account mới; self-managed thì bạn tự tạo IAM role ở từng account.",
+      "tip": "Đề nói 'đã dùng AWS Organizations' → thường là service-managed.",
+      "lessons": [
+        "cfn-stacksets"
+      ]
+    },
+    {
+      "term": "DeletionPolicy",
+      "full": null,
+      "def": "Thuộc tính từng resource quyết định số phận physical resource khi logical resource bị xóa: Delete (mặc định), Retain, RetainExceptOnCreate, Snapshot (EBS volume, RDS, Redshift, ElastiCache, Neptune...).",
+      "tip": "EC2 instance không hỗ trợ Snapshot; RDS DB instance mặc định Snapshot. Snapshot để lại không tự xóa, vẫn tốn tiền.",
+      "lessons": [
+        "cfn-deletion-policy"
+      ]
+    },
+    {
+      "term": "RetainExceptOnCreate",
+      "full": null,
+      "def": "Biến thể của Retain: giữ resource khi bị xóa, trừ trường hợp stack tạo lần đầu bị rollback, khi đó resource vừa tạo được dọn đi.",
+      "tip": null,
+      "lessons": [
+        "cfn-deletion-policy"
+      ]
+    },
+    {
+      "term": "UpdateReplacePolicy",
+      "full": null,
+      "def": "Tương tự DeletionPolicy nhưng áp cho bản cũ khi resource bị replace do update (Delete, Retain, Snapshot); DeletionPolicy không có tác dụng lúc replace.",
+      "tip": "Bảo vệ dữ liệu khi update gây replacement → UpdateReplacePolicy; xem trước resource nào bị replace → change set.",
+      "lessons": [
+        "cfn-deletion-policy"
+      ]
+    },
+    {
+      "term": "Stack Termination Protection",
+      "full": null,
+      "def": "Setting chặn việc xóa cả stack cho tới khi tắt nó đi; khác DeletionPolicy, vốn quy định số phận từng resource khi bị xóa.",
+      "tip": null,
+      "lessons": [
+        "cfn-deletion-policy"
+      ]
+    },
+    {
+      "term": "CloudFormation Stack Role",
+      "full": null,
+      "def": "IAM role (service role) gắn vào stack để CloudFormation assume khi create/update/delete resource thay vì dùng quyền người thao tác; người dùng chỉ cần quyền trên stack + iam:PassRole.",
+      "tip": "'User cần dùng CloudFormation làm việc mà bên ngoài họ không được phép' → stack role (role separation).",
+      "lessons": [
+        "cfn-stack-roles"
+      ]
+    },
+    {
+      "term": "AWS::CloudFormation::Init",
+      "full": null,
+      "def": "Khối cấu hình trong Metadata của resource mô tả desired state cho instance: packages, groups, users, sources, files, commands, services; cfn-init đọc và áp lên EC2.",
+      "tip": null,
+      "lessons": [
+        "cfn-init"
+      ]
+    },
+    {
+      "term": "cfn-init",
+      "full": null,
+      "def": "Helper script có sẵn trên Amazon Linux, được gọi từ user data, đọc AWS::CloudFormation::Init để đưa instance về desired state (khai báo muốn gì thay vì viết script thủ tục).",
+      "tip": "User data = procedural, chạy một lần lúc launch; cfn-init = desired state, chạy lại được khi kết hợp cfn-hup.",
+      "lessons": [
+        "cfn-init"
+      ]
+    },
+    {
+      "term": "cfn-hup",
+      "full": null,
+      "def": "Daemon trên EC2 định kỳ kiểm tra metadata của resource trong stack; khi metadata đổi sau update stack thì chạy action đã cấu hình, thường là chạy lại cfn-init.",
+      "tip": "'Update stack phải cập nhật cấu hình phần mềm trên EC2 đang chạy' → cfn-hup + cfn-init.",
+      "lessons": [
+        "cfn-hup"
+      ]
+    },
+    {
+      "term": "CloudFormation Change Sets",
+      "full": null,
+      "def": "Bản xem trước thay đổi của stack (thêm, sửa, xóa, có replace không) trước khi Execute, kèm pre-deployment validation; có loại create, update, import và drift-aware.",
+      "tip": "'Preview thay đổi, biết resource nào bị replace trước khi update' → change set. Change set chỉ xem trước, không bảo vệ dữ liệu.",
+      "lessons": [
+        "cfn-change-sets"
+      ]
+    },
+    {
+      "term": "Replacement Update",
+      "full": null,
+      "def": "Kiểu update nguy hiểm nhất: CloudFormation tạo resource mới (physical ID mới) rồi xóa bản cũ, có thể mất dữ liệu; các kiểu khác là No interruption và Some interruption.",
+      "tip": null,
+      "lessons": [
+        "cfn-change-sets"
+      ]
+    },
+    {
+      "term": "Drift Detection",
+      "full": null,
+      "def": "Phát hiện resource bị sửa tay ngoài CloudFormation, khác với template; drift-aware change set xem trước template mới có tính tới drift và đưa resource về đúng template.",
+      "tip": null,
+      "lessons": [
+        "cfn-change-sets"
+      ]
+    },
+    {
+      "term": "Resource Import",
+      "full": null,
+      "def": "Đưa resource đã tạo tay vào cho một stack CloudFormation quản lý, thông qua change set loại IMPORT.",
+      "tip": "'Đưa resource tạo bằng console vào CloudFormation quản lý' → import.",
+      "lessons": [
+        "cfn-change-sets"
+      ]
+    },
+    {
+      "term": "CloudFormation Custom Resources",
+      "full": null,
+      "def": "Logical resource mà mỗi lần create/update/delete CloudFormation gửi event tới Lambda function hoặc SNS topic (khai báo qua ServiceToken) để làm việc CFN không hỗ trợ native.",
+      "tip": "'Empty S3 bucket trước khi xóa stack', gọi hệ thống bên ngoài khi deploy → Lambda-backed custom resource.",
+      "lessons": [
+        "cfn-custom-resources"
+      ]
+    },
+    {
+      "term": "ResponseURL",
+      "full": null,
+      "def": "Presigned URL kèm trong event của custom resource; code xử lý phải gửi kết quả (SUCCESS/FAILED và dữ liệu) về đây để CloudFormation tiếp tục.",
+      "tip": "Lambda quên gửi response về ResponseURL → stack bị treo tới khi timeout.",
+      "lessons": [
+        "cfn-custom-resources"
+      ]
+    }
+  ]
+}

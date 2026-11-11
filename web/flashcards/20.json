@@ -1,0 +1,645 @@
+{
+  "chapter": "20",
+  "cards": [
+    {
+      "term": "Amazon DynamoDB",
+      "full": null,
+      "def": "NoSQL wide-column key/value dạng database-as-a-service, public service, không server để quản lý; dữ liệu tự replicate qua nhiều AZ, latency single-digit millisecond, on-demand là capacity mode mặc định.",
+      "tip": "NoSQL, key/value, serverless app → DynamoDB; relational data, join, SQL → RDS/Aurora.",
+      "lessons": [
+        "dynamodb-architecture"
+      ]
+    },
+    {
+      "term": "Partition Key",
+      "full": null,
+      "def": "Attribute bắt buộc của primary key, được hash để quyết định item nằm ở partition nào; nếu chỉ có partition key thì giá trị phải unique.",
+      "tip": "Partition key ít giá trị khác nhau → hot partition, throttle dù tổng capacity còn đủ.",
+      "lessons": [
+        "dynamodb-architecture",
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "Sort Key",
+      "full": null,
+      "def": "Thành phần tùy chọn của composite primary key; nhiều item cùng partition key được phân biệt và sắp xếp theo sort key, cho Query theo khoảng (between, begins_with).",
+      "tip": null,
+      "lessons": [
+        "dynamodb-architecture"
+      ]
+    },
+    {
+      "term": "DynamoDB Item Size Limit",
+      "full": null,
+      "def": "Mỗi item (primary key + mọi attribute, schema linh hoạt) tối đa 400 KB.",
+      "tip": "Dữ liệu lớn (ảnh, file) → lưu S3, DynamoDB chỉ giữ pointer.",
+      "lessons": [
+        "dynamodb-architecture"
+      ]
+    },
+    {
+      "term": "DynamoDB On-Demand Backup",
+      "full": null,
+      "def": "Backup toàn bộ table chạy thủ công, giữ tới khi bạn xóa, không ảnh hưởng hiệu năng; restore luôn ra table mới (cùng hoặc khác region).",
+      "tip": null,
+      "lessons": [
+        "dynamodb-architecture"
+      ]
+    },
+    {
+      "term": "DynamoDB PITR",
+      "full": "Point-in-Time Recovery",
+      "def": "Continuous backup bật theo table (tắt mặc định), khôi phục về bất kỳ giây nào trong cửa sổ 1–35 ngày, restore ra table mới.",
+      "tip": "Phục hồi sau khi ghi hoặc xóa nhầm dữ liệu DynamoDB → PITR.",
+      "lessons": [
+        "dynamodb-architecture"
+      ]
+    },
+    {
+      "term": "PartiQL",
+      "full": null,
+      "def": "Ngôn ngữ truy vấn giống SQL mà DynamoDB hỗ trợ cho select, insert, update, delete; không phải SQL quan hệ thật, không có join.",
+      "tip": "Đề nhấn mạnh SQL, join, dữ liệu quan hệ → thường không phải DynamoDB.",
+      "lessons": [
+        "dynamodb-architecture"
+      ]
+    },
+    {
+      "term": "On-Demand Capacity Mode",
+      "full": null,
+      "def": "Capacity mode mặc định của DynamoDB: không cần dự báo capacity, trả theo số request đọc/ghi thực tế, tự scale theo tải.",
+      "tip": "Tải không đoán trước, spiky, app mới ra mắt, muốn ít quản trị → on-demand.",
+      "lessons": [
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "Provisioned Capacity Mode",
+      "full": null,
+      "def": "Đặt sẵn RCU/WCU cho table, có auto scaling (min, max, target utilization) và reserved capacity; rẻ hơn với tải ổn định, dự đoán được.",
+      "tip": "Provisioned → on-demand chỉ đổi được 4 lần mỗi 24 giờ; chiều ngược lại không giới hạn.",
+      "lessons": [
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "RCU",
+      "full": "Read Capacity Unit",
+      "def": "1 RCU = 1 strongly consistent read mỗi giây cho item tới 4 KB (hoặc 2 eventually consistent read); làm tròn lên theo bội 4 KB cho từng item.",
+      "tip": "Item 10 KB → làm tròn 12 KB = 3 RCU nếu strongly consistent, 1,5 RCU nếu eventually consistent.",
+      "lessons": [
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "WCU",
+      "full": "Write Capacity Unit",
+      "def": "1 WCU = 1 lần ghi mỗi giây cho item tới 1 KB; làm tròn lên theo bội 1 KB cho từng item, tối thiểu 1 đơn vị mỗi operation.",
+      "tip": "10 item 2,5 KB mỗi giây → mỗi item 3 WCU → cần 30 WCU.",
+      "lessons": [
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "Eventually Consistent Read",
+      "full": null,
+      "def": "Kiểu đọc mặc định của DynamoDB, có thể chưa thấy lần ghi mới nhất; tốn một nửa capacity so với strongly consistent read ở cả hai capacity mode.",
+      "tip": null,
+      "lessons": [
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "Strongly Consistent Read",
+      "full": null,
+      "def": "Đọc luôn trả dữ liệu mới nhất sau lần ghi thành công; phải yêu cầu rõ trên từng lệnh đọc, tốn gấp đôi; GSI không hỗ trợ, DAX không cache kiểu đọc này.",
+      "tip": "'Luôn đọc dữ liệu mới nhất ngay sau khi ghi' → strongly consistent read.",
+      "lessons": [
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "DynamoDB Query",
+      "full": null,
+      "def": "Đọc các item theo một giá trị partition key (tùy chọn điều kiện trên sort key), chỉ tốn capacity cho item được đọc; cách đọc hiệu quả nhất.",
+      "tip": "Tối ưu chi phí/hiệu năng → tránh Scan, dùng Query + index (GSI/LSI).",
+      "lessons": [
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "DynamoDB Scan",
+      "full": null,
+      "def": "Đọc toàn bộ table rồi mới lọc; linh hoạt nhất nhưng tốn capacity cho mọi item đã đọc, kể cả item bị filter loại bỏ.",
+      "tip": "Filter và projection không làm giảm capacity tiêu thụ.",
+      "lessons": [
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "ProvisionedThroughputExceededException",
+      "full": null,
+      "def": "Lỗi throttle khi request vượt capacity provisioned hoặc dồn vào hot partition; xử lý bằng tăng capacity, auto scaling, on-demand, retry với exponential backoff.",
+      "tip": "Đọc lặp lại nhiều gây throttle → cân nhắc DAX.",
+      "lessons": [
+        "dynamodb-operations-and-performance"
+      ]
+    },
+    {
+      "term": "LSI",
+      "full": "Local Secondary Index",
+      "def": "Index giữ nguyên partition key nhưng dùng sort key khác; phải tạo cùng lúc với table, không thêm hay xóa sau đó, dùng chung capacity với table, hỗ trợ strongly consistent.",
+      "tip": "Cần sort key thay thế + strongly consistent → LSI. Table đã tồn tại → không thêm LSI được.",
+      "lessons": [
+        "dynamodb-indexes-lsi-and-gsi"
+      ]
+    },
+    {
+      "term": "GSI",
+      "full": "Global Secondary Index",
+      "def": "Index có partition key và sort key khác hẳn base table, tạo được bất cứ lúc nào, có capacity riêng, chỉ eventually consistent; mặc định tối đa 20 GSI mỗi table.",
+      "tip": "Cần query theo attribute khác trên table đang chạy → GSI. GSI thiếu WCU có thể throttle ghi lên base table.",
+      "lessons": [
+        "dynamodb-indexes-lsi-and-gsi"
+      ]
+    },
+    {
+      "term": "Index Projection",
+      "full": null,
+      "def": "Chọn attribute đưa vào index: KEYS_ONLY, INCLUDE hoặc ALL; project ít tiết kiệm storage/capacity nhưng LSI phải fetch thêm từ base table, GSI thì không trả được attribute thiếu.",
+      "tip": null,
+      "lessons": [
+        "dynamodb-indexes-lsi-and-gsi"
+      ]
+    },
+    {
+      "term": "DynamoDB Streams",
+      "full": null,
+      "def": "Luồng có thứ tự thời gian các thay đổi item (insert, update, delete) của một table, bật theo table, giữ trong cửa sổ 24 giờ; tính năng native, không phải Kinesis.",
+      "tip": "'Hành động khi dữ liệu DynamoDB thay đổi, không polling' → Streams + Lambda.",
+      "lessons": [
+        "dynamodb-streams-and-triggers"
+      ]
+    },
+    {
+      "term": "Stream View Types",
+      "full": null,
+      "def": "4 kiểu nội dung bản ghi trong DynamoDB Stream: KEYS_ONLY, NEW_IMAGE, OLD_IMAGE, NEW_AND_OLD_IMAGES.",
+      "tip": "Cần cả trạng thái trước và sau thay đổi mà không đọc lại table → NEW_AND_OLD_IMAGES.",
+      "lessons": [
+        "dynamodb-streams-and-triggers"
+      ]
+    },
+    {
+      "term": "DynamoDB Triggers",
+      "full": null,
+      "def": "Kiến trúc Streams + Lambda: Lambda đọc stream qua event source mapping theo batch và chạy code khi item thay đổi (gửi thông báo, ghi audit, đồng bộ hệ thống khác).",
+      "tip": null,
+      "lessons": [
+        "dynamodb-streams-and-triggers"
+      ]
+    },
+    {
+      "term": "DynamoDB Global Tables",
+      "full": null,
+      "def": "Replication multi-active (multi-master) cross-region: table ở nhiều region gom thành một global table, đọc và ghi ở region nào cũng được; dùng cho global HA, latency thấp, DR.",
+      "tip": "NoSQL đọc ghi nhiều region, active-active → Global Tables; relational toàn cầu → Aurora Global Database.",
+      "lessons": [
+        "dynamodb-global-tables"
+      ]
+    },
+    {
+      "term": "MREC",
+      "full": "Multi-Region Eventual Consistency",
+      "def": "Consistency mode mặc định của Global Tables: replicate bất đồng bộ, thường dưới 1 giây, xung đột giải quyết bằng last writer wins; strongly consistent read chỉ trong region ghi.",
+      "tip": null,
+      "lessons": [
+        "dynamodb-global-tables"
+      ]
+    },
+    {
+      "term": "MRSC",
+      "full": "Multi-Region Strong Consistency",
+      "def": "Consistency mode replicate đồng bộ của Global Tables: strongly consistent read ở mọi region, ghi chậm hơn, ghi xung đột bị từ chối thay vì ghi đè.",
+      "tip": "Consistency mode chọn lúc tạo global table, không đổi được.",
+      "lessons": [
+        "dynamodb-global-tables"
+      ]
+    },
+    {
+      "term": "Last Writer Wins",
+      "full": null,
+      "def": "Cơ chế giải xung đột của Global Tables mode MREC: khi hai region cùng ghi một item, bản ghi mới nhất thắng và bản kia bị ghi đè âm thầm.",
+      "tip": null,
+      "lessons": [
+        "dynamodb-global-tables"
+      ]
+    },
+    {
+      "term": "DAX",
+      "full": "DynamoDB Accelerator",
+      "def": "In-memory cache tích hợp sẵn với DynamoDB: app gọi DAX SDK, DAX tự lo cache hit/miss, latency đọc từ millisecond xuống microsecond; cluster chạy trong VPC, trải nhiều AZ.",
+      "tip": "Cache cho DynamoDB, ít sửa code → DAX (không phải ElastiCache). Strongly consistent read đi thẳng xuống DynamoDB, không được cache.",
+      "lessons": [
+        "dax"
+      ]
+    },
+    {
+      "term": "DynamoDB TTL",
+      "full": "Time To Live",
+      "def": "Attribute chứa thời điểm hết hạn (epoch time tính bằng giây) cho từng item; quá hạn thì DynamoDB đánh dấu expired và xóa trong nền, miễn phí, không tốn WCU.",
+      "tip": "Tự xóa session hết hạn → TTL; muốn archive item trước khi mất → TTL + Streams + Lambda ghi sang S3.",
+      "lessons": [
+        "dynamodb-ttl"
+      ]
+    },
+    {
+      "term": "Amazon Athena",
+      "full": null,
+      "def": "Query SQL ad-hoc serverless trực tiếp trên dữ liệu trong S3, schema-on-read, không load, không ETL, không hạ tầng; trả theo lượng dữ liệu query quét hoặc capacity reservation.",
+      "tip": "Query ad-hoc dữ liệu S3, log AWS (VPC Flow Logs, CloudTrail, ELB) → Athena. Warehouse phân tích nặng → Redshift.",
+      "lessons": [
+        "athena"
+      ]
+    },
+    {
+      "term": "Schema-on-Read",
+      "full": null,
+      "def": "Schema chỉ được áp lên dữ liệu lúc đọc (table định nghĩa trong Glue Data Catalog), dữ liệu gốc trong S3 giữ nguyên định dạng và không bị thay đổi.",
+      "tip": null,
+      "lessons": [
+        "athena"
+      ]
+    },
+    {
+      "term": "Athena Workgroup",
+      "full": null,
+      "def": "Đơn vị cô lập team và kiểm soát chi phí (giới hạn dữ liệu quét mỗi query) trong Athena; engine SQL hay Apache Spark chọn lúc tạo workgroup và không đổi được.",
+      "tip": null,
+      "lessons": [
+        "athena"
+      ]
+    },
+    {
+      "term": "Athena Federated Query",
+      "full": null,
+      "def": "Cho Athena chạy SQL trên nguồn ngoài S3 (RDS, DynamoDB, on-prem...) bằng data source connector chạy trên Lambda.",
+      "tip": "Một câu SQL join dữ liệu S3 với nguồn khác mà không di chuyển dữ liệu → Athena Federated Query.",
+      "lessons": [
+        "athena"
+      ]
+    },
+    {
+      "term": "Athena for Apache Spark",
+      "full": null,
+      "def": "Engine Spark serverless của Athena: viết PySpark trong notebook cho data pipeline/ETL nhiều bước, chạy trên DPU và trả theo DPU-giờ.",
+      "tip": "Data engineering bằng code mà không muốn quản cluster Spark → Athena for Apache Spark.",
+      "lessons": [
+        "athena"
+      ]
+    },
+    {
+      "term": "Apache Parquet",
+      "full": null,
+      "def": "Định dạng file lưu theo cột, nén tốt; với engine tính tiền theo dữ liệu quét như Athena, đọc Parquet/ORC chỉ quét cột cần nên rẻ và nhanh hơn.",
+      "tip": "Giảm chi phí Athena → nén + định dạng cột (Parquet/ORC) + partition theo khóa hay lọc.",
+      "lessons": [
+        "athena"
+      ]
+    },
+    {
+      "term": "Amazon ElastiCache",
+      "full": null,
+      "def": "In-memory cache/database managed với engine Valkey, Redis OSS, Memcached; latency sub-millisecond, giảm tải đọc database và lưu session state; phải sửa code ứng dụng.",
+      "tip": "Read-heavy, giảm chi phí đọc DB → ElastiCache; đề ghi 'không được sửa code' → gần như chắc không phải ElastiCache.",
+      "lessons": [
+        "elasticache"
+      ]
+    },
+    {
+      "term": "Valkey",
+      "full": null,
+      "def": "Engine in-memory mã nguồn mở tương thích Redis (client, cấu trúc dữ liệu), AWS khuyên dùng cho triển khai ElastiCache mới; có replication, Multi-AZ, backup.",
+      "tip": null,
+      "lessons": [
+        "elasticache"
+      ]
+    },
+    {
+      "term": "ElastiCache for Redis OSS",
+      "full": null,
+      "def": "Engine Redis mã nguồn mở: cấu trúc dữ liệu phong phú (sorted set, list, hash), replication, Multi-AZ failover, backup/restore, transactions.",
+      "tip": "Cần HA, backup, leaderboard (sorted set), transactions → Valkey/Redis OSS.",
+      "lessons": [
+        "elasticache"
+      ]
+    },
+    {
+      "term": "ElastiCache for Memcached",
+      "full": null,
+      "def": "Engine cache đơn giản, multi-threaded, tận dụng nhiều core CPU; không replication, không persistence/backup, không Multi-AZ HA nên có thể mất dữ liệu.",
+      "tip": "Cache đơn giản, multi-threaded, chấp nhận mất dữ liệu → Memcached.",
+      "lessons": [
+        "elasticache"
+      ]
+    },
+    {
+      "term": "External Session State",
+      "full": null,
+      "def": "Lưu session người dùng ngoài instance (ElastiCache hoặc DynamoDB) để ứng dụng stateless: instance nào cũng phục vụ được, scale in hay instance hỏng không mất session.",
+      "tip": "Bền hơn session stickiness, vốn mất session khi instance chết.",
+      "lessons": [
+        "elasticache"
+      ]
+    },
+    {
+      "term": "Amazon Redshift",
+      "full": null,
+      "def": "Data warehouse MPP, OLAP, lưu theo cột, quy mô petabyte; nhận dữ liệu từ hệ OLTP, S3, DynamoDB... cho phân tích, báo cáo, BI dài hạn; provisioned hoặc Serverless.",
+      "tip": "Data warehouse, petabyte, columnar, BI trên dữ liệu lịch sử → Redshift; giao dịch real-time → RDS/Aurora.",
+      "lessons": [
+        "redshift"
+      ]
+    },
+    {
+      "term": "OLAP",
+      "full": "Online Analytical Processing",
+      "def": "Workload phân tích: truy vấn phức tạp, tổng hợp trên khối lớn dữ liệu lịch sử; ngược với OLTP (Online Transaction Processing) gồm nhiều giao dịch nhỏ, ngắn, real-time.",
+      "tip": "OLAP → Redshift; OLTP → RDS/Aurora/DynamoDB.",
+      "lessons": [
+        "redshift"
+      ]
+    },
+    {
+      "term": "MPP",
+      "full": "Massively Parallel Processing",
+      "def": "Kiến trúc chia dữ liệu và query cho nhiều node xử lý song song; Redshift có leader node nhận query, lập kế hoạch và compute node thực thi.",
+      "tip": null,
+      "lessons": [
+        "redshift"
+      ]
+    },
+    {
+      "term": "Redshift Serverless",
+      "full": null,
+      "def": "Mode Redshift không quản cluster: capacity tính theo RPU, tự scale, trả theo RPU-giây, không tốn tiền compute khi rảnh; cùng engine và SQL với provisioned.",
+      "tip": "Tải phân tích thất thường, không muốn quản capacity → Redshift Serverless; tải ổn định nặng → provisioned + reserved node.",
+      "lessons": [
+        "redshift"
+      ]
+    },
+    {
+      "term": "Redshift Spectrum",
+      "full": null,
+      "def": "Cho cluster Redshift query trực tiếp dữ liệu nằm trên S3 (external table) mà không cần load vào warehouse.",
+      "tip": "Đã có Redshift và muốn query dữ liệu S3 không load → Spectrum; chỉ query ad-hoc S3, không warehouse → Athena.",
+      "lessons": [
+        "redshift"
+      ]
+    },
+    {
+      "term": "Redshift Federated Query",
+      "full": null,
+      "def": "Cho Redshift query trực tiếp dữ liệu live trong database bên ngoài (RDS, Aurora PostgreSQL/MySQL) mà không cần ETL.",
+      "tip": null,
+      "lessons": [
+        "redshift"
+      ]
+    },
+    {
+      "term": "Enhanced VPC Routing",
+      "full": null,
+      "def": "Setting buộc traffic COPY/UNLOAD giữa Redshift và S3 hay nguồn khác đi qua VPC, nên áp dụng được SG, NACL, VPC endpoint, custom DNS, VPC Flow Logs.",
+      "tip": "Mặc định traffic Redshift đi ra ngoài VPC (kể cả tới S3); cần kiểm soát đường đi → bật Enhanced VPC Routing.",
+      "lessons": [
+        "redshift"
+      ]
+    },
+    {
+      "term": "Redshift Snapshots",
+      "full": null,
+      "def": "Snapshot lưu vào S3: automatic (khoảng mỗi 8 giờ hoặc 5 GB thay đổi mỗi node, retention mặc định 1 ngày) và manual (không tự xóa); copy được sang region khác.",
+      "tip": "Provisioned mặc định chỉ một AZ: chống lỗi AZ → restore snapshot sang AZ khác; DR region → cross-region snapshot copy.",
+      "lessons": [
+        "redshift"
+      ]
+    },
+    {
+      "term": "Amazon Neptune",
+      "full": null,
+      "def": "Graph database managed, vận hành giống RDS/Aurora: trong VPC, private mặc định, Multi-AZ, read replica, continuous backup vào S3, point-in-time recovery.",
+      "tip": "Graph, quan hệ thay đổi liên tục: mạng xã hội, fraud ring, recommendation, knowledge graph → Neptune.",
+      "lessons": [
+        "amazon-neptune"
+      ]
+    },
+    {
+      "term": "Neptune Global Database",
+      "full": null,
+      "def": "Kiến trúc Neptune trải nhiều region: 1 primary region ghi và tối đa 5 secondary region chỉ đọc, phục vụ đọc toàn cầu và DR.",
+      "tip": null,
+      "lessons": [
+        "amazon-neptune"
+      ]
+    },
+    {
+      "term": "Amazon OpenSearch Service",
+      "full": null,
+      "def": "Search và log analytics managed, near real-time, chạy OpenSearch (fork của Elasticsearch): JSON document được index ngay khi tới, tìm được trong khoảng một giây; trải 2 hoặc 3 AZ.",
+      "tip": "Full-text search, log analytics, Elasticsearch/Kibana, vector search → OpenSearch. Lưu rẻ, query thỉnh thoảng → S3 + Athena.",
+      "lessons": [
+        "amazon-opensearch-service"
+      ]
+    },
+    {
+      "term": "OpenSearch Dashboards",
+      "full": null,
+      "def": "Giao diện visualization và khám phá dữ liệu đi kèm OpenSearch, là bản fork của Kibana.",
+      "tip": "Đề cũ nói ELK/Kibana → OpenSearch Service + OpenSearch Dashboards.",
+      "lessons": [
+        "amazon-opensearch-service"
+      ]
+    },
+    {
+      "term": "OpenSearch Serverless",
+      "full": null,
+      "def": "Mode OpenSearch không quản node: đặt min/max OCU, tự scale và có thể về 0; mode domain thì chọn instance type + số node, trả instance-giờ, không auto scaling.",
+      "tip": null,
+      "lessons": [
+        "amazon-opensearch-service"
+      ]
+    },
+    {
+      "term": "OpenSearch Ingestion",
+      "full": null,
+      "def": "Pipeline managed để nạp, lọc và reshape dữ liệu vào OpenSearch; cùng Amazon Data Firehose và CloudWatch Logs subscription filter là các đường vào chính.",
+      "tip": "Mẫu hay gặp: Kinesis → Firehose → OpenSearch → Dashboards/QuickSight.",
+      "lessons": [
+        "amazon-opensearch-service"
+      ]
+    },
+    {
+      "term": "AWS Lake Formation",
+      "full": null,
+      "def": "Fine-grained access control cho S3 data lake (S3 + Glue Data Catalog): cấp quyền theo database, table, cột, hàng; đọc S3 thay user qua registration role và cấp temporary credentials.",
+      "tip": "S3 data lake + cần hạn chế theo cột/hàng → Lake Formation. Chỉ cần quyền theo bucket/prefix → bucket policy, IAM.",
+      "lessons": [
+        "aws-lake-formation"
+      ]
+    },
+    {
+      "term": "LF-Tags",
+      "full": "Lake Formation Tags",
+      "def": "Tag gắn lên database, table, cột để cấp quyền theo phân loại (vd domain=finance) thay vì theo tên từng resource; scale tốt khi có nhiều table.",
+      "tip": null,
+      "lessons": [
+        "aws-lake-formation"
+      ]
+    },
+    {
+      "term": "Lake Formation Data Filters",
+      "full": null,
+      "def": "Kết hợp biểu thức lọc hàng với danh sách cột include/exclude để giới hạn quyền tới từng ô (cell-level).",
+      "tip": "Chỉ cho xem dữ liệu một quốc gia và ẩn cột nhạy cảm → data filter.",
+      "lessons": [
+        "aws-lake-formation"
+      ]
+    },
+    {
+      "term": "Lake Formation Blueprints",
+      "full": null,
+      "def": "Workflow mẫu có sẵn để nạp dữ liệu từ nguồn như RDS hay log vào data lake trên S3.",
+      "tip": "Đưa dữ liệu RDS vào data lake dễ dàng → Lake Formation Blueprint.",
+      "lessons": [
+        "aws-lake-formation"
+      ]
+    },
+    {
+      "term": "Amazon EMR",
+      "full": null,
+      "def": "Nền tảng cluster managed chạy Hadoop (MapReduce), Spark, Hive, HBase, Presto, Flink; triển khai trên EC2, Serverless, EKS hoặc Outposts.",
+      "tip": "Hadoop, MapReduce, Spark quy mô lớn, migrate Hadoop on-prem → EMR.",
+      "lessons": [
+        "amazon-emr"
+      ]
+    },
+    {
+      "term": "EMR Primary, Core and Task Nodes",
+      "full": null,
+      "def": "Primary node (1 hoặc 3) điều phối cluster; core node chạy task và giữ HDFS; task node chỉ chạy task, không lưu dữ liệu. Cluster EMR trên EC2 nằm trong một AZ.",
+      "tip": "Spot cho task node; primary và core nên On-Demand.",
+      "lessons": [
+        "amazon-emr"
+      ]
+    },
+    {
+      "term": "Transient Cluster",
+      "full": null,
+      "def": "Cluster EMR dựng cho một workload rồi tự terminate khi xong, input/output nằm trên S3; rẻ hơn duy trì cluster chạy dài hạn.",
+      "tip": null,
+      "lessons": [
+        "amazon-emr"
+      ]
+    },
+    {
+      "term": "EMRFS",
+      "full": "EMR File System",
+      "def": "Lớp cho EMR đọc/ghi S3 như filesystem, giữ dữ liệu bền ngoài vòng đời cluster; HDFS trên core node chỉ tạm thời, mất khi cluster tắt.",
+      "tip": "Dữ liệu cần bền → S3 qua EMRFS; dữ liệu trung gian cần hiệu năng storage cao nhất → HDFS.",
+      "lessons": [
+        "amazon-emr"
+      ]
+    },
+    {
+      "term": "EMR Serverless",
+      "full": null,
+      "def": "Cách chạy job Spark hoặc Hive trên EMR mà không quản cluster; AWS tự cấp và scale capacity cho từng job.",
+      "tip": "Chỉ có job Spark/Hive, không muốn quản compute → EMR Serverless; dữ liệu không được rời on-prem → EMR on Outposts.",
+      "lessons": [
+        "amazon-emr"
+      ]
+    },
+    {
+      "term": "Amazon QuickSight",
+      "full": null,
+      "def": "Dịch vụ BI managed cho visualization, dashboard, ad-hoc analysis; kết nối nguồn AWS (Athena, Redshift, RDS, S3, OpenSearch) và ngoài (Salesforce, Snowflake...), tính tiền theo user.",
+      "tip": "Dashboard, visualization, business intelligence → QuickSight. Dashboard private mặc định, embed được vào app.",
+      "lessons": [
+        "amazon-quicksight"
+      ]
+    },
+    {
+      "term": "SPICE",
+      "full": "Super-fast, Parallel, In-memory Calculation Engine",
+      "def": "Engine in-memory của QuickSight: import dữ liệu vào SPICE để dashboard phản hồi nhanh và giảm tải query lên nguồn.",
+      "tip": null,
+      "lessons": [
+        "amazon-quicksight"
+      ]
+    },
+    {
+      "term": "QuickSight Capacity Pricing",
+      "full": null,
+      "def": "Cách tính giá QuickSight theo session đọc (30 phút) thay vì theo từng reader, hợp khi số người xem đông và khó đoán; reader là user chỉ xem với giá thấp.",
+      "tip": null,
+      "lessons": [
+        "amazon-quicksight"
+      ]
+    },
+    {
+      "term": "AWS Data Exchange",
+      "full": null,
+      "def": "Tìm, subscribe và dùng dataset bên thứ ba (miễn phí hoặc trả phí) qua Files, API, S3, Redshift datashare, Lake Formation; provider publish và quản license, khách hàng.",
+      "tip": "Mua/bán dataset bên thứ ba → Data Exchange. Cần thu hồi quyền, dữ liệu luôn mới → giao tại chỗ, không giao file.",
+      "lessons": [
+        "aws-data-exchange"
+      ]
+    },
+    {
+      "term": "Open Data on AWS",
+      "full": null,
+      "def": "Chương trình chia sẻ dataset công khai từ nhiều publisher, dùng hoàn toàn miễn phí trên AWS.",
+      "tip": null,
+      "lessons": [
+        "aws-data-exchange"
+      ]
+    },
+    {
+      "term": "Amazon MSK",
+      "full": "Amazon Managed Streaming for Apache Kafka",
+      "def": "Apache Kafka managed: AWS lo control plane (tạo cluster, patch, thay broker hỏng, scale), bạn giữ data plane (topic, producer, consumer); broker trong VPC nhiều AZ, private mặc định.",
+      "tip": "Đã dùng Kafka, Kafka API, migrate Kafka → MSK; xây mới, chỉ dịch vụ native → Kinesis Data Streams.",
+      "lessons": [
+        "amazon-msk"
+      ]
+    },
+    {
+      "term": "Kafka Topic",
+      "full": null,
+      "def": "Luồng record chia thành partition, giữ thứ tự trong partition, không bị xóa khi đọc mà giữ theo retention; nhiều consumer group đọc độc lập bằng offset riêng và replay được.",
+      "tip": "Nhiều consumer đọc độc lập cùng luồng + replay → Kafka/MSK, không phải SQS.",
+      "lessons": [
+        "amazon-msk"
+      ]
+    },
+    {
+      "term": "MSK Serverless",
+      "full": null,
+      "def": "Mode MSK không chọn broker, trả theo throughput và storage, hợp workload biến động; mode provisioned chọn broker Standard hoặc Express.",
+      "tip": "MSK public endpoint chỉ có ở provisioned, bật sau khi tạo, bắt buộc auth IAM/SCRAM/mutual TLS.",
+      "lessons": [
+        "amazon-msk"
+      ]
+    },
+    {
+      "term": "MSK Connect",
+      "full": null,
+      "def": "Chạy Kafka Connect connector managed để đổ dữ liệu giữa MSK và S3, database... mà không phải tự viết consumer.",
+      "tip": null,
+      "lessons": [
+        "amazon-msk"
+      ]
+    }
+  ]
+}

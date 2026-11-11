@@ -1,0 +1,514 @@
+{
+ "chapter": "17",
+ "cards": [
+  {
+   "term": "BGP",
+   "full": "Border Gateway Protocol",
+   "def": "Routing protocol path-vector để các Autonomous System trao đổi route; chạy trên TCP port 179, peering phải cấu hình thủ công và chọn đường theo AS_PATH ngắn nhất (không xét bandwidth/latency).",
+   "tip": "Direct Connect (mỗi VIF) và dynamic Site-to-Site VPN đều dùng BGP. Router không hỗ trợ BGP → chỉ dùng static VPN.",
+   "lessons": [
+    "bgp",
+    "site-to-site-vpn",
+    "direct-connect"
+   ]
+  },
+  {
+   "term": "ASN",
+   "full": "Autonomous System Number",
+   "def": "Số định danh một Autonomous System (mạng do một thực thể quản lý) do IANA cấp; dải 16-bit 0–65535, trong đó 64512–65534 là private ASN dùng cho peering riêng.",
+   "tip": "Nhớ private ASN 64512–65534; ASN mặc định phía Amazon của VGW là 64512. Khai ASN khi tạo CGW nếu dùng BGP.",
+   "lessons": [
+    "bgp",
+    "site-to-site-vpn"
+   ]
+  },
+  {
+   "term": "AS Path Prepending",
+   "full": null,
+   "def": "Kỹ thuật lặp lại ASN của mình nhiều lần trong AS_PATH khi quảng bá route qua một link để link đó trông dài hơn, khiến BGP ưu tiên đường khác và biến link này thành backup.",
+   "tip": "Muốn chọn link primary/backup (hai DX, hoặc DX vs VPN) trong BGP → AS path prepending.",
+   "lessons": [
+    "bgp",
+    "direct-connect-resilience"
+   ]
+  },
+  {
+   "term": "IPsec",
+   "full": null,
+   "def": "Bộ giao thức dựng tunnel an toàn giữa hai peer qua mạng không tin cậy (thường là Internet), cung cấp authentication và encryption; dùng asymmetric để thỏa thuận symmetric key rồi mã hóa dữ liệu bằng symmetric key.",
+   "tip": "Đề nói 'encrypted connection over the public internet to on-prem' → Site-to-Site VPN (IPsec). Mã hóa tốn CPU nên VPN bị giới hạn throughput.",
+   "lessons": [
+    "ipsec-vpn",
+    "site-to-site-vpn"
+   ]
+  },
+  {
+   "term": "IKE Phase 1",
+   "full": "Internet Key Exchange Phase 1",
+   "def": "Giai đoạn chậm, nặng của IPsec: hai peer authenticate (pre-shared key hoặc certificate), chạy Diffie-Hellman để có key chung rồi tạo IKE SA (Phase 1 tunnel) bảo vệ các trao đổi tiếp theo.",
+   "tip": "Phase 1 = authenticate + DH + IKE SA. Phase 1 được giữ lại khi Phase 2 bị hủy, nên dựng lại tunnel dữ liệu rất nhanh.",
+   "lessons": [
+    "ipsec-vpn"
+   ]
+  },
+  {
+   "term": "IKE Phase 2",
+   "full": "Internet Key Exchange Phase 2",
+   "def": "Giai đoạn nhanh, nhẹ chạy trên Phase 1: hai peer thỏa thuận cipher suite tốt nhất cùng hỗ trợ, sinh IPsec symmetric key và tạo IPsec SA (một cặp SA, mỗi chiều một SA) để mã hóa dữ liệu.",
+   "tip": "Phase 2 bị tear down khi hết interesting traffic và dựng lại khi có traffic mới, không phải làm lại Phase 1.",
+   "lessons": [
+    "ipsec-vpn"
+   ]
+  },
+  {
+   "term": "Site-to-Site VPN",
+   "full": null,
+   "def": "Kết nối logic mã hóa IPsec giữa VPC và mạng ngoài AWS, mặc định chạy qua public Internet; dựng trong dưới 1 giờ vì chỉ là cấu hình, nhưng throughput ~1.25 Gbps và latency không ổn định.",
+   "tip": "'Nhanh nhất / vài giờ / rẻ / cần mã hóa qua Internet' → Site-to-Site VPN. '> 1.25 Gbps' → DX hoặc VPN trên Transit Gateway.",
+   "lessons": [
+    "site-to-site-vpn",
+    "compare-vpn-vs-direct-connect"
+   ]
+  },
+  {
+   "term": "VGW",
+   "full": "Virtual Private Gateway",
+   "def": "Gateway object logic phía AWS gắn với đúng một VPC, làm target trong route table và là điểm terminate VPN/Private VIF; có sẵn HA nhờ các endpoint vật lý ở nhiều AZ, mỗi endpoint có public IPv4.",
+   "tip": "VPN gắn VGW giới hạn ~1.25 Gbps và không có ECMP. Nhiều VPC nối on-prem → thay VGW bằng Transit Gateway.",
+   "lessons": [
+    "site-to-site-vpn",
+    "transit-gateway"
+   ]
+  },
+  {
+   "term": "CGW",
+   "full": "Customer Gateway",
+   "def": "Vừa là object cấu hình logic trong AWS vừa là router vật lý on-prem mà object đó đại diện; khi tạo cần khai public IP của router (và ASN nếu dùng BGP).",
+   "tip": "Một CGW là single point of failure → chỉ partial HA. Full HA cần 2 CGW (2 router, 2 ISP, lý tưởng 2 tòa nhà).",
+   "lessons": [
+    "site-to-site-vpn"
+   ]
+  },
+  {
+   "term": "Dynamic VPN",
+   "full": null,
+   "def": "Site-to-Site VPN trao đổi route bằng BGP giữa VGW và CGW thay vì khai static route; biết trạng thái link, đổi route on the fly, hỗ trợ multi-connection failover và kết hợp với Direct Connect.",
+   "tip": "Cần failover tự động / nhiều đường / dùng cùng DX → dynamic (BGP) VPN. Static VPN chỉ cần IPsec, chạy với hầu hết router.",
+   "lessons": [
+    "site-to-site-vpn",
+    "bgp"
+   ]
+  },
+  {
+   "term": "AWS Client VPN",
+   "full": null,
+   "def": "Bản managed của OpenVPN cho từng máy client (laptop, desktop) kết nối mã hóa vào VPC qua Internet; client nối tới Client VPN endpoint, xác thực bằng certificate, federated identity hoặc Directory Service.",
+   "tip": "Nhân viên remote / từng laptop cần vào VPC → Client VPN. Cả văn phòng / data center → Site-to-Site VPN.",
+   "lessons": [
+    "client-vpn"
+   ]
+  },
+  {
+   "term": "Split Tunnel",
+   "full": null,
+   "def": "Chế độ của Client VPN mà route của endpoint được thêm vào route table của client thay vì thay thế, nên chỉ traffic tới mạng AWS đi qua tunnel; Internet và LAN đi đường bình thường.",
+   "tip": "Mặc định mọi traffic qua VPN (0.0.0.0/0). Client mất truy cập LAN / Internet chậm → bật split tunnel (không mặc định).",
+   "lessons": [
+    "client-vpn"
+   ]
+  },
+  {
+   "term": "Direct Connect",
+   "full": "DX",
+   "def": "Kết nối vật lý riêng từ mạng của bạn vào AWS Region qua một DX location; thực chất bạn nhận một port 1/10/100/400 Gbps trên AWS DX router, cho băng thông cao, latency thấp và ổn định.",
+   "tip": "'Low/consistent latency, high throughput, không qua Internet' → DX. Cần ngay trong vài ngày → không phải DX (provision tuần–tháng).",
+   "lessons": [
+    "direct-connect",
+    "compare-vpn-vs-direct-connect"
+   ]
+  },
+  {
+   "term": "DX Location",
+   "full": "Direct Connect Location",
+   "def": "Data center lớn trong vùng mà AWS thuê chỗ đặt AWS DX router (không thuộc sở hữu của AWS); khách hàng hoặc comms partner đặt router trong cage của mình tại đó.",
+   "tip": "Bẫy: DX location không phải tòa nhà của AWS. Nếu không có chỗ ở đó → comms partner kéo kết nối về văn phòng.",
+   "lessons": [
+    "direct-connect"
+   ]
+  },
+  {
+   "term": "Private VIF",
+   "full": "Private Virtual Interface",
+   "def": "Virtual interface trên DX (VLAN 802.1Q + phiên BGP riêng) đi tới VGW của một VPC hoặc qua DX Gateway, dùng để truy cập tài nguyên private IP trong VPC.",
+   "tip": "Đích là private IP trong VPC → Private VIF. Bẫy: VPN qua DX KHÔNG dùng private VIF.",
+   "lessons": [
+    "direct-connect",
+    "direct-connect-public-vif-and-vpn"
+   ]
+  },
+  {
+   "term": "Public VIF",
+   "full": "Public Virtual Interface",
+   "def": "Virtual interface trên DX đi tới AWS Public Zone để truy cập public services (S3, SQS...) và public IP của AWS, kể cả VPN endpoint của VGW/TGW; không cho ra public Internet.",
+   "tip": "'Encrypt traffic over Direct Connect' → IPsec VPN over public VIF tới VGW/TGW.",
+   "lessons": [
+    "direct-connect",
+    "direct-connect-public-vif-and-vpn"
+   ]
+  },
+  {
+   "term": "Transit VIF",
+   "full": "Transit Virtual Interface",
+   "def": "Virtual interface trên DX nối tới Direct Connect Gateway được associate với Transit Gateway, để đưa DX vào TGW và tới nhiều VPC.",
+   "tip": "DX + nhiều VPC qua TGW, hoặc private IP VPN qua DX → transit VIF + DX Gateway + TGW.",
+   "lessons": [
+    "direct-connect",
+    "transit-gateway",
+    "direct-connect-public-vif-and-vpn"
+   ]
+  },
+  {
+   "term": "DX Hosted Connection",
+   "full": null,
+   "def": "Kết nối Direct Connect mua qua AWS partner thay vì đặt port dedicated trực tiếp từ AWS, cho phép tốc độ thấp hơn (từ 50 Mbps) tới vài chục Gbps.",
+   "tip": "Dedicated: 1/10/100/400 Gbps. Cần tốc độ nhỏ hơn 1 Gbps → hosted connection qua partner. MACsec không hỗ trợ hosted.",
+   "lessons": [
+    "direct-connect"
+   ]
+  },
+  {
+   "term": "DX High Resiliency Model",
+   "full": null,
+   "def": "Mô hình trong Direct Connect Resiliency Toolkit: 2 DX location, mỗi nơi 1 connection, nối về các customer premises khác nhau; chịu được lỗi cả một location và đứng sau SLA 99.9%.",
+   "tip": "Hai DX ở cùng một location vẫn còn SPOF là location đó (mô hình development and test).",
+   "lessons": [
+    "direct-connect-resilience"
+   ]
+  },
+  {
+   "term": "DX Maximum Resiliency Model",
+   "full": null,
+   "def": "Mô hình 2 DX location × 2 connection trên thiết bị riêng, mỗi location 2 customer router, extension khác tuyến về 2 premises; bắt buộc để có SLA 99.99%, chi phí và độ phức tạp cao nhất.",
+   "tip": "Nhớ thang: development and test (2 port, 1 location) → high (99.9%) → maximum (99.99%).",
+   "lessons": [
+    "direct-connect-resilience"
+   ]
+  },
+  {
+   "term": "DX Resilience by Default",
+   "full": null,
+   "def": "Direct Connect là một sợi cáp vật lý nên mặc định không resilient: DX location, AWS DX router, cross connect, customer router, extension và premises đều là single point of failure.",
+   "tip": "Đề nói 'DX is NOT resilient by default'. HA nhưng tiết kiệm → DX primary + Site-to-Site VPN backup.",
+   "lessons": [
+    "direct-connect-resilience",
+    "compare-vpn-vs-direct-connect"
+   ]
+  },
+  {
+   "term": "VPN over Direct Connect",
+   "full": null,
+   "def": "Chạy IPsec Site-to-Site VPN trên DX để có mã hóa end-to-end vào VPC: qua public VIF tới public endpoint của VGW/TGW, kết hợp bảo mật của VPN với latency thấp, ổn định của DX.",
+   "tip": "DX không mã hóa sẵn. Cấu hình VPN là transit agnostic: cùng cấu hình chạy được qua Internet làm backup.",
+   "lessons": [
+    "direct-connect-public-vif-and-vpn",
+    "compare-vpn-vs-direct-connect"
+   ]
+  },
+  {
+   "term": "Private IP VPN",
+   "full": null,
+   "def": "Site-to-Site VPN trên Transit Gateway với outside IP private, chạy qua transit VIF + Direct Connect Gateway; không dùng public IP nào, endpoint không truy cập được từ Internet.",
+   "tip": "'Mã hóa qua DX nhưng chỉ dùng IP private' → transit VIF + DX Gateway + TGW. VGW không hỗ trợ; không dùng làm backup qua Internet.",
+   "lessons": [
+    "direct-connect-public-vif-and-vpn",
+    "transit-gateway"
+   ]
+  },
+  {
+   "term": "Direct Connect Gateway",
+   "full": null,
+   "def": "Tài nguyên global (không thuộc region hay VPC nào) nối DX VIF với VGW hoặc Transit Gateway ở nhiều region; với transit VIF, DX Gateway được associate với TGW.",
+   "tip": "DX tới TGW hoặc VPC ở region khác → Direct Connect Gateway.",
+   "lessons": [
+    "direct-connect-public-vif-and-vpn",
+    "transit-gateway",
+    "direct-connect"
+   ]
+  },
+  {
+   "term": "MACsec",
+   "full": null,
+   "def": "Mã hóa Layer 2 single hop giữa AWS DX router và thiết bị nhận cross connect; overhead thấp, nhanh hơn IPsec nhiều nhưng chỉ có trên dedicated connection và cần thiết bị hỗ trợ.",
+   "tip": "MACsec = một hop, chỉ dedicated. IPsec VPN over DX = end-to-end, dùng được với cả hosted.",
+   "lessons": [
+    "direct-connect-public-vif-and-vpn",
+    "direct-connect"
+   ]
+  },
+  {
+   "term": "Transit Gateway",
+   "full": "TGW",
+   "def": "Network transit hub HA, scalable nối nhiều VPC với nhau và với on-prem (VPN, Direct Connect) theo hub-and-spoke, hỗ trợ transitive routing; thay full mesh VPC Peering và VPN tunnel.",
+   "tip": "'Nhiều VPC + on-prem, giảm số kết nối, transitive routing' → Transit Gateway. Chia sẻ cross-account bằng AWS RAM.",
+   "lessons": [
+    "transit-gateway"
+   ]
+  },
+  {
+   "term": "TGW Attachment",
+   "full": null,
+   "def": "Cách TGW nối với thành phần khác: VPC attachment (một subnet mỗi AZ), Site-to-Site VPN attachment, Direct Connect Gateway attachment (transit VIF), peering attachment và Connect attachment cho SD-WAN.",
+   "tip": "VPC attachment cần một subnet trong mỗi AZ muốn dùng TGW.",
+   "lessons": [
+    "transit-gateway"
+   ]
+  },
+  {
+   "term": "TGW Peering Attachment",
+   "full": null,
+   "def": "Attachment peer hai Transit Gateway, kể cả cross-region và cross-account; traffic đi trên AWS global network. Chỉ hỗ trợ static route, phải tự thêm route trỏ vào attachment.",
+   "tip": "Bẫy: TGW peering không học route tự động (không BGP) → static route thủ công.",
+   "lessons": [
+    "transit-gateway"
+   ]
+  },
+  {
+   "term": "TGW Route Tables",
+   "full": null,
+   "def": "Mặc định TGW có một default route table route giữa mọi attachment; có thể tạo nhiều route table để phân tách routing, ví dụ cách ly VPC prod và dev.",
+   "tip": "Yêu cầu nhóm VPC không được thông nhau qua TGW → dùng nhiều TGW route table.",
+   "lessons": [
+    "transit-gateway"
+   ]
+  },
+  {
+   "term": "ECMP",
+   "full": "Equal-Cost Multi-Path",
+   "def": "Cơ chế gộp băng thông của nhiều VPN tunnel cùng chi phí; Transit Gateway hỗ trợ ECMP nên VPN trên TGW vượt được giới hạn ~1.25 Gbps của VPN gắn VGW.",
+   "tip": "Cần VPN qua Internet > 1.25 Gbps → Site-to-Site VPN trên Transit Gateway (ECMP), VGW không làm được.",
+   "lessons": [
+    "transit-gateway",
+    "site-to-site-vpn"
+   ]
+  },
+  {
+   "term": "Storage Gateway",
+   "full": null,
+   "def": "Appliance (thường là VM) đặt on-prem trình bày storage qua iSCSI, NFS, SMB và lưu vào S3, EBS snapshot, Glacier; giao tiếp HTTPS tới endpoint public (hoặc VPC endpoint). Có các mode Volume, Tape, File.",
+   "tip": "Tích hợp hybrid lâu dài có cache cục bộ → Storage Gateway; migrate/đồng bộ → DataSync; offline cực lớn → Snow.",
+   "lessons": [
+    "storage-gateway"
+   ]
+  },
+  {
+   "term": "Volume Gateway Stored Mode",
+   "full": null,
+   "def": "Gateway trình bày volume block qua iSCSI, toàn bộ dữ liệu (primary) nằm on-prem; ghi qua upload buffer rồi copy bất đồng bộ lên AWS thành EBS snapshot. 32 volume × 16 TB/gateway.",
+   "tip": "Backup full-disk, DR, migration, cần low latency toàn bộ dữ liệu → Stored. Bẫy: Stored KHÔNG mở rộng capacity.",
+   "lessons": [
+    "storage-gateway"
+   ]
+  },
+  {
+   "term": "Volume Gateway Cached Mode",
+   "full": null,
+   "def": "Volume iSCSI có primary data trong S3 (vùng AWS-managed), on-prem chỉ cache dữ liệu hay dùng; vẫn tạo EBS snapshot được, tổng tới 1 PB/gateway.",
+   "tip": "Hết chỗ on-prem, cần data center / capacity extension cho volume block → Cached.",
+   "lessons": [
+    "storage-gateway"
+   ]
+  },
+  {
+   "term": "Tape Gateway",
+   "full": null,
+   "def": "Mode VTL của Storage Gateway giả làm iSCSI tape library, media changer và tape drive cho phần mềm backup sẵn có; tape lưu trong VTL (S3) và archive sang VTS (Glacier/Deep Archive).",
+   "tip": "Thay tape backup truyền thống mà không đổi phần mềm backup → Tape Gateway. Virtual tape 100 GB–15 TB; VTL 1 PB / 1.500 tape.",
+   "lessons": [
+    "storage-gateway"
+   ]
+  },
+  {
+   "term": "S3 File Gateway",
+   "full": null,
+   "def": "Mode File của Storage Gateway: file share NFS hoặc SMB (có AD authentication) map mỗi file thành object trong S3 bucket của bạn, có read/write cache cục bộ; dùng được lifecycle, S3 Events, Athena.",
+   "tip": "File / NFS / SMB lên S3 → File Gateway. Multi-site: gateway khác không tự refresh và không có file locking.",
+   "lessons": [
+    "storage-gateway"
+   ]
+  },
+  {
+   "term": "Snow Family",
+   "full": null,
+   "def": "Nhóm thiết bị vật lý (Snowball, Snowball Edge, Snowmobile) để chuyển dữ liệu rất lớn vào hoặc ra AWS offline khi mạng quá chậm hay quá đắt; dữ liệu trên thiết bị mã hóa bằng KMS.",
+   "tip": "Dữ liệu vừa, mạng đủ, cần lặp lại theo lịch → DataSync, không phải Snow. AWS đã ngừng Snowmobile (2024).",
+   "lessons": [
+    "snow-family"
+   ]
+  },
+  {
+   "term": "Snowball",
+   "full": null,
+   "def": "Thiết bị cỡ vali chỉ có storage (50 hoặc 80 TB, mạng 1/10 Gbps), không có compute; có thể đặt nhiều thiết bị gửi tới nhiều địa điểm.",
+   "tip": "Dải kinh tế 10 TB – 10 PB, 'multiple devices, multiple premises' → Snowball.",
+   "lessons": [
+    "snow-family"
+   ]
+  },
+  {
+   "term": "Snowball Edge",
+   "full": null,
+   "def": "Snowball có thêm compute (EC2, tùy chọn GPU), dung lượng lớn hơn và mạng nhanh hơn (10–100 Gbps); biến thể Storage Optimized và Compute Optimized.",
+   "tip": "Cần xử lý dữ liệu tại site xa khi ingest, chạy EC2/GPU, hoặc nạp nhanh hơn → Snowball Edge. 10 PB rải nhiều site → nhiều Snowball Edge.",
+   "lessons": [
+    "snow-family"
+   ]
+  },
+  {
+   "term": "Snowmobile",
+   "full": null,
+   "def": "Data center di động trong shipping container trên xe tải, tới tối đa 100 PB mỗi xe, cắm vào nguồn điện và mạng của data center rồi chở dữ liệu về AWS.",
+   "tip": "Một site, ≥ 10 PB → Snowmobile. Dưới 10 PB hoặc nhiều site → không kinh tế. Thực tế đã ngừng từ 2024.",
+   "lessons": [
+    "snow-family"
+   ]
+  },
+  {
+   "term": "AWS Directory Service",
+   "full": null,
+   "def": "Directory managed (user, group, computer) chạy trong VPC, triển khai vào hai subnet ở hai AZ cho HA; cần cho FSx for Windows, WorkSpaces, IAM Identity Center và EC2 Windows join domain.",
+   "tip": "Hybrid Windows (FSx for Windows, WorkSpaces) → nghĩ tới Directory Service. Đề chỉ hỏi chọn kiểu nào.",
+   "lessons": [
+    "directory-service"
+   ]
+  },
+  {
+   "term": "AWS Managed Microsoft AD",
+   "full": null,
+   "def": "Microsoft AD DS thật do AWS chạy và patch (hai domain controller, mỗi AZ một), hỗ trợ schema extension, SharePoint, SQL Server; có thể trust một hoặc hai chiều với AD on-prem qua VPN/DX.",
+   "tip": "Lựa chọn mặc định. Link on-prem đứt thì user trong AWS vẫn chạy. IAM Identity Center với AD on-prem cần trust hai chiều.",
+   "lessons": [
+    "directory-service"
+   ]
+  },
+  {
+   "term": "Managed Microsoft AD Hybrid Edition",
+   "full": null,
+   "def": "Edition mà AWS chạy hai domain controller join và replicate với chính domain on-prem hiện có (một domain, không trust); mọi user vẫn đăng nhập được khi VPN đứt.",
+   "tip": "Muốn giữ một domain duy nhất cho EC2/FSx/RDS trong AWS → Hybrid Edition. Không dùng với WorkSpaces, IAM Identity Center.",
+   "lessons": [
+    "directory-service"
+   ]
+  },
+  {
+   "term": "AD Connector",
+   "full": null,
+   "def": "Proxy chuyển request xác thực về AD on-prem qua kết nối private, không lưu dữ liệu directory trên cloud; kết nối hoặc AD on-prem hỏng thì không ai đăng nhập được.",
+   "tip": "Dùng WorkSpaces với AD on-prem mà không lưu gì trên cloud → AD Connector. FSx for Windows và RDS KHÔNG dùng được AD Connector.",
+   "lessons": [
+    "directory-service",
+    "fsx-for-windows"
+   ]
+  },
+  {
+   "term": "Simple AD",
+   "full": null,
+   "def": "Directory cơ bản độc lập chạy Samba 4 (tương thích một phần AD), không tích hợp được với directory on-prem; đã đóng với khách hàng mới.",
+   "tip": "Không phải đáp án cho triển khai mới. FSx for Windows không hỗ trợ Simple AD.",
+   "lessons": [
+    "directory-service"
+   ]
+  },
+  {
+   "term": "DataSync",
+   "full": null,
+   "def": "Dịch vụ truyền dữ liệu online được quản lý, hai chiều, giữa NAS/SAN (NFS, SMB, HDFS, object storage) hoặc cloud khác và S3/EFS/FSx; có schedule, bandwidth limit, incremental, nén, mã hóa TLS, giữ metadata và kiểm tra toàn vẹn.",
+   "tip": "Chuyển online có lịch, throttling, data validation → DataSync. Mỗi task ~10 Gbps (~100 TB/ngày).",
+   "lessons": [
+    "datasync"
+   ]
+  },
+  {
+   "term": "FSx for Windows File Server",
+   "full": null,
+   "def": "File share Windows native, fully managed, truy cập qua SMB với NTFS ACL, dedup, DFS, VSS; luôn cần Active Directory (AWS Managed Microsoft AD hoặc self-managed AD), triển khai Single-AZ hoặc Multi-AZ.",
+   "tip": "Windows / SMB / Active Directory → FSx for Windows; Linux / NFS / POSIX → EFS. Ghép FSx với Simple AD hay AD Connector là sai.",
+   "lessons": [
+    "fsx-for-windows",
+    "directory-service"
+   ]
+  },
+  {
+   "term": "FSx for Lustre",
+   "full": null,
+   "def": "File system song song managed cho HPC trên client Linux (EC2, ECS, EKS), permission POSIX; throughput nhiều TB/s, hàng triệu IOPS, latency sub-ms; có thể gắn S3 bucket làm data repository.",
+   "tip": "HPC, ML/SageMaker, big data, financial modelling, POSIX → FSx for Lustre. Windows/SMB → không phải Lustre.",
+   "lessons": [
+    "fsx-for-lustre"
+   ]
+  },
+  {
+   "term": "Lustre Scratch Deployment",
+   "full": null,
+   "def": "Deployment type cho workload ngắn hạn, hiệu năng tốt nhất (200 MB/s per TiB, burst 1,300), chỉ SSD; không HA, không replication, không backup, lỗi phần cứng là mất dữ liệu.",
+   "tip": "Tạm thời, nhanh, rẻ, chấp nhận mất dữ liệu → Scratch.",
+   "lessons": [
+    "fsx-for-lustre"
+   ]
+  },
+  {
+   "term": "Lustre Persistent Deployment",
+   "full": null,
+   "def": "Deployment type cho lưu trữ dài hạn: replicate và self-healing khi hỏng phần cứng, có backup (0–90 ngày); baseline 125/250/500/1000 MB/s per TiB. Với SSD chỉ replicate trong một AZ.",
+   "tip": "Bẫy: Persistent SSD không chống được lỗi cả AZ → cần Intelligent-Tiering, backup hoặc export sang S3.",
+   "lessons": [
+    "fsx-for-lustre"
+   ]
+  },
+  {
+   "term": "Lustre S3 Data Repository",
+   "full": null,
+   "def": "S3 bucket gắn với FSx for Lustre: object hiện ra trong file system ngay và được lazy load khi truy cập lần đầu; thay đổi chỉ ghi về S3 khi có automatic export policy hoặc export task.",
+   "tip": "Xử lý nhanh dữ liệu nằm trong S3 bằng file system HPC → Lustre + S3 repository. Intelligent-Tiering không gắn được repository.",
+   "lessons": [
+    "fsx-for-lustre"
+   ]
+  },
+  {
+   "term": "AWS Transfer Family",
+   "full": null,
+   "def": "Dịch vụ managed file transfer dựng server SFTP, FTPS, FTP, AS2 đặt trước S3 hoặc EFS (mỗi server chỉ một loại, không đổi được) để người dùng/đối tác truyền file mà không đổi ứng dụng.",
+   "tip": "Đối tác bên ngoài upload file qua SFTP vào S3/EFS → Transfer Family. Server stopped vẫn tính phí theo giờ.",
+   "lessons": [
+    "transfer-family"
+   ]
+  },
+  {
+   "term": "Transfer Family Endpoint Types",
+   "full": null,
+   "def": "Public (chỉ SFTP, IP động, không SG/NACL), VPC Internet (Elastic IP tĩnh, SFTP/FTPS/AS2, có SG) và VPC Internal (chỉ trong VPC/VPN/DX, hỗ trợ cả FTP).",
+   "tip": "Đối tác cần IP tĩnh để whitelist → VPC Internet endpoint. FTP chỉ dùng VPC Internal.",
+   "lessons": [
+    "transfer-family"
+   ]
+  },
+  {
+   "term": "AS2",
+   "full": "Applicability Statement 2",
+   "def": "Giao thức truyền dữ liệu B2B có cấu trúc kèm bảo mật/compliance (supply chain, payment, ERP); trên Transfer Family chỉ chạy với S3 và endpoint VPC, không có user login mà dùng profile, certificate, agreement.",
+   "tip": "AS2 = chỉ S3, không Public endpoint. FTP/FTPS chỉ dùng Directory Service hoặc custom IdP.",
+   "lessons": [
+    "transfer-family"
+   ]
+  },
+  {
+   "term": "VPN First, DX Later",
+   "full": null,
+   "def": "Pattern dựng Site-to-Site VPN để có kết nối ngay trong khi chờ Direct Connect provision (tuần–tháng); khi DX lên thì giữ VPN chạy trên DX để mã hóa và/hoặc qua Internet làm backup.",
+   "tip": "Cần kết nối ngay nhưng lâu dài cần băng thông cao → VPN trước, DX sau.",
+   "lessons": [
+    "compare-vpn-vs-direct-connect",
+    "direct-connect-public-vif-and-vpn"
+   ]
+  }
+ ]
+}

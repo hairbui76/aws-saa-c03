@@ -1,0 +1,281 @@
+{
+ "chapter": "08",
+ "cards": [
+  {
+   "term": "Container",
+   "full": null,
+   "def": "Môi trường cô lập chạy một ứng dụng như một process trên host OS, dùng chung kernel thay vì có guest OS riêng. Nhẹ, khởi động nhanh, mật độ cao, portable và consistent.",
+   "tip": "Từ khóa lightweight, portable, consistent across environments, không cần full OS → container. Cần kernel/OS riêng → VM.",
+   "lessons": [
+    "containers-fundamentals"
+   ]
+  },
+  {
+   "term": "Container Image",
+   "full": null,
+   "def": "Chồng các file system layer read-only (base image ở dưới, tùy chỉnh ở trên) dùng chung giữa các container. Container đang chạy = image + một layer read/write riêng.",
+   "tip": "Dữ liệu trong layer R/W mất khi xóa container → dữ liệu bền vững cần storage ngoài (EFS...).",
+   "lessons": [
+    "containers-fundamentals"
+   ]
+  },
+  {
+   "term": "Container Registry",
+   "full": null,
+   "def": "Nơi lưu và phân phối container image (public hoặc private), ví dụ Docker Hub hoặc ECR. Image được push lên registry rồi pull về các container host để chạy.",
+   "tip": "Registry private tích hợp IAM, dùng với ECS/EKS → ECR.",
+   "lessons": [
+    "containers-fundamentals",
+    "ecr"
+   ]
+  },
+  {
+   "term": "ECS",
+   "full": "Elastic Container Service",
+   "def": "Dịch vụ container orchestration managed của AWS: nhận container + chỉ dẫn (task/service definition) rồi lo chạy, scaling, health check, thay container lỗi trên capacity EC2, Fargate hoặc Managed Instances.",
+   "tip": "Chạy container đơn giản trên AWS, không nhắc Kubernetes → ECS; nhắc Kubernetes/tránh lock-in → EKS.",
+   "lessons": [
+    "ecs"
+   ]
+  },
+  {
+   "term": "ECS Cluster",
+   "full": null,
+   "def": "Đơn vị quản lý logic của ECS, ranh giới tổ chức workload container; bản thân cluster không chạy container, container chạy trên capacity gắn vào cluster.",
+   "tip": null,
+   "lessons": [
+    "ecs"
+   ]
+  },
+  {
+   "term": "Container Definition",
+   "full": null,
+   "def": "Phần định nghĩa một container trong ECS: image nằm ở đâu (URL trên registry) và port mapping nào được expose.",
+   "tip": "Container definition = image + port; task definition = CPU/memory, network mode, compatibility, task role.",
+   "lessons": [
+    "ecs"
+   ]
+  },
+  {
+   "term": "Task Definition",
+   "full": null,
+   "def": "Bản mô tả một ứng dụng hoàn chỉnh trong ECS: một hoặc nhiều container definition, CPU/memory, network mode, compatibility (EC2/Fargate/Managed Instances), task role, volume.",
+   "tip": null,
+   "lessons": [
+    "ecs"
+   ]
+  },
+  {
+   "term": "ECS Task Role",
+   "full": null,
+   "def": "IAM role mà task assume để nhận temporary credentials gọi dịch vụ AWS; mọi container trong task dùng được. Là cách best practice cấp quyền AWS cho code trong container.",
+   "tip": "Container ECS cần gọi S3/DynamoDB → Task Role (không nhúng access key, không dựa vào instance role của host).",
+   "lessons": [
+    "ecs"
+   ]
+  },
+  {
+   "term": "ECS Task Execution Role",
+   "full": null,
+   "def": "IAM role cho ECS agent/Fargate dùng để pull image từ ECR và gửi log tới CloudWatch Logs, khác với task role (quyền của code trong container).",
+   "tip": "Task không pull được image từ ECR hoặc không ghi được log → kiểm tra task execution role.",
+   "lessons": [
+    "ecs",
+    "ecr"
+   ]
+  },
+  {
+   "term": "ECS Service",
+   "full": null,
+   "def": "Cấu hình chạy và duy trì N bản sao của task: thay task lỗi, gắn load balancer phân phối tải, trải qua nhiều AZ cho HA. Dùng cho ứng dụng long-running, production.",
+   "tip": "Cần nhiều bản sao, HA, tự thay task lỗi, gắn ALB → ECS Service (không phải task đơn lẻ).",
+   "lessons": [
+    "ecs"
+   ]
+  },
+  {
+   "term": "ECS EC2 Launch Type",
+   "full": null,
+   "def": "Capacity ECS là EC2 container instance trong account của bạn (chạy ECS agent, scale bằng ASG). Toàn quyền host, dùng được RI/Spot, custom AMI, Windows; nhưng trả tiền instance kể cả khi rảnh và tự lo capacity.",
+   "tip": "Đã có Reserved Instances, muốn Spot, cần custom AMI/SSH/Windows, workload lớn ổn định nhạy giá → ECS EC2.",
+   "lessons": [
+    "ecs-launch-types-ec2-vs-fargate"
+   ]
+  },
+  {
+   "term": "AWS Fargate",
+   "full": null,
+   "def": "Capacity serverless cho container: không quản lý EC2 host, trả theo CPU/memory của task đang chạy. Mỗi task được inject một ENI riêng vào VPC (network mode awsvpc) và gắn Security Group.",
+   "tip": "Chạy container \"without managing servers\", ít vận hành nhất, tải burst/batch/không đều → Fargate.",
+   "lessons": [
+    "ecs-launch-types-ec2-vs-fargate",
+    "eks"
+   ]
+  },
+  {
+   "term": "ECS Managed Instances",
+   "full": null,
+   "def": "Capacity ở giữa EC2 và Fargate: EC2 instance thật trong account nhưng AWS chọn AMI (Bottlerocket, chỉ Linux), patch theo chu kỳ 14 ngày và tự scale; không SSH. Giá EC2 + phí quản lý mỗi instance.",
+   "tip": "Cần GPU/instance chuyên dụng/privileged container nhưng không muốn quản lý AMI, patch, scale host → ECS Managed Instances.",
+   "lessons": [
+    "ecs-launch-types-ec2-vs-fargate"
+   ]
+  },
+  {
+   "term": "awsvpc Network Mode",
+   "full": null,
+   "def": "Network mode cấp cho mỗi task một ENI riêng với IP trong VPC, nên task được kiểm soát bằng Security Group như tài nguyên VPC bình thường; bắt buộc với Fargate.",
+   "tip": "Fargate task cần public IP → đặt subnet public + bật auto-assign public IP.",
+   "lessons": [
+    "ecs-launch-types-ec2-vs-fargate"
+   ]
+  },
+  {
+   "term": "ECR",
+   "full": "Elastic Container Registry",
+   "def": "Registry container image managed: mỗi account có sẵn một registry private mỗi region, bạn tạo repository (public hoặc private, chọn lúc tạo). Lưu Docker/OCI image và artifact như Helm chart, tích hợp IAM.",
+   "tip": "docker login vào ECR: username AWS + token từ aws ecr get-login-password. Subnet private pull image cần NAT hoặc VPC endpoint (ECR + S3).",
+   "lessons": [
+    "ecr"
+   ]
+  },
+  {
+   "term": "ECR Image Scanning",
+   "full": null,
+   "def": "Quét lỗ hổng image theo CVE, cấu hình ở mức registry. Basic: miễn phí, chỉ package OS, chạy khi push hoặc chạy tay. Enhanced: tích hợp Amazon Inspector, có phí, quét cả package ngôn ngữ và liên tục.",
+   "tip": "Quét lỗ hổng cả thư viện ngôn ngữ, liên tục → ECR enhanced scanning (Inspector).",
+   "lessons": [
+    "ecr",
+    "inspector"
+   ]
+  },
+  {
+   "term": "ECR Lifecycle Policy",
+   "full": null,
+   "def": "Rule ở mức repository tự expire image cũ hoặc không dùng để giảm chi phí lưu trữ.",
+   "tip": "Tự động xóa image cũ/không tag → ECR lifecycle policy.",
+   "lessons": [
+    "ecr"
+   ]
+  },
+  {
+   "term": "ECR Replication",
+   "full": null,
+   "def": "Tự động replicate image sang region khác và/hoặc account khác, cấu hình ở mức registry; dùng cho DR, ứng dụng multi-region hoặc nhiều account.",
+   "tip": "Quyền cross-account dùng registry policy hoặc repository policy.",
+   "lessons": [
+    "ecr"
+   ]
+  },
+  {
+   "term": "ECR Tag Immutability",
+   "full": null,
+   "def": "Thiết lập repository ngăn push image khác đè lên một tag đã tồn tại (ví dụ v1), bảo vệ các version đã phát hành.",
+   "tip": "Không cho ghi đè tag đã phát hành → bật tag immutability.",
+   "lessons": [
+    "ecr"
+   ]
+  },
+  {
+   "term": "Kubernetes",
+   "full": null,
+   "def": "Hệ thống container orchestration mã nguồn mở, cloud-agnostic: chạy container tin cậy, scale được, tự phục hồi, service discovery. Cluster gồm control plane và các worker node.",
+   "tip": "Đã chạy Kubernetes on-prem, tránh lock-in, portable giữa các cloud → EKS (không phải ECS).",
+   "lessons": [
+    "kubernetes"
+   ]
+  },
+  {
+   "term": "Pod",
+   "full": null,
+   "def": "Đơn vị compute nhỏ nhất trong Kubernetes, chứa một hoặc nhiều container chia sẻ storage và networking (thường một container mỗi pod). Pod là tạm thời, có thể bị xóa, evict hoặc mất theo node.",
+   "tip": "Pod và storage mặc định là ephemeral → cần Persistent Volume (trên AWS: EBS/EFS/FSx).",
+   "lessons": [
+    "kubernetes"
+   ]
+  },
+  {
+   "term": "Kubernetes Control Plane",
+   "full": null,
+   "def": "Phần quản lý cluster: kube-apiserver (front-end), etcd (key-value store), kube-scheduler (gán pod vào node), kube-controller-manager và cloud-controller-manager.",
+   "tip": "etcd = key-value store của cluster; kube-scheduler gán pod vào node.",
+   "lessons": [
+    "kubernetes",
+    "eks"
+   ]
+  },
+  {
+   "term": "Kubernetes Ingress",
+   "full": null,
+   "def": "Cơ chế cho phép bên ngoài cluster truy cập service (User → Ingress → Service → Pod). Ingress controller hiện thực hạ tầng; trên AWS là AWS Load Balancer Controller dùng ALB/NLB.",
+   "tip": "Expose ứng dụng Kubernetes ra ngoài trên AWS → Ingress qua ALB/NLB.",
+   "lessons": [
+    "kubernetes"
+   ]
+  },
+  {
+   "term": "Persistent Volume",
+   "full": null,
+   "def": "Volume Kubernetes có vòng đời vượt quá mọi pod dùng nó, cung cấp storage lâu dài cho ứng dụng container; trên EKS dùng EBS, EFS hoặc FSx.",
+   "tip": "Nhiều pod trên nhiều AZ cần chung file → EFS.",
+   "lessons": [
+    "kubernetes",
+    "eks"
+   ]
+  },
+  {
+   "term": "EKS",
+   "full": "Elastic Kubernetes Service",
+   "def": "Kubernetes managed trên AWS: control plane và etcd do AWS quản lý, chạy multi-AZ trong VPC của AWS; node ở VPC của bạn giao tiếp qua ENI được inject. Tích hợp ECR, ELB, IAM, VPC.",
+   "tip": "Đề nhắc Kubernetes, open source orchestration, multi-cloud → EKS.",
+   "lessons": [
+    "eks"
+   ]
+  },
+  {
+   "term": "EKS Managed Node Groups",
+   "full": null,
+   "def": "Kiểu node EKS trong đó EKS lo provisioning và lifecycle của các EC2 node, khác self-managed node (bạn toàn quyền SSH, AMI riêng).",
+   "tip": "Tự động hóa provisioning EC2 node nhưng vẫn dùng EC2 → managed node groups; toàn quyền SSH/AMI → self-managed.",
+   "lessons": [
+    "eks"
+   ]
+  },
+  {
+   "term": "EKS Auto Mode",
+   "full": null,
+   "def": "Chế độ compute fully managed của EKS: AWS chọn instance type EC2, provision, scale, patch và thay (cycle) node định kỳ (tối đa 21 ngày), quản lý cả networking và storage của node.",
+   "tip": "Muốn node EC2 mà AWS lo cả chọn instance, scale, patch → EKS Auto Mode.",
+   "lessons": [
+    "eks"
+   ]
+  },
+  {
+   "term": "EKS Fargate Profile",
+   "full": null,
+   "def": "Cấu hình chọn pod nào chạy trên Fargate trong EKS: không provision, không chọn instance type, không lo cluster packing. Fargate không hỗ trợ GPU.",
+   "tip": "Ít overhead nhất cho node EKS → Fargate profile.",
+   "lessons": [
+    "eks"
+   ]
+  },
+  {
+   "term": "EKS Anywhere",
+   "full": null,
+   "def": "Bản phân phối cho phép tạo và vận hành cluster EKS trên hạ tầng của bạn (on-premises hoặc bất kỳ đâu), tự quản cả control plane.",
+   "tip": "Chạy Kubernetes kiểu EKS hoàn toàn on-prem → EKS Anywhere (hoặc EKS on Outposts).",
+   "lessons": [
+    "eks"
+   ]
+  },
+  {
+   "term": "EKS Hybrid Nodes",
+   "full": null,
+   "def": "Cho phép dùng server on-premises làm node của cluster EKS trong khi control plane vẫn do AWS quản lý trên cloud.",
+   "tip": "Container chạy on-prem nhưng control plane để AWS quản lý → EKS Hybrid Nodes.",
+   "lessons": [
+    "eks"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,214 @@
+{
+  "chapter": "23",
+  "cards": [
+    {
+      "term": "AWS Elastic Beanstalk",
+      "full": null,
+      "def": "PaaS cho developer: chỉ đưa code, EB dựng và quản lý môi trường end-to-end (EC2, ASG, load balancer...) bằng CloudFormation phía sau; database nên để ngoài environment.",
+      "tip": "Deploy web app nhanh, không quản hạ tầng, team nhỏ → Elastic Beanstalk; microservices/serverless thuần → ECS/EKS/Lambda.",
+      "lessons": [
+        "elastic-beanstalk"
+      ]
+    },
+    {
+      "term": "Elastic Beanstalk Application",
+      "full": null,
+      "def": "Thư mục logic chứa mọi thứ của một ứng dụng trong EB: các application version, environment và cấu hình.",
+      "tip": null,
+      "lessons": [
+        "elastic-beanstalk"
+      ]
+    },
+    {
+      "term": "Application Version",
+      "full": null,
+      "def": "Một bản code có nhãn của ứng dụng EB; ở Standard là source bundle trong S3; mỗi environment chạy một version tại một thời điểm.",
+      "tip": null,
+      "lessons": [
+        "elastic-beanstalk"
+      ]
+    },
+    {
+      "term": "Elastic Beanstalk Environment",
+      "full": null,
+      "def": "Hạ tầng chạy một application version (EC2 trong ASG, thường sau load balancer); mỗi web environment có CNAME riêng dạng ...elasticbeanstalk.com.",
+      "tip": null,
+      "lessons": [
+        "elastic-beanstalk"
+      ]
+    },
+    {
+      "term": "Source Bundle",
+      "full": null,
+      "def": "File zip hoặc WAR chứa code ứng dụng (kèm thư mục .ebextensions) upload lên S3 bucket của Elastic Beanstalk, mỗi region một bucket.",
+      "tip": "Thấy 'source bundle' → Elastic Beanstalk.",
+      "lessons": [
+        "elastic-beanstalk"
+      ]
+    },
+    {
+      "term": "Elastic Beanstalk Platform",
+      "full": null,
+      "def": "Môi trường runtime có sẵn cho environment Standard (Java, .NET, Node.js, Python, PHP, Ruby, Go...) hoặc Docker; platform branch gồm nhiều platform version.",
+      "tip": "Ngôn ngữ không được hỗ trợ sẵn → Docker platform.",
+      "lessons": [
+        "elastic-beanstalk"
+      ]
+    },
+    {
+      "term": "Worker Tier",
+      "full": null,
+      "def": "Environment EB xử lý việc nền, việc lâu (encode video, xử lý thiết kế) lấy từ SQS queue do EB quản lý mà web tier đẩy message vào; hai tier scale độc lập.",
+      "tip": "Tách xử lý lâu khỏi web → worker tier + SQS (chỉ có ở Standard).",
+      "lessons": [
+        "elastic-beanstalk"
+      ]
+    },
+    {
+      "term": "Elastic Beanstalk Cluster Mode",
+      "full": null,
+      "def": "Chế độ EB chạy ứng dụng thành container trên EKS do EB quản lý, có ALB tùy chọn; không có platform, không có web/worker tier và SQS.",
+      "tip": "Muốn container trên Kubernetes mà không tự vận hành EKS → EB cluster mode.",
+      "lessons": [
+        "elastic-beanstalk"
+      ]
+    },
+    {
+      "term": "CNAME Swap",
+      "full": null,
+      "def": "Hoán đổi environment URL (CNAME) giữa hai environment để chuyển traffic sang bản mới trong blue/green; lỗi thì swap lại.",
+      "tip": "Sau swap giữ environment cũ tới khi DNS cũ hết hạn rồi mới xóa.",
+      "lessons": [
+        "elastic-beanstalk-cloning-and-blue-green",
+        "elastic-beanstalk"
+      ]
+    },
+    {
+      "term": "All at Once Deployment",
+      "full": null,
+      "def": "Deployment policy mặc định của EB: deploy version mới lên mọi instance cùng lúc; nhanh nhất, không tốn thêm nhưng có downtime.",
+      "tip": "Môi trường dev, chấp nhận downtime, cần nhanh nhất → All at once.",
+      "lessons": [
+        "elastic-beanstalk-deployment-policies"
+      ]
+    },
+    {
+      "term": "Rolling Deployment",
+      "full": null,
+      "def": "Deploy theo từng batch instance; capacity giảm trong lúc deploy, không tốn thêm chi phí, hai version chạy song song, không tự rollback.",
+      "tip": "Không tốn thêm tiền, chấp nhận giảm capacity → Rolling.",
+      "lessons": [
+        "elastic-beanstalk-deployment-policies"
+      ]
+    },
+    {
+      "term": "Rolling with Additional Batch",
+      "full": null,
+      "def": "Như Rolling nhưng launch thêm một batch instance mới trước để giữ 100% capacity trong suốt quá trình deploy; tốn thêm một ít chi phí.",
+      "tip": "Giữ nguyên capacity khi deploy, tốn thêm ít → Rolling with additional batch.",
+      "lessons": [
+        "elastic-beanstalk-deployment-policies"
+      ]
+    },
+    {
+      "term": "Immutable Deployment",
+      "full": null,
+      "def": "Dựng Auto Scaling Group tạm với instance mới chạy version mới; đạt health check thì chuyển vào ASG chính và bỏ instance cũ. Rollback nhanh, an toàn nhất, tạm tốn gấp đôi.",
+      "tip": "Rollback nhanh và an toàn nhất, không đụng instance đang chạy → Immutable.",
+      "lessons": [
+        "elastic-beanstalk-deployment-policies"
+      ]
+    },
+    {
+      "term": "Traffic Splitting",
+      "full": null,
+      "def": "Deployment policy như immutable nhưng chỉ chia một % traffic sang instance mới trong thời gian đánh giá (canary testing), tự quay lại nếu lỗi; cần ALB.",
+      "tip": "'Đưa X% traffic sang bản mới để canary test' → Traffic splitting.",
+      "lessons": [
+        "elastic-beanstalk-deployment-policies"
+      ]
+    },
+    {
+      "term": "Blue/Green Deployment",
+      "full": null,
+      "def": "Không phải deployment policy của EB: dùng hai environment riêng, deploy bản mới lên environment thứ hai, test, rồi CNAME swap; rollback bằng swap lại.",
+      "tip": "Bản mới không chạy chung được với bản cũ, thay đổi lớn → blue/green.",
+      "lessons": [
+        "elastic-beanstalk-deployment-policies",
+        "elastic-beanstalk-cloning-and-blue-green"
+      ]
+    },
+    {
+      "term": "Environment Cloning",
+      "full": null,
+      "def": "Tạo environment mới sao chép environment có sẵn (option setting, environment variable, resource); chỉ đổi tên, URL prefix, mô tả, platform version cùng branch, service role.",
+      "tip": "Clone không copy dữ liệu RDS và không mang theo unmanaged change. Tạo QA giống prod nhanh → eb clone.",
+      "lessons": [
+        "elastic-beanstalk-cloning-and-blue-green"
+      ]
+    },
+    {
+      "term": "Application Version Lifecycle Policy",
+      "full": null,
+      "def": "Tự xóa application version cũ theo tuổi hoặc theo tổng số version, tùy chọn xóa luôn source bundle trên S3; không xóa version đang deploy.",
+      "tip": "Version cũ chất đống, chạm giới hạn số version → lifecycle policy.",
+      "lessons": [
+        "elastic-beanstalk-cloning-and-blue-green"
+      ]
+    },
+    {
+      "term": "Database Deletion Policy",
+      "full": null,
+      "def": "Khi RDS được tạo trong environment EB, xóa environment thì DB xử lý theo Delete (mất dữ liệu), Snapshot (chụp rồi xóa) hoặc Retain (giữ DB chạy ngoài EB).",
+      "tip": "Production → tạo RDS ngoài EB, trỏ tới bằng environment property.",
+      "lessons": [
+        "elastic-beanstalk-and-rds"
+      ]
+    },
+    {
+      "term": "RDS Environment Properties",
+      "full": null,
+      "def": "EB tự cấp RDS_HOSTNAME, RDS_PORT, RDS_DB_NAME, RDS_USERNAME, RDS_PASSWORD khi RDS nằm trong environment; RDS ngoài EB thì phải tự đặt property và mở security group.",
+      "tip": "RDS ngoài EB không kết nối được → kiểm tra security group của RDS và environment property.",
+      "lessons": [
+        "elastic-beanstalk-and-rds"
+      ]
+    },
+    {
+      "term": "Decouple Database",
+      "full": null,
+      "def": "Thao tác tách RDS đang gắn ra khỏi environment EB; quy trình đúng: đặt deletion policy Retain, apply và đợi xong, rồi mới decouple.",
+      "tip": "Đổi policy và decouple trong cùng một lần có thể mất DB.",
+      "lessons": [
+        "elastic-beanstalk-and-rds"
+      ]
+    },
+    {
+      "term": ".ebextensions",
+      "full": null,
+      "def": "Thư mục ở gốc source bundle chứa file .config (YAML/JSON) theo định dạng CloudFormation để tùy biến environment EB Standard (không áp dụng cho cluster mode).",
+      "tip": "Tùy biến environment hoặc thêm resource (vd ElastiCache) cùng với code → .ebextensions.",
+      "lessons": [
+        "elastic-beanstalk-ebextensions"
+      ]
+    },
+    {
+      "term": "option_settings",
+      "full": null,
+      "def": "Mục trong file .config của .ebextensions để đặt option cho environment và resource do EB tạo; mục Resources thì tạo resource hoàn toàn mới.",
+      "tip": null,
+      "lessons": [
+        "elastic-beanstalk-ebextensions"
+      ]
+    },
+    {
+      "term": "container_commands",
+      "full": null,
+      "def": "Mục trong .ebextensions chạy lệnh sau khi source được giải nén nhưng trước khi app được deploy; cùng nhóm với packages, files, users, commands, services.",
+      "tip": null,
+      "lessons": [
+        "elastic-beanstalk-ebextensions"
+      ]
+    }
+  ]
+}

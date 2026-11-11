@@ -1,0 +1,225 @@
+{
+ "chapter": "16",
+ "cards": [
+  {
+   "term": "VPC Flow Logs",
+   "full": null,
+   "def": "Ghi metadata của luồng traffic qua ENI (IP, port, protocol, packets, bytes, ACCEPT/REJECT) ở mức VPC, subnet hoặc ENI; không ghi nội dung packet và không real-time.",
+   "tip": "Cần xem nội dung packet → không phải Flow Logs. Cần giám sát real-time → Flow Logs không đáp ứng.",
+   "lessons": [
+    "vpc-flow-logs"
+   ]
+  },
+  {
+   "term": "Flow Log Record",
+   "full": null,
+   "def": "Mỗi dòng log (format mặc định v2): version, account-id, interface-id, srcaddr, dstaddr, srcport, dstport, protocol, packets, bytes, start, end, action, log-status; custom format thêm vpc-id, tcp-flags...",
+   "tip": "Protocol: ICMP = 1, TCP = 6, UDP = 17. ICMP không có port nên port là 0.",
+   "lessons": [
+    "vpc-flow-logs"
+   ]
+  },
+  {
+   "term": "Flow Logs ACCEPT then REJECT",
+   "full": null,
+   "def": "Một luồng có dòng ACCEPT chiều vào và REJECT chiều trả lời: dấu hiệu NACL (stateless) chặn chiều về, vì SG stateful thường chỉ cho một dòng cho cả hội thoại.",
+   "tip": "Thấy ACCEPT inbound rồi REJECT outbound cùng luồng → NACL đang chặn response.",
+   "lessons": [
+    "vpc-flow-logs"
+   ]
+  },
+  {
+   "term": "Flow Logs Destinations",
+   "full": null,
+   "def": "Flow Logs gửi tới S3 (truy vấn SQL bằng Athena, trả theo dữ liệu đọc), CloudWatch Logs (tích hợp, metric filter, alarm) hoặc Amazon Data Firehose (biến đổi, đưa vào công cụ analytics).",
+   "tip": "Phân tích Flow Logs bằng SQL rẻ → S3 + Athena; cần alarm/metric filter → CloudWatch Logs.",
+   "lessons": [
+    "vpc-flow-logs"
+   ]
+  },
+  {
+   "term": "Flow Logs Excluded Traffic",
+   "full": null,
+   "def": "Một số traffic không được ghi: Instance Metadata Service 169.254.169.254, Time Sync 169.254.169.123, DHCP, kích hoạt license Windows, Amazon DNS server.",
+   "tip": "'Vì sao Flow Logs không thấy truy cập metadata/DHCP/DNS?' → các loại này bị loại trừ.",
+   "lessons": [
+    "vpc-flow-logs"
+   ]
+  },
+  {
+   "term": "VPC Traffic Mirroring",
+   "full": null,
+   "def": "Sao chép nguyên gói tin (cả payload) từ ENI tới công cụ phân tích/IDS, khác Flow Logs vốn chỉ có metadata.",
+   "tip": "Cần deep packet inspection / nội dung packet trong VPC → Traffic Mirroring (hoặc packet sniffer), không phải Flow Logs.",
+   "lessons": [
+    "vpc-flow-logs"
+   ]
+  },
+  {
+   "term": "Egress-Only Internet Gateway",
+   "full": null,
+   "def": "Internet gateway chỉ cho IPv6, chỉ cho kết nối khởi tạo từ trong VPC ra (stateful, response quay về); kết nối từ ngoài vào bị drop tại gateway. HA mọi AZ, gắn vào VPC như IGW.",
+   "tip": "IPv6 instance cần ra Internet nhưng không cho Internet kết nối vào → EIGW với route ::/0. NAT Gateway không dùng cho IPv6 outbound-only.",
+   "lessons": [
+    "egress-only-internet-gateway"
+   ]
+  },
+  {
+   "term": "AWS PrivateLink",
+   "full": null,
+   "def": "Công nghệ kết nối private tới dịch vụ ngoài VPC (dịch vụ AWS, account khác, partner Marketplace) qua interface endpoint (ENI) trong VPC consumer, không qua Internet, không cần peering.",
+   "tip": "Cung cấp dịch vụ riêng tư cho nhiều VPC/account khác, không mở inbound public → PrivateLink (NLB + endpoint service).",
+   "lessons": [
+    "aws-privatelink",
+    "interface-vpc-endpoints"
+   ]
+  },
+  {
+   "term": "VPC Endpoint Service",
+   "full": null,
+   "def": "Phía provider của PrivateLink: dịch vụ đặt sau NLB (bật cross-zone) rồi tạo endpoint service, cấp quyền cho AWS account, IAM user/role hoặc mở cho tất cả; consumer tạo interface endpoint tới nó.",
+   "tip": "Thấy 'endpoint service' + 'NLB' trong đề → PrivateLink. ALB không làm được endpoint service trực tiếp.",
+   "lessons": [
+    "aws-privatelink"
+   ]
+  },
+  {
+   "term": "Gateway VPC Endpoint",
+   "full": null,
+   "def": "Endpoint cho S3 và DynamoDB hoạt động bằng routing: thêm prefix list của dịch vụ vào route table đã chọn; miễn phí, HA sẵn, không nằm trong subnet/AZ, chỉ cùng region và chỉ dùng từ trong VPC đó.",
+   "tip": "Instance private cần S3/DynamoDB, rẻ nhất → gateway endpoint. Đáp án 'gateway endpoint ở mỗi AZ' là sai.",
+   "lessons": [
+    "gateway-vpc-endpoints"
+   ]
+  },
+  {
+   "term": "Prefix List",
+   "full": null,
+   "def": "Đối tượng logic đại diện cho tập dải IP (ví dụ của S3 trong một region), do AWS cập nhật; gateway endpoint thêm route destination = prefix list, target = vpce-... vào route table.",
+   "tip": "Nhắc tới route table/prefix list → gateway endpoint; nhắc tới DNS/ENI → interface endpoint.",
+   "lessons": [
+    "gateway-vpc-endpoints"
+   ]
+  },
+  {
+   "term": "VPC Endpoint Policy",
+   "full": null,
+   "def": "Resource policy JSON gắn lên gateway hoặc interface endpoint, giới hạn endpoint được dùng để truy cập tài nguyên nào (ví dụ chỉ vài bucket S3).",
+   "tip": "Giới hạn VPC chỉ truy cập một số bucket → endpoint policy (có ở cả hai loại endpoint).",
+   "lessons": [
+    "gateway-vpc-endpoints",
+    "compare-gateway-vs-interface-endpoints"
+   ]
+  },
+  {
+   "term": "aws:SourceVpce",
+   "full": null,
+   "def": "Condition key trong bucket policy để chỉ chấp nhận request đi qua một VPC endpoint cụ thể; thường dùng explicit deny mọi request không đến từ endpoint đó (private-only bucket).",
+   "tip": "'Bucket chỉ nhận traffic từ VPC' → bucket policy với aws:SourceVpce.",
+   "lessons": [
+    "gateway-vpc-endpoints"
+   ]
+  },
+  {
+   "term": "Interface VPC Endpoint",
+   "full": null,
+   "def": "ENI có private IP trong subnet, đưa dịch vụ AWS (SNS, SQS, SSM, KMS, S3...) vào VPC qua PrivateLink; dẫn traffic bằng DNS, có Security Group, mỗi endpoint chỉ ở một AZ.",
+   "tip": "Không HA mặc định → một endpoint mỗi AZ. Truy cập được từ on-prem qua VPN/DX và VPC peer, khác gateway endpoint.",
+   "lessons": [
+    "interface-vpc-endpoints"
+   ]
+  },
+  {
+   "term": "Interface Endpoint Private DNS",
+   "full": null,
+   "def": "Tùy chọn (bật mặc định) gắn Route 53 private hosted zone do AWS quản lý vào VPC để tên DNS mặc định của dịch vụ resolve ra private IP của endpoint; cần enableDnsHostnames và enableDnsSupport.",
+   "tip": "'Ứng dụng không sửa được nhưng phải đi qua endpoint' → bật Private DNS.",
+   "lessons": [
+    "interface-vpc-endpoints",
+    "aws-privatelink"
+   ]
+  },
+  {
+   "term": "Gateway vs Interface Endpoint",
+   "full": null,
+   "def": "Gateway: route table + prefix list, chỉ S3/DynamoDB, HA sẵn, miễn phí, không SG, chỉ dùng trong VPC. Interface: DNS + ENI (PrivateLink), hầu hết dịch vụ, theo AZ, có SG, có phí, dùng được từ on-prem.",
+   "tip": "S3 cần truy cập từ on-prem qua VPN/DX hoặc VPC khác → interface endpoint cho S3.",
+   "lessons": [
+    "compare-gateway-vs-interface-endpoints"
+   ]
+  },
+  {
+   "term": "VPC Peering",
+   "full": null,
+   "def": "Kết nối mạng riêng tư trên backbone AWS giữa đúng hai VPC (cùng/khác region, cùng/khác account; cross-region được mã hóa); non-transitive và CIDR hai bên không được trùng.",
+   "tip": "A-B và B-C không cho A-C. Nhiều VPC cần hub-and-spoke/transitive → Transit Gateway.",
+   "lessons": [
+    "vpc-peering"
+   ]
+  },
+  {
+   "term": "Non-transitive Peering",
+   "full": null,
+   "def": "Peering không định tuyến xuyên VPC trung gian, cũng không dùng chung IGW, NAT, VPN, DX hay gateway endpoint của VPC peer; full mesh n VPC cần n(n-1)/2 peering.",
+   "tip": "Đáp án 'route qua VPC B để tới C' là bẫy.",
+   "lessons": [
+    "vpc-peering"
+   ]
+  },
+  {
+   "term": "Peering Route Configuration",
+   "full": null,
+   "def": "Sau khi tạo và accept peering (pcx-...), mỗi phía phải thêm route destination = CIDR VPC bên kia, target = pcx, và mở SG/NACL; thiếu route chiều về là lỗi kinh điển.",
+   "tip": "Peering tạo rồi vẫn không thông → kiểm tra route table cả hai phía và SG/NACL.",
+   "lessons": [
+    "vpc-peering"
+   ]
+  },
+  {
+   "term": "Peered Security Group Reference",
+   "full": null,
+   "def": "Cùng region, SG có thể tham chiếu SG ID của VPC peer (peering trực tiếp); khác region thì không, phải dùng IP/CIDR.",
+   "tip": "Cross-region peering → SG rule dùng CIDR, không dùng SG ID.",
+   "lessons": [
+    "vpc-peering"
+   ]
+  },
+  {
+   "term": "VPC IPAM",
+   "full": null,
+   "def": "IP Address Manager quản lý pool IP theo cấp bậc cho nhiều VPC, account, region: VPC chọn pool và kích thước là được cấp CIDR không trùng, xóa VPC thì dải về lại pool.",
+   "tip": "Nhiều VPC/account/region cần quản lý IP tập trung, tránh CIDR chồng lấn → VPC IPAM.",
+   "lessons": [
+    "vpc-ipam"
+   ]
+  },
+  {
+   "term": "IPAM Pool",
+   "full": null,
+   "def": "Dải IP trong một scope (private/public) của IPAM, lồng nhau theo cấp bậc (toàn công ty → vùng → prod), mỗi pool có min/max/default netmask cho phần cấp phát.",
+   "tip": "Chia sẻ pool sang account khác → AWS Organizations + RAM.",
+   "lessons": [
+    "vpc-ipam"
+   ]
+  },
+  {
+   "term": "IPAM Advanced Tier",
+   "full": null,
+   "def": "Mức trả phí của IPAM: có private IPv4, audit, cross-region và cross-account; free tier chỉ 1 account, 1 region, không có private IPv4.",
+   "tip": "Đề cần private IPv4 hoặc nhiều account/region trong IPAM → advanced tier.",
+   "lessons": [
+    "vpc-ipam"
+   ]
+  },
+  {
+   "term": "BYOIP",
+   "full": "Bring Your Own IP",
+   "def": "Đưa dải IP public mình sở hữu vào AWS (qua IPAM public pool hoặc Global Accelerator) sau bước xác minh quyền sở hữu, để giữ IP khi chuyển hệ thống lên AWS.",
+   "tip": "Giữ nguyên IP public đã được khách whitelist khi migrate → BYOIP.",
+   "lessons": [
+    "vpc-ipam",
+    "global-accelerator"
+   ]
+  }
+ ]
+}

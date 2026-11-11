@@ -1,0 +1,176 @@
+{
+ "chapter": "12",
+ "cards": [
+  {
+   "term": "EFS",
+   "full": "Elastic File System",
+   "def": "Shared network file system chuẩn NFSv4, mount đồng thời trên nhiều compute Linux (EC2, Lambda, ECS/EKS, EC2 Mac) và cả on-prem qua VPN/DX; dữ liệu tách khỏi vòng đời instance, dùng quyền POSIX.",
+   "tip": "Đề nói 'shared file system cho nhiều EC2 Linux', 'NFS', 'POSIX' → EFS. Windows/SMB → FSx for Windows, không phải EFS.",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "EFS Mount Target",
+   "full": null,
+   "def": "Điểm truy cập của EFS trong VPC: mỗi mount target nằm trong một subnet, nhận IP của subnet đó và gắn Security Group (NFS dùng TCP 2049).",
+   "tip": "HA = một mount target ở mỗi AZ có workload. On-prem mount bằng IP của mount target vì DNS name EFS có thể không resolve ngoài VPC.",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "EFS General Purpose Mode",
+   "full": null,
+   "def": "Performance mode mặc định của EFS, latency thấp, phù hợp gần như mọi workload: web server, CMS, home directory, file serving.",
+   "tip": "Không có yêu cầu đặc biệt → General Purpose. AWS khuyên dùng cho hầu hết trường hợp.",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "EFS Max I/O Mode",
+   "full": null,
+   "def": "Performance mode legacy (previous generation): aggregate throughput và IOPS cao hơn nhưng latency cao hơn, dành cho workload song song cao như big data, media processing.",
+   "tip": "Max I/O đổi latency lấy throughput tổng; không nên chọn làm mặc định.",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "EFS Elastic Throughput",
+   "full": null,
+   "def": "Throughput mode mặc định của EFS: tự co giãn theo tải, không cần cấp phát hay burst credit, trả tiền theo lượng dữ liệu đọc/ghi.",
+   "tip": "Đề nói 'tải khó đoán, không muốn quản lý throughput' → Elastic.",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "EFS Bursting Throughput",
+   "full": null,
+   "def": "Throughput mode có burst credit pool, throughput nền tăng theo dung lượng dữ liệu lưu trữ: file system càng lớn càng nhanh (tương tự EBS gp2).",
+   "tip": "Bursting giống gp2: hiệu năng gắn với dung lượng.",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "EFS Provisioned Throughput",
+   "full": null,
+   "def": "Throughput mode cho phép chỉ định throughput độc lập với dung lượng lưu trữ (file system nhỏ vẫn đặt throughput cao), giá cao hơn (tương tự io1/io2).",
+   "tip": "Đề nói 'dữ liệu nhỏ nhưng cần throughput cao, ổn định' → Provisioned (hoặc Elastic).",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "EFS Infrequent Access",
+   "full": null,
+   "def": "Storage class rẻ hơn cho file ít truy cập; lưu rẻ nhưng tính phí mỗi lần truy cập. Kết hợp lifecycle policy để tự chuyển file Standard → IA → Archive.",
+   "tip": "Đề nói 'giảm chi phí cho file ít truy cập trên EFS' → lifecycle management sang IA (Archive sau 90 ngày không truy cập).",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "EFS One Zone",
+   "full": null,
+   "def": "Kiểu triển khai EFS chỉ lưu dữ liệu trong một AZ, rẻ hơn Regional nhưng không chịu được mất AZ; chỉ có một mount target ở AZ đã chọn.",
+   "tip": "Dev/test hoặc dữ liệu không quan trọng, cần rẻ → One Zone. Production cần chịu lỗi AZ → Regional.",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "EFS File System Policy",
+   "full": null,
+   "def": "Resource policy của EFS: chặn root access, ép read-only mặc định, chặn anonymous access và bắt buộc encryption in transit cho mọi client.",
+   "tip": "Bắt buộc mã hóa khi truyền → file system policy. Encryption at rest (KMS) chỉ bật được lúc tạo file system.",
+   "lessons": [
+    "efs"
+   ]
+  },
+  {
+   "term": "AWS Backup",
+   "full": null,
+   "def": "Dịch vụ data protection fully managed: gom cấu hình, lập lịch, lưu trữ, giám sát backup cho EC2, EBS, EFS, FSx, RDS, Aurora, DynamoDB, S3... về một chỗ, trải nhiều account (Organizations) và region.",
+   "tip": "Đề nói 'quản lý backup tập trung nhiều dịch vụ/account/region', 'thay script snapshot' → AWS Backup.",
+   "lessons": [
+    "aws-backup"
+   ]
+  },
+  {
+   "term": "Backup Plan",
+   "full": null,
+   "def": "Chính sách backup trong AWS Backup: tần suất (tới mỗi giờ hoặc cron), backup window, lifecycle sang cold storage và hết hạn, vault đích, region copy, continuous backup.",
+   "tip": "Tần suất nhỏ nhất qua cron là mỗi giờ; tài nguyên gán vào plan thường theo tag.",
+   "lessons": [
+    "aws-backup"
+   ]
+  },
+  {
+   "term": "Backup Vault",
+   "full": null,
+   "def": "Container đích lưu các recovery point của AWS Backup, mã hóa bằng KMS key; mặc định read/write nên backup vẫn xóa được.",
+   "tip": "Cần ít nhất một vault. Muốn chống xóa → bật Vault Lock.",
+   "lessons": [
+    "aws-backup"
+   ]
+  },
+  {
+   "term": "AWS Backup Vault Lock",
+   "full": null,
+   "def": "Bật chế độ WORM cho backup vault để ngăn xóa backup trước hạn hoặc sửa lifecycle; backup vẫn hết hạn tự nhiên theo retention.",
+   "tip": "Không nhầm với S3 Object Lock hay Glacier Vault Lock: Vault Lock này của AWS Backup, bảo vệ backup của mọi dịch vụ.",
+   "lessons": [
+    "aws-backup"
+   ]
+  },
+  {
+   "term": "Vault Lock Compliance Mode",
+   "full": null,
+   "def": "Chế độ khóa chặt của AWS Backup Vault Lock: sau thời gian cool-off (tối thiểu 72 giờ) thì không ai, kể cả root hay AWS, xóa được backup hay gỡ lock.",
+   "tip": "Đề nói 'backup không thể bị xóa kể cả bởi admin/root', 'ransomware', 'compliance' → Vault Lock compliance mode.",
+   "lessons": [
+    "aws-backup"
+   ]
+  },
+  {
+   "term": "Vault Lock Governance Mode",
+   "full": null,
+   "def": "Chế độ khóa mềm của AWS Backup Vault Lock: người có đủ quyền IAM vẫn gỡ được lock, dùng để test hoặc bảo vệ khỏi thao tác nhầm.",
+   "tip": "Governance = gỡ được với quyền IAM; Compliance = bất biến sau cool-off 72 giờ.",
+   "lessons": [
+    "aws-backup"
+   ]
+  },
+  {
+   "term": "Continuous Backup",
+   "full": null,
+   "def": "Tùy chọn trong backup plan cho dịch vụ hỗ trợ (RDS, S3...) để có point-in-time recovery: restore về bất kỳ thời điểm nào trong cửa sổ tối đa 35 ngày.",
+   "tip": "Đề nói 'restore về một thời điểm cụ thể' qua AWS Backup → continuous backup/PITR, tối đa 35 ngày.",
+   "lessons": [
+    "aws-backup"
+   ]
+  },
+  {
+   "term": "Backup Cold Storage",
+   "full": null,
+   "def": "Tầng lưu rẻ hơn cho recovery point, được lifecycle của backup plan chuyển sang; backup đã vào cold storage phải nằm đó tối thiểu 90 ngày.",
+   "tip": "Nhớ số: cold storage tối thiểu 90 ngày.",
+   "lessons": [
+    "aws-backup"
+   ]
+  },
+  {
+   "term": "Cross-Region Backup Copy",
+   "full": null,
+   "def": "Cấu hình trong backup plan để tự sao chép recovery point sang region (hoặc account) khác, bảo vệ dữ liệu khi cả region gặp sự cố.",
+   "tip": "Đề nói 'DR cho backup khi mất region' → region copy trong backup plan; cross-account qua Organizations.",
+   "lessons": [
+    "aws-backup"
+   ]
+  }
+ ]
+}

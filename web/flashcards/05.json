@@ -1,0 +1,552 @@
+{
+  "chapter": "05",
+  "cards": [
+    {
+      "term": "S3 bucket policy",
+      "full": null,
+      "def": "Resource policy JSON gắn vào bucket, có Principal; cấp hoặc chặn quyền cho identity cùng account, account khác hoặc anonymous ('*'); mỗi bucket chỉ có một bucket policy.",
+      "tip": "Cần public read hoặc cho account khác truy cập bucket → bucket policy.",
+      "lessons": [
+        "s3-security"
+      ]
+    },
+    {
+      "term": "Resource-based policy",
+      "full": null,
+      "def": "Policy gắn vào tài nguyên (S3 bucket, SQS queue, KMS key...) quy định ai (Principal) được truy cập tài nguyên đó; khác identity policy gắn vào identity.",
+      "tip": "Cross-account cần cả hai phía cho phép: identity policy ở account nguồn + resource policy ở account đích.",
+      "lessons": [
+        "s3-security",
+        "iam-identity-policies"
+      ]
+    },
+    {
+      "term": "S3 ACL",
+      "full": "S3 Access Control List",
+      "def": "Cơ chế phân quyền legacy ở mức bucket/object với vài quyền cố định (READ, WRITE...), không linh hoạt; nay tắt mặc định qua Object Ownership = Bucket owner enforced.",
+      "tip": "ACL gần như luôn là đáp án sai cho thiết kế mới; dùng bucket policy.",
+      "lessons": [
+        "s3-security"
+      ]
+    },
+    {
+      "term": "S3 Block Public Access",
+      "full": null,
+      "def": "Lớp fail-safe ở mức bucket, account và organization chặn mọi truy cập public/anonymous bất kể bucket policy hay ACL cho phép gì; bật mặc định.",
+      "tip": "Đã cấp public mà vẫn bị chặn → kiểm tra Block Public Access ở cả bucket, account và organization.",
+      "lessons": [
+        "s3-security"
+      ]
+    },
+    {
+      "term": "S3 Object Ownership",
+      "full": null,
+      "def": "Thiết lập quyết định ai sở hữu object được upload vào bucket; mặc định Bucket owner enforced: bucket owner sở hữu mọi object và ACL bị vô hiệu hóa.",
+      "tip": "Object upload/replicate cross-account mà bucket owner không đọc được → Bucket owner enforced.",
+      "lessons": [
+        "s3-security",
+        "s3-replication"
+      ]
+    },
+    {
+      "term": "S3 static website hosting",
+      "full": null,
+      "def": "Cho S3 phục vụ object qua HTTP thông thường tới trình duyệt, với index document và error document, qua website endpoint đặt theo tên bucket + region.",
+      "tip": "Website endpoint chỉ HTTP; cần HTTPS/custom certificate/cache toàn cầu → đặt CloudFront phía trước.",
+      "lessons": [
+        "s3-static-website-hosting"
+      ]
+    },
+    {
+      "term": "S3 website custom domain",
+      "full": null,
+      "def": "Dùng tên miền riêng cho website S3 qua Route 53: tên bucket phải trùng đúng tên miền (ví dụ www.example.com) rồi tạo Alias record trỏ tới website endpoint.",
+      "tip": "Mở website bị 403 → thiếu bucket policy public read hoặc Block Public Access còn bật.",
+      "lessons": [
+        "s3-static-website-hosting"
+      ]
+    },
+    {
+      "term": "S3 Versioning",
+      "full": null,
+      "def": "Thiết lập mức bucket giữ mọi version của object: ghi đè tạo version mới, xóa thì thêm delete marker; ba trạng thái Disabled (mặc định), Enabled, Suspended.",
+      "tip": "Bật rồi không tắt hẳn được, chỉ Suspend; suspend không xóa version cũ và vẫn tính tiền.",
+      "lessons": [
+        "s3-versioning-and-mfa-delete"
+      ]
+    },
+    {
+      "term": "Delete marker",
+      "full": null,
+      "def": "Version đặc biệt S3 thêm khi xóa object mà không chỉ định version trong bucket bật versioning, khiến object trông như đã bị xóa.",
+      "tip": "Khôi phục object bị xóa nhầm → xóa delete marker; xóa kèm version ID mới là xóa vĩnh viễn.",
+      "lessons": [
+        "s3-versioning-and-mfa-delete"
+      ]
+    },
+    {
+      "term": "MFA Delete",
+      "full": null,
+      "def": "Tùy chọn trong cấu hình versioning bắt buộc MFA khi đổi trạng thái versioning hoặc xóa vĩnh viễn một object version; chỉ root user bật được, qua CLI/API.",
+      "tip": "Thêm lớp chống xóa vĩnh viễn version → MFA Delete (không phải WORM theo thời hạn như Object Lock).",
+      "lessons": [
+        "s3-versioning-and-mfa-delete",
+        "mfa"
+      ]
+    },
+    {
+      "term": "Multipart Upload",
+      "full": null,
+      "def": "Chia dữ liệu thành nhiều part (tối đa 10.000 part, mỗi part 5 MB–5 GB) upload song song; part lỗi chỉ cần gửi lại part đó, tăng tốc độ và độ tin cậy.",
+      "tip": "Object > 5 GB bắt buộc multipart (single PUT tối đa 5 GB); nên dùng từ 100 MB.",
+      "lessons": [
+        "s3-performance-optimization"
+      ]
+    },
+    {
+      "term": "S3 Transfer Acceleration",
+      "full": null,
+      "def": "Đưa dữ liệu upload vào edge location gần nhất rồi đi trên mạng toàn cầu của AWS tới bucket ở xa; phải dùng accelerate endpoint, chỉ tính phí khi thực sự được tăng tốc.",
+      "tip": "User ở xa region của bucket upload chậm → Transfer Acceleration; tên bucket phải DNS-compliant, không chứa dấu chấm.",
+      "lessons": [
+        "s3-performance-optimization"
+      ]
+    },
+    {
+      "term": "AWS KMS",
+      "full": "AWS Key Management Service",
+      "def": "Dịch vụ regional, public để tạo, lưu, quản lý cryptographic key và mã hóa/giải mã; key không bao giờ rời KMS ở dạng plaintext, HSM đạt FIPS 140-3 Level 3.",
+      "tip": "Dấu hiệu chọn CloudHSM thay KMS: HSM riêng single-tenant, khách tự quản HSM (không còn là 'Level 3').",
+      "lessons": [
+        "kms"
+      ]
+    },
+    {
+      "term": "KMS key",
+      "full": null,
+      "def": "Đối tượng logic trong KMS (tên cũ CMK) gồm key ID, metadata, key policy và key material; mã hóa trực tiếp được tối đa 4 KB dữ liệu.",
+      "tip": "Dữ liệu > 4 KB → GenerateDataKey/envelope encryption.",
+      "lessons": [
+        "kms"
+      ]
+    },
+    {
+      "term": "DEK",
+      "full": "Data Encryption Key",
+      "def": "Khóa KMS sinh qua GenerateDataKey, trả về bản plaintext và bản ciphertext; dùng plaintext mã hóa dữ liệu rồi xóa đi, lưu bản ciphertext cạnh dữ liệu.",
+      "tip": "KMS không lưu và không tự dùng DEK; giải mã thì gửi DEK đã mã hóa cho KMS Decrypt.",
+      "lessons": [
+        "kms"
+      ]
+    },
+    {
+      "term": "Envelope encryption",
+      "full": null,
+      "def": "Mã hóa dữ liệu bằng data key, rồi mã hóa data key bằng KMS key; chỉ data key nhỏ phải đi qua KMS nên mã hóa được dữ liệu lớn hiệu quả.",
+      "tip": "S3 SSE-KMS và EBS encryption đều dùng envelope encryption.",
+      "lessons": [
+        "kms",
+        "s3-encryption"
+      ]
+    },
+    {
+      "term": "AWS managed key",
+      "full": null,
+      "def": "KMS key do dịch vụ AWS tự tạo trong account khi dùng KMS lần đầu (alias aws/s3, aws/ebs...), rotation bắt buộc khoảng mỗi năm; không sửa key policy được.",
+      "tip": "Cần cross-account, sửa key policy, kiểm soát rotation → customer managed key.",
+      "lessons": [
+        "kms",
+        "s3-encryption"
+      ]
+    },
+    {
+      "term": "Customer managed key",
+      "full": null,
+      "def": "KMS key bạn tạo và quản lý: sửa key policy, bật/tắt rotation (mặc định tắt, chọn được chu kỳ), alias, cấp quyền cross-account; tính phí khoảng 1 USD/tháng mỗi key cộng phí API.",
+      "tip": "Role separation, audit việc dùng key, cross-account đọc object SSE-KMS → customer managed key.",
+      "lessons": [
+        "kms"
+      ]
+    },
+    {
+      "term": "Key policy",
+      "full": null,
+      "def": "Resource policy bắt buộc của mỗi KMS key; chỉ khi key policy trust account thì IAM policy trong account mới có tác dụng với key đó.",
+      "tip": "Xóa nhầm statement trust account có thể khóa luôn quyền truy cập key.",
+      "lessons": [
+        "kms"
+      ]
+    },
+    {
+      "term": "Multi-Region key",
+      "full": null,
+      "def": "Bộ KMS key ở nhiều region có cùng key ID và key material, nên dữ liệu mã hóa ở region này giải mã được ở region khác; mặc định key là single-region.",
+      "tip": "Key không rời region; cần dùng chung ở nhiều region → multi-Region key hoặc re-encrypt.",
+      "lessons": [
+        "kms"
+      ]
+    },
+    {
+      "term": "KMS key rotation",
+      "full": null,
+      "def": "Thay backing key material theo chu kỳ, KMS giữ mọi bản cũ để vẫn giải mã được dữ liệu cũ; key ID và ARN không đổi.",
+      "tip": "AWS managed key: luôn bật (~1 năm); customer managed: tùy chọn, mặc định tắt.",
+      "lessons": [
+        "kms"
+      ]
+    },
+    {
+      "term": "KMS key deletion",
+      "full": null,
+      "def": "Xóa KMS key không có hiệu lực ngay: key được lên lịch xóa với waiting period 7–30 ngày (mặc định 30), trong thời gian đó có thể hủy.",
+      "tip": "Muốn ngừng dùng ngay mà vẫn còn đường lui → disable key thay vì xóa.",
+      "lessons": [
+        "kms"
+      ]
+    },
+    {
+      "term": "Client-side encryption",
+      "full": null,
+      "def": "Dữ liệu được mã hóa trước khi rời máy client, S3 chỉ nhận ciphertext; bạn tự quản key, quy trình và tốn CPU mã hóa.",
+      "tip": "'AWS không bao giờ được thấy plaintext' → client-side encryption.",
+      "lessons": [
+        "s3-encryption"
+      ]
+    },
+    {
+      "term": "SSE-C",
+      "full": "Server-Side Encryption with Customer-Provided Keys",
+      "def": "Bạn gửi key kèm mỗi request, S3 mã hóa/giải mã rồi bỏ key và chỉ lưu hash của key; tiết kiệm CPU nhưng tự quản lý key. Nay là legacy, bị chặn mặc định.",
+      "tip": "'Key phải do công ty giữ nhưng không muốn tốn CPU mã hóa' → SSE-C; mất key là mất object.",
+      "lessons": [
+        "s3-encryption"
+      ]
+    },
+    {
+      "term": "SSE-S3",
+      "full": "Server-Side Encryption with Amazon S3 Managed Keys",
+      "def": "S3 tự quản toàn bộ key (AES-256, mỗi object một key được mã hóa bằng root key do S3 rotate); là mặc định cho mọi object, ít overhead nhất.",
+      "tip": "Không đáp ứng role separation hay kiểm soát key; cần những thứ đó → SSE-KMS.",
+      "lessons": [
+        "s3-encryption"
+      ]
+    },
+    {
+      "term": "SSE-KMS",
+      "full": "Server-Side Encryption with AWS KMS Keys",
+      "def": "S3 dùng KMS key để sinh data key cho từng object; cho phép kiểm soát key policy, rotation, audit qua CloudTrail và role separation (cần cả quyền S3 lẫn KMS).",
+      "tip": "'Admin S3 không được đọc dữ liệu', audit việc dùng key → SSE-KMS với customer managed key.",
+      "lessons": [
+        "s3-encryption"
+      ]
+    },
+    {
+      "term": "DSSE-KMS",
+      "full": "Dual-Layer Server-Side Encryption with AWS KMS Keys",
+      "def": "Mã hóa hai lớp độc lập ở phía server cho mỗi object bằng KMS, đáp ứng quy định bắt buộc hai lớp mã hóa (chính phủ, quốc phòng).",
+      "tip": "'Quy định bắt buộc hai lớp mã hóa' → DSSE-KMS.",
+      "lessons": [
+        "s3-encryption"
+      ]
+    },
+    {
+      "term": "Default bucket encryption",
+      "full": null,
+      "def": "Loại SSE áp cho object upload mà không chỉ định header mã hóa; không mang tính ép buộc vì request vẫn có thể chọn loại khác.",
+      "tip": "Muốn ép loại mã hóa → bucket policy Deny khi header x-amz-server-side-encryption không đúng.",
+      "lessons": [
+        "s3-encryption"
+      ]
+    },
+    {
+      "term": "S3 Bucket Key",
+      "full": null,
+      "def": "Khóa ngắn hạn cấp bucket do KMS key sinh ra; S3 dùng nó để tự sinh DEK cho nhiều object trong một khoảng thời gian, giảm mạnh số call tới KMS.",
+      "tip": "SSE-KMS bị KMS throttling hoặc phí KMS cao → bật Bucket Key; không áp ngược cho object cũ.",
+      "lessons": [
+        "s3-bucket-keys"
+      ]
+    },
+    {
+      "term": "S3 Standard",
+      "full": null,
+      "def": "Storage class mặc định: replicate qua ≥3 AZ, durability 11 số 9, latency mili giây, không phí retrieval, không minimum duration hay minimum size.",
+      "tip": "Dữ liệu truy cập thường xuyên → Standard; chỉ đổi class khi đề có lý do cụ thể.",
+      "lessons": [
+        "s3-storage-classes"
+      ]
+    },
+    {
+      "term": "S3 Standard-IA",
+      "full": "S3 Standard-Infrequent Access",
+      "def": "Class ≥3 AZ, lưu rẻ hơn Standard nhưng có phí retrieval mỗi GB, minimum duration 30 ngày và minimum billable size 128 KB.",
+      "tip": "Dữ liệu quan trọng, truy cập ít nhưng cần ngay khi cần → Standard-IA; tránh cho file nhỏ/dữ liệu tạm.",
+      "lessons": [
+        "s3-storage-classes"
+      ]
+    },
+    {
+      "term": "S3 One Zone-IA",
+      "full": "S3 One Zone-Infrequent Access",
+      "def": "Giống Standard-IA nhưng chỉ lưu ở một AZ nên rẻ hơn; mất AZ có thể mất dữ liệu. Vẫn có phí retrieval, tối thiểu 30 ngày và 128 KB.",
+      "tip": "Dữ liệu tạo lại được hoặc bản replica → One Zone-IA; dữ liệu quan trọng duy nhất mà chọn One Zone-IA là bẫy.",
+      "lessons": [
+        "s3-storage-classes"
+      ]
+    },
+    {
+      "term": "S3 Glacier Instant Retrieval",
+      "full": null,
+      "def": "Class archive truy xuất tức thì (mili giây) như Standard-IA nhưng lưu rẻ hơn, phí retrieval cao hơn, minimum duration 90 ngày.",
+      "tip": "Truy cập khoảng mỗi quý một lần nhưng cần ngay → Glacier Instant Retrieval.",
+      "lessons": [
+        "s3-storage-classes"
+      ]
+    },
+    {
+      "term": "S3 Glacier Flexible Retrieval",
+      "full": null,
+      "def": "Class archive rẻ (tên cũ S3 Glacier): object phải chạy retrieval job tạo bản sao tạm mới đọc được — Expedited 1–5 phút, Standard 3–5 giờ, Bulk 5–12 giờ; tối thiểu 90 ngày.",
+      "tip": "Archive chấp nhận phút–giờ → Flexible Retrieval; cần trong vài phút → Expedited.",
+      "lessons": [
+        "s3-storage-classes"
+      ]
+    },
+    {
+      "term": "S3 Glacier Deep Archive",
+      "full": null,
+      "def": "Class rẻ nhất cho lưu trữ dài hạn: retrieval Standard trong 12 giờ, Bulk trong 48 giờ; minimum duration 180 ngày, thêm 40 KB metadata mỗi object.",
+      "tip": "Archive rẻ nhất, giữ nhiều năm vì compliance, chấp nhận 12–48 giờ → Deep Archive.",
+      "lessons": [
+        "s3-storage-classes"
+      ]
+    },
+    {
+      "term": "S3 Intelligent-Tiering",
+      "full": null,
+      "def": "Class tự chuyển object giữa các tier (Frequent, Infrequent, Archive Instant; tùy chọn Archive/Deep Archive Access) theo mức truy cập thực tế; không phí retrieval, có phí monitoring mỗi object.",
+      "tip": "Pattern truy cập không biết trước hoặc thay đổi → Intelligent-Tiering; object < 128 KB không được tiering.",
+      "lessons": [
+        "s3-storage-classes",
+        "s3-lifecycle-configuration"
+      ]
+    },
+    {
+      "term": "S3 Express One Zone",
+      "full": null,
+      "def": "Class hiệu năng cao nhất với latency mili giây một chữ số, lưu trong directory bucket ở một AZ bạn chọn; request rẻ hơn, storage đắt hơn Standard.",
+      "tip": "ML/analytics cần latency thấp nhất, compute đặt cùng AZ → Express One Zone.",
+      "lessons": [
+        "s3-storage-classes"
+      ]
+    },
+    {
+      "term": "Minimum storage duration",
+      "full": null,
+      "def": "Thời gian tối thiểu bị tính phí lưu trữ dù object bị xóa hoặc chuyển đi sớm hơn: 30 ngày (Standard-IA, One Zone-IA), 90 ngày (Glacier IR, Flexible), 180 ngày (Deep Archive).",
+      "tip": "Nhớ 30/90/180; dữ liệu tạm/ngắn hạn tránh IA và Glacier.",
+      "lessons": [
+        "s3-storage-classes"
+      ]
+    },
+    {
+      "term": "S3 Lifecycle configuration",
+      "full": null,
+      "def": "Tập rule gắn vào bucket (lọc theo prefix/tag) để tự động transition object/version sang class rẻ hơn hoặc expire sau N ngày; dựa trên thời gian, không dựa trên mức truy cập.",
+      "tip": "'Chuyển sang class rẻ sau N ngày', 'xóa log sau 365 ngày' → lifecycle; 'theo mức truy cập' → Intelligent-Tiering.",
+      "lessons": [
+        "s3-lifecycle-configuration"
+      ]
+    },
+    {
+      "term": "Transition action",
+      "full": null,
+      "def": "Hành động lifecycle chuyển object xuống class rẻ hơn theo kiểu thác nước (Standard → IA → Intelligent-Tiering → One Zone-IA → Glacier IR → Flexible → Deep Archive), không đi ngược lên.",
+      "tip": "Standard → IA cần ≥30 ngày ở Standard; One Zone-IA không sang được Glacier IR; object < 128 KB mặc định không transition.",
+      "lessons": [
+        "s3-lifecycle-configuration"
+      ]
+    },
+    {
+      "term": "Expiration action",
+      "full": null,
+      "def": "Hành động lifecycle xóa current version hoặc noncurrent version của object sau số ngày định trước; cũng dùng dọn expired delete marker và incomplete multipart upload.",
+      "tip": "Bucket versioning tốn tiền vì noncurrent version → lifecycle expire/transition noncurrent versions.",
+      "lessons": [
+        "s3-lifecycle-configuration",
+        "s3-versioning-and-mfa-delete"
+      ]
+    },
+    {
+      "term": "S3 Replication",
+      "full": null,
+      "def": "Sao chép object bất đồng bộ từ source bucket sang destination bucket, cùng hoặc khác account; cấu hình trên source kèm IAM role để S3 assume; versioning bắt buộc ở cả hai bucket.",
+      "tip": "Không retroactive: object có sẵn → S3 Batch Replication; mặc định không replicate delete marker, không replicate thay đổi do lifecycle.",
+      "lessons": [
+        "s3-replication"
+      ]
+    },
+    {
+      "term": "CRR",
+      "full": "Cross-Region Replication",
+      "def": "S3 Replication giữa hai bucket ở hai region khác nhau, dùng cho DR toàn cầu, giảm latency đọc ở region khác hoặc đáp ứng yêu cầu bản sao ở xa.",
+      "tip": "Giảm chi phí bản sao DR → đổi storage class ở destination (ví dụ One Zone-IA).",
+      "lessons": [
+        "s3-replication"
+      ]
+    },
+    {
+      "term": "SRR",
+      "full": "Same-Region Replication",
+      "def": "S3 Replication giữa hai bucket cùng region, dùng để gom log, đồng bộ prod/test hoặc tạo bản sao ở account khác mà dữ liệu không rời region.",
+      "tip": "Dữ liệu không được rời region nhưng cần bản sao cô lập → SRR sang account khác.",
+      "lessons": [
+        "s3-replication"
+      ]
+    },
+    {
+      "term": "S3 RTC",
+      "full": "S3 Replication Time Control",
+      "def": "Tùy chọn replication có SLA replicate 99,99% object mới trong 15 phút, kèm metric và event để theo dõi tiến độ replicate.",
+      "tip": "Đề nhắc '15 phút' hoặc cần thời gian replicate dự đoán được → RTC.",
+      "lessons": [
+        "s3-replication"
+      ]
+    },
+    {
+      "term": "Presigned URL",
+      "full": null,
+      "def": "URL mang sẵn thông tin xác thực của identity tạo ra nó, cho bất kỳ ai cầm URL GET hoặc PUT một object cụ thể trong bucket private, trong thời gian giới hạn.",
+      "tip": "URL tạo bằng role chết khi token hết hạn (≤12 giờ); cần URL sống nhiều ngày → tạo bằng IAM user.",
+      "lessons": [
+        "s3-presigned-urls"
+      ]
+    },
+    {
+      "term": "CORS",
+      "full": "Cross-Origin Resource Sharing",
+      "def": "Cơ chế web cho phép trình duyệt gọi tài nguyên ở origin khác khi phía được gọi (S3 bucket, API Gateway) có CORS configuration cho phép origin đó; rule khớp đầu tiên thắng.",
+      "tip": "Web ở domain A gọi bucket/API ở domain B bị lỗi CORS → bật CORS trên B; CORS không cấp quyền truy cập.",
+      "lessons": [
+        "cors"
+      ]
+    },
+    {
+      "term": "Web origin",
+      "full": null,
+      "def": "Bộ ba protocol + domain + port xác định nguồn của trang web; request cùng origin luôn được phép, khác origin thì trình duyệt hạn chế nếu không có CORS.",
+      "tip": "http và https của cùng domain là hai origin khác nhau.",
+      "lessons": [
+        "cors"
+      ]
+    },
+    {
+      "term": "S3 Select",
+      "full": null,
+      "def": "Lọc một phần nội dung của một object (CSV, JSON, Parquet) bằng câu SQL rút gọn ngay phía S3, chỉ trả dữ liệu đã lọc nên nhanh và rẻ hơn tải cả object; Glacier Select tương tự cho Glacier.",
+      "tip": "Đóng với khách mới từ 25/07/2024; truy vấn SQL trên nhiều object/cả dataset → Athena.",
+      "lessons": [
+        "s3-select-and-glacier-select"
+      ]
+    },
+    {
+      "term": "S3 Event Notifications",
+      "full": null,
+      "def": "Sinh event JSON khi object được tạo, xóa, restore hoặc replication gặp sự cố, rồi gửi tới Lambda, SQS, SNS hoặc EventBridge để làm workflow event-driven.",
+      "tip": "Upload file xong tự xử lý → S3 event → Lambda; event không tới đích → kiểm tra resource policy của đích.",
+      "lessons": [
+        "s3-events"
+      ]
+    },
+    {
+      "term": "S3 Server Access Logging",
+      "full": null,
+      "def": "Ghi log chi tiết từng request vào source bucket (requester, operation, status, bytes...) và giao vào target bucket cùng region, cùng account theo kiểu best effort, thường trễ vài giờ.",
+      "tip": "Best effort, trễ vài giờ → server access logs; cần đảm bảo/nhanh hơn → CloudTrail data events.",
+      "lessons": [
+        "s3-access-logs"
+      ]
+    },
+    {
+      "term": "S3 Object Lock",
+      "full": null,
+      "def": "Áp mô hình WORM lên từng object version: không ghi đè, không xóa được trong thời gian khóa; cần versioning, gồm Retention Period và Legal Hold độc lập nhau.",
+      "tip": "'Không ai, kể cả root, được xóa trong N năm', quy định pháp lý → Object Lock Compliance mode.",
+      "lessons": [
+        "s3-object-lock"
+      ]
+    },
+    {
+      "term": "WORM",
+      "full": "Write Once, Read Many",
+      "def": "Mô hình lưu trữ dữ liệu ghi một lần rồi chỉ đọc, không sửa hay xóa được trong thời hạn quy định; thường do quy định tài chính, y tế, pháp lý yêu cầu.",
+      "tip": "WORM trên S3 → Object Lock.",
+      "lessons": [
+        "s3-object-lock"
+      ]
+    },
+    {
+      "term": "Compliance mode",
+      "full": null,
+      "def": "Retention mode nghiêm nhất của Object Lock: không ai, kể cả root user hay AWS Support, xóa, ghi đè, rút ngắn retention hay đổi mode cho tới khi hết hạn.",
+      "tip": "Muốn thử nghiệm trước → dùng Governance mode, vì Compliance không gỡ được.",
+      "lessons": [
+        "s3-object-lock"
+      ]
+    },
+    {
+      "term": "Governance mode",
+      "full": null,
+      "def": "Retention mode mềm hơn: version vẫn được bảo vệ, nhưng identity có quyền s3:BypassGovernanceRetention và gửi header bypass có thể xóa hoặc đổi retention.",
+      "tip": "Ngăn xóa nhưng một số admin đặc biệt vẫn được phép → Governance mode.",
+      "lessons": [
+        "s3-object-lock"
+      ]
+    },
+    {
+      "term": "Legal Hold",
+      "full": null,
+      "def": "Cờ bật/tắt trên từng object version, không có thời hạn; khi bật thì không xóa/ghi đè được cho tới khi gỡ, cần quyền s3:PutObjectLegalHold để thay đổi.",
+      "tip": "Giữ object cho vụ kiện, không biết thời hạn → Legal Hold; bucket default chỉ áp cho retention.",
+      "lessons": [
+        "s3-object-lock"
+      ]
+    },
+    {
+      "term": "S3 Requester Pays",
+      "full": null,
+      "def": "Thiết lập bucket chuyển phí request và data transfer ra sang người tải (identity AWS đã xác thực, gửi header x-amz-request-payer); owner vẫn trả phí lưu trữ.",
+      "tip": "Chia sẻ dataset lớn mà không muốn trả phí transfer → Requester Pays; không dùng được với anonymous/static website.",
+      "lessons": [
+        "s3-requester-pays"
+      ]
+    },
+    {
+      "term": "S3 Access Points",
+      "full": null,
+      "def": "Tạo nhiều endpoint truy cập cho một bucket, mỗi access point có DNS name, policy và network origin (Internet hoặc một VPC) riêng, thay cho một bucket policy khổng lồ.",
+      "tip": "Bucket dùng chung nhiều team, policy quá phức tạp → Access Points; chỉ cho truy cập từ một VPC → VPC origin.",
+      "lessons": [
+        "s3-access-points"
+      ]
+    },
+    {
+      "term": "S3 Inventory",
+      "full": null,
+      "def": "Báo cáo daily/weekly danh sách object của một bucket/prefix kèm encryption, storage class, replication status, Object Lock...; xuất CSV/ORC/Parquet vào target bucket cùng region.",
+      "tip": "Audit 'object nào chưa mã hóa/replicate lỗi' trên bucket lớn → S3 Inventory; không real-time, lần đầu tới 48 giờ.",
+      "lessons": [
+        "s3-inventory"
+      ]
+    },
+    {
+      "term": "S3 Multi-Region Access Points",
+      "full": null,
+      "def": "Một endpoint S3 toàn cầu trỏ tới nhiều bucket ở nhiều region, tự route request tới bucket gần/nhanh nhất qua mạng AWS; hỗ trợ failover active-active hoặc active-passive.",
+      "tip": "MRAP không tự replicate: cần CRR hai chiều + replica modification sync; giảm replication lag → RTC.",
+      "lessons": [
+        "s3-multi-region-access-points"
+      ]
+    }
+  ]
+}

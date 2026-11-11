@@ -1,0 +1,725 @@
+{
+  "chapter": "18",
+  "cards": [
+    {
+      "term": "AWS Secrets Manager",
+      "full": null,
+      "def": "Dịch vụ lưu secret (password, API key, token, DB credential) luôn mã hóa bằng KMS và tự động rotate; ứng dụng lấy secret lúc chạy qua SDK, xác thực bằng IAM role thay vì hard-code.",
+      "tip": "Đề có 'secret' + 'rotation' + 'RDS' → Secrets Manager; giá trị cấu hình cần mã hóa, không rotate → Parameter Store SecureString.",
+      "lessons": [
+        "secrets-manager"
+      ]
+    },
+    {
+      "term": "Secrets Manager Automatic Rotation",
+      "full": null,
+      "def": "Secrets Manager định kỳ gọi Lambda function (quyền qua execution role) để đổi secret và đổi luôn password trong dịch vụ tích hợp như RDS, nên secret và DB luôn đồng bộ.",
+      "tip": "Rotation end-to-end là khác biệt chính so với SSM Parameter Store (không có rotation sẵn).",
+      "lessons": [
+        "secrets-manager"
+      ]
+    },
+    {
+      "term": "Managed Rotation",
+      "full": null,
+      "def": "Kiểu rotation mà AWS lo end-to-end cho một số dịch vụ, tiêu biểu là master user password của RDS và Aurora: không cần tự viết hay quản lý Lambda function.",
+      "tip": "Master password RDS/Aurora cần rotate, ít vận hành nhất → managed rotation của Secrets Manager.",
+      "lessons": [
+        "secrets-manager"
+      ]
+    },
+    {
+      "term": "Layer 7 Firewall",
+      "full": null,
+      "def": "Firewall hiểu giao thức tầng ứng dụng như HTTP: thấy header, host, URL path, nội dung request nên chặn được tấn công đặc thù giao thức, lọc nội dung, chặn ứng dụng cụ thể, vẫn giữ khả năng L3/4/5.",
+      "tip": "SG và NACL chỉ thấy IP/port/protocol; cần lọc theo header, path, SQLi, XSS → Layer 7, trên AWS là WAF. Muốn soi HTTPS phải terminate TLS.",
+      "lessons": [
+        "layer-7-firewall",
+        "waf"
+      ]
+    },
+    {
+      "term": "AWS WAF",
+      "full": "AWS Web Application Firewall",
+      "def": "Firewall Layer 7 managed lọc request HTTP/HTTPS theo IP, header, URI, query string, body, quốc gia; gắn vào CloudFront, ALB, API Gateway, AppSync (và Cognito user pool, App Runner...).",
+      "tip": "SQL injection, XSS, chặn theo quốc gia, rate limit HTTP, bot → WAF. NLB và EC2 không gắn WAF trực tiếp: đổi sang ALB hoặc đặt CloudFront phía trước.",
+      "lessons": [
+        "waf",
+        "layer-7-firewall"
+      ]
+    },
+    {
+      "term": "Web ACL",
+      "full": "Web Access Control List",
+      "def": "Đơn vị cấu hình chính của WAF, chứa rule và rule group xử lý theo thứ tự, có default action ALLOW hoặc BLOCK cho request không khớp rule nào; chính Web ACL được associate vào resource.",
+      "tip": "Một resource chỉ có một Web ACL, một Web ACL gắn được nhiều resource. Web ACL cho CloudFront là global; Web ACL regional phải cùng region với resource.",
+      "lessons": [
+        "waf"
+      ]
+    },
+    {
+      "term": "WAF Rule Group",
+      "full": null,
+      "def": "Nhóm rule tái sử dụng ở nhiều Web ACL, không có default action riêng; nguồn: AWS Managed, Marketplace vendor, tự tạo, hoặc service-owned (do Shield, Firewall Manager quản lý).",
+      "tip": "WCU capacity của rule group khai báo lúc tạo, không đổi được về sau, tối đa 5000.",
+      "lessons": [
+        "waf"
+      ]
+    },
+    {
+      "term": "AWS Managed Rules",
+      "full": null,
+      "def": "Rule group do AWS xây và cập nhật (core rule set, SQL injection, IP reputation, known bad inputs...); phần lớn miễn phí với khách WAF, riêng Bot Control, Fraud Control ATP/ACFP tính thêm phí.",
+      "tip": "Muốn chặn nhanh các exploit phổ biến mà ít công vận hành → thêm AWS Managed Rules vào Web ACL.",
+      "lessons": [
+        "waf"
+      ]
+    },
+    {
+      "term": "Rate-based Rule",
+      "full": null,
+      "def": "Rule WAF khớp khi số request của một nhóm (gom theo aggregation key, mặc định source IP) vượt ngưỡng trong cửa sổ thời gian, ví dụ 5000 request tới /login trong 5 phút.",
+      "tip": "HTTP flood, brute force login → rate-based rule. Không có action ALLOW, chỉ BLOCK, COUNT, CAPTCHA, CHALLENGE.",
+      "lessons": [
+        "waf",
+        "shield"
+      ]
+    },
+    {
+      "term": "WAF WCU",
+      "full": "Web ACL Capacity Unit",
+      "def": "Thước đo độ phức tạp tính toán của rule WAF; giá gốc một Web ACL gồm 1500 WCU, dùng thêm được tới hard limit 5000 với phí theo bậc 500 WCU.",
+      "tip": "Đừng nhầm với WCU (Write Capacity Unit) của DynamoDB.",
+      "lessons": [
+        "waf"
+      ]
+    },
+    {
+      "term": "WAF CAPTCHA and Challenge",
+      "full": null,
+      "def": "Hai action kiểm tra client: CAPTCHA bắt người dùng giải câu đố, CHALLENGE chạy kiểm tra JavaScript ngầm; cả hai cấp token để client đã vượt qua không bị hỏi lại liên tục.",
+      "tip": "Lọc bot nhưng không muốn chặn cứng người dùng thật → CAPTCHA/CHALLENGE thay cho BLOCK.",
+      "lessons": [
+        "waf"
+      ]
+    },
+    {
+      "term": "WAF Logging",
+      "full": null,
+      "def": "Log request của Web ACL gửi được tới S3, CloudWatch Logs hoặc Amazon Data Firehose; log vào S3 được giao theo lô khoảng mỗi 5 phút.",
+      "tip": "Cần phản ứng gần real-time với log WAF → CloudWatch Logs hoặc Firehose, đừng dựa vào log trực tiếp vào S3.",
+      "lessons": [
+        "waf"
+      ]
+    },
+    {
+      "term": "Geo Match Statement",
+      "full": null,
+      "def": "Điều kiện rule WAF khớp theo quốc gia nguồn (origin country) của request, dùng để chặn hoặc chỉ cho phép traffic từ một số quốc gia.",
+      "tip": "'Chặn truy cập ứng dụng sau ALB từ quốc gia X' → WAF geo match trên Web ACL.",
+      "lessons": [
+        "waf"
+      ]
+    },
+    {
+      "term": "AWS Shield Standard",
+      "full": null,
+      "def": "Lớp chống DDoS L3/L4 miễn phí, tự động cho mọi khách hàng AWS, bảo vệ tại perimeter của region hoặc tại edge; hiệu quả nhất khi dùng Route 53, CloudFront, Global Accelerator.",
+      "tip": "'Chống DDoS miễn phí, không cần cấu hình gì' → Shield Standard.",
+      "lessons": [
+        "shield"
+      ]
+    },
+    {
+      "term": "AWS Shield Advanced",
+      "full": null,
+      "def": "Gói chống DDoS trả phí (US$3000/tháng mỗi organization, cam kết 1 năm) cho CloudFront, Route 53, Global Accelerator, Elastic IP, ALB/CLB; phải bật tường minh, có L7 qua WAF và đã gồm phí WAF cơ bản.",
+      "tip": "Cần đội SRT 24/7, cost protection, metrics tấn công real-time → Shield Advanced. Không tự bảo vệ: bật từng resource hoặc qua Firewall Manager.",
+      "lessons": [
+        "shield"
+      ]
+    },
+    {
+      "term": "SRT",
+      "full": "Shield Response Team",
+      "def": "Đội chuyên gia DDoS của AWS dành cho khách Shield Advanced; khi bật proactive engagement, SRT chủ động liên hệ và bắt đầu xử lý khi tấn công ảnh hưởng ứng dụng.",
+      "tip": "Proactive engagement bắt buộc phải có health-based detection (Route 53 health checks).",
+      "lessons": [
+        "shield"
+      ]
+    },
+    {
+      "term": "DDoS Cost Protection",
+      "full": null,
+      "def": "Quyền lợi của Shield Advanced: AWS bù chi phí phát sinh do tấn công DDoS (ví dụ EC2 scale out vì tải độc hại) trên resource được hỗ trợ đã bật protection.",
+      "tip": "'Bồi hoàn chi phí scale do bị DDoS' → Shield Advanced.",
+      "lessons": [
+        "shield"
+      ]
+    },
+    {
+      "term": "Health-based Detection",
+      "full": null,
+      "def": "Tính năng Shield Advanced dùng Route 53 health check của ứng dụng làm tín hiệu sức khỏe, giúp phát hiện tấn công chính xác hơn, giảm false positive và giảm thiểu nhanh hơn.",
+      "tip": null,
+      "lessons": [
+        "shield"
+      ]
+    },
+    {
+      "term": "Shield Protection Groups",
+      "full": null,
+      "def": "Nhóm các resource được Shield Advanced bảo vệ, định nghĩa theo tiêu chí thành viên để resource mới tự được thêm, quản lý bảo vệ theo nhóm thay vì từng resource.",
+      "tip": null,
+      "lessons": [
+        "shield"
+      ]
+    },
+    {
+      "term": "AWS CloudHSM",
+      "full": null,
+      "def": "HSM single-tenant do AWS host, đạt FIPS 140-3 Level 3; AWS chỉ provision và bảo trì phần cứng, không truy cập được key, khách hàng toàn quyền kiểm soát; không tích hợp native với dịch vụ AWS.",
+      "tip": "'Single-tenant HSM', 'AWS không được truy cập key', thuật toán non-FIPS → CloudHSM. Cần tích hợp S3/EBS encryption → KMS.",
+      "lessons": [
+        "cloudhsm"
+      ]
+    },
+    {
+      "term": "HSM",
+      "full": "Hardware Security Module",
+      "def": "Thiết bị phần cứng tamper-resistant chuyên tạo, lưu trữ key và thực hiện thao tác mật mã; KMS dùng HSM dùng chung phía sau, CloudHSM cho bạn HSM riêng.",
+      "tip": "'HSM' trong đề có thể là CloudHSM hoặc HSM on-premises.",
+      "lessons": [
+        "cloudhsm"
+      ]
+    },
+    {
+      "term": "FIPS 140-3 Level 3",
+      "full": "Federal Information Processing Standards 140-3, Level 3",
+      "def": "Chuẩn của Mỹ cho module mật mã; Level 3 đòi hỏi chống can thiệp vật lý. Theo bài mới, cả CloudHSM lẫn KMS đều đạt mức này.",
+      "tip": "FIPS 140-3 Level 3 một mình không còn là lý do chọn CloudHSM (bản khóa cũ: 'FIPS 140-2 Level 3 overall' → CloudHSM).",
+      "lessons": [
+        "cloudhsm"
+      ]
+    },
+    {
+      "term": "PKCS#11, JCE, CNG/KSP",
+      "full": null,
+      "def": "Các API mật mã chuẩn công nghiệp mà CloudHSM hỗ trợ: PKCS#11, Java Cryptography Extensions, Microsoft CNG/KSP, OpenSSL Dynamic Engine; KMS thì chỉ dùng AWS API và IAM.",
+      "tip": "Đề nhắc 'industry-standard APIs' như PKCS#11, JCE, CNG → CloudHSM.",
+      "lessons": [
+        "cloudhsm"
+      ]
+    },
+    {
+      "term": "Crypto Officer and Crypto User",
+      "full": null,
+      "def": "Hai loại user của CloudHSM, được tạo và quản lý ngay trong HSM, không qua IAM: crypto officer quản trị user, crypto user thực hiện thao tác mật mã.",
+      "tip": "Mất credential HSM thì AWS không khôi phục được key cho bạn.",
+      "lessons": [
+        "cloudhsm"
+      ]
+    },
+    {
+      "term": "KMS Custom Key Store",
+      "full": null,
+      "def": "Tính năng KMS trỏ tới một CloudHSM cluster bạn sở hữu: key material được sinh và giữ trong HSM single-tenant của bạn, nhưng vẫn dùng được tích hợp dịch vụ AWS của KMS.",
+      "tip": "Vừa cần key trong HSM riêng vừa cần SSE-KMS cho S3/EBS → KMS custom key store dựa trên CloudHSM.",
+      "lessons": [
+        "cloudhsm",
+        "kms"
+      ]
+    },
+    {
+      "term": "CloudHSM Cluster",
+      "full": null,
+      "def": "Nhóm nhiều HSM đặt ở nhiều AZ, đồng bộ key với nhau để có high availability; CloudHSM tự backup cluster nên khôi phục được vào cluster mới.",
+      "tip": "Một HSM đơn lẻ không HA → triển khai cluster ít nhất 2 HSM ở các AZ khác nhau.",
+      "lessons": [
+        "cloudhsm"
+      ]
+    },
+    {
+      "term": "SSL/TLS Offload with CloudHSM",
+      "full": null,
+      "def": "Use case kinh điển của CloudHSM: web server đẩy thao tác mật mã TLS và private key sang HSM; cùng nhóm với Oracle TDE và bảo vệ private key của CA.",
+      "tip": "SSL offload trên web server, Oracle TDE, private key của CA → CloudHSM.",
+      "lessons": [
+        "cloudhsm"
+      ]
+    },
+    {
+      "term": "AWS Config",
+      "full": null,
+      "def": "Ghi lại lịch sử cấu hình của resource (configuration item, relationship) theo thời gian và đánh giá compliance bằng Config Rules; regional, chỉ phát hiện, không ngăn thay đổi.",
+      "tip": "'Cấu hình SG tuần trước thế nào', audit thay đổi cấu hình → AWS Config. Cần NGĂN hành động → IAM policy/SCP.",
+      "lessons": [
+        "aws-config"
+      ]
+    },
+    {
+      "term": "Configuration Item",
+      "full": null,
+      "def": "Bản ghi cấu hình của một resource tại một thời điểm, kèm relationship với resource khác và sự kiện liên quan; tập hợp CI tạo thành configuration history lưu trong S3 config bucket.",
+      "tip": "CloudTrail ghi API call (ai làm gì); Config ghi trạng thái cấu hình và quan hệ giữa resource.",
+      "lessons": [
+        "aws-config"
+      ]
+    },
+    {
+      "term": "AWS Config Rules",
+      "full": null,
+      "def": "Rule (AWS managed hoặc custom viết bằng Lambda hay Guard) đánh giá resource compliant hay non-compliant; thay đổi compliance phát event qua EventBridge và thông báo SNS.",
+      "tip": "Config Rules chỉ đánh dấu non-compliant, không chặn thay đổi.",
+      "lessons": [
+        "aws-config"
+      ]
+    },
+    {
+      "term": "AWS Config Remediation",
+      "full": null,
+      "def": "Tự động khắc phục resource non-compliant bằng SSM Automation document (remediation native của Config) hoặc qua EventBridge gọi Lambda.",
+      "tip": "Tự sửa resource non-compliant (vd cài patch thiếu cho EC2) → Config Rules + remediation bằng SSM Automation.",
+      "lessons": [
+        "aws-config",
+        "ssm-documents"
+      ]
+    },
+    {
+      "term": "AWS Config Aggregator",
+      "full": null,
+      "def": "Gom dữ liệu cấu hình và compliance của nhiều account và nhiều region về một chỗ, vì bản thân AWS Config là dịch vụ regional.",
+      "tip": "Cần một view compliance cross-account, cross-region → Config aggregator.",
+      "lessons": [
+        "aws-config"
+      ]
+    },
+    {
+      "term": "Periodic Recording",
+      "full": null,
+      "def": "Chế độ AWS Config ghi cấu hình 24 giờ một lần thay vì continuous recording (mặc định), giảm chi phí khi chấp nhận độ chi tiết theo ngày.",
+      "tip": "Firewall Manager yêu cầu continuous recording, periodic là không đủ.",
+      "lessons": [
+        "aws-config",
+        "aws-firewall-manager"
+      ]
+    },
+    {
+      "term": "Amazon Macie",
+      "full": null,
+      "def": "Dịch vụ data security cho S3: dùng ML và pattern matching để khám phá, phân loại, giám sát dữ liệu nhạy cảm (PII, PHI, tài chính, credential) và cảnh báo khi bucket bị nới lỏng bảo mật.",
+      "tip": "'Tìm PII, số thẻ tín dụng trong S3 bucket' → Macie. Macie chỉ dành cho S3.",
+      "lessons": [
+        "macie"
+      ]
+    },
+    {
+      "term": "Managed Data Identifiers",
+      "full": null,
+      "def": "Bộ nhận diện dữ liệu nhạy cảm do AWS xây và quản lý, dùng ML + pattern matching, phủ các loại phổ biến (tên, hộ chiếu, thẻ tín dụng, AWS access key...) cho nhiều quốc gia.",
+      "tip": null,
+      "lessons": [
+        "macie"
+      ]
+    },
+    {
+      "term": "Custom Data Identifiers",
+      "full": null,
+      "def": "Nhận diện do bạn tự định nghĩa bằng regex cho dữ liệu đặc thù tổ chức (mã nhân viên...), tinh chỉnh bằng keywords, maximum match distance và ignore words.",
+      "tip": "Dữ liệu nhạy cảm theo định dạng riêng của công ty → Macie custom data identifier.",
+      "lessons": [
+        "macie"
+      ]
+    },
+    {
+      "term": "Sensitive Data Discovery Job",
+      "full": null,
+      "def": "Job của Macie: chọn bucket, lịch chạy (một lần hoặc định kỳ) và bộ identifier để phân tích object, sinh sensitive data findings (Credentials, Financial, Personal, Multiple...).",
+      "tip": null,
+      "lessons": [
+        "macie"
+      ]
+    },
+    {
+      "term": "Macie Policy Findings",
+      "full": null,
+      "def": "Finding khi setting của bucket bị đổi theo hướng giảm bảo mật sau khi bật Macie: tắt Block Public Access, bucket public, chia sẻ ra ngoài, default encryption về SSE-S3.",
+      "tip": "Mọi finding Macie tự động lên EventBridge; gửi lên Security Hub là setting theo account.",
+      "lessons": [
+        "macie"
+      ]
+    },
+    {
+      "term": "Amazon Managed Grafana",
+      "full": null,
+      "def": "Grafana do AWS quản lý: dashboard truy vấn dữ liệu tại nguồn qua plugin (CloudWatch, AMP, X-Ray, OpenSearch, Athena, Azure Monitor...), không lưu dữ liệu vận hành, không cần agent.",
+      "tip": "Đội đã quen Grafana hoặc cần nguồn ngoài CloudWatch → Managed Grafana; mọi thứ đã ở CloudWatch → CloudWatch dashboard là đủ.",
+      "lessons": [
+        "amazon-managed-grafana"
+      ]
+    },
+    {
+      "term": "Grafana Workspace",
+      "full": null,
+      "def": "Đơn vị cô lập logic của Managed Grafana, chỉ lưu cấu hình (dashboard, alert rule, data source, user); tính phí theo active user, tối thiểu một editor license.",
+      "tip": "User vào workspace qua IAM Identity Center hoặc SAML, không qua IAM; quyền đọc nguồn AWS qua IAM role của workspace.",
+      "lessons": [
+        "amazon-managed-grafana"
+      ]
+    },
+    {
+      "term": "Managed Grafana VPC Connection",
+      "full": null,
+      "def": "Kết nối workspace với một VPC (tạo ENI trong subnet) để đọc nguồn private như RDS; từ đó mọi traffic của workspace đều đi qua VPC này.",
+      "tip": "Sau khi kết nối VPC: mất đường PrivateLink tới CloudWatch/AMP/X-Ray, cần interface endpoint và NAT Gateway. Một workspace chỉ một VPC.",
+      "lessons": [
+        "amazon-managed-grafana"
+      ]
+    },
+    {
+      "term": "Amazon Managed Service for Prometheus",
+      "full": null,
+      "def": "Kho lưu và truy vấn metric tương thích Prometheus (PromQL) do AWS quản lý; workspace theo region, replicate qua 3 AZ, retention mặc định 150 ngày, tối đa 3 năm. Không tự thu thập dữ liệu.",
+      "tip": "Đội đã dùng Prometheus/PromQL → AMP; mọi thứ đã ở CloudWatch → Container Insights.",
+      "lessons": [
+        "amazon-managed-service-for-prometheus"
+      ]
+    },
+    {
+      "term": "PromQL",
+      "full": "Prometheus Query Language",
+      "def": "Ngôn ngữ truy vấn metric của Prometheus; chạy qua remote query endpoint của workspace AMP, thường từ Amazon Managed Grafana hoặc alert rule.",
+      "tip": null,
+      "lessons": [
+        "amazon-managed-service-for-prometheus"
+      ]
+    },
+    {
+      "term": "Remote Write Endpoint",
+      "full": null,
+      "def": "Public endpoint của workspace AMP nhận metric do collector push lên; remote query endpoint là nơi chạy PromQL. Request tới cả hai phải ký SigV4.",
+      "tip": "AMP không thu thập: collector (ADOT, Prometheus agent, CloudWatch agent) scrape workload rồi push vào remote write endpoint.",
+      "lessons": [
+        "amazon-managed-service-for-prometheus"
+      ]
+    },
+    {
+      "term": "ADOT",
+      "full": "AWS Distro for OpenTelemetry",
+      "def": "Bản phân phối OpenTelemetry do AWS hỗ trợ, dùng làm collector scrape metric từ workload rồi gửi tới AMP và các backend khác; bạn tự cấu hình và vận hành.",
+      "tip": "Dùng EKS → có AWS managed collector, không phải tự vận hành collector.",
+      "lessons": [
+        "amazon-managed-service-for-prometheus"
+      ]
+    },
+    {
+      "term": "Prometheus Alert Manager",
+      "full": null,
+      "def": "Thành phần nhận alert từ alert rule (PromQL chạy theo lịch) trong workspace AMP, gom nhóm, suppress trong maintenance window rồi gửi thông báo qua SNS.",
+      "tip": null,
+      "lessons": [
+        "amazon-managed-service-for-prometheus"
+      ]
+    },
+    {
+      "term": "AWS Compute Optimizer",
+      "full": null,
+      "def": "Đưa recommendation cho từng resource (EC2, ASG, EBS, Lambda, RDS...) dựa trên metric CloudWatch thật: under-provisioned, over-provisioned hay optimized; phần lõi miễn phí, phân tích 14 ngày.",
+      "tip": "Cần gợi ý instance type/size cụ thể dựa trên mức dùng thật → Compute Optimizer, không phải Trusted Advisor.",
+      "lessons": [
+        "aws-compute-optimizer"
+      ]
+    },
+    {
+      "term": "Enhanced Infrastructure Metrics",
+      "full": null,
+      "def": "Tính năng trả phí của Compute Optimizer nâng cửa sổ phân tích từ 14 lên 93 ngày cho recommendation của EC2, Auto Scaling Group và RDS.",
+      "tip": "Workload có chu kỳ dài (báo cáo cuối tháng) → bật Enhanced Infrastructure Metrics để không bị gợi ý downsize sai.",
+      "lessons": [
+        "aws-compute-optimizer"
+      ]
+    },
+    {
+      "term": "Rightsizing",
+      "full": null,
+      "def": "Điều chỉnh loại và kích thước resource cho khớp mức sử dụng thật, tránh thiếu hiệu năng (under-provisioned) hoặc trả tiền cho capacity thừa (over-provisioned).",
+      "tip": "Recommendation EC2 muốn tính cả memory → cài CloudWatch Agent.",
+      "lessons": [
+        "aws-compute-optimizer"
+      ]
+    },
+    {
+      "term": "Amazon Inspector",
+      "full": null,
+      "def": "Dịch vụ vulnerability management quét liên tục EC2 (và OS), container image trong ECR, Lambda để tìm lỗ hổng phần mềm và network exposure; findings xếp theo Inspector risk score.",
+      "tip": "Thấy CVE, CIS Benchmarks, vulnerability scan → Inspector. Inspector không tự sửa: muốn tự khắc phục thì EventBridge → Lambda.",
+      "lessons": [
+        "inspector"
+      ]
+    },
+    {
+      "term": "CVE",
+      "full": "Common Vulnerabilities and Exposures",
+      "def": "Cơ sở dữ liệu công khai các lỗ hổng đã biết, mỗi lỗ hổng có một CVE ID; package vulnerability finding của Inspector liệt kê các CVE ID tìm thấy.",
+      "tip": "Đề nhắc CVE → Inspector.",
+      "lessons": [
+        "inspector"
+      ]
+    },
+    {
+      "term": "CIS Benchmarks",
+      "full": "Center for Internet Security Benchmarks",
+      "def": "Bộ best practice bảo mật của ngành; Inspector so OS của EC2 với CIS bằng targeted scan on-demand hoặc theo lịch, Security Hub có standard CIS AWS Foundations Benchmark.",
+      "tip": "'Scheduled CIS benchmark scanning cho EC2' → Inspector; chấm điểm account theo CIS AWS Foundations → Security Hub.",
+      "lessons": [
+        "inspector",
+        "aws-security-hub"
+      ]
+    },
+    {
+      "term": "Network Reachability",
+      "full": null,
+      "def": "Kiểm tra của Inspector (mỗi 12 giờ, chỉ EC2) tìm đường TCP/UDP đang mở tới instance từ Internet Gateway, VPC peering, VPN, xét end-to-end qua SG, NACL, ELB, IGW.",
+      "tip": "Phân tích EC2 nào lộ ra Internet qua port nào → Inspector network reachability, không bao giờ cần agent.",
+      "lessons": [
+        "inspector"
+      ]
+    },
+    {
+      "term": "Agentless Scanning",
+      "full": null,
+      "def": "Cách Inspector quét EC2 bằng cách phân tích EBS snapshot, không cần agent; agent-based dùng SSM Agent; mặc định account chạy hybrid mode kết hợp cả hai.",
+      "tip": "EC2 không được cài thêm agent mà vẫn cần quét lỗ hổng → Inspector agentless scanning.",
+      "lessons": [
+        "inspector"
+      ]
+    },
+    {
+      "term": "Amazon GuardDuty",
+      "full": null,
+      "def": "Threat detection liên tục: phân tích DNS logs, VPC Flow Logs, CloudTrail management events (và S3 data events khi bật S3 Protection) bằng ML + threat intelligence để phát hiện hoạt động bất thường.",
+      "tip": "GuardDuty chỉ phát hiện, không chặn; tự phản ứng → finding → EventBridge → Lambda/SNS.",
+      "lessons": [
+        "guardduty"
+      ]
+    },
+    {
+      "term": "GuardDuty S3 Protection",
+      "full": null,
+      "def": "Protection plan cho GuardDuty phân tích CloudTrail S3 data events (thao tác trên object) để phát hiện truy cập S3 đáng ngờ; ngoài ra còn EKS, Malware, RDS, Lambda Protection.",
+      "tip": "GuardDuty không cần bạn tự bật VPC Flow Logs hay trail; nó lấy luồng dữ liệu độc lập.",
+      "lessons": [
+        "guardduty"
+      ]
+    },
+    {
+      "term": "Trusted IP List",
+      "full": null,
+      "def": "Danh sách IP tin cậy (allow list) để GuardDuty không sinh finding cho hoạt động từ các IP đó; giúp điều chỉnh những gì GuardDuty coi là bình thường.",
+      "tip": null,
+      "lessons": [
+        "guardduty"
+      ]
+    },
+    {
+      "term": "Delegated Administrator Account",
+      "full": null,
+      "def": "Account được management account của Organizations chỉ định để quản lý một dịch vụ bảo mật (GuardDuty, Security Hub, Detective, Macie, Firewall Manager) cho mọi member account.",
+      "tip": "Bật và quản lý dịch vụ bảo mật tập trung cho cả Organization, account mới tự được thêm → delegated administrator.",
+      "lessons": [
+        "guardduty",
+        "aws-security-hub",
+        "amazon-detective"
+      ]
+    },
+    {
+      "term": "AWS Network Firewall",
+      "full": null,
+      "def": "Firewall managed, regional đặt trên đường traffic vào/ra VPC qua firewall endpoint; có stateless engine (5-tuple) và stateful engine (Suricata, domain list, IPS).",
+      "tip": "Lọc theo domain, IPS/Suricata cho cả VPC → Network Firewall. Không inspect VPC peering, Global Accelerator, Amazon-provided DNS.",
+      "lessons": [
+        "aws-network-firewall"
+      ]
+    },
+    {
+      "term": "Firewall Subnet",
+      "full": null,
+      "def": "Subnet riêng ở mỗi AZ chỉ chứa firewall endpoint (một VPC endpoint) của Network Firewall; route table của subnet khác trỏ traffic qua endpoint cùng AZ.",
+      "tip": "Endpoint không lọc được traffic của chính subnet chứa nó → không đặt workload trong firewall subnet.",
+      "lessons": [
+        "aws-network-firewall"
+      ]
+    },
+    {
+      "term": "Ingress Route Table",
+      "full": null,
+      "def": "Route table gắn vào Internet Gateway để traffic inbound tới subnet bị chuyển qua firewall endpoint trước khi tới instance.",
+      "tip": "Kiến trúc Network Firewall: ingress route table trên IGW + default route của public subnet trỏ tới endpoint cùng AZ.",
+      "lessons": [
+        "aws-network-firewall"
+      ]
+    },
+    {
+      "term": "Firewall Policy",
+      "full": null,
+      "def": "Đơn vị cấu hình của Network Firewall: chọn rule group stateless/stateful, thứ tự xử lý và default action; một firewall có đúng một policy, một policy dùng cho nhiều firewall.",
+      "tip": "Type và capacity của rule group không đổi được sau khi tạo; thứ tự stateful cố định lúc tạo policy.",
+      "lessons": [
+        "aws-network-firewall"
+      ]
+    },
+    {
+      "term": "Stateless Rule Group",
+      "full": null,
+      "def": "Rule group Network Firewall xét từng packet theo 5-tuple, không biết request hay response (giống NACL); action pass, drop, forward sang stateful engine; theo priority, số nhỏ trước.",
+      "tip": null,
+      "lessons": [
+        "aws-network-firewall"
+      ]
+    },
+    {
+      "term": "Stateful Rule Group",
+      "full": null,
+      "def": "Rule group có state theo chuẩn Suricata: Suricata rule, simple rule (giống SG), domain list, IPS; action pass, drop, reject (gửi TCP reset), alert.",
+      "tip": "Thứ tự đánh giá: action order (mặc định) hoặc strict order (AWS khuyên), chọn lúc tạo policy.",
+      "lessons": [
+        "aws-network-firewall"
+      ]
+    },
+    {
+      "term": "Suricata",
+      "full": null,
+      "def": "Chuẩn mở cho rule IDS/IPS mà stateful engine của Network Firewall dùng; rule IPS bắt buộc theo định dạng tương thích Suricata.",
+      "tip": "Đề nhắc Suricata hoặc IPS rule cho VPC → AWS Network Firewall.",
+      "lessons": [
+        "aws-network-firewall"
+      ]
+    },
+    {
+      "term": "Domain List Rule",
+      "full": null,
+      "def": "Rule stateful của Network Firewall liệt kê domain cho phép hoặc chặn (hỗ trợ wildcard), dựa vào HTTP Host header hoặc SNI của TLS.",
+      "tip": "'Chỉ cho EC2 gọi ra server cập nhật phần mềm, chặn phần còn lại' → Network Firewall domain list.",
+      "lessons": [
+        "aws-network-firewall"
+      ]
+    },
+    {
+      "term": "AWS Trusted Advisor",
+      "full": null,
+      "def": "Check best practice real-time ở mức account, không cần agent, theo 6 nhóm: cost optimization, performance, security, fault tolerance, service limits, operational excellence; gắn với support plan.",
+      "tip": "Cần mọi check, nhóm operational excellence, Trusted Advisor API hay event-driven → support plan trả phí.",
+      "lessons": [
+        "aws-trusted-advisor"
+      ]
+    },
+    {
+      "term": "Trusted Advisor Core Checks",
+      "full": null,
+      "def": "6 check miễn phí cho gói Basic/Developer: S3 bucket permissions, SG port mở không giới hạn, STS global endpoint usage, MFA on root, EBS public snapshots, RDS public snapshots.",
+      "tip": "Basic/Developer = 6 core check + mọi service limit check.",
+      "lessons": [
+        "aws-trusted-advisor"
+      ]
+    },
+    {
+      "term": "Service Limit Check",
+      "full": null,
+      "def": "Check của Trusted Advisor cảnh báo khi account dùng quá 80% một service limit (quota); có trong mọi support plan.",
+      "tip": "Tự theo dõi limit và tự mở case xin tăng → Trusted Advisor + AWS Support API (cần gói trả phí).",
+      "lessons": [
+        "aws-trusted-advisor"
+      ]
+    },
+    {
+      "term": "AWS Support API",
+      "full": null,
+      "def": "API để mở, xem, cập nhật và resolve support case bằng code (thêm trao đổi, tệp đính kèm); chỉ có với support plan trả phí.",
+      "tip": null,
+      "lessons": [
+        "aws-trusted-advisor"
+      ]
+    },
+    {
+      "term": "AWS Security Hub",
+      "full": null,
+      "def": "Điểm gom findings từ GuardDuty, Inspector, Macie, Config, Firewall Manager, IAM Access Analyzer và partner; CSPM chấm điểm theo CIS, PCI DSS, AWS Foundational Security Best Practices.",
+      "tip": "Regional và không retroactive; cần bật AWS Config resource recording ở mọi account và region.",
+      "lessons": [
+        "aws-security-hub"
+      ]
+    },
+    {
+      "term": "CSPM",
+      "full": "Cloud Security Posture Management",
+      "def": "Khả năng của Security Hub so môi trường với security standard để cho ra score và findings; phần lớn control chạy bằng service-linked AWS Config rule.",
+      "tip": "'So account với CIS / PCI DSS, có điểm tổng' → Security Hub CSPM.",
+      "lessons": [
+        "aws-security-hub"
+      ]
+    },
+    {
+      "term": "ASFF",
+      "full": "AWS Security Finding Format",
+      "def": "Định dạng JSON chuẩn cho mọi finding Security Hub nhận vào và sinh ra, giúp gom dữ liệu nhiều nguồn mà không phải xử lý nhiều định dạng khác nhau.",
+      "tip": "Thấy ASFF → Security Hub.",
+      "lessons": [
+        "aws-security-hub"
+      ]
+    },
+    {
+      "term": "Security Hub Home Region",
+      "full": null,
+      "def": "Region được chọn để nhận dữ liệu từ các linked region, cho view gộp findings của nhiều account và nhiều region trong một chỗ.",
+      "tip": "Security Hub regional: bật ở mọi region rồi gom về home region.",
+      "lessons": [
+        "aws-security-hub"
+      ]
+    },
+    {
+      "term": "Security Hub Automation Rules",
+      "full": null,
+      "def": "Rule có sẵn trong Security Hub tự động suppress finding, đổi severity hoặc thêm note theo tiêu chí bạn đặt; phản ứng tùy biến thì dùng EventBridge.",
+      "tip": null,
+      "lessons": [
+        "aws-security-hub"
+      ]
+    },
+    {
+      "term": "AWS Firewall Manager",
+      "full": null,
+      "def": "Quản lý tập trung WAF, Network Firewall, SG, NACL, Shield Advanced, Route 53 Resolver DNS Firewall cho mọi account trong Organization; bản thân không lọc traffic, account mới tự nhận policy.",
+      "tip": "Điều kiện: Organizations all features + AWS Config continuous recording ở mọi member account và region có policy.",
+      "lessons": [
+        "aws-firewall-manager"
+      ]
+    },
+    {
+      "term": "Firewall Manager Policy",
+      "full": null,
+      "def": "Policy tạo trong administrator account gồm policy type, scope (account, OU, tag exclusion), rule và action identify only (mặc định) hoặc automatic remediation.",
+      "tip": "Policy là regional; riêng WAF cho CloudFront là global.",
+      "lessons": [
+        "aws-firewall-manager"
+      ]
+    },
+    {
+      "term": "Security Group Usage Audit Policy",
+      "full": null,
+      "def": "Một trong 3 loại policy SG của Firewall Manager (common, content audit, usage audit): dọn Security Group không dùng hoặc thừa trên các account.",
+      "tip": "Đẩy bộ rule SG chuẩn → common; gỡ rule ngoài phạm vi cho phép → content audit.",
+      "lessons": [
+        "aws-firewall-manager"
+      ]
+    },
+    {
+      "term": "Amazon Detective",
+      "full": null,
+      "def": "Dịch vụ điều tra bảo mật: gom sự kiện theo thời gian từ CloudTrail, VPC Flow Logs, GuardDuty findings thành đồ thị quan hệ để lần theo, xem resource liên quan và điều gì bất thường.",
+      "tip": "GuardDuty phát hiện, Detective điều tra: 'tìm nguồn gốc, lần theo finding / login thất bại' → Detective.",
+      "lessons": [
+        "amazon-detective"
+      ]
+    }
+  ]
+}

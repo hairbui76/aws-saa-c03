@@ -1,0 +1,670 @@
+{
+ "chapter": "14",
+ "cards": [
+  {
+   "term": "AWS Lambda",
+   "full": null,
+   "def": "Dịch vụ Function as a Service (FaaS): chạy đoạn code nhỏ, stateless theo event; chỉ tính tiền theo số request và thời gian chạy (memory × duration). Timeout tối đa 900 giây.",
+   "tip": "Job chạy quá 15 phút → không phải Lambda; nghĩ tới Step Functions, ECS/Fargate, EC2 hoặc AWS Batch.",
+   "lessons": [
+    "lambda",
+    "serverless-architecture"
+   ]
+  },
+  {
+   "term": "Lambda Memory",
+   "full": null,
+   "def": "Cấu hình 128 MB – 10,240 MB (bước 1 MB); vCPU không chọn trực tiếp mà tăng tuyến tính theo memory (1,769 MB ≈ 1 vCPU, tối đa 6 vCPU). /tmp mặc định 512 MB, tăng được tới 10 GB.",
+   "tip": "Muốn thêm CPU cho Lambda → tăng memory; không có tùy chọn vCPU riêng.",
+   "lessons": [
+    "lambda"
+   ]
+  },
+  {
+   "term": "Lambda VPC Networking",
+   "full": null,
+   "def": "Gắn function vào subnet + security group trong VPC của bạn qua Hyperplane ENI (một ENI cho mỗi tổ hợp subnet + SG). Khi đó function vào được tài nguyên private nhưng mặc định không ra Internet/public AWS services.",
+   "tip": "Lambda trong VPC cần NAT Gateway hoặc VPC endpoint để ra ngoài; execution role cần quyền EC2 networking (tạo ENI).",
+   "lessons": [
+    "lambda"
+   ]
+  },
+  {
+   "term": "Lambda Execution Role",
+   "full": null,
+   "def": "IAM role mà Lambda assume khi chạy để lấy temporary credentials: quyết định function được làm gì với dịch vụ khác (đọc DynamoDB, ghi S3, ghi CloudWatch Logs...).",
+   "tip": "Lambda chạy mà CloudWatch Logs trống → execution role thiếu quyền logging (vd. AWSLambdaBasicExecutionRole).",
+   "lessons": [
+    "lambda"
+   ]
+  },
+  {
+   "term": "Lambda Resource Policy",
+   "full": null,
+   "def": "Resource-based policy gắn vào function, quy định ai được invoke nó: account khác hoặc dịch vụ như S3, SNS, API Gateway. Thường được console tự thêm khi tạo trigger.",
+   "tip": "Execution role = function làm được gì; resource policy = ai được gọi function (cross-account, S3, SNS).",
+   "lessons": [
+    "lambda"
+   ]
+  },
+  {
+   "term": "Lambda Asynchronous Invocation",
+   "full": null,
+   "def": "Kiểu gọi 'gửi rồi quên' do dịch vụ AWS đẩy event (S3 events, SNS, EventBridge); Lambda tự retry 0–2 lần nên code phải idempotent (chạy lại cho kết quả như cũ).",
+   "tip": "Event lỗi sau khi retry → DLQ hoặc Destinations. Synchronous (CLI/API, API Gateway) thì client tự retry.",
+   "lessons": [
+    "lambda"
+   ]
+  },
+  {
+   "term": "Lambda Destinations",
+   "full": null,
+   "def": "Cấu hình gửi kết quả của async invocation tới SQS, SNS, Lambda khác, EventBridge hoặc S3, tách riêng cho success và failure.",
+   "tip": "S3 chỉ làm destination khi failure. Destinations linh hoạt hơn DLQ vì có cả nhánh success.",
+   "lessons": [
+    "lambda"
+   ]
+  },
+  {
+   "term": "Lambda Event Source Mapping",
+   "full": null,
+   "def": "Thành phần poll nguồn không tự đẩy event (SQS, Kinesis, DynamoDB Streams, Amazon MQ, MSK...), gom record thành batch rồi invoke function; batch thành công hoặc thất bại cùng nhau.",
+   "tip": "Mapping đọc nguồn bằng quyền của execution role → role phải có quyền SQS/Kinesis/DynamoDB Streams. Batch lỗi → on-failure destination.",
+   "lessons": [
+    "lambda",
+    "sqs",
+    "kinesis-data-streams"
+   ]
+  },
+  {
+   "term": "Lambda Alias",
+   "full": null,
+   "def": "Con trỏ có tên (DEV, STAGE, PROD) tới một version cụ thể, đổi đích được bất kỳ lúc nào; các thành phần ứng dụng trỏ vào alias thay vì version.",
+   "tip": "Triển khai/rollback Lambda an toàn → publish version mới rồi chuyển alias PROD sang nó.",
+   "lessons": [
+    "lambda",
+    "api-gateway"
+   ]
+  },
+  {
+   "term": "Lambda Cold Start",
+   "full": null,
+   "def": "Lần invoke phải dựng execution context mới (cấp phần cứng, cài runtime, tải package) nên chậm ~100 ms – 1 s; warm start dùng lại context cũ chỉ ~1–2 ms.",
+   "tip": "Khởi tạo DB connection bên ngoài handler để tái dùng giữa các lần warm start, nhưng code vẫn phải chạy đúng trong môi trường mới.",
+   "lessons": [
+    "lambda"
+   ]
+  },
+  {
+   "term": "Lambda Provisioned Concurrency",
+   "full": null,
+   "def": "AWS tạo sẵn và giữ ấm một số execution context để giảm cold start; mỗi context chỉ xử lý một invocation tại một thời điểm.",
+   "tip": "Đề nói latency cao do cold start trước đợt tải lớn/release → bật provisioned concurrency.",
+   "lessons": [
+    "lambda"
+   ]
+  },
+  {
+   "term": "Amazon EventBridge",
+   "full": null,
+   "def": "Router event serverless (tiền thân CloudWatch Events): nhận event JSON gần real-time từ dịch vụ AWS, ứng dụng custom và SaaS partner, rồi rule khớp event và chuyển tới target.",
+   "tip": "'Phản ứng khi có thay đổi trong account' hoặc cần event từ SaaS/third-party → EventBridge rule + Lambda.",
+   "lessons": [
+    "eventbridge"
+   ]
+  },
+  {
+   "term": "EventBridge Event Bus",
+   "full": null,
+   "def": "Kênh nhận event trong account: mỗi account có default event bus (dịch vụ AWS luôn gửi vào đây), có thể tạo thêm custom bus và partner bus cho SaaS.",
+   "tip": "Event của SaaS partner chỉ vào bus bạn tạo, không vào default bus. S3 phải bật tích hợp EventBridge mới gửi event.",
+   "lessons": [
+    "eventbridge"
+   ]
+  },
+  {
+   "term": "EventBridge Rule",
+   "full": null,
+   "def": "Gắn với một event bus, so khớp event pattern (vd. source aws.ec2, state stopped) rồi chuyển nguyên event JSON tới tối đa 5 target như Lambda, SNS, Step Functions.",
+   "tip": "Nhớ con số: mỗi rule tối đa 5 target. Rule không xử lý lại event trong quá khứ.",
+   "lessons": [
+    "eventbridge"
+   ]
+  },
+  {
+   "term": "EventBridge Scheduler",
+   "full": null,
+   "def": "Dịch vụ lập lịch serverless kích hoạt target bằng biểu thức rate, cron (6 trường) hoặc at (chạy một lần), có time zone và flexible time window; không gắn event bus.",
+   "tip": "Cron serverless thay cron trên EC2 → EventBridge Scheduler. Schedule rule trên bus là legacy, chỉ UTC.",
+   "lessons": [
+    "eventbridge",
+    "lambda"
+   ]
+  },
+  {
+   "term": "Serverless Architecture",
+   "full": null,
+   "def": "Kiến trúc quản lý càng ít server càng tốt: chia ứng dụng thành function nhỏ, stateless, event-driven chạy trên FaaS, ghép với managed service (S3, DynamoDB, Cognito); chi phí gần 0 khi không có tải.",
+   "tip": "Đề nói 'không quản lý server', 'chi phí gần 0 khi rảnh' → S3 + API Gateway + Lambda + DynamoDB (+ Cognito).",
+   "lessons": [
+    "serverless-architecture",
+    "lab-serverless-app-pet-cuddle-o-tron"
+   ]
+  },
+  {
+   "term": "SNS",
+   "full": "Simple Notification Service",
+   "def": "Dịch vụ pub/sub public, regionally resilient: publisher gửi message (tối đa 256 KB) vào topic, SNS đẩy (push) tới mọi subscriber như SQS, Lambda, HTTP(S), email, SMS, mobile push, Firehose.",
+   "tip": "Gửi một message tới nhiều consumer cùng lúc, hoặc thông báo cho admin khi CloudWatch alarm/ASG/CloudFormation đổi trạng thái → SNS.",
+   "lessons": [
+    "sns",
+    "compare-sqs-vs-sns-vs-kinesis"
+   ]
+  },
+  {
+   "term": "SNS Subscription Filter Policy",
+   "full": null,
+   "def": "Policy gắn lên subscription để subscriber chỉ nhận message khớp điều kiện theo message attribute hoặc message body, thay vì nhận tất cả.",
+   "tip": "Subscriber chỉ cần một phần message → filter policy, không cần tạo nhiều topic.",
+   "lessons": [
+    "sns"
+   ]
+  },
+  {
+   "term": "SNS Fan-out",
+   "full": null,
+   "def": "Mẫu một SNS topic có nhiều SQS queue subscribe: một message được nhân ra mỗi queue để các worker xử lý song song, độc lập, với buffer riêng.",
+   "tip": "Một S3 event/upload cần kích hoạt nhiều job độc lập → SNS fan-out tới nhiều SQS (hoặc EventBridge rule tới nhiều target).",
+   "lessons": [
+    "sns",
+    "sqs",
+    "compare-sqs-vs-sns-vs-kinesis"
+   ]
+  },
+  {
+   "term": "SNS FIFO Topic",
+   "full": null,
+   "def": "Loại topic giữ thứ tự nghiêm ngặt và loại trùng (deduplication), nhưng chỉ giao được tới SQS queue; Standard topic thì best-effort ordering, at-least-once.",
+   "tip": "Pub/sub cần giữ thứ tự và không trùng → SNS FIFO topic + SQS (thường là SQS FIFO).",
+   "lessons": [
+    "sns"
+   ]
+  },
+  {
+   "term": "AWS Step Functions",
+   "full": null,
+   "def": "Dịch vụ dựng state machine điều phối workflow serverless nhiều bước, giữ dữ liệu giữa các state và gọi nhiều dịch vụ AWS; khắc phục giới hạn 15 phút và stateless của Lambda.",
+   "tip": "Workflow > 15 phút, nhiều bước, rẽ nhánh, chờ, cần phê duyệt của con người → Step Functions, đừng xâu chuỗi Lambda.",
+   "lessons": [
+    "step-functions",
+    "lab-serverless-app-pet-cuddle-o-tron"
+   ]
+  },
+  {
+   "term": "Step Functions Standard Workflow",
+   "full": null,
+   "def": "Loại workflow mặc định: chạy tối đa 1 năm, ngữ nghĩa exactly-once, phù hợp việc chạy dài, cần audit hoặc không được lặp (thu tiền).",
+   "tip": "Standard = 1 năm, exactly-once. Loại workflow chọn lúc tạo và không đổi được sau đó.",
+   "lessons": [
+    "step-functions"
+   ]
+  },
+  {
+   "term": "Step Functions Express Workflow",
+   "full": null,
+   "def": "Loại workflow cho xử lý event khối lượng lớn, ngắn: tối đa 5 phút, at-least-once, hợp IoT streaming, transform dữ liệu, mobile backend.",
+   "tip": "Express = 5 phút, at-least-once, throughput cao. Việc không được lặp → chọn Standard.",
+   "lessons": [
+    "step-functions"
+   ]
+  },
+  {
+   "term": "Wait State",
+   "full": null,
+   "def": "State tạm dừng workflow trong một khoảng thời gian hoặc tới một thời điểm cụ thể lấy từ input, không tốn compute trong lúc chờ.",
+   "tip": "Cần chờ lâu hơn 15 phút (delay queue tối đa 15 phút) → Step Functions Wait state.",
+   "lessons": [
+    "step-functions",
+    "sqs-delay-queues"
+   ]
+  },
+  {
+   "term": "Amazon API Gateway",
+   "full": null,
+   "def": "Dịch vụ managed, HA để tạo và quản lý API (REST, HTTP, WebSocket) làm cửa vào cho Lambda, HTTP endpoint hoặc dịch vụ AWS; lo authorization, throttling, caching, CORS, transformation.",
+   "tip": "Giữ API ổn định cho client trong khi backend dời từ on-prem lên AWS → API Gateway (công cụ migration).",
+   "lessons": [
+    "api-gateway",
+    "serverless-architecture"
+   ]
+  },
+  {
+   "term": "API Gateway Integration Timeout",
+   "full": null,
+   "def": "Giới hạn 29 giây cho integration phía sau API Gateway: Lambda dù chạy được 15 phút vẫn phải trả lời trong 29 s, quá thì client nhận 504.",
+   "tip": "Lambda sau API Gateway: nhớ 29 s chứ không phải 15 phút; lỗi 504 = integration timeout.",
+   "lessons": [
+    "api-gateway",
+    "lambda"
+   ]
+  },
+  {
+   "term": "Lambda Authorizer",
+   "full": null,
+   "def": "Lambda function (trước gọi là custom authorizer) nhận bearer token, kiểm tra với user store/IdP riêng rồi trả IAM policy + principal để API Gateway cho đi tiếp hoặc trả 403.",
+   "tip": "Token/IdP tùy biến, không phải Cognito → Lambda authorizer. Dùng Cognito → User Pool authorizer.",
+   "lessons": [
+    "api-gateway"
+   ]
+  },
+  {
+   "term": "Cognito User Pool Authorizer",
+   "full": null,
+   "def": "Cách xác thực của API Gateway: client đăng nhập Cognito User Pool, gửi JWT kèm request và API Gateway tự validate token natively, không cần Lambda.",
+   "tip": "Xác thực người dùng ứng dụng gọi API với ít code nhất → Cognito User Pool authorizer.",
+   "lessons": [
+    "api-gateway",
+    "cognito"
+   ]
+  },
+  {
+   "term": "API Gateway Endpoint Types",
+   "full": null,
+   "def": "Ba loại endpoint: Edge-optimized (đi qua CloudFront POP gần client), Regional (cho client cùng region), Private (chỉ truy cập trong VPC qua interface endpoint).",
+   "tip": "Client toàn cầu → edge-optimized; cùng region → regional; chỉ nội bộ VPC → private.",
+   "lessons": [
+    "api-gateway"
+   ]
+  },
+  {
+   "term": "API Gateway Canary Deployment",
+   "full": null,
+   "def": "Bật canary trên một stage để deployment mới nhận một tỉ lệ traffic nhỏ; ổn thì promote thành base, lỗi thì xóa canary và quay về base.",
+   "tip": "Triển khai API mới an toàn cho một phần người dùng → stage + canary.",
+   "lessons": [
+    "api-gateway"
+   ]
+  },
+  {
+   "term": "API Gateway Caching",
+   "full": null,
+   "def": "Cache response theo stage để giảm số lần gọi backend: dung lượng 500 MB – 237 GB, TTL mặc định 300 s, tối đa 3600 s (0 = tắt), có thể mã hóa.",
+   "tip": "Giảm tải backend và latency cho request lặp lại → bật cache trên stage.",
+   "lessons": [
+    "api-gateway"
+   ]
+  },
+  {
+   "term": "API Gateway Error Codes",
+   "full": null,
+   "def": "Mã lỗi cần nhớ: 4XX phía client (400 bad request, 403 authorizer/WAF chặn, 429 throttling), 5XX phía backend (502 output Lambda sai, 503 backend unavailable, 504 timeout 29 s).",
+   "tip": "429 = vượt throttle; 403 = authorizer hoặc WAF từ chối; 502 = Lambda trả output không hợp lệ.",
+   "lessons": [
+    "api-gateway"
+   ]
+  },
+  {
+   "term": "SES",
+   "full": "Simple Email Service",
+   "def": "Dịch vụ gửi/nhận email managed; account mới ở sandbox mode chỉ gửi được giữa các địa chỉ đã verify, phải xin ra khỏi sandbox để gửi tự do.",
+   "tip": "Ứng dụng cần gửi email → SES; gửi SMS/push/fan-out → SNS.",
+   "lessons": [
+    "lab-serverless-app-pet-cuddle-o-tron"
+   ]
+  },
+  {
+   "term": "SQS",
+   "full": "Simple Queue Service",
+   "def": "Message queue public, fully managed, HA trong region: producer gửi message, consumer poll (pull) để xử lý, giúp decouple và giao tiếp asynchronous. Message tối đa 1 MB, giữ mặc định 4 ngày, tối đa 14 ngày.",
+   "tip": "Đề nói decouple, asynchronous, worker pool, buffer giữa các tier → SQS. Payload lớn → lưu S3, message chỉ chứa link.",
+   "lessons": [
+    "sqs",
+    "compare-sqs-vs-sns-vs-kinesis"
+   ]
+  },
+  {
+   "term": "SQS Visibility Timeout",
+   "full": null,
+   "def": "Khoảng thời gian message bị ẩn sau khi consumer nhận; xử lý xong phải DeleteMessage, không xóa thì message hiện lại để retry. Mặc định 30 s, khoảng 0 s – 12 h.",
+   "tip": "Message bị xử lý trùng → visibility timeout ngắn hơn thời gian xử lý; tăng timeout hoặc gọi ChangeMessageVisibility.",
+   "lessons": [
+    "sqs",
+    "sqs-delay-queues"
+   ]
+  },
+  {
+   "term": "SQS Long Polling",
+   "full": null,
+   "def": "Đặt WaitTimeSeconds (tối đa 20 s) để ReceiveMessage chờ tới khi có message thay vì trả về ngay; short polling trả về lập tức kể cả khi rỗng nên tốn request.",
+   "tip": "Giảm chi phí / giảm response rỗng khi poll SQS → long polling. SQS tính tiền theo request, không theo message.",
+   "lessons": [
+    "sqs",
+    "compare-sqs-vs-sns-vs-kinesis"
+   ]
+  },
+  {
+   "term": "SQS Standard Queue",
+   "full": null,
+   "def": "Loại queue mặc định: throughput gần như không giới hạn, thứ tự best-effort và at-least-once delivery (đôi khi nhận trùng) nên consumer phải idempotent.",
+   "tip": "Throughput cực lớn, không cần thứ tự → Standard. DLQ của Standard queue phải là Standard.",
+   "lessons": [
+    "sqs-standard-vs-fifo"
+   ]
+  },
+  {
+   "term": "SQS FIFO Queue",
+   "full": null,
+   "def": "Loại queue giữ thứ tự nghiêm ngặt và exactly-once processing; mặc định 300 TPS (3.000 msg/s với batching), tên bắt buộc có hậu tố .fifo.",
+   "tip": "Không đổi Standard thành FIFO tại chỗ được → phải tạo queue mới tên đuôi .fifo. Thứ tự/không trùng → FIFO.",
+   "lessons": [
+    "sqs-standard-vs-fifo"
+   ]
+  },
+  {
+   "term": "SQS Message Group ID",
+   "full": null,
+   "def": "Thuộc tính của message trong FIFO queue: thứ tự được đảm bảo trong từng group, các group khác nhau được xử lý song song.",
+   "tip": "Chỉ cần giữ thứ tự theo từng khách hàng/từng đơn → dùng message group ID theo khách hàng/đơn.",
+   "lessons": [
+    "sqs-standard-vs-fifo"
+   ]
+  },
+  {
+   "term": "SQS Message Deduplication ID",
+   "full": null,
+   "def": "ID dùng để loại trùng trong FIFO queue: message cùng ID trong cửa sổ 5 phút bị bỏ; ID do app đặt hoặc tính bằng hash body (content-based deduplication).",
+   "tip": "Chống gửi trùng message trong 5 phút → deduplication ID hoặc bật content-based deduplication.",
+   "lessons": [
+    "sqs-standard-vs-fifo"
+   ]
+  },
+  {
+   "term": "FIFO High-Throughput Mode",
+   "full": null,
+   "def": "Chế độ của SQS FIFO nâng giới hạn vượt xa 300 TPS: tùy region từ ít nhất 2.400 tới 70.000 TPS (×10 khi batching), vẫn giữ thứ tự trong message group.",
+   "tip": "Cần > 3.000 msg/s mà vẫn giữ thứ tự → FIFO high-throughput mode; không cần thứ tự → Standard.",
+   "lessons": [
+    "sqs-standard-vs-fifo",
+    "sqs"
+   ]
+  },
+  {
+   "term": "SQS Delay Queue",
+   "full": null,
+   "def": "Queue có DelaySeconds khác 0: message mới vào sẽ vô hình trong khoảng đó (0–15 phút) trước khi consumer nhận được; khác visibility timeout vốn ẩn message sau khi đã nhận.",
+   "tip": "'Chờ X phút rồi mới xử lý' (≤ 15 phút) → delay queue. Chờ lâu hơn → Step Functions Wait hoặc EventBridge Scheduler.",
+   "lessons": [
+    "sqs-delay-queues"
+   ]
+  },
+  {
+   "term": "SQS Message Timer",
+   "full": null,
+   "def": "Delay đặt cho từng message (0–15 phút), ghi đè DelaySeconds của queue.",
+   "tip": "Message timer không hỗ trợ trên FIFO queue; FIFO chỉ dùng delay ở mức queue.",
+   "lessons": [
+    "sqs-delay-queues"
+   ]
+  },
+  {
+   "term": "SQS Dead-Letter Queue",
+   "full": null,
+   "def": "Queue phụ chứa message nhận nhiều lần mà không xử lý thành công, để cô lập, đặt alarm và chẩn đoán; một DLQ phục vụ được nhiều source queue cùng loại.",
+   "tip": "Đặt retention DLQ dài hơn source queue: với Standard, enqueue timestamp giữ nguyên khi sang DLQ (FIFO thì reset).",
+   "lessons": [
+    "sqs-dead-letter-queues",
+    "sqs"
+   ]
+  },
+  {
+   "term": "SQS Redrive Policy",
+   "full": null,
+   "def": "Cấu hình trên source queue chỉ định DLQ và maxReceiveCount; khi ReceiveCount vượt maxReceiveCount mà message chưa bị xóa thì nó được chuyển sang DLQ.",
+   "tip": "Message lỗi cứ quay vòng, làm nghẽn worker → DLQ + redrive policy với maxReceiveCount.",
+   "lessons": [
+    "sqs-dead-letter-queues"
+   ]
+  },
+  {
+   "term": "Kinesis Data Streams",
+   "full": null,
+   "def": "Dịch vụ streaming để ingest dữ liệu khổng lồ từ nhiều producer, lưu trong rolling window để nhiều consumer đọc real-time (~200 ms) ở tốc độ riêng và replay được.",
+   "tip": "Đề nói ingestion, real-time, click stream, IoT, nhiều consumer, replay → Kinesis; worker pool/decouple → SQS.",
+   "lessons": [
+    "kinesis-data-streams",
+    "compare-sqs-vs-sns-vs-kinesis"
+   ]
+  },
+  {
+   "term": "Kinesis Shard",
+   "full": null,
+   "def": "Đơn vị throughput của stream: mỗi shard ingest 1 MB/s (1.000 record/s) và cho đọc 2 MB/s; record tối đa 1 MB. Thêm shard thì throughput tăng tuyến tính và giá tăng theo.",
+   "tip": "Stream không đủ throughput (provisioned mode) → thêm shard.",
+   "lessons": [
+    "kinesis-data-streams"
+   ]
+  },
+  {
+   "term": "Kinesis Capacity Mode",
+   "full": null,
+   "def": "Chế độ dung lượng của stream: Provisioned (bạn chọn và đổi số shard) hoặc On-demand (Kinesis tự quản lý shard, trả theo GB dữ liệu ghi và đọc).",
+   "tip": "Lưu lượng khó đoán, không muốn quản lý shard → on-demand mode.",
+   "lessons": [
+    "kinesis-data-streams"
+   ]
+  },
+  {
+   "term": "Amazon Data Firehose",
+   "full": null,
+   "def": "Tên mới của Kinesis Data Firehose: dịch vụ fully managed, serverless giao dữ liệu streaming tới S3, Redshift (qua S3 + COPY), OpenSearch, Splunk, HTTP endpoint; trả theo khối lượng dữ liệu.",
+   "tip": "Đẩy stream vào S3/Redshift/OpenSearch/Splunk ít vận hành nhất → Firehose. Firehose không giao trực tiếp vào DynamoDB/RDS.",
+   "lessons": [
+    "kinesis-data-firehose",
+    "kinesis-data-streams"
+   ]
+  },
+  {
+   "term": "Firehose Buffering",
+   "full": null,
+   "def": "Firehose gom dữ liệu tới khi đạt buffer size hoặc buffer interval (điều kiện nào tới trước) rồi mới giao; với S3 mặc định 5 MB / 300 s, cấu hình 1–128 MB và 0–900 s.",
+   "tip": "Firehose là NEAR real-time (vài chục giây – vài phút). Đề yêu cầu real-time → đáp án Firehose sai.",
+   "lessons": [
+    "kinesis-data-firehose"
+   ]
+  },
+  {
+   "term": "Kinesis Data Analytics",
+   "full": null,
+   "def": "Dịch vụ xử lý dữ liệu stream real-time bằng SQL: đọc từ Kinesis Data Streams hoặc Firehose, làm giàu bằng reference data trên S3, ghi kết quả ra stream, Lambda hoặc Firehose.",
+   "tip": "Phân tích/biến đổi phức tạp stream real-time bằng SQL, leaderboard game, dashboard bầu cử → KDA. Output ra Firehose thì chỉ còn near real-time.",
+   "lessons": [
+    "kinesis-data-analytics"
+   ]
+  },
+  {
+   "term": "Amazon Managed Service for Apache Flink",
+   "full": null,
+   "def": "Tên hiện tại của Kinesis Data Analytics: xử lý stream real-time bằng Apache Flink; các ứng dụng SQL kiểu cũ đã bị AWS ngừng dần.",
+   "tip": "Đáp án nhắc Apache Flink cho xử lý stream real-time → chính là Kinesis Data Analytics đời mới.",
+   "lessons": [
+    "kinesis-data-analytics"
+   ]
+  },
+  {
+   "term": "Kinesis Video Streams",
+   "full": null,
+   "def": "Dịch vụ ingest video live và dữ liệu time-serialized (audio, thermal, depth, radar) từ camera, xe, drone; lưu, mã hóa, index bên trong dịch vụ cho consumer đọc theo frame.",
+   "tip": "Bẫy: không truy cập trực tiếp video gốc trên S3/EBS/EFS, chỉ qua API KVS. Từ khóa GStreamer, RTSP → KVS.",
+   "lessons": [
+    "kinesis-video-streams"
+   ]
+  },
+  {
+   "term": "Amazon Cognito",
+   "full": null,
+   "def": "Dịch vụ authentication, authorization và user management cho app web/mobile, gồm hai phần tách biệt: User Pool (đăng nhập → JWT) và Identity Pool (đổi identity → temporary AWS credentials).",
+   "tip": "App có hàng triệu user đăng nhập Google/Facebook → Cognito, không tạo IAM user (giới hạn 5.000/account).",
+   "lessons": [
+    "cognito",
+    "serverless-architecture"
+   ]
+  },
+  {
+   "term": "Cognito User Pool",
+   "full": null,
+   "def": "Thư mục user serverless cho sign-up/sign-in, managed login UI, MFA, social/SAML/OIDC federation; đăng nhập xong trả về JWT (user pool token), không phải AWS credentials.",
+   "tip": "Đáp án dùng JWT của user pool để truy cập trực tiếp S3/DynamoDB → sai; cần Identity Pool.",
+   "lessons": [
+    "cognito"
+   ]
+  },
+  {
+   "term": "Cognito Identity Pool",
+   "full": null,
+   "def": "Đổi identity (token IdP ngoài, user pool token hoặc guest) lấy temporary AWS credentials bằng cách Cognito assume IAM role thay mặt user; quyền của app = quyền của role.",
+   "tip": "Cần temporary credentials để app truy cập S3/DynamoDB → Identity Pool. Kiến trúc khuyến nghị: User Pool làm IdP duy nhất cho Identity Pool.",
+   "lessons": [
+    "cognito",
+    "serverless-architecture"
+   ]
+  },
+  {
+   "term": "AWS Glue",
+   "full": null,
+   "def": "Dịch vụ ETL serverless kèm Data Catalog: crawler sinh metadata, Glue job extract–transform–load dữ liệu giữa S3, RDS, JDBC, DynamoDB, stream; chỉ trả cho tài nguyên thực dùng.",
+   "tip": "ETL + 'serverless / ad hoc / cost effective' → Glue (thay Data Pipeline vốn tạo EMR cluster trong account).",
+   "lessons": [
+    "glue"
+   ]
+  },
+  {
+   "term": "Glue Data Catalog",
+   "full": null,
+   "def": "Kho metadata bền vững về các nguồn dữ liệu, một catalog cho mỗi region của mỗi account; được Athena, Redshift Spectrum, EMR, Lake Formation dùng chung, giúp phá data silo.",
+   "tip": "Cần khám phá schema dữ liệu S3 để truy vấn bằng Athena/Redshift Spectrum → Glue crawler + Data Catalog.",
+   "lessons": [
+    "glue"
+   ]
+  },
+  {
+   "term": "Glue Crawler",
+   "full": null,
+   "def": "Thành phần kết nối tới nguồn dữ liệu, xác định schema và tạo bảng metadata trong Data Catalog; dùng IAM role cho S3/DynamoDB, Glue connection cho JDBC.",
+   "tip": "Crawler không crawl stream (Kinesis, Kafka); stream chỉ là nguồn cho Glue job.",
+   "lessons": [
+    "glue"
+   ]
+  },
+  {
+   "term": "Glue Job",
+   "full": null,
+   "def": "Một job ETL: extract từ source, transform bằng script tự viết hoặc Glue sinh, rồi load vào đích; chạy trên warm pool do AWS quản lý, kích hoạt thủ công, theo event hoặc lịch EventBridge.",
+   "tip": "Chuyển CSV trên S3 sang Parquet để Athena truy vấn, không quản lý compute → Glue job + crawler.",
+   "lessons": [
+    "glue"
+   ]
+  },
+  {
+   "term": "Amazon MQ",
+   "full": null,
+   "def": "Message broker mã nguồn mở được quản lý (ActiveMQ, RabbitMQ) có cả queue và topic qua chuẩn mở JMS, AMQP, MQTT, OpenWire, STOMP; mặc định private trong VPC, không phải public service như SNS/SQS.",
+   "tip": "Migrate messaging on-prem ít sửa code, thấy JMS/AMQP/MQTT → Amazon MQ. Thiết kế mới cần tích hợp AWS → SNS/SQS.",
+   "lessons": [
+    "amazon-mq",
+    "compare-sqs-vs-sns-vs-kinesis"
+   ]
+  },
+  {
+   "term": "Amazon AppFlow",
+   "full": null,
+   "def": "Dịch vụ tích hợp dữ liệu fully managed, no-code, trao đổi dữ liệu giữa SaaS (Salesforce, Slack, Zendesk, ServiceNow, SAP) và AWS (S3, Redshift) qua flow; hỗ trợ PrivateLink.",
+   "tip": "Đồng bộ dữ liệu SaaS vào S3/Redshift không viết code → AppFlow. Database → DMS; file on-prem → DataSync.",
+   "lessons": [
+    "appflow"
+   ]
+  },
+  {
+   "term": "AWS X-Ray",
+   "full": null,
+   "def": "Dịch vụ distributed tracing: lần theo từng request qua API Gateway, Lambda, DynamoDB... để thấy latency, lỗi và chặng gây chậm trong ứng dụng phân tán.",
+   "tip": "'Distributed tracing', 'service map', 'tìm chặng chậm qua microservices' → X-Ray. Ai gọi API gì → CloudTrail.",
+   "lessons": [
+    "x-ray",
+    "lambda"
+   ]
+  },
+  {
+   "term": "X-Ray Tracing Header",
+   "full": null,
+   "def": "Header chứa trace ID do dịch vụ tích hợp X-Ray đầu tiên mà request chạm tới sinh ra; đi theo request qua mọi dịch vụ để X-Ray nối các chặng của cùng một request.",
+   "tip": null,
+   "lessons": [
+    "x-ray"
+   ]
+  },
+  {
+   "term": "X-Ray Segment",
+   "full": null,
+   "def": "Khối dữ liệu mỗi dịch vụ gửi về X-Ray (host, request, response, thời gian, lỗi); subsegment chi tiết hơn bên trong, vd. lời gọi HTTP hay database.",
+   "tip": "Lambda bật X-Ray ở mức function và execution role phải có quyền X-Ray; EC2/ECS cần X-Ray daemon; API Gateway bật theo stage.",
+   "lessons": [
+    "x-ray"
+   ]
+  },
+  {
+   "term": "X-Ray Service Map",
+   "full": null,
+   "def": "Hình ảnh trực quan (còn gọi trace map) của service graph trong console: luồng request giữa các dịch vụ, latency trung bình, tần suất và lỗi từng thành phần.",
+   "tip": null,
+   "lessons": [
+    "x-ray"
+   ]
+  },
+  {
+   "term": "AWS Device Farm",
+   "full": null,
+   "def": "Dịch vụ test app web/mobile managed trên trình duyệt và thiết bị thật (không phải giả lập), nhiều OS/kích thước/ngôn ngữ; chạy fuzz, Appium, XCTest, Instrumentation, trả báo cáo và cho remote access.",
+   "tip": "Test app trên nhiều thiết bị thật mà không muốn tự mua/quản lý thiết bị → AWS Device Farm.",
+   "lessons": [
+    "device-farm"
+   ]
+  },
+  {
+   "term": "AWS Batch",
+   "full": null,
+   "def": "Dịch vụ batch processing managed: chia workload lớn thành nhiều job container chạy song song không cần người tương tác; Batch lo queue, compute và orchestration, không thu phí riêng ngoài compute.",
+   "tip": "Hàng nghìn job song song có queue/ưu tiên → Batch; một job dài đơn lẻ → ECS task trên Fargate; việc ngắn ≤ 15 phút → Lambda.",
+   "lessons": [
+    "aws-batch"
+   ]
+  },
+  {
+   "term": "Batch Job Queue",
+   "full": null,
+   "def": "Nơi job được submit và chờ compute; queue có độ ưu tiên và gắn với một hoặc nhiều compute environment theo thứ tự ưu tiên (vd. Spot trước, On-Demand sau).",
+   "tip": null,
+   "lessons": [
+    "aws-batch"
+   ]
+  },
+  {
+   "term": "Batch Compute Environment",
+   "full": null,
+   "def": "Tài nguyên chạy job: Managed (Batch provision và scale về 0, dùng EC2 On-Demand/Spot hoặc Fargate) hoặc Unmanaged (bạn tự quản lý ECS/EKS, không dùng được Fargate).",
+   "tip": "Ít quản trị nhất → managed (thường Fargate; EC2 khi cần GPU). Job chịu gián đoạn → Spot + retry.",
+   "lessons": [
+    "aws-batch"
+   ]
+  },
+  {
+   "term": "Pub/Sub Messaging",
+   "full": null,
+   "def": "Mô hình publisher gửi message vào topic và dịch vụ đẩy (push) bản sao tới mọi subscriber; khác queue (pull, mỗi message một consumer xử lý) và stream (nhiều consumer đọc lại trong window).",
+   "tip": "Push + nhiều subscriber → SNS; pull + worker → SQS; ingest + replay + nhiều consumer → Kinesis Data Streams.",
+   "lessons": [
+    "compare-sqs-vs-sns-vs-kinesis",
+    "sns"
+   ]
+  }
+ ]
+}

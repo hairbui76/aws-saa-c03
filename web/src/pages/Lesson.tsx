@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Circle, CircleDot, MessageCircle, MonitorPlay, Route as RouteIcon, StickyNote } from 'lucide-react';
-import { slug, useJson, type Chapter, type Lesson } from '../lib/content';
+import { CheckCircle2, Circle, CircleDot, Layers, MessageCircle, MonitorPlay, Route as RouteIcon, StickyNote } from 'lucide-react';
+import { slug, useIndex, useJson, type Chapter, type Lesson } from '../lib/content';
 import { chats, isDone, markVisited, marks, notes, progress, setDone } from '../lib/store';
 import { fmtDate, stageStatus, usePlan } from '../lib/roadmap';
 import { Sketch } from '../components/Sketch';
@@ -35,6 +35,7 @@ export default function LessonPage() {
   const { id } = useParams();
   const [params] = useSearchParams();
   const { data: lesson, error } = useJson<Lesson>(`l/${id}.json`);
+  const index = useIndex().data;
   const chapter = useJson<Chapter>(lesson ? `c/${lesson.chapterId}.json` : null).data;
   const p = progress.use();
   const { openSettings } = useUi();
@@ -64,6 +65,7 @@ export default function LessonPage() {
   if (!lesson) return <div className="page loading">Đang tải…</div>;
   const lp = p.lessons[lesson.id];
   const examCount = lesson.quiz.filter((q) => q.src).length;
+  const fcCount = index?.chapters.find((c) => c.id === lesson.chapterId)?.lessons.find((l) => l.id === lesson.id)?.fc ?? 0;
 
   const ask = (prompt: string) => {
     setPending(prompt);
@@ -132,6 +134,12 @@ export default function LessonPage() {
             <ExamMark n={examCount} main={chapter?.lessons.find((l) => l.id === lesson.id)?.pm} label />
             <span className="muted small">→ làm ở phần Kiểm tra cuối bài</span>
           </button>
+        )}
+        {fcCount > 0 && (
+          <Link className="fc-jump" to={`/flashcards?lesson=${lesson.id}`} title="Học các thẻ thuật ngữ của bài này">
+            <Layers size={15} /> {fcCount} thẻ thuật ngữ
+            <span className="muted small">→ học bằng flashcard</span>
+          </Link>
         )}
         {lesson.aliases.length > 0 && (
           <div className="aliases">

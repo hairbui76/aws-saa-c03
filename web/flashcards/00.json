@@ -1,0 +1,82 @@
+{
+  "chapter": "00",
+  "cards": [
+    {
+      "term": "SAA-C03",
+      "full": "AWS Certified Solutions Architect – Associate",
+      "def": "Kỳ thi cấp Associate: 65 câu (50 tính điểm + 15 câu thử nghiệm không tính điểm), 130 phút, 150 USD, điểm đậu 720/1000 thang scaled, chấm compensatory, hiệu lực 3 năm.",
+      "tip": "Trung bình ~2 phút/câu cho cả đọc đề, đọc đáp án và quyết định; không cần đậu từng domain.",
+      "lessons": [
+        "saa-c03-exam-overview"
+      ]
+    },
+    {
+      "term": "Exam domains",
+      "full": null,
+      "def": "Bốn domain của SAA-C03: Design Secure Architectures 30%, Design Resilient Architectures 26%, Design High-Performing Architectures 24%, Design Cost-Optimized Architectures 20%.",
+      "tip": "Bốn domain cũng là bốn tiêu chí hay gặp trong câu hỏi: secure/best practice, resilient, performance, cost.",
+      "lessons": [
+        "saa-c03-exam-overview",
+        "exam-technique"
+      ]
+    },
+    {
+      "term": "Multiple response",
+      "full": null,
+      "def": "Dạng câu hỏi có từ hai đáp án đúng trở lên; ở cấp Associate đề luôn ghi rõ số đáp án cần chọn (choose two/three), khác multiple choice chỉ chọn 1.",
+      "tip": "Để ý từ chỉ số lượng (one, any, all) trong đề vì nó thay đổi đáp án đúng.",
+      "lessons": [
+        "saa-c03-exam-overview",
+        "exam-technique"
+      ]
+    },
+    {
+      "term": "Three-phase exam technique",
+      "full": null,
+      "def": "Chia bài thi thành 3 lượt: phase 1 làm câu dễ, phase 2 câu trung bình, phase 3 câu khó còn lại, để câu khó không ăn hết thời gian của các câu làm được.",
+      "tip": "Không đoán ở phase 1–2; cuối giờ không để trống câu nào vì đoán sai không bị trừ điểm.",
+      "lessons": [
+        "exam-technique"
+      ]
+    },
+    {
+      "term": "Mark for Review",
+      "full": null,
+      "def": "Chức năng đánh dấu câu hỏi trong phần mềm thi để quay lại xử lý sau từ màn hình review; dùng cho câu bí hoặc câu tốn nhiều thời gian.",
+      "tip": "DON'T PANIC: bí thì mark rồi đi tiếp, luôn theo dõi thời gian còn lại.",
+      "lessons": [
+        "exam-technique"
+      ]
+    },
+    {
+      "term": "Practice exams",
+      "full": null,
+      "def": "Đề luyện tập mô phỏng thi thật (kể cả sample questions và practice test chính thức của AWS) để quen độ dài câu hỏi, quản lý thời gian và tìm lỗ hổng kiến thức.",
+      "tip": "Chỉ nên thi thật khi đều đặn đạt trên 90% ở practice test.",
+      "lessons": [
+        "exam-technique",
+        "saa-c03-exam-overview"
+      ]
+    },
+    {
+      "term": "Cost-effective",
+      "full": null,
+      "def": "Từ khóa trong đề yêu cầu chọn đáp án rẻ nhất mà vẫn đáp ứng đủ mọi yêu cầu kỹ thuật khác của câu hỏi (hiệu năng, resilience, bảo mật).",
+      "tip": "'Cost-effective' → loại đáp án thừa năng lực; 'within X days' → loại giải pháp cần nhiều tuần như Direct Connect.",
+      "lessons": [
+        "exam-technique",
+        "animals4life-scenario"
+      ]
+    },
+    {
+      "term": "Scenario-based question",
+      "full": null,
+      "def": "Câu hỏi đặt trong tình huống doanh nghiệp (hiện trạng, yêu cầu, ràng buộc); phải tách phần liên quan tới đáp án khỏi phần mô tả thừa ('word fluff').",
+      "tip": "Cost-conscious → giải pháp rẻ; small IT team/automation → managed service, IaC; global users → CDN, multi-region.",
+      "lessons": [
+        "animals4life-scenario",
+        "exam-technique"
+      ]
+    }
+  ]
+}

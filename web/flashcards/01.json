@@ -1,0 +1,192 @@
+{
+  "chapter": "01",
+  "cards": [
+    {
+      "term": "AWS account",
+      "full": null,
+      "def": "Container chứa identities (user, role) và resources; có đúng một root user, một email duy nhất, payment method riêng và là ranh giới cô lập mặc định với các account khác.",
+      "tip": "Cô lập dev/test/prod hoặc giới hạn thiệt hại khi lộ credential → tách nhiều account (+ AWS Organizations).",
+      "lessons": [
+        "aws-accounts"
+      ]
+    },
+    {
+      "term": "Account root user",
+      "full": null,
+      "def": "Identity được tạo cùng account, đăng nhập bằng email + password; có toàn quyền trên đúng account đó, không bị IAM policy giới hạn, không xóa được.",
+      "tip": "Bật MFA cho root, không tạo access key cho root, dùng IAM admin cho công việc hằng ngày.",
+      "lessons": [
+        "aws-accounts",
+        "iam-basics"
+      ]
+    },
+    {
+      "term": "Blast radius",
+      "full": null,
+      "def": "Phạm vi thiệt hại khi có lỗi hoặc sự cố bảo mật; AWS account mặc định là bức tường chặn thiệt hại lan sang account khác.",
+      "tip": "Mặc định mọi truy cập từ ngoài account bị deny; cross-account phải cấp quyền tường minh.",
+      "lessons": [
+        "aws-accounts"
+      ]
+    },
+    {
+      "term": "Root user only tasks",
+      "full": null,
+      "def": "Một số tác vụ chỉ root user làm được: đóng account, đổi email/password root và account settings, đổi support plan, khôi phục quyền khi IAM admin tự khóa mình, bật MFA Delete cho S3.",
+      "tip": "Đề hỏi ai bật được S3 MFA Delete hoặc đóng account → root user.",
+      "lessons": [
+        "aws-accounts",
+        "s3-versioning-and-mfa-delete"
+      ]
+    },
+    {
+      "term": "IAM access to Billing information",
+      "full": null,
+      "def": "Thiết lập account (root bật) cho phép IAM user/role có quyền billing truy cập Billing and Cost Management; mặc định tắt nên kể cả AdministratorAccess cũng không xem được hóa đơn.",
+      "tip": "'Admin có AdministratorAccess nhưng không xem được hóa đơn' → chưa bật IAM user and role access to Billing information.",
+      "lessons": [
+        "aws-accounts",
+        "aws-budgets"
+      ]
+    },
+    {
+      "term": "MFA",
+      "full": "Multi-Factor Authentication",
+      "def": "Buộc người đăng nhập chứng minh bằng nhiều loại factor khác nhau (thường là password + mã một lần từ thiết bị); trong AWS, MFA gán cho từng identity (root, IAM user), không cho cả account.",
+      "tip": "MFA của root không bảo vệ IAM user và ngược lại; AWS nay bắt buộc MFA cho root user.",
+      "lessons": [
+        "mfa"
+      ]
+    },
+    {
+      "term": "Authentication factors",
+      "full": null,
+      "def": "Bốn loại bằng chứng: knowledge (thứ bạn biết), possession (thứ bạn có), inherence (thứ bạn là), location (nơi bạn ở); MFA cần ít nhất hai loại khác nhau.",
+      "tip": "Password + câu hỏi bảo mật vẫn là single-factor vì cùng là knowledge.",
+      "lessons": [
+        "mfa"
+      ]
+    },
+    {
+      "term": "AWS Budgets",
+      "full": null,
+      "def": "Theo dõi chi phí hoặc usage so với ngưỡng đặt trước và gửi cảnh báo khi chi tiêu actual hoặc forecasted chạm các mốc %; có cost, usage, RI và Savings Plans budget.",
+      "tip": "'Được báo khi chi phí sắp/dự báo vượt mức X' → AWS Budgets với alert Forecasted, không phải Cost Explorer.",
+      "lessons": [
+        "aws-budgets"
+      ]
+    },
+    {
+      "term": "Budget Actions",
+      "full": null,
+      "def": "Hành động tự động khi budget vượt ngưỡng: áp IAM policy, áp SCP hoặc dừng EC2/RDS instance chỉ định; chạy tự động hoặc chờ phê duyệt.",
+      "tip": "'Tự động ngăn chi tiêu vượt mức' → AWS Budgets + Budget Actions.",
+      "lessons": [
+        "aws-budgets"
+      ]
+    },
+    {
+      "term": "AWS Free plan",
+      "full": null,
+      "def": "Gói (từ 2025) chỉ cho khách hàng mới: mọi chi phí trừ vào credit, hết credit hoặc hết 6 tháng thì account dừng hẳn, không bao giờ tính tiền thẻ; thiếu một số dịch vụ như Organizations.",
+      "tip": "Paid plan ai cũng tạo được: dùng credit trước, hết credit thì tính tiền thật; nâng từ Free lên Paid bất cứ lúc nào.",
+      "lessons": [
+        "aws-budgets",
+        "aws-accounts"
+      ]
+    },
+    {
+      "term": "AWS Free Tier",
+      "full": null,
+      "def": "Hạn mức miễn phí theo dịch vụ, có ở cả Free plan lẫn Paid plan: Always Free (hạn mức hằng tháng, ví dụ Lambda, DynamoDB) và Free Trials; vượt hạn mức thì phát sinh phí.",
+      "tip": "EC2 không còn là Always Free; bật Receive AWS Free Tier alerts để biết khi vượt hạn mức.",
+      "lessons": [
+        "aws-budgets"
+      ]
+    },
+    {
+      "term": "CloudWatch billing alarm",
+      "full": null,
+      "def": "CloudWatch alarm trên metric EstimatedCharges, cảnh báo khi tổng chi phí ước tính của account vượt ngưỡng; phải bật Receive CloudWatch billing alerts trước.",
+      "tip": "Metric billing chỉ có ở us-east-1.",
+      "lessons": [
+        "aws-budgets",
+        "cloudwatch-basics"
+      ]
+    },
+    {
+      "term": "IAM",
+      "full": "Identity and Access Management",
+      "def": "Dịch vụ global, miễn phí, mỗi account một instance riêng; vừa là identity provider vừa authenticate và authorize các identity (user, group, role) bằng policy.",
+      "tip": "IAM là global, globally resilient — không chọn region; IAM chỉ tin root user của chính account đó.",
+      "lessons": [
+        "iam-basics"
+      ]
+    },
+    {
+      "term": "Authentication",
+      "full": null,
+      "def": "Bước principal gửi request chứng minh mình đúng là identity đã tự nhận, bằng username/password, access key, MFA...",
+      "tip": "Authentication = bạn là ai; authorization = bạn được làm gì.",
+      "lessons": [
+        "iam-basics",
+        "iam-users-and-arns"
+      ]
+    },
+    {
+      "term": "Authorization",
+      "full": null,
+      "def": "Bước sau khi xác thực: AWS dựa trên các policy liên quan để cho phép hoặc từ chối hành động của identity trên tài nguyên.",
+      "tip": "Policy chỉ có tác dụng khi được attach vào identity hoặc tài nguyên.",
+      "lessons": [
+        "iam-basics",
+        "iam-identity-policies"
+      ]
+    },
+    {
+      "term": "Least privilege",
+      "full": null,
+      "def": "Nguyên tắc chỉ cấp đúng quyền tối thiểu cần cho công việc, không hơn, để giảm thiệt hại khi một identity hay credential bị lạm dụng.",
+      "tip": "'Best practice' về quyền → least privilege, role thay access key, ngừng dùng root.",
+      "lessons": [
+        "iam-basics"
+      ]
+    },
+    {
+      "term": "Access key",
+      "full": null,
+      "def": "Long-term credential của IAM user cho CLI/API/SDK, gồm Access Key ID (public) và Secret Access Key (bí mật, chỉ hiện một lần); mỗi user tối đa 2 key, trạng thái Active/Inactive.",
+      "tip": "App trên EC2/Lambda cần quyền → IAM role, không nhúng access key; không tạo access key cho root.",
+      "lessons": [
+        "iam-access-keys-and-aws-cli"
+      ]
+    },
+    {
+      "term": "Access key rotation",
+      "full": null,
+      "def": "Tạo cặp key mới, cập nhật mọi nơi dùng key cũ, vô hiệu hóa rồi xóa cặp cũ; đây là lý do mỗi IAM user được phép có tối đa 2 access key cùng lúc.",
+      "tip": "Key bị lộ → deactivate/xóa ngay và tạo key mới; mất secret thì không lấy lại được.",
+      "lessons": [
+        "iam-access-keys-and-aws-cli"
+      ]
+    },
+    {
+      "term": "Named profile",
+      "full": null,
+      "def": "Bộ cấu hình AWS CLI có tên (credentials + region) lưu trong ~/.aws/credentials và ~/.aws/config, chọn bằng --profile để làm việc với nhiều account/identity.",
+      "tip": "Access key trong ~/.aws/credentials lưu dạng plaintext → ưu tiên credential ngắn hạn.",
+      "lessons": [
+        "iam-access-keys-and-aws-cli"
+      ]
+    },
+    {
+      "term": "aws login",
+      "full": null,
+      "def": "Lệnh AWS CLI v2 mở trình duyệt để đăng nhập bằng identity console (password + MFA), rồi cấp credential tạm thời cho terminal thay cho access key dài hạn.",
+      "tip": "AWS khuyến nghị credential ngắn hạn: aws login cho người dùng CLI, IAM role cho ứng dụng và dịch vụ.",
+      "lessons": [
+        "iam-access-keys-and-aws-cli"
+      ]
+    }
+  ]
+}

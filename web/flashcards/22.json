@@ -1,0 +1,179 @@
+{
+  "chapter": "22",
+  "cards": [
+    {
+      "term": "AWS Systems Manager",
+      "full": null,
+      "def": "Dịch vụ quản lý tập trung máy chủ ở AWS, on-prem và cloud khác (tên cũ SSM): inventory, patching, Run Command, State Manager, Parameter Store, Session Manager.",
+      "tip": "Quản lý, patch, chạy lệnh cho fleet EC2 + server on-prem (hybrid) → Systems Manager.",
+      "lessons": [
+        "systems-manager"
+      ]
+    },
+    {
+      "term": "SSM Agent",
+      "full": null,
+      "def": "Agent trên server giao tiếp outbound với endpoint Systems Manager (public service); cài sẵn trên đa số AMI AWS hiện đại, AMI cũ/custom và server on-prem phải tự cài.",
+      "tip": "Instance không thành managed → kiểm tra agent, quyền (instance role hoặc DHMC), đường mạng tới endpoint (IGW hoặc VPC endpoint).",
+      "lessons": [
+        "systems-manager"
+      ]
+    },
+    {
+      "term": "Managed Node",
+      "full": null,
+      "def": "Mọi máy Systems Manager quản lý được (EC2, server on-prem, VM ở cloud khác) khi có agent, quyền và kết nối; managed instance là managed node chạy trên EC2.",
+      "tip": null,
+      "lessons": [
+        "systems-manager"
+      ]
+    },
+    {
+      "term": "DHMC",
+      "full": "Default Host Management Configuration",
+      "def": "Setting theo account và region cho phép EC2 tự thành managed instance mà không cần gắn instance role; instance cần IMDSv2 và SSM Agent đủ mới.",
+      "tip": "'EC2 thành managed mà không gắn instance profile' → DHMC.",
+      "lessons": [
+        "systems-manager"
+      ]
+    },
+    {
+      "term": "Hybrid Activation",
+      "full": null,
+      "def": "Cách đăng ký server on-prem/VM vào Systems Manager: tạo activation (IAM role) lấy activation code + activation ID, cài agent và đăng ký; chỉ cần kết nối outbound.",
+      "tip": "Server on-prem tham gia Systems Manager → hybrid activation.",
+      "lessons": [
+        "systems-manager"
+      ]
+    },
+    {
+      "term": "SSM Inventory",
+      "full": null,
+      "def": "Thu thập metadata từ managed node: ứng dụng đã cài, file, cấu hình mạng, OS patch và hotfix, phần cứng, service đang chạy, mục tùy chỉnh.",
+      "tip": null,
+      "lessons": [
+        "systems-manager",
+        "ssm-documents"
+      ]
+    },
+    {
+      "term": "State Manager",
+      "full": null,
+      "def": "Tính năng Systems Manager giữ managed node ở desired state (vd port luôn bị chặn trên firewall OS); cấu hình bị lệch thì tự áp lại, dùng command hoặc Automation document.",
+      "tip": "'Giữ cấu hình OS ở trạng thái mong muốn, tự sửa khi bị lệch' → State Manager.",
+      "lessons": [
+        "systems-manager",
+        "ssm-documents"
+      ]
+    },
+    {
+      "term": "Session Manager",
+      "full": null,
+      "def": "Mở shell vào EC2 (kể cả trong private subnet) và server on-prem qua SSM Agent, không mở port inbound, không SSH key, không bastion; chỉ cần outbound tới endpoint.",
+      "tip": "Vào instance private không bastion, không mở port 22 → Session Manager.",
+      "lessons": [
+        "systems-manager"
+      ]
+    },
+    {
+      "term": "SSM Run Command",
+      "full": null,
+      "def": "Chạy command document trên nhiều managed node (chọn theo node, tag, resource group) mà không cần SSH/RDP; output tới CloudWatch Logs hoặc S3, thông báo qua SNS.",
+      "tip": "Chạy lệnh theo lịch hoặc khi có event → EventBridge rule với target là Run Command.",
+      "lessons": [
+        "ssm-run-command"
+      ]
+    },
+    {
+      "term": "Rate Control",
+      "full": null,
+      "def": "Thiết lập của Run Command: concurrency giới hạn số hoặc % node chạy cùng lúc, error threshold dừng gửi lệnh khi lỗi vượt ngưỡng; Patch Manager cũng dùng.",
+      "tip": "'Giới hạn số máy chạy cùng lúc, dừng khi quá nhiều lỗi' → concurrency + error threshold.",
+      "lessons": [
+        "ssm-run-command",
+        "ssm-patch-manager"
+      ]
+    },
+    {
+      "term": "SSM Document",
+      "full": null,
+      "def": "File JSON/YAML lưu theo region, về khái niệm giống template CloudFormation, nhận parameter và có các bước (mainSteps); dùng chung cho mọi tính năng Systems Manager.",
+      "tip": "Không cần tự viết: dùng document Owned by Amazon (vd AWS-RunShellScript, AWS-ConfigureAWSPackage).",
+      "lessons": [
+        "ssm-documents"
+      ]
+    },
+    {
+      "term": "Command Document",
+      "full": null,
+      "def": "Loại SSM document dùng bởi Run Command, State Manager và Maintenance Windows để chạy lệnh hoặc cấu hình trên node.",
+      "tip": null,
+      "lessons": [
+        "ssm-documents"
+      ]
+    },
+    {
+      "term": "Automation Runbook",
+      "full": null,
+      "def": "Loại SSM document cho workflow nhiều bước trên resource AWS (tạo/cập nhật AMI, restart instance), chạy bởi Automation, State Manager, Maintenance Windows, Config remediation.",
+      "tip": "Tự động tạo/cập nhật golden AMI → Automation runbook.",
+      "lessons": [
+        "ssm-documents"
+      ]
+    },
+    {
+      "term": "Distributor",
+      "full": null,
+      "def": "Tính năng Systems Manager đóng gói và phân phối phần mềm (agent...) lên fleet managed node, dùng Package document.",
+      "tip": "'Cài phần mềm lên cả fleet managed node' → Distributor; cấu hình thì chạy command document qua Run Command.",
+      "lessons": [
+        "ssm-documents"
+      ]
+    },
+    {
+      "term": "SSM Patch Manager",
+      "full": null,
+      "def": "Tự động patch Windows, Linux, macOS trên EC2, server on-prem và VM theo patch baseline và maintenance window, rồi báo cáo compliance node nào thiếu patch.",
+      "tip": "Patch fleet EC2 + on-prem theo lịch, có kiểm soát và báo cáo → Patch Manager.",
+      "lessons": [
+        "ssm-patch-manager"
+      ]
+    },
+    {
+      "term": "Patch Baseline",
+      "full": null,
+      "def": "Quy định patch nào được duyệt; mỗi OS có baseline mặc định, đa số tự duyệt patch sau 7 ngày (Ubuntu, Debian duyệt ngay). Baseline = WHAT.",
+      "tip": "Patch đã phát hành mà chưa được cài → nhớ auto-approval delay 7 ngày.",
+      "lessons": [
+        "ssm-patch-manager"
+      ]
+    },
+    {
+      "term": "Patch Group",
+      "full": null,
+      "def": "Nhóm node theo tag key 'Patch Group' để gán baseline khác mặc định; một node chỉ thuộc một patch group, không gán gì thì dùng default baseline của OS.",
+      "tip": null,
+      "lessons": [
+        "ssm-patch-manager"
+      ]
+    },
+    {
+      "term": "Maintenance Window",
+      "full": null,
+      "def": "Định nghĩa khi nào được làm việc có thể gây gián đoạn như patch: schedule, duration, target và task. Maintenance window = WHEN.",
+      "tip": null,
+      "lessons": [
+        "ssm-patch-manager"
+      ]
+    },
+    {
+      "term": "AWS-RunPatchBaseline",
+      "full": null,
+      "def": "Command document mà Patch Manager chạy qua Run Command để scan hoặc cài patch theo baseline trên node, rồi cập nhật kết quả compliance.",
+      "tip": "Baseline = WHAT, maintenance window = WHEN, AWS-RunPatchBaseline = thực hiện, compliance = kiểm tra.",
+      "lessons": [
+        "ssm-patch-manager"
+      ]
+    }
+  ]
+}

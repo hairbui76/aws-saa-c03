@@ -1,0 +1,477 @@
+{
+  "chapter": "03",
+  "cards": [
+    {
+      "term": "AWS Public Zone",
+      "full": null,
+      "def": "Vùng mạng nằm giữa Public Internet và các VPC, nơi dịch vụ có public endpoint (S3, DynamoDB, SQS...) chạy; truy cập từ Internet hoặc từ VPC qua IGW mà không đi qua Public Internet.",
+      "tip": "Traffic EC2 → IGW → S3 vẫn nằm trên mạng AWS; subnet private tới S3 không cần IGW/NAT → Gateway VPC Endpoint.",
+      "lessons": [
+        "aws-public-vs-private-services"
+      ]
+    },
+    {
+      "term": "AWS Private Zone",
+      "full": null,
+      "def": "Vùng mạng gồm các VPC, cô lập theo mặc định; tài nguyên bên trong chỉ ra ngoài khi được cấu hình (IGW, NAT) hoặc nối riêng (VPN, Direct Connect).",
+      "tip": "On-prem muốn vào VPC một cách private → Site-to-Site VPN hoặc Direct Connect.",
+      "lessons": [
+        "aws-public-vs-private-services"
+      ]
+    },
+    {
+      "term": "Public service (AWS)",
+      "full": null,
+      "def": "Dịch vụ có endpoint public trong AWS Public Zone (ví dụ S3); 'public' chỉ là khái niệm networking, vẫn phải có quyền IAM/bucket policy mới truy cập được dữ liệu.",
+      "tip": "EC2 và RDS là private service (chạy trong VPC); S3 là public service nhưng private theo mặc định.",
+      "lessons": [
+        "aws-public-vs-private-services",
+        "s3-basics"
+      ]
+    },
+    {
+      "term": "AWS Region",
+      "full": null,
+      "def": "Khu vực địa lý chứa hạ tầng AWS đầy đủ gồm nhiều AZ; tách biệt về lỗi và địa chính trị, dữ liệu mặc định không rời region, cho phép kiểm soát vị trí đặt dữ liệu.",
+      "tip": "'Dữ liệu phải ở trong quốc gia X' (data sovereignty, compliance) → chọn region ở đó.",
+      "lessons": [
+        "aws-global-infrastructure"
+      ]
+    },
+    {
+      "term": "Availability Zone",
+      "full": null,
+      "def": "Một hoặc nhiều data center tách biệt về điện, mạng, cơ sở vật chất trong một region, nối với nhau bằng mạng dư thừa độ trễ thấp.",
+      "tip": "AZ không bằng một data center; chịu được mất một AZ → trải tài nguyên qua nhiều AZ.",
+      "lessons": [
+        "aws-global-infrastructure"
+      ]
+    },
+    {
+      "term": "Edge Location",
+      "full": null,
+      "def": "Điểm hiện diện nhỏ của AWS ở rất nhiều thành phố, chủ yếu cho CDN (CloudFront), DNS và tăng tốc mạng; không chạy đầy đủ dịch vụ như region.",
+      "tip": "Phân phối nội dung độ trễ thấp cho người dùng toàn cầu → edge location (CloudFront); đừng nhầm với region.",
+      "lessons": [
+        "aws-global-infrastructure"
+      ]
+    },
+    {
+      "term": "AZ ID",
+      "full": null,
+      "def": "Định danh vật lý cố định của một AZ (ví dụ use1-az1), giống nhau ở mọi account; còn tên như us-east-1a được ánh xạ khác nhau giữa các account.",
+      "tip": "Cần chỉ cùng một AZ vật lý giữa nhiều account → dùng AZ ID, không dùng tên AZ.",
+      "lessons": [
+        "aws-global-infrastructure"
+      ]
+    },
+    {
+      "term": "Globally resilient",
+      "full": null,
+      "def": "Mức resilience của dịch vụ có dữ liệu replicate qua nhiều region (ví dụ IAM, Route 53); chỉ ngừng khi toàn bộ AWS gặp sự cố.",
+      "tip": "IAM, Route 53, CloudFront là global; không chọn region khi dùng.",
+      "lessons": [
+        "aws-global-infrastructure",
+        "route-53-fundamentals"
+      ]
+    },
+    {
+      "term": "Region resilient",
+      "full": null,
+      "def": "Dịch vụ hoạt động trong một region, dữ liệu replicate qua nhiều AZ của region đó (ví dụ S3, VPC); chịu được mất một AZ nhưng không chịu được mất cả region.",
+      "tip": "Chịu được mất cả region/thảm họa diện rộng → thiết kế multi-region.",
+      "lessons": [
+        "aws-global-infrastructure",
+        "s3-basics"
+      ]
+    },
+    {
+      "term": "AZ resilient",
+      "full": null,
+      "def": "Tài nguyên chạy trong một AZ (ví dụ EC2, EBS, subnet); AZ hỏng thì tài nguyên hỏng theo dù bên trong có thể có phần cứng dư thừa.",
+      "tip": "EC2/EBS là AZ resilient → muốn chịu lỗi AZ phải chạy nhiều instance ở nhiều AZ (ASG + ELB).",
+      "lessons": [
+        "aws-global-infrastructure",
+        "ec2-basics"
+      ]
+    },
+    {
+      "term": "Wavelength Zone",
+      "full": null,
+      "def": "Hạ tầng AWS đặt trong mạng 5G của nhà mạng, cho ứng dụng di động/IoT độ trễ cực thấp vì traffic không phải rời mạng 5G.",
+      "tip": "Đề nói '5G', ứng dụng mobile/IoT cần compute sát mạng di động → Wavelength Zone.",
+      "lessons": [
+        "aws-global-infrastructure",
+        "aws-local-zones"
+      ]
+    },
+    {
+      "term": "AWS Outposts",
+      "full": null,
+      "def": "Rack phần cứng AWS lắp tại data center của khách, chạy dịch vụ AWS (EC2, EBS...) on-premises với cùng API và công cụ, mở rộng một region về tại chỗ.",
+      "tip": "Workload/dữ liệu bắt buộc ở on-premises nhưng muốn dùng AWS → Outposts.",
+      "lessons": [
+        "aws-global-infrastructure",
+        "cloud-deployment-models"
+      ]
+    },
+    {
+      "term": "AWS Local Zones",
+      "full": null,
+      "def": "Hạ tầng AWS ở một thành phố lớn, mở rộng parent region như một 'mini region'/AZ gần người dùng, chạy EC2, EBS, subnet VPC với độ trễ cực thấp; chỉ có một số dịch vụ.",
+      "tip": "'Lowest latency cho người dùng ở một thành phố cụ thể' (game, VDI) → Local Zone.",
+      "lessons": [
+        "aws-local-zones",
+        "aws-global-infrastructure"
+      ]
+    },
+    {
+      "term": "Parent region",
+      "full": null,
+      "def": "Region mà một Local Zone thuộc về; subnet ở Local Zone là phần mở rộng của VPC trong parent region và một số chức năng (như EBS snapshot) chạy ở region cha.",
+      "tip": "Local Zone chỉ là một zone, không có resilience sẵn; cần HA thì tự thiết kế thêm zone/region.",
+      "lessons": [
+        "aws-local-zones"
+      ]
+    },
+    {
+      "term": "VPC",
+      "full": "Virtual Private Cloud",
+      "def": "Mạng ảo riêng trong một account và một region, private và cô lập theo mặc định; VPC là region resilient, còn mỗi subnet nằm trong một AZ.",
+      "tip": "Mỗi region có nhiều custom VPC nhưng tối đa một default VPC.",
+      "lessons": [
+        "default-vpc"
+      ]
+    },
+    {
+      "term": "Default VPC",
+      "full": null,
+      "def": "VPC AWS tạo sẵn, tối đa một mỗi region, CIDR cố định 172.31.0.0/16, một subnet /20 mỗi AZ, có IGW, SG, NACL và subnet tự gán public IPv4.",
+      "tip": "Xóa và tạo lại được; không dùng cho production — kiến trúc nghiêm túc, hybrid → custom VPC.",
+      "lessons": [
+        "default-vpc"
+      ]
+    },
+    {
+      "term": "EC2",
+      "full": "Elastic Compute Cloud",
+      "def": "Dịch vụ IaaS cung cấp máy ảo (instance) với OS và runtime riêng; là private service launch vào một subnet nên AZ resilient.",
+      "tip": "EC2 là IaaS: khách tự patch OS (Shared Responsibility Model).",
+      "lessons": [
+        "ec2-basics"
+      ]
+    },
+    {
+      "term": "EC2 instance states",
+      "full": null,
+      "def": "Running: tính tiền CPU, memory, storage, mạng; Stopped: không tính compute nhưng vẫn tính EBS; Terminated: xóa vĩnh viễn, không quay lại được, hết chi phí.",
+      "tip": "'Đã stop mà vẫn bị tính tiền' → phí EBS; muốn hết hẳn chi phí → terminate (và xóa snapshot/EIP).",
+      "lessons": [
+        "ec2-basics"
+      ]
+    },
+    {
+      "term": "EC2 key pair",
+      "full": null,
+      "def": "Cặp khóa asymmetric: public key nằm trên instance, private key bạn tải đúng một lần; Linux dùng để SSH, Windows dùng để giải mã mật khẩu Administrator rồi RDP.",
+      "tip": "SSH port 22, RDP port 3389; mất private key thì AWS không cấp lại được.",
+      "lessons": [
+        "ec2-basics"
+      ]
+    },
+    {
+      "term": "S3",
+      "full": "Simple Storage Service",
+      "def": "Dịch vụ object storage public, regionally resilient, dung lượng gần như vô hạn, giá rẻ; dữ liệu là object nằm trong bucket, truy cập qua API/HTTP.",
+      "tip": "Cần lưu trữ chung → S3 là mặc định; cần mount/file share → không phải S3.",
+      "lessons": [
+        "s3-basics"
+      ]
+    },
+    {
+      "term": "S3 bucket",
+      "full": null,
+      "def": "Container chứa object, tạo trong một region và dữ liệu không rời region trừ khi bạn cấu hình; tên duy nhất toàn cầu (3–63 ký tự, chữ thường), cấu trúc phẳng.",
+      "tip": "Hàng nghìn user cần vùng riêng → một bucket chia prefix, không tạo bucket cho mỗi user (vướng quota bucket).",
+      "lessons": [
+        "s3-basics"
+      ]
+    },
+    {
+      "term": "S3 object",
+      "full": null,
+      "def": "Đơn vị lưu trữ của S3 gồm key (tên) và value (dữ liệu, từ 0 B tới 50 TB) cùng version ID, metadata; số object trong bucket không giới hạn.",
+      "tip": "Tài liệu/đề cũ ghi object tối đa 5 TB; nay là 50 TB.",
+      "lessons": [
+        "s3-basics"
+      ]
+    },
+    {
+      "term": "S3 prefix",
+      "full": null,
+      "def": "Phần đầu của object key (ví dụ 'photos/2026/'); console hiển thị như folder nhưng S3 không có thư mục thật, chỉ có key phẳng.",
+      "tip": "Phân quyền theo prefix bằng IAM policy để chia một bucket cho nhiều user.",
+      "lessons": [
+        "s3-basics"
+      ]
+    },
+    {
+      "term": "AWS CloudFormation",
+      "full": null,
+      "def": "Công cụ Infrastructure as Code của AWS: đọc template YAML/JSON rồi tạo, cập nhật, xóa tài nguyên tự động, nhất quán, lặp lại được ở nhiều region/account.",
+      "tip": "'Triển khai hạ tầng nhất quán, lặp lại ở nhiều môi trường' → CloudFormation; nhiều account/region → StackSets.",
+      "lessons": [
+        "cloudformation-basics"
+      ]
+    },
+    {
+      "term": "IaC",
+      "full": "Infrastructure as Code",
+      "def": "Mô tả hạ tầng bằng code/template được quản lý version như phần mềm thay cho thao tác tay trên console, giúp tự động, nhất quán và tái sử dụng.",
+      "tip": "Small IT team, cần automation → managed service + IaC.",
+      "lessons": [
+        "cloudformation-basics",
+        "animals4life-scenario"
+      ]
+    },
+    {
+      "term": "CloudFormation template",
+      "full": null,
+      "def": "File YAML/JSON gồm các section AWSTemplateFormatVersion, Description, Metadata, Parameters, Mappings, Conditions, Transform, Resources, Outputs; chỉ Resources là bắt buộc.",
+      "tip": "Bẫy: có cả AWSTemplateFormatVersion và Description thì Description phải đứng ngay sau format version.",
+      "lessons": [
+        "cloudformation-basics",
+        "yaml"
+      ]
+    },
+    {
+      "term": "CloudFormation stack",
+      "full": null,
+      "def": "Biểu diễn 'sống' của template, chứa các logical resource; CFN tạo/cập nhật/xóa physical resource tương ứng để luôn khớp với stack, xóa stack là xóa tài nguyên.",
+      "tip": "Template tạo IAM resource → phải xác nhận CAPABILITY_IAM / CAPABILITY_NAMED_IAM.",
+      "lessons": [
+        "cloudformation-basics"
+      ]
+    },
+    {
+      "term": "Amazon CloudWatch",
+      "full": null,
+      "def": "Nền tảng observability của AWS thu thập và quản lý dữ liệu vận hành (metric, log, alarm, dashboard) cho dịch vụ AWS, on-premises và cloud khác.",
+      "tip": "CloudWatch = hiệu năng/vận hành; 'ai gọi API gì' → CloudTrail.",
+      "lessons": [
+        "cloudwatch-basics"
+      ]
+    },
+    {
+      "term": "CloudWatch metric",
+      "full": null,
+      "def": "Tập data point theo thời gian của một thông số cần theo dõi (ví dụ CPUUtilization); mỗi data point gồm timestamp và value, có thể kèm dimension.",
+      "tip": "Memory, dung lượng đĩa đã dùng, process trong OS không có sẵn → cần CloudWatch Agent.",
+      "lessons": [
+        "cloudwatch-basics"
+      ]
+    },
+    {
+      "term": "Dimension",
+      "full": null,
+      "def": "Cặp name/value gắn vào data point để phân biệt nguồn trong cùng một metric, ví dụ InstanceId, InstanceType, AutoScalingGroupName.",
+      "tip": "Xem CPU của một instance cụ thể → lọc metric theo dimension InstanceId.",
+      "lessons": [
+        "cloudwatch-basics"
+      ]
+    },
+    {
+      "term": "CloudWatch alarm",
+      "full": null,
+      "def": "Theo dõi một metric so với ngưỡng theo period, có ba trạng thái OK / ALARM / INSUFFICIENT_DATA và kích hoạt action như gửi SNS, Auto Scaling, EC2 action.",
+      "tip": "'Thông báo khi metric vượt ngưỡng' → Alarm + SNS; 'scale khi CPU cao' → Alarm + Auto Scaling.",
+      "lessons": [
+        "cloudwatch-basics"
+      ]
+    },
+    {
+      "term": "Datapoints to alarm",
+      "full": null,
+      "def": "Thiết lập M of N: alarm chỉ chuyển ALARM khi M trong N evaluation periods gần nhất vi phạm ngưỡng, giúp bỏ qua spike ngắn.",
+      "tip": "Alarm kêu vì spike ngắn → tăng evaluation periods + đặt datapoints to alarm, hoặc period dài hơn.",
+      "lessons": [
+        "cloudwatch-basics"
+      ]
+    },
+    {
+      "term": "Detailed monitoring",
+      "full": null,
+      "def": "Tùy chọn có phí cho EC2 gửi metric mỗi 1 phút thay vì 5 phút (basic monitoring), giúp alarm và Auto Scaling phản ứng nhanh hơn.",
+      "tip": "Cần metric EC2 chi tiết hơn 5 phút → bật detailed monitoring.",
+      "lessons": [
+        "cloudwatch-basics"
+      ]
+    },
+    {
+      "term": "Shared Responsibility Model",
+      "full": null,
+      "def": "Mô hình phân chia trách nhiệm bảo mật: AWS lo security OF the cloud, khách hàng lo security IN the cloud; ranh giới dịch chuyển theo IaaS/PaaS/SaaS.",
+      "tip": "Patch OS của EC2 → khách; patch OS/engine của RDS → AWS; SG, IAM, mã hóa, dữ liệu → luôn là khách.",
+      "lessons": [
+        "shared-responsibility-model"
+      ]
+    },
+    {
+      "term": "Security OF the cloud",
+      "full": null,
+      "def": "Phần trách nhiệm của AWS: hạ tầng toàn cầu (region, AZ, edge), data center vật lý, phần cứng, hypervisor, mạng và phần mềm vận hành dịch vụ.",
+      "tip": "Bảo mật vật lý data center, phần cứng, hypervisor → AWS.",
+      "lessons": [
+        "shared-responsibility-model"
+      ]
+    },
+    {
+      "term": "Security IN the cloud",
+      "full": null,
+      "def": "Phần trách nhiệm của khách hàng: OS (với IaaS), ứng dụng, cấu hình firewall (SG, NACL), IAM, mã hóa client/server side và dữ liệu.",
+      "tip": "Dịch vụ càng managed thì phần của khách càng ít, nhưng dữ liệu và IAM luôn là của khách.",
+      "lessons": [
+        "shared-responsibility-model"
+      ]
+    },
+    {
+      "term": "High Availability",
+      "full": null,
+      "def": "Thiết kế để tối đa hóa thời gian hệ thống online, giảm thiểu outage bằng cách tự động khôi phục hoặc thay thế nhanh; chấp nhận gián đoạn ngắn.",
+      "tip": "'Minimize downtime', 'highly available', 'recover quickly' → HA (Multi-AZ + tự thay thế như ASG, RDS Multi-AZ).",
+      "lessons": [
+        "ha-vs-ft-vs-dr"
+      ]
+    },
+    {
+      "term": "Fault Tolerance",
+      "full": null,
+      "def": "Khả năng hệ thống tiếp tục hoạt động bình thường khi một hoặc nhiều thành phần lỗi, không gây gián đoạn cho người dùng; cần dư thừa active/active nên đắt và phức tạp hơn HA.",
+      "tip": "'No interruption', 'continue operating if a component fails', life-critical → FT.",
+      "lessons": [
+        "ha-vs-ft-vs-dr"
+      ]
+    },
+    {
+      "term": "Disaster Recovery",
+      "full": null,
+      "def": "Tập chính sách, công cụ, quy trình để khôi phục hệ thống và dữ liệu sau thảm họa khi HA và FT không cứu được: backup ngoài site, môi trường dự phòng, kế hoạch và diễn tập.",
+      "tip": "'Recover after region/site disaster', 'backup', 'RPO/RTO' → DR.",
+      "lessons": [
+        "ha-vs-ft-vs-dr",
+        "rpo-and-rto"
+      ]
+    },
+    {
+      "term": "Amazon Route 53",
+      "full": null,
+      "def": "Dịch vụ DNS managed của AWS làm hai việc tách biệt: đăng ký domain và host zone trên name server của AWS; là global service, globally resilient.",
+      "tip": "R53 không gắn với region và chịu được lỗi cả region.",
+      "lessons": [
+        "route-53-fundamentals"
+      ]
+    },
+    {
+      "term": "Hosted zone",
+      "full": null,
+      "def": "Zone DNS của một domain được host trên Route 53, mỗi zone được cấp 4 name server; public hosted zone resolve từ Internet, private hosted zone chỉ trong VPC được associate.",
+      "tip": "Domain ở registrar khác → tạo hosted zone rồi cập nhật NS ở registrar trỏ tới 4 name server của R53.",
+      "lessons": [
+        "route-53-fundamentals"
+      ]
+    },
+    {
+      "term": "NS record",
+      "full": null,
+      "def": "Record ủy quyền (delegation) cho biết các name server authoritative của một zone; zone cha (ví dụ .com) dùng NS để trỏ xuống zone con.",
+      "tip": null,
+      "lessons": [
+        "dns-record-types",
+        "dns-fundamentals"
+      ]
+    },
+    {
+      "term": "A record",
+      "full": null,
+      "def": "Ánh xạ một tên DNS tới địa chỉ IPv4; bản cho IPv6 là AAAA record, thường tạo cả hai cho cùng một tên.",
+      "tip": "A = IPv4, AAAA = IPv6.",
+      "lessons": [
+        "dns-record-types"
+      ]
+    },
+    {
+      "term": "CNAME record",
+      "full": null,
+      "def": "Ánh xạ một tên tới một tên khác (canonical name) để nhiều tên dùng chung một đích; không bao giờ trỏ tới IP và không dùng được ở apex domain.",
+      "tip": "Trỏ apex domain tới ELB/CloudFront/S3 → Alias record của Route 53, không dùng CNAME.",
+      "lessons": [
+        "dns-record-types"
+      ]
+    },
+    {
+      "term": "MX record",
+      "full": null,
+      "def": "Record chỉ ra mail server nhận email của domain, gồm priority và giá trị là tên host; server có priority thấp hơn được dùng trước.",
+      "tip": "MX priority thấp hơn = ưu tiên cao hơn.",
+      "lessons": [
+        "dns-record-types"
+      ]
+    },
+    {
+      "term": "TXT record",
+      "full": null,
+      "def": "Record chứa text tùy ý, thường dùng để chứng minh quyền sở hữu domain với dịch vụ bên ngoài hoặc cấu hình chống spam (SPF, DKIM).",
+      "tip": "'Chứng minh sở hữu domain' → TXT record.",
+      "lessons": [
+        "dns-record-types"
+      ]
+    },
+    {
+      "term": "TTL",
+      "full": "Time To Live",
+      "def": "Số giây resolver được cache một DNS record trước khi phải hỏi lại name server authoritative; TTL cao giảm số query nhưng thay đổi lâu có hiệu lực.",
+      "tip": "Chuẩn bị migration/đổi DNS → hạ TTL trước; 'đổi DNS mãi chưa có hiệu lực' → caching/TTL.",
+      "lessons": [
+        "dns-record-types"
+      ]
+    },
+    {
+      "term": "Service Quotas",
+      "full": null,
+      "def": "Giới hạn số tài nguyên/thao tác của mỗi dịch vụ trong một account (ví dụ vCPU EC2 On-Demand), thường theo region, dịch vụ global theo account; xin tăng qua Service Quotas console/CLI.",
+      "tip": "'Không launch thêm được instance' → request quota increase; mở region mới/DR → xin tăng ở region đó trước.",
+      "lessons": [
+        "service-quotas"
+      ]
+    },
+    {
+      "term": "Hard limit",
+      "full": null,
+      "def": "Quota không thể xin tăng, khác soft limit (tăng được qua request); ví dụ kinh điển là 5.000 IAM user mỗi account.",
+      "tip": "App hàng triệu người dùng → federation/Cognito, không phải 'xin tăng quota IAM user'.",
+      "lessons": [
+        "service-quotas",
+        "iam-users-and-arns"
+      ]
+    },
+    {
+      "term": "Quota request template",
+      "full": null,
+      "def": "Danh sách quota khai báo sẵn trong Service Quotas (với AWS Organizations) để mọi member account mới gia nhập organization tự động được xin tăng theo mẫu.",
+      "tip": "Nhiều account trong org cần cùng mức quota ngay khi tạo → quota request template.",
+      "lessons": [
+        "service-quotas",
+        "aws-organizations"
+      ]
+    },
+    {
+      "term": "Service Quotas Automatic Management",
+      "full": null,
+      "def": "Tính năng theo dõi mức dùng quota, gửi thông báo khi sắp chạm ngưỡng hoặc tự xin tăng quota thay bạn; chọn được region áp dụng và ngoại lệ.",
+      "tip": "Cảnh báo trước khi chạm quota → CloudWatch alarm; muốn AWS tự xin tăng → Automatic Management.",
+      "lessons": [
+        "service-quotas"
+      ]
+    }
+  ]
+}

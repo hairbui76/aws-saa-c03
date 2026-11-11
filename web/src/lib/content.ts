@@ -8,6 +8,8 @@ export type LessonRef = {
   quiz: number;
   /** questions from the practice tests on this lesson; pm = those whose main topic it is */
   pq?: number;
+  /** term flashcards that point at this lesson */
+  fc?: number;
   pm?: number;
   /** set when the update batch touches this lesson */
   u?: UpdateKind;

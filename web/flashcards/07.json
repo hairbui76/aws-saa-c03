@@ -1,0 +1,835 @@
+{
+ "chapter": "07",
+ "cards": [
+  {
+   "term": "Paravirtualization",
+   "full": null,
+   "def": "Ảo hóa trong đó mã nguồn guest OS được sửa để thay lệnh privileged bằng hypercall gọi hypervisor, kèm paravirtual driver. Nhanh hơn emulated nhưng chỉ dùng được với OS sửa được.",
+   "tip": null,
+   "lessons": [
+    "virtualization"
+   ]
+  },
+  {
+   "term": "SR-IOV",
+   "full": "Single Root I/O Virtualization",
+   "def": "Thiết bị phần cứng (ví dụ card mạng) tự chia thành nhiều logical card gán thẳng cho từng guest, không qua hypervisor. Trên EC2 đây chính là Enhanced Networking.",
+   "tip": "Đề nhắc SR-IOV → Enhanced Networking: băng thông cao, PPS cao, latency thấp và ổn định, ít tốn CPU host.",
+   "lessons": [
+    "virtualization",
+    "enhanced-networking-and-ebs-optimized"
+   ]
+  },
+  {
+   "term": "AWS Nitro System",
+   "full": null,
+   "def": "Hypervisor stack và phần cứng chuyên dụng của AWS cho các instance family hiện đại, offload I/O sang phần cứng riêng. Là nền tảng cho nhiều tính năng cao cấp (EBS status check, io2 Block Express đạt trần...).",
+   "tip": "Instance non-Nitro chỉ đạt 32,000 IOPS EBS; muốn mức cao nhất cần Nitro.",
+   "lessons": [
+    "virtualization",
+    "ec2-architecture-and-resilience"
+   ]
+  },
+  {
+   "term": "EC2 Host",
+   "full": null,
+   "def": "Server vật lý do AWS quản lý nằm trong một AZ, chứa CPU, memory, instance store, kèm mạng storage (tới EBS) và mạng data (tới VPC). Thường chạy nhiều instance cùng type/generation, khác size.",
+   "tip": "Host = 1 AZ: AZ hỏng → host và instance hỏng. EC2 là AZ-resilient.",
+   "lessons": [
+    "ec2-architecture-and-resilience"
+   ]
+  },
+  {
+   "term": "Dedicated Instance",
+   "full": null,
+   "def": "Instance chạy trên phần cứng chỉ dành cho account của bạn nhưng vẫn trả theo instance (cộng phí dedicated theo region mỗi giờ). Không thấy socket/core, không host affinity, không phải quản lý host.",
+   "tip": "Chỉ cần \"không chia sẻ phần cứng với khách khác\", không cần license theo socket/core → Dedicated Instances.",
+   "lessons": [
+    "ec2-architecture-and-resilience",
+    "ec2-purchase-options",
+    "dedicated-hosts"
+   ]
+  },
+  {
+   "term": "Stop/Start vs Reboot",
+   "full": null,
+   "def": "Reboot giữ instance trên host cũ; stop rồi start (hoặc host lỗi/bảo trì) có thể chuyển instance sang host khác cùng AZ, làm mất dữ liệu instance store và đổi public IPv4.",
+   "tip": "Instance không bao giờ tự chuyển AZ; muốn sang AZ khác → snapshot/AMI rồi launch mới.",
+   "lessons": [
+    "ec2-architecture-and-resilience",
+    "instance-store"
+   ]
+  },
+  {
+   "term": "General Purpose Instances",
+   "full": null,
+   "def": "Category mặc định với tỷ lệ CPU/memory cân bằng (family T, M...), dùng cho workload đa dạng, steady state. Luôn bắt đầu từ đây rồi mới đổi khi có nút cổ chai cụ thể.",
+   "tip": "Tải đều → M; tải nền thấp có burst, cần rẻ → T.",
+   "lessons": [
+    "ec2-instance-types"
+   ]
+  },
+  {
+   "term": "Compute Optimized Instances",
+   "full": null,
+   "def": "Category nhiều CPU so với memory, CPU hiệu năng cao (family C), cho media encoding, scientific modelling, gaming server, batch processing.",
+   "tip": "CPU cao liên tục, encoding/gaming → C.",
+   "lessons": [
+    "ec2-instance-types"
+   ]
+  },
+  {
+   "term": "Memory Optimized Instances",
+   "full": null,
+   "def": "Category nhiều memory so với CPU (family R, X, High Memory, z1d), cho xử lý dataset lớn trong RAM, in-memory cache, DB in-memory.",
+   "tip": "Thiếu RAM, in-memory cache/DB → R hoặc X.",
+   "lessons": [
+    "ec2-instance-types"
+   ]
+  },
+  {
+   "term": "Accelerated Computing Instances",
+   "full": null,
+   "def": "Category có phần cứng tăng tốc: GPU (P, G), FPGA (F) và chip ML của AWS (Trainium, Inferentia), cho ML, graphics rendering, xử lý song song.",
+   "tip": "ML training → P hoặc Trainium (Trn); graphics/ML inference → G hoặc Inferentia (Inf); FPGA → F.",
+   "lessons": [
+    "ec2-instance-types"
+   ]
+  },
+  {
+   "term": "Storage Optimized Instances",
+   "full": null,
+   "def": "Category có local storage (instance store) dung lượng lớn, rất nhanh, tối ưu random IOPS (family I) hoặc sequential throughput HDD (D, H), cho NoSQL, data warehouse, Hadoop.",
+   "tip": "IOPS local cực cao/NoSQL → I; throughput HDD rẻ, Hadoop/data warehouse → D.",
+   "lessons": [
+    "ec2-instance-types",
+    "instance-store"
+   ]
+  },
+  {
+   "term": "HPC Optimized Instances",
+   "full": null,
+   "def": "Category cho HPC liên kết chặt (tightly coupled) như mô phỏng khoa học, computational fluid dynamics, VFX rendering; nhận ra qua family Hpc6a, Hpc7a, Hpc7g.",
+   "tip": null,
+   "lessons": [
+    "ec2-instance-types"
+   ]
+  },
+  {
+   "term": "Instance Type Name",
+   "full": null,
+   "def": "Cách đọc tên như R8gd.8xlarge: chữ đầu là family (R), số là generation (8), chữ sau là additional capabilities (g = Graviton, d = NVMe instance store, n = network, a = AMD, i = Intel, e = extra), cuối là size.",
+   "tip": "Nói đầy đủ instance type để tránh mơ hồ; luôn ưu tiên generation mới nhất (price/performance tốt hơn).",
+   "lessons": [
+    "ec2-instance-types"
+   ]
+  },
+  {
+   "term": "Burstable Instances",
+   "full": null,
+   "def": "Family T (T3, T3a, T4g...): tải nền thấp, tích CPU credit để thỉnh thoảng burst lên cao; rẻ hơn M cho workload ít dùng CPU.",
+   "tip": "Domain controller/email relay 2–3% CPU, thỉnh thoảng burst → T; Exchange chạy đều ~60% → M.",
+   "lessons": [
+    "ec2-instance-types"
+   ]
+  },
+  {
+   "term": "AWS Graviton",
+   "full": null,
+   "def": "Dòng CPU ARM do AWS thiết kế (chữ g trong tên type, ví dụ m6g, r8gd), price/performance tốt nếu OS và ứng dụng chạy được trên ARM.",
+   "tip": null,
+   "lessons": [
+    "ec2-instance-types"
+   ]
+  },
+  {
+   "term": "Key Pair",
+   "full": null,
+   "def": "Cặp khóa SSH: AWS giữ public key và chèn vào instance lúc launch, bạn tải private key (.pem cho OpenSSH, .ppk cho PuTTY) đúng một lần. Kết nối bằng ssh -i với user theo AMI (ví dụ ec2-user).",
+   "tip": "Lỗi \"permissions are too open\" → chmod 400 file key. SSH cần: kết nối mạng + private key + SG cho phép port 22 từ IP nguồn.",
+   "lessons": [
+    "ec2-instance-connect-and-ssh",
+    "ec2-basics"
+   ]
+  },
+  {
+   "term": "EC2 Instance Connect",
+   "full": null,
+   "def": "Kết nối SSH vào instance qua trình duyệt hoặc CLI, xác thực bằng quyền IAM thay vì phân phối key; dịch vụ đẩy SSH key tạm vào instance qua metadata. Bản console cần instance có public IP.",
+   "tip": "Instance Connect không chạy dù SSH từ máy bạn chạy → SG phải cho phép dải IP của dịch vụ Instance Connect (AWS-managed prefix list).",
+   "lessons": [
+    "ec2-instance-connect-and-ssh"
+   ]
+  },
+  {
+   "term": "EC2 Instance Connect Endpoint",
+   "full": null,
+   "def": "Endpoint đặt trong VPC cho phép SSH/RDP tới instance ở private subnet mà không cần public IP, IGW, bastion hay VPN.",
+   "tip": "Quản trị instance private, không public IP, không bastion → EC2 Instance Connect Endpoint (hoặc SSM Session Manager).",
+   "lessons": [
+    "ec2-instance-connect-and-ssh",
+    "bastion-host"
+   ]
+  },
+  {
+   "term": "Block Storage",
+   "full": null,
+   "def": "Storage trình bày dạng volume gồm các block có địa chỉ, không có cấu trúc; OS tự tạo file system rồi mount. Mount được và boot được; trên AWS là EBS và instance store.",
+   "tip": "Cần boot hoặc storage hiệu năng cao trong OS → block storage.",
+   "lessons": [
+    "storage-fundamentals",
+    "ebs"
+   ]
+  },
+  {
+   "term": "File Storage",
+   "full": null,
+   "def": "File system dựng sẵn có cấu trúc thư mục, truy cập qua mạng bằng đường dẫn; chia sẻ được cho nhiều client nhưng không boot được. Trên AWS là EFS, FSx.",
+   "tip": "Nhiều instance cần chia sẻ cùng một file system → EFS/FSx, không phải EBS.",
+   "lessons": [
+    "storage-fundamentals",
+    "efs"
+   ]
+  },
+  {
+   "term": "Ephemeral Storage",
+   "full": null,
+   "def": "Storage tạm thời, không thể tin là tồn tại lâu dài; mất khi đĩa hỏng, host hỏng hoặc instance chuyển host. Ví dụ điển hình: instance store.",
+   "tip": "Đề kiểm tra loại nào ephemeral (instance store) và loại nào persistent (EBS).",
+   "lessons": [
+    "storage-fundamentals",
+    "instance-store"
+   ]
+  },
+  {
+   "term": "IOPS",
+   "full": "Input/Output Operations Per Second",
+   "def": "Số thao tác đọc/ghi mỗi giây mà storage hỗ trợ. Cùng với IO (block) size quyết định throughput; latency mạng cao làm giảm IOPS đạt được với network storage.",
+   "tip": "Mốc IOPS/volume: gp2 16K, io1 64K, gp3 80K, io2 Block Express 256K; instance store tới hàng triệu.",
+   "lessons": [
+    "storage-fundamentals",
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "Storage Throughput",
+   "full": null,
+   "def": "Lượng dữ liệu truyền mỗi giây (MB/s), tính bằng IO size × IOPS (16 KB × 100 IOPS = 1.6 MB/s). Có thể bị chặn bởi throughput cap của volume hoặc instance.",
+   "tip": "Đề cho IOPS đủ nhưng chậm → kiểm tra throughput cap của loại volume hoặc băng thông EBS của instance.",
+   "lessons": [
+    "storage-fundamentals"
+   ]
+  },
+  {
+   "term": "EBS",
+   "full": "Elastic Block Store",
+   "def": "Block storage gắn vào EC2 qua mạng, persistent và độc lập vòng đời instance; replicate trong một AZ nên chỉ AZ-resilient, chỉ attach vào instance cùng AZ. Tính phí theo GB-tháng đã provision.",
+   "tip": "EBS là AZ-scoped: sang AZ khác → snapshot rồi tạo volume ở AZ đích; sang region khác → copy snapshot.",
+   "lessons": [
+    "ebs"
+   ]
+  },
+  {
+   "term": "EBS Multi-Attach",
+   "full": null,
+   "def": "Cho một volume io1/io2 gắn vào nhiều instance cùng AZ cùng lúc, dùng cho ứng dụng cluster; ứng dụng phải tự quản lý ghi đồng thời để tránh hỏng dữ liệu.",
+   "tip": "Chia sẻ block volume cho cluster → Multi-Attach (io1/io2). Chia sẻ file system nhiều instance/AZ → EFS.",
+   "lessons": [
+    "ebs",
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "Elastic Volumes",
+   "full": null,
+   "def": "Tính năng đổi type (ví dụ gp2 → gp3), size và IOPS của EBS volume đang dùng mà không cần detach.",
+   "tip": "Giảm chi phí từ gp2 → đổi sang gp3 tại chỗ bằng Elastic Volumes.",
+   "lessons": [
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "gp2",
+   "full": null,
+   "def": "EBS General Purpose SSD đời đầu: baseline 3 IOPS/GB (tối thiểu 100), burst tới 3,000 IOPS bằng credit bucket 5.4 triệu credit; tối đa 16,000 IOPS và 250 MB/s; size 1 GB–16 TB.",
+   "tip": "Volume > 1,000 GB có baseline ≥ 3,000 nên không dùng credit. Muốn thêm IOPS với gp2 → tăng size.",
+   "lessons": [
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "gp2 Burst Credits",
+   "full": null,
+   "def": "I/O credit bucket của gp2 (và mô hình MB/s của st1/sc1): bucket bắt đầu đầy, cạn khi dùng trên baseline và tự nạp theo baseline. Cạn thì volume tụt về baseline; theo dõi bằng metric BurstBalance.",
+   "tip": "gp2 nhỏ chạy chậm sau thời gian tải nặng → cạn burst credit; giải pháp: gp3, tăng size gp2 hoặc io1/io2.",
+   "lessons": [
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "gp3",
+   "full": null,
+   "def": "EBS General Purpose SSD thế hệ mới, mặc định trên console: mọi size có chuẩn 3,000 IOPS và 125 MiB/s, trả thêm tới 80,000 IOPS và 2,000 MiB/s; size 1 GB–64 TB; rẻ hơn gp2 ~20%.",
+   "tip": "Mặc định/boot/giá tốt → gp3. gp3 không tự tăng IOPS theo size, phải provision thêm.",
+   "lessons": [
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "io1",
+   "full": null,
+   "def": "EBS Provisioned IOPS SSD: IOPS cấu hình độc lập với size (tối đa 50 IOPS/GB), tới 64,000 IOPS và 1,000 MB/s mỗi volume, size 4 GB–16 TB; latency thấp, ổn định; hỗ trợ Multi-Attach.",
+   "tip": "Cần IOPS cam kết, latency ổn định cho DB → io1/io2 Block Express dù gp3 có trần IOPS cao hơn io1.",
+   "lessons": [
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "io2 Block Express",
+   "full": null,
+   "def": "EBS Provisioned IOPS SSD cao nhất (từ 2025 io2 và io2 Block Express là một): tới 256,000 IOPS, 4,000 MB/s, 1,000 IOPS/GB, size tới 64 TB, latency sub-millisecond, durability 99.999%.",
+   "tip": "Cần > 64,000 IOPS, > 2,000 MB/s hoặc sub-millisecond trên một volume → io2 Block Express (cần instance Nitro).",
+   "lessons": [
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "st1",
+   "full": null,
+   "def": "EBS Throughput Optimized HDD: rẻ, cho truy cập tuần tự thường xuyên; baseline 40 MB/s mỗi TB, burst 250 MB/s mỗi TB, tối đa 500 MB/s; size 125 GB–16 TB; không làm boot volume.",
+   "tip": "Big data, data warehouse, log processing, throughput tuần tự giá rẻ → st1.",
+   "lessons": [
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "sc1",
+   "full": null,
+   "def": "EBS Cold HDD: rẻ nhất trong EBS, cho dữ liệu lạnh ít truy cập; baseline 12 MB/s mỗi TB, burst 80 MB/s mỗi TB, tối đa 250 MB/s; không làm boot volume.",
+   "tip": "Dữ liệu lạnh, vài lần scan/ngày, rẻ nhất → sc1. Đề có \"boot\" hoặc \"IOPS\" → loại st1/sc1.",
+   "lessons": [
+    "ebs-volume-types"
+   ]
+  },
+  {
+   "term": "RAID 0 (EBS striping)",
+   "full": null,
+   "def": "Gộp nhiều EBS volume thành một khối trong OS để cộng dồn IOPS/throughput, nhưng không có redundancy (một volume hỏng là mất cả set) và vẫn bị chặn bởi trần EBS của instance.",
+   "tip": "Cần vượt trần một volume → RAID 0 nhiều volume trên instance Nitro lớn (ví dụ R5b ~260,000 IOPS).",
+   "lessons": [
+    "ebs-volume-types",
+    "compare-ebs-vs-instance-store"
+   ]
+  },
+  {
+   "term": "Instance Store",
+   "full": null,
+   "def": "Block storage gắn vật lý vào EC2 host, nhanh nhất AWS (hàng triệu IOPS), đã tính trong giá instance nhưng ephemeral; chỉ thêm được lúc launch. Mất dữ liệu khi stop/start, resize, host bảo trì hoặc hỏng phần cứng.",
+   "tip": "Không thêm instance store sau launch. Cache, buffer, scratch, dữ liệu đã replicate, cần IOPS cao hơn mọi EBS → instance store. Reboot giữ dữ liệu.",
+   "lessons": [
+    "instance-store",
+    "compare-ebs-vs-instance-store"
+   ]
+  },
+  {
+   "term": "EBS vs Instance Store",
+   "full": null,
+   "def": "EBS: persistent, network-attached, detach/attach, snapshot, trả theo GB. Instance store: ephemeral, gắn vật lý vào host, nhanh nhất, miễn phí kèm instance, không snapshot.",
+   "tip": "Từ khóa persistent/durable/survive stop → EBS; temporary/cache/millions of IOPS/data replicated across nodes → Instance Store.",
+   "lessons": [
+    "compare-ebs-vs-instance-store"
+   ]
+  },
+  {
+   "term": "EBS Snapshot",
+   "full": null,
+   "def": "Bản backup của EBS volume lưu trong S3 do AWS quản lý, đưa dữ liệu lên mức region-resilient. Tạo volume từ snapshot ở AZ khác, hoặc copy snapshot sang region khác cho DR/migration.",
+   "tip": "Bảo vệ khỏi AZ failure → snapshot; DR cross-region → copy snapshot (tự động bằng Data Lifecycle Manager hoặc AWS Backup).",
+   "lessons": [
+    "ebs-snapshots",
+    "ebs"
+   ]
+  },
+  {
+   "term": "Incremental Snapshot",
+   "full": null,
+   "def": "Snapshot đầu là full copy dữ liệu đã dùng, các snapshot sau chỉ lưu phần thay đổi. Xóa một snapshot không làm hỏng snapshot khác; tính phí theo GB-tháng dữ liệu đã dùng, không theo dung lượng cấp phát.",
+   "tip": "Snapshot dày (5 phút/lần) không nhất thiết đắt hơn snapshot mỗi giờ vì chỉ lưu phần thay đổi.",
+   "lessons": [
+    "ebs-snapshots"
+   ]
+  },
+  {
+   "term": "Fast Snapshot Restore",
+   "full": null,
+   "def": "FSR: bật trên snapshot cho các AZ chọn trước để volume tạo ra được khởi tạo đầy đủ ngay, không bị first-read penalty. Có giới hạn số FSR mỗi region và tốn thêm phí.",
+   "tip": "Volume restore từ snapshot chậm lúc đầu (dữ liệu nạp lazily từ S3) → FSR (trả thêm), hoặc đọc trước mọi block bằng dd (miễn phí).",
+   "lessons": [
+    "ebs-snapshots"
+   ]
+  },
+  {
+   "term": "EBS Snapshots Archive",
+   "full": null,
+   "def": "Archive tier cho snapshot giữ lâu, hiếm khi cần: lưu tối thiểu 90 ngày, restore mất tới 72 giờ, rẻ hơn standard tier. Hợp với snapshot cuối dự án, hằng tháng/quý.",
+   "tip": "Snapshot giữ lâu, chấp nhận chờ tới 72 giờ khi restore → archive tier; không dùng cho backup hằng ngày.",
+   "lessons": [
+    "ebs-snapshots"
+   ]
+  },
+  {
+   "term": "EBS Snapshot Lock",
+   "full": null,
+   "def": "Đưa snapshot vào trạng thái WORM trong một khoảng thời gian hoặc tới một ngày; ở compliance mode không ai xóa được bất kể quyền IAM. Dùng cho compliance và chống ransomware.",
+   "tip": "Snapshot \"không ai được xóa\", chống ransomware → snapshot lock.",
+   "lessons": [
+    "ebs-snapshots",
+    "s3-object-lock"
+   ]
+  },
+  {
+   "term": "Amazon Data Lifecycle Manager",
+   "full": null,
+   "def": "Dịch vụ tự động tạo, giữ, copy (kể cả sang region khác) và xóa EBS snapshot/AMI theo policy lịch trình.",
+   "tip": "Tự động hóa snapshot EBS định kỳ và copy cross-region → Data Lifecycle Manager (hoặc AWS Backup).",
+   "lessons": [
+    "ebs-snapshots",
+    "aws-backup"
+   ]
+  },
+  {
+   "term": "EBS Encryption",
+   "full": null,
+   "def": "Mã hóa AES-256 giữa EC2 host và EBS bằng KMS: dữ liệu at rest, in transit host↔volume, snapshot và volume tạo từ snapshot. Tính năng miễn phí (chỉ trả KMS), OS không biết có mã hóa.",
+   "tip": "Đã mã hóa thì không gỡ được; volume chưa mã hóa không bật mã hóa tại chỗ được → snapshot → tạo volume mã hóa.",
+   "lessons": [
+    "ebs-encryption",
+    "kms"
+   ]
+  },
+  {
+   "term": "EBS Encryption by Default",
+   "full": null,
+   "def": "Thiết lập theo account và region khiến mọi EBS volume mới tạo đều được mã hóa bằng KMS key mặc định đã chọn.",
+   "tip": "Yêu cầu \"mọi EBS volume mới phải được mã hóa\" → bật encryption by default cho từng region.",
+   "lessons": [
+    "ebs-encryption"
+   ]
+  },
+  {
+   "term": "EBS Data Encryption Key",
+   "full": null,
+   "def": "Mỗi volume mã hóa có DEK riêng do KMS sinh (GenerateDataKeyWithoutPlaintext), lưu dạng mã hóa cùng volume; bản plaintext chỉ nằm trong memory của EC2 host. Snapshot và volume restore cùng KMS key dùng lại cùng DEK.",
+   "tip": "Restore/copy với KMS key khác → DEK mới. Key bị disable/xóa → volume không dùng được.",
+   "lessons": [
+    "ebs-encryption"
+   ]
+  },
+  {
+   "term": "ENI",
+   "full": "Elastic Network Interface",
+   "def": "Card mạng ảo trong một subnet, mang MAC, private IPv4, public IPv4/Elastic IP, IPv6, Security Group và Source/Destination Check. Mỗi instance có một primary ENI, thêm được secondary ENI cùng AZ.",
+   "tip": "Mọi ENI của một instance phải cùng AZ (có thể khác subnet). SG gắn vào ENI, áp cho mọi IP trên ENI đó.",
+   "lessons": [
+    "ec2-network-interfaces-ips-and-dns"
+   ]
+  },
+  {
+   "term": "Secondary ENI",
+   "full": null,
+   "def": "ENI gắn thêm vào instance, detach được và gắn sang instance khác cùng AZ, mang theo MAC và IP. Dùng cho licensing theo MAC, multi-homed (management/data) hoặc tách SG theo IP.",
+   "tip": "Phần mềm license theo MAC → license theo secondary ENI, thay instance thì chuyển ENI sang. Cần SG khác nhau cho các IP → nhiều ENI.",
+   "lessons": [
+    "ec2-network-interfaces-ips-and-dns"
+   ]
+  },
+  {
+   "term": "Public IPv4 Address (EC2)",
+   "full": null,
+   "def": "Public IPv4 thường cấp cho ENI là động: stop rồi start (hoặc chuyển host) thì nhận IP mới, reboot thì giữ. OS không bao giờ thấy IP này vì IGW làm static NAT; đổi rồi không lấy lại được.",
+   "tip": "Không cấu hình public IPv4 trong OS. Cần IP cố định → Elastic IP. AWS tính phí mọi public IPv4 (kể cả EIP đang gắn).",
+   "lessons": [
+    "ec2-network-interfaces-ips-and-dns",
+    "vpc-routing-and-internet-gateway"
+   ]
+  },
+  {
+   "term": "Elastic IP",
+   "full": null,
+   "def": "Public IPv4 tĩnh cấp cho account trong một region, giữ tới khi release; associate với private IP trên ENI và chuyển được giữa instance. Gắn vào primary ENI thì public IPv4 thường bị gỡ.",
+   "tip": "Gỡ EIP → instance nhận public IPv4 mới, không lấy lại IP cũ. EIP chỉ có cho IPv4.",
+   "lessons": [
+    "ec2-network-interfaces-ips-and-dns"
+   ]
+  },
+  {
+   "term": "Private DNS Hostname",
+   "full": null,
+   "def": "Tên DNS nội bộ kết thúc bằng .internal, chỉ resolve trong VPC. Có hai kiểu: IP name (ip-10-16-0-10.ec2.internal, chỉ IPv4) và resource name (theo instance ID, resolve được IPv4/IPv6).",
+   "tip": null,
+   "lessons": [
+    "ec2-network-interfaces-ips-and-dns"
+   ]
+  },
+  {
+   "term": "Public DNS Hostname",
+   "full": null,
+   "def": "Tên DNS public của instance (ec2-…amazonaws.com): trong VPC resolve ra private IPv4 để traffic đi thẳng nội bộ, ngoài VPC resolve ra public IPv4.",
+   "tip": "Public DNS = private IP trong VPC, public IP ở mọi nơi khác. Cần enableDnsHostnames để được cấp.",
+   "lessons": [
+    "ec2-network-interfaces-ips-and-dns",
+    "custom-vpc"
+   ]
+  },
+  {
+   "term": "AMI",
+   "full": "Amazon Machine Image",
+   "def": "Khuôn để launch EC2, tham chiếu EBS snapshot của từng volume qua block device mapping. AMI là regional (ID khác nhau mỗi region), không sửa được; quyền mặc định private, share được cho account/OU/Organization.",
+   "tip": "Một AMI không dùng cho nhiều region: phải copy, bản copy là AMI khác, ID khác. Chi phí AMI = dung lượng snapshot nó tham chiếu.",
+   "lessons": [
+    "ami",
+    "ec2-basics"
+   ]
+  },
+  {
+   "term": "Block Device Mapping",
+   "full": null,
+   "def": "Bảng trong AMI nối snapshot ID với device ID của volume gốc (ví dụ /dev/xvda boot, /dev/xvdf data). Khi launch, mỗi snapshot tạo một EBS volume mới trong AZ đích gắn đúng device ID.",
+   "tip": null,
+   "lessons": [
+    "ami"
+   ]
+  },
+  {
+   "term": "AMI Baking",
+   "full": null,
+   "def": "Cài và cấu hình sẵn OS + ứng dụng vào một instance rồi tạo AMI, để các instance launch sau đó sẵn sàng gần như ngay lập tức nhưng kém linh hoạt về cấu hình.",
+   "tip": "Giảm boot-time-to-service-time (ASG scale-out chậm vì cài app lâu) → bake phần nặng vào AMI, user data lo cấu hình cuối.",
+   "lessons": [
+    "ami",
+    "ec2-user-data-bootstrapping"
+   ]
+  },
+  {
+   "term": "AMI Copy",
+   "full": null,
+   "def": "Copy AMI sang region khác, kéo theo các snapshot, tạo ra AMI mới với ID mới. Có thể bật mã hóa lúc copy; snapshot mã hóa được mã hóa lại bằng KMS key ở region đích.",
+   "tip": "Launch cùng cấu hình ở region khác → copy AMI. KMS key là regional nên phải dùng key ở region đích.",
+   "lessons": [
+    "ami"
+   ]
+  },
+  {
+   "term": "Block Public Access for AMIs",
+   "full": null,
+   "def": "Guardrail theo account/region, bật sẵn, chặn việc share AMI public mới. Muốn public phải tắt, share rồi nên bật lại; AMI đã public trước đó vẫn giữ public.",
+   "tip": "Ưu tiên share AMI explicit cho account/OU/Organization tin cậy thay vì public.",
+   "lessons": [
+    "ami"
+   ]
+  },
+  {
+   "term": "On-Demand Instances",
+   "full": null,
+   "def": "Mô hình mua mặc định: chạy trên pool host dùng chung, tính tiền theo giây khi running, không gián đoạn, không giảm giá và không giữ capacity (có thể gặp insufficient capacity).",
+   "tip": "Short-term, unknown, không chịu gián đoạn → On-Demand. Instance stop không tính compute nhưng EBS vẫn tính.",
+   "lessons": [
+    "ec2-purchase-options"
+   ]
+  },
+  {
+   "term": "Spot Instances",
+   "full": null,
+   "def": "Capacity EC2 đang dư bán rẻ tới 90% so với On-Demand theo spot price của từng pool (type + AZ), không còn đấu giá. Bị thu hồi khi AWS cần lại capacity, giá vượt max price, hoặc ràng buộc nhóm không đáp ứng.",
+   "tip": "Rẻ nhất, chịu gián đoạn, batch chạy lại được, stateless, CI/CD → Spot. Không bao giờ chọn Spot cho workload không chịu gián đoạn.",
+   "lessons": [
+    "ec2-purchase-options"
+   ]
+  },
+  {
+   "term": "Spot Instance Interruption Notice",
+   "full": null,
+   "def": "Cảnh báo 2 phút trước khi Spot bị thu hồi, gửi đồng thời qua EventBridge (EC2 Spot Instance Interruption Warning) và instance metadata (spot/instance-action, nên poll mỗi 5 giây).",
+   "tip": "Hibernate không có 2 phút: hibernate bắt đầu ngay khi có thông báo.",
+   "lessons": [
+    "ec2-purchase-options",
+    "ec2-instance-metadata"
+   ]
+  },
+  {
+   "term": "Spot Interruption Behavior",
+   "full": null,
+   "def": "Hành động khi Spot bị thu hồi: Terminate (mặc định), Stop (giữ EBS, tự start lại khi có capacity) hoặc Hibernate (ghi RAM xuống root EBS mã hóa, chạy tiếp đúng chỗ dừng).",
+   "tip": "Stop và Hibernate cần spot request persistent; one-time request chỉ terminate.",
+   "lessons": [
+    "ec2-purchase-options"
+   ]
+  },
+  {
+   "term": "EC2 Rebalance Recommendation",
+   "full": null,
+   "def": "Tín hiệu best effort báo Spot instance có nguy cơ cao bị gián đoạn, thường đến trước thông báo 2 phút để kịp drain hoặc launch instance thay thế; có thể không đến.",
+   "tip": "Thứ chắc chắn duy nhất là thông báo 2 phút; rebalance recommendation chỉ là best effort.",
+   "lessons": [
+    "ec2-purchase-options"
+   ]
+  },
+  {
+   "term": "Reserved Instances",
+   "full": null,
+   "def": "Cam kết trên hóa đơn dùng một cấu hình EC2 trong 1 hoặc 3 năm để được giảm giá; không phải loại instance để launch. Mua mà không dùng vẫn trả; đã active thì không hủy được.",
+   "tip": "24/7, steady-state, dài hạn → Reserved/Savings Plans. Giảm sâu nhất: 3 năm + All Upfront.",
+   "lessons": [
+    "reserved-instances-and-savings-plans",
+    "ec2-purchase-options"
+   ]
+  },
+  {
+   "term": "Standard RI",
+   "full": null,
+   "def": "Offering class giảm giá nhiều nhất của Reserved Instances nhưng khóa cứng thuộc tính; muốn thay đổi chỉ có thể bán lại trên RI Marketplace.",
+   "tip": "Standard = giảm nhiều nhất, không đổi; Convertible = đổi được, giảm ít hơn.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Convertible RI",
+   "full": null,
+   "def": "Offering class của Reserved Instances giảm ít hơn Standard nhưng đổi được trong kỳ hạn sang Convertible RI khác với thuộc tính mới (family, OS, tenancy...).",
+   "tip": "Cam kết dài hạn nhưng dự kiến đổi instance family → Convertible RI (hoặc Savings Plans).",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Zonal RI",
+   "full": null,
+   "def": "RI có scope một AZ: vừa giảm giá vừa giữ (reserve) capacity trong AZ đó, nhưng không linh hoạt AZ hay size; launch ở AZ khác thì mất cả hai lợi ích.",
+   "tip": "Cần vừa giảm giá vừa chắc chắn có capacity ở một AZ trong 1–3 năm → Zonal RI.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Regional RI",
+   "full": null,
+   "def": "RI có scope region: giảm giá cho instance khớp ở mọi AZ, có instance size flexibility, nhưng không giữ capacity.",
+   "tip": "Regional RI không reserve capacity; muốn giữ chỗ → Zonal RI hoặc On-Demand Capacity Reservation.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Instance Size Flexibility",
+   "full": null,
+   "def": "Giảm giá của regional RI tự trải cho nhiều size trong cùng family (ví dụ RI t3.large giảm một phần cho t3.xlarge). Chỉ áp cho regional RI, Linux/Unix, default tenancy.",
+   "tip": "Không áp cho zonal RI, dedicated tenancy, Windows, RHEL, SUSE.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "RI Payment Options",
+   "full": null,
+   "def": "Ba cách trả cho RI/Savings Plans: All Upfront (giảm nhiều nhất, không phí theo giờ), Partial Upfront (ở giữa), No Upfront (giảm ít nhất, trả đều dù instance chạy hay không).",
+   "tip": "Giảm sâu nhất cho reservation: 3 năm + All Upfront.",
+   "lessons": [
+    "reserved-instances-and-savings-plans",
+    "ec2-purchase-options"
+   ]
+  },
+  {
+   "term": "On-Demand Capacity Reservation",
+   "full": null,
+   "def": "ODCR: giữ capacity cho instance type, platform, AZ, tenancy và số lượng; tính giá On-Demand dù dùng hay không, không giảm giá, loại immediate không cam kết và hủy lúc nào cũng được.",
+   "tip": "Cần capacity đảm bảo mà không cam kết 1/3 năm → ODCR. Vừa giữ chỗ vừa giảm giá → ODCR + Savings Plans/regional RI.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Future-dated Capacity Reservation",
+   "full": null,
+   "def": "ODCR đặt trước cho một ngày cách hiện tại 5–120 ngày; AWS đánh giá rồi kích hoạt đúng ngày. Đã kích hoạt thì bị khóa trong thời gian cam kết; bắt đầu ở chế độ targeted.",
+   "tip": "Giữ capacity cho sự kiện biết trước (Black Friday) → future-dated Capacity Reservation.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Open vs Targeted Matching",
+   "full": null,
+   "def": "Cách ODCR khớp với instance: open thì mọi instance đang chạy khớp thuộc tính tự dùng reservation; targeted thì chỉ instance launch có chỉ định reservation ID mới dùng.",
+   "tip": "Không muốn instance khác \"ăn\" mất suất đặt trước → targeted.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Capacity Blocks for ML",
+   "full": null,
+   "def": "Biến thể capacity reservation cho phép đặt trước instance GPU/Trainium (dòng P, Trn) trong khoảng thời gian xác định, tới khoảng 8 tuần trước, cho training/fine-tuning ML.",
+   "tip": "Đặt trước GPU/Trainium cho đợt training ML → Capacity Blocks for ML.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Savings Plans",
+   "full": null,
+   "def": "Cam kết số tiền chi mỗi giờ (theo giá Savings Plan) trong 1 hoặc 3 năm, không gắn instance type cụ thể. Trong mức cam kết tính giá rẻ, vượt mức tính On-Demand; dùng thiếu vẫn trả đủ; không giữ capacity.",
+   "tip": "Savings Plans không phủ Spot; RI được áp trước. AWS khuyên Savings Plans thay RI cho đa số workload.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Compute Savings Plan",
+   "full": null,
+   "def": "Savings Plan linh hoạt nhất, áp cho EC2 (mọi family, region, OS, tenancy), Fargate và Lambda; giảm tới khoảng 66% so với On-Demand.",
+   "tip": "Tổ chức đang chuyển dần từ EC2 sang Fargate rồi Lambda → Compute Savings Plan.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "EC2 Instance Savings Plan",
+   "full": null,
+   "def": "Savings Plan khóa vào một instance family trong một region (ví dụ M5 ở us-east-1), linh hoạt size, OS, tenancy; giảm tới khoảng 72%.",
+   "tip": "Chỉ dùng EC2, biết rõ family và region → EC2 Instance Savings Plan tiết kiệm hơn Compute SP.",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "Scheduled Reserved Instances",
+   "full": null,
+   "def": "Loại RI cũ cho nhu cầu dài hạn nhưng chỉ chạy theo khung giờ cố định (ví dụ batch 5 giờ mỗi đêm); đã deprecated, không còn mua được.",
+   "tip": "Đề cũ có thể còn đáp án Scheduled RI; nay dùng Savings Plans hoặc Capacity Reservation (kể cả future-dated).",
+   "lessons": [
+    "reserved-instances-and-savings-plans"
+   ]
+  },
+  {
+   "term": "System Status Check",
+   "full": null,
+   "def": "Status check theo dõi dịch vụ EC2 và host vật lý: mất nguồn, mất mạng, lỗi phần cứng/phần mềm của host. Fail nghĩa là vấn đề phía AWS.",
+   "tip": "System check fail → stop/start hoặc recover để sang host khác. Auto recovery chỉ dựa trên system status check.",
+   "lessons": [
+    "ec2-status-checks-and-auto-recovery"
+   ]
+  },
+  {
+   "term": "Instance Status Check",
+   "full": null,
+   "def": "Status check theo dõi bên trong instance: file system hỏng, cấu hình mạng OS sai, kernel lỗi, hết memory. Fail nghĩa là vấn đề phía bạn, phải tự sửa.",
+   "tip": null,
+   "lessons": [
+    "ec2-status-checks-and-auto-recovery"
+   ]
+  },
+  {
+   "term": "Attached EBS Status Check",
+   "full": null,
+   "def": "Status check thứ ba, chỉ có trên instance Nitro, kiểm tra instance có tới được các EBS volume đang gắn hay không. Instance Nitro khỏe báo 3/3 checks passed.",
+   "tip": null,
+   "lessons": [
+    "ec2-status-checks-and-auto-recovery"
+   ]
+  },
+  {
+   "term": "Simplified Automatic Recovery",
+   "full": null,
+   "def": "Tính năng bật sẵn trên instance hỗ trợ: khi system status check fail, instance tự chuyển sang host khỏe trong cùng AZ, giữ instance ID, IP và EBS; RAM bị mất do OS khởi động lại.",
+   "tip": "Auto recovery không chống sự cố cả AZ; HA thật cần multi-AZ + ASG + ELB.",
+   "lessons": [
+    "ec2-status-checks-and-auto-recovery"
+   ]
+  },
+  {
+   "term": "EC2 Recover Action",
+   "full": null,
+   "def": "Action Recover của CloudWatch status check alarm (theo dõi system status check) chuyển instance sang host mới cùng AZ; dùng khi cần tùy chỉnh thời gian hoặc gửi SNS. Các action khác: Reboot, Stop, Terminate.",
+   "tip": "Tự phục hồi khi host lỗi, giữ instance ID/IP → simplified automatic recovery hoặc CloudWatch alarm + Recover.",
+   "lessons": [
+    "ec2-status-checks-and-auto-recovery",
+    "cloudwatch-basics"
+   ]
+  },
+  {
+   "term": "Termination Protection",
+   "full": null,
+   "def": "Attribute DisableApiTermination chặn terminate instance qua API/console, cần thêm quyền riêng để tắt nên cho phép tách vai trò. Không chặn terminate do OS shutdown (behavior terminate) hay ASG scale-in.",
+   "tip": "Ngăn xóa nhầm EC2 quan trọng → bật termination protection.",
+   "lessons": [
+    "ec2-shutdown-terminate-and-termination-protection"
+   ]
+  },
+  {
+   "term": "Stop Protection",
+   "full": null,
+   "def": "Attribute DisableApiStop chặn cả stop lẫn terminate instance; mạnh hơn termination protection.",
+   "tip": "Muốn chặn cả stop chứ không chỉ terminate → stop protection.",
+   "lessons": [
+    "ec2-shutdown-terminate-and-termination-protection"
+   ]
+  },
+  {
+   "term": "Instance-initiated Shutdown Behavior",
+   "full": null,
+   "def": "Quyết định instance chuyển sang Stop (mặc định) hay Terminate khi shutdown từ bên trong OS.",
+   "tip": "Muốn instance tự xóa khi OS shutdown (instance disposable) → shutdown behavior = terminate.",
+   "lessons": [
+    "ec2-shutdown-terminate-and-termination-protection"
+   ]
+  },
+  {
+   "term": "Vertical Scaling",
+   "full": null,
+   "def": "Scale up/down bằng cách đổi instance sang size lớn/nhỏ hơn. Không cần sửa ứng dụng nhưng mỗi lần resize phải stop/start (downtime), bước scale thô, có trần là size lớn nhất và giá premium.",
+   "tip": "Ứng dụng legacy/monolith không sửa code được → vertical scaling là cách đơn giản nhất.",
+   "lessons": [
+    "horizontal-vs-vertical-scaling"
+   ]
+  },
+  {
+   "term": "Horizontal Scaling",
+   "full": null,
+   "def": "Scale out/in bằng cách thêm/bớt instance phía sau load balancer. Không downtime, gần như không giới hạn, bước mịn, rẻ hơn nhưng ứng dụng phải stateless hoặc dùng off-host session.",
+   "tip": "\"Không downtime khi scale\", tải thay đổi nhanh → horizontal (ELB + Auto Scaling Group).",
+   "lessons": [
+    "horizontal-vs-vertical-scaling",
+    "auto-scaling-groups"
+   ]
+  },
+  {
+   "term": "Off-host Session State",
+   "full": null,
+   "def": "Lưu session người dùng (đăng nhập, giỏ hàng) ngoài instance, ví dụ trong DynamoDB hoặc ElastiCache, để instance stateless và request vào instance nào cũng được.",
+   "tip": "Người dùng bị logout/mất giỏ hàng khi scale out → đưa session ra DynamoDB/ElastiCache (hoặc session stickiness).",
+   "lessons": [
+    "horizontal-vs-vertical-scaling",
+    "elasticache"
+   ]
+  },
+  {
+   "term": "IMDS",
+   "full": "Instance Metadata Service",
+   "def": "Dịch vụ cho instance tự hỏi thông tin về chính nó tại 169.254.169.254/latest/meta-data/ (public IP, AZ, SG, credentials của instance role...). Traffic không rời host; không mã hóa.",
+   "tip": "Ứng dụng cần biết public IP của chính nó → hỏi metadata. Nhớ URL chính xác: http://169.254.169.254/latest/meta-data/.",
+   "lessons": [
+    "ec2-instance-metadata"
+   ]
+  },
+  {
+   "term": "IMDSv2",
+   "full": null,
+   "def": "Phiên bản metadata có session authentication: lấy token bằng PUT /latest/api/token rồi gửi header X-aws-ec2-metadata-token trong mọi GET; giảm rủi ro SSRF lấy trộm credentials.",
+   "tip": "Tăng bảo mật IMDS → đặt IMDSv2 required (hoặc tắt IMDS). IMDSv1 không xác thực.",
+   "lessons": [
+    "ec2-instance-metadata"
+   ]
+  }
+ ]
+}

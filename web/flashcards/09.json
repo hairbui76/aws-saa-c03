@@ -1,0 +1,241 @@
+{
+ "chapter": "09",
+ "cards": [
+  {
+   "term": "EC2 User Data",
+   "full": null,
+   "def": "Khối dữ liệu (thường là script Bash/PowerShell) truyền cho instance lúc launch, đọc tại 169.254.169.254/latest/user-data. Mặc định chạy bằng root đúng một lần ở lần launch đầu; tối đa 16 KB trước base64.",
+   "tip": "Sửa user data rồi reboot → script không chạy lại. User data không bảo mật: không đặt mật khẩu/credential.",
+   "lessons": [
+    "ec2-user-data-bootstrapping",
+    "ec2-instance-metadata"
+   ]
+  },
+  {
+   "term": "Bootstrapping",
+   "full": null,
+   "def": "Cho instance tự cấu hình khi launch bằng user data (cloud-init thực thi trên Amazon Linux). EC2 không kiểm tra script: script lỗi thì instance vẫn Running và vẫn pass status checks.",
+   "tip": "Muốn chỉ báo thành công khi cấu hình xong → CreationPolicy + cfn-signal (CloudFormation).",
+   "lessons": [
+    "ec2-user-data-bootstrapping",
+    "cfn-wait-conditions-and-cfn-signal"
+   ]
+  },
+  {
+   "term": "Boot-time-to-service-time",
+   "full": null,
+   "def": "Thời gian từ lúc launch tới khi instance thực sự nhận traffic: thời gian AWS provision cộng thời gian cài đặt, cấu hình trong OS. Rút ngắn bằng AMI baking, giữ linh hoạt bằng bootstrapping.",
+   "tip": "Tối ưu: bake phần nặng (cài app) vào AMI, bootstrap phần cấu hình cuối bằng user data.",
+   "lessons": [
+    "ec2-user-data-bootstrapping",
+    "ami"
+   ]
+  },
+  {
+   "term": "EC2 Image Builder",
+   "full": null,
+   "def": "Dịch vụ pipeline tự động build, test và phân phối AMI lẫn container image (ECR), chạy tay hoặc theo lịch; build/test chạy trong account và region của pipeline. Không tính phí riêng, chỉ trả tài nguyên dùng.",
+   "tip": "Tự động tạo, cập nhật định kỳ, test và phân phối golden AMI → EC2 Image Builder.",
+   "lessons": [
+    "ec2-image-builder"
+   ]
+  },
+  {
+   "term": "Image Recipe",
+   "full": null,
+   "def": "Thành phần Image Builder định nghĩa build gì và test thế nào: base image (AMI hoặc container image), build component và test component dạng YAML/JSON (tự viết, AWS managed hoặc Marketplace).",
+   "tip": "Cần image đạt chuẩn hardening → dùng component dựng sẵn STIG/CIS.",
+   "lessons": [
+    "ec2-image-builder"
+   ]
+  },
+  {
+   "term": "Image Builder Distribution Configuration",
+   "full": null,
+   "def": "Cấu hình tùy chọn của Image Builder tự copy hoặc share image cuối sang region khác, account khác hoặc thành viên AWS Organizations; image chỉ được phân phối khi mọi test pass.",
+   "tip": "AMI cập nhật cần có sẵn ở region/account khác → distribution configuration.",
+   "lessons": [
+    "ec2-image-builder"
+   ]
+  },
+  {
+   "term": "EC2 Instance Role",
+   "full": null,
+   "def": "IAM role có trust policy cho ec2.amazonaws.com, gắn vào instance qua instance profile. Ứng dụng nhận temporary credentials qua metadata, tự xoay vòng trước khi hết hạn; CLI/SDK tự dùng.",
+   "tip": "Ứng dụng trên EC2 cần truy cập S3/DynamoDB → instance role. Đáp án lưu access key trên instance/AMI/user data gần như chắc chắn sai.",
+   "lessons": [
+    "ec2-instance-roles",
+    "iam-roles"
+   ]
+  },
+  {
+   "term": "Instance Profile",
+   "full": null,
+   "def": "Lớp vỏ bọc quanh IAM role, là thứ thực sự gắn vào EC2 instance. Console tạo tự động cùng tên role; CLI/CloudFormation phải tạo riêng (AWS::IAM::InstanceProfile).",
+   "tip": "Gắn/đổi role cho instance đang chạy được, không cần stop; người gắn cần iam:PassRole.",
+   "lessons": [
+    "ec2-instance-roles"
+   ]
+  },
+  {
+   "term": "AWS CLI Credential Precedence",
+   "full": null,
+   "def": "Thứ tự CLI tìm credential: tùy chọn dòng lệnh → biến môi trường → ~/.aws/credentials → ~/.aws/config → container credentials → instance profile (cuối cùng).",
+   "tip": "Ai đó chạy aws configure với access key trên instance → key đó thắng instance role.",
+   "lessons": [
+    "ec2-instance-roles"
+   ]
+  },
+  {
+   "term": "SSM Parameter Store",
+   "full": null,
+   "def": "Kho cấu hình và secret name/value managed (String, StringList, SecureString) có phân cấp theo path, versioning, phân quyền bằng IAM. Public service: instance private cần NAT hoặc VPC endpoint.",
+   "tip": "Cấu hình/secret tập trung, chi phí thấp → Parameter Store. Cần tự động rotate secret (mật khẩu RDS) → Secrets Manager.",
+   "lessons": [
+    "ssm-parameter-store",
+    "secrets-manager"
+   ]
+  },
+  {
+   "term": "SecureString",
+   "full": null,
+   "def": "Kiểu parameter mã hóa bằng KMS (mặc định alias/aws/ssm hoặc customer managed key). Đọc plaintext cần cả quyền ssm:GetParameter* lẫn kms:Decrypt trên key.",
+   "tip": "get-parameters ... --with-decryption để giải mã; thiếu quyền KMS thì không đọc được.",
+   "lessons": [
+    "ssm-parameter-store",
+    "kms"
+   ]
+  },
+  {
+   "term": "Parameter Hierarchy",
+   "full": null,
+   "def": "Tên parameter chứa dấu / tạo cây kiểu thư mục (ví dụ /aem-web/dbpassword), tối đa 15 cấp; lấy cả nhánh bằng get-parameters-by-path và cấp quyền IAM theo nhánh.",
+   "tip": null,
+   "lessons": [
+    "ssm-parameter-store"
+   ]
+  },
+  {
+   "term": "SSM Public Parameters",
+   "full": null,
+   "def": "Parameter do AWS công bố, ví dụ AMI ID mới nhất của từng OS theo region (/aws/service/ami-amazon-linux-latest/...).",
+   "tip": "Lấy AMI ID mới nhất cho mọi region trong CloudFormation → public parameter (AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>).",
+   "lessons": [
+    "ssm-parameter-store"
+   ]
+  },
+  {
+   "term": "Parameter Store Advanced Tier",
+   "full": null,
+   "def": "Tier tính phí của Parameter Store: hơn 10,000 parameter (tới 100,000), value tới 8 KB, có parameter policies (expiration) và share parameter cho account khác. Standard miễn phí: 10,000 parameter, 4 KB.",
+   "tip": "Cần share parameter cross-account, > 4 KB hoặc expiration policy → Advanced tier.",
+   "lessons": [
+    "ssm-parameter-store"
+   ]
+  },
+  {
+   "term": "CloudWatch Agent",
+   "full": null,
+   "def": "Agent cài trong OS để thu metric bên trong (memory, disk space, process) và log file ứng dụng/hệ thống đẩy lên CloudWatch/CloudWatch Logs. Cần cài, cấu hình và quyền (instance role).",
+   "tip": "Giám sát memory/disk space hoặc gửi application log từ EC2 → cài CloudWatch Agent; metric mặc định của EC2 không có memory.",
+   "lessons": [
+    "cloudwatch-agent",
+    "cloudwatch-logs"
+   ]
+  },
+  {
+   "term": "CloudWatchAgentServerPolicy",
+   "full": null,
+   "def": "Managed policy cho instance chạy CloudWatch Agent: ghi metric/log lên CloudWatch và đọc cấu hình agent từ Parameter Store. CloudWatchAgentAdminPolicy thêm quyền ghi cấu hình vào Parameter Store.",
+   "tip": "Cấu hình agent thống nhất cho fleet → lưu ở Parameter Store, cài bằng Systems Manager Run Command.",
+   "lessons": [
+    "cloudwatch-agent"
+   ]
+  },
+  {
+   "term": "Cluster Placement Group",
+   "full": null,
+   "def": "Đặt instance sát nhau trên cùng hardware segment trong một AZ cho latency thấp nhất, PPS cao nhất và 10 Gbps single-stream; gần như không có resilience. Nên launch cùng lúc, cùng instance type.",
+   "tip": "Low latency, high throughput giữa node, HPC, tightly coupled → Cluster (kèm enhanced networking, EFA nếu MPI). Cluster không span AZ.",
+   "lessons": [
+    "ec2-placement-groups"
+   ]
+  },
+  {
+   "term": "Spread Placement Group",
+   "full": null,
+   "def": "Đặt mỗi instance trên một rack riêng (nguồn điện, mạng riêng), span được nhiều AZ; giới hạn cứng 7 instance đang chạy mỗi AZ mỗi group; không hỗ trợ Dedicated Instances/Hosts.",
+   "tip": "Ít instance quan trọng cần tách phần cứng tối đa → Spread; nhớ 7 instance/AZ, cần hơn thì dùng nhiều group.",
+   "lessons": [
+    "ec2-placement-groups"
+   ]
+  },
+  {
+   "term": "Partition Placement Group",
+   "full": null,
+   "def": "Chia instance thành tối đa 7 partition mỗi AZ, mỗi partition một nhóm rack riêng, không giới hạn instance mỗi partition; ứng dụng thấy được partition để replicate theo topology.",
+   "tip": "HDFS, HBase, Cassandra, Kafka, topology-aware, hàng trăm instance cần tách fault domain → Partition.",
+   "lessons": [
+    "ec2-placement-groups"
+   ]
+  },
+  {
+   "term": "Dedicated Host",
+   "full": null,
+   "def": "Thuê trọn một EC2 host vật lý cho một instance family, trả tiền theo host (instance trên đó không tính thêm), tự quản capacity; thấy socket/core vật lý, có host affinity. Share được qua RAM.",
+   "tip": "License theo socket/core vật lý, BYOL → Dedicated Host. Không dùng được với RDS.",
+   "lessons": [
+    "dedicated-hosts",
+    "ec2-purchase-options"
+   ]
+  },
+  {
+   "term": "Host Affinity",
+   "full": null,
+   "def": "Gắn instance với một Dedicated Host cụ thể, để stop/start vẫn quay về đúng host đó; quan trọng cho license gắn với phần cứng.",
+   "tip": null,
+   "lessons": [
+    "dedicated-hosts"
+   ]
+  },
+  {
+   "term": "Enhanced Networking",
+   "full": null,
+   "def": "Tính năng mạng dùng SR-IOV: card mạng chia logical card riêng cho từng instance nên băng thông cao, PPS cao, latency thấp và ổn định, ít tốn CPU host. Mặc định/miễn phí trên instance hiện đại.",
+   "tip": "Higher PPS, lower consistent latency giữa instance → enhanced networking, thường kèm cluster placement group.",
+   "lessons": [
+    "enhanced-networking-and-ebs-optimized",
+    "virtualization"
+   ]
+  },
+  {
+   "term": "ENA",
+   "full": "Elastic Network Adapter",
+   "def": "Driver/thiết bị enhanced networking chính hiện nay của EC2, hỗ trợ băng thông tới 100 Gbps và hơn trên instance mới; Intel 82599 VF là thế hệ cũ (tới 10 Gbps).",
+   "tip": null,
+   "lessons": [
+    "enhanced-networking-and-ebs-optimized"
+   ]
+  },
+  {
+   "term": "EFA",
+   "full": "Elastic Fabric Adapter",
+   "def": "Network device là ENA cộng khả năng bypass OS cho giao tiếp node-to-node latency cực thấp, dành cho HPC/MPI và ML tightly coupled; thường đi cùng cluster placement group.",
+   "tip": "HPC cần MPI → EFA.",
+   "lessons": [
+    "enhanced-networking-and-ebs-optimized",
+    "ec2-placement-groups"
+   ]
+  },
+  {
+   "term": "EBS-Optimized Instance",
+   "full": null,
+   "def": "Instance có băng thông mạng dành riêng cho EBS, để lưu lượng storage và data không tranh chấp nhau. Mặc định bật, không tốn phí trên đa số instance hiện đại.",
+   "tip": "EBS không đạt IOPS/throughput mong đợi → kiểm tra EBS-optimized và giới hạn băng thông EBS của instance type.",
+   "lessons": [
+    "enhanced-networking-and-ebs-optimized",
+    "ebs-volume-types"
+   ]
+  }
+ ]
+}

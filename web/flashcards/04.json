@@ -1,0 +1,584 @@
+{
+  "chapter": "04",
+  "cards": [
+    {
+      "term": "Identity policy",
+      "full": null,
+      "def": "Policy document JSON attach vào IAM user, group hoặc role, gồm một hoặc nhiều statement Allow/Deny về Action trên Resource (kèm Condition tùy chọn).",
+      "tip": "Identity mới tạo không có quyền gì; quyền đến từ policy đã attach.",
+      "lessons": [
+        "iam-identity-policies"
+      ]
+    },
+    {
+      "term": "Policy statement",
+      "full": null,
+      "def": "Khối trong policy gồm Sid (tùy chọn), Effect (Allow/Deny), Action (ví dụ s3:GetObject, hỗ trợ wildcard), Resource (ARN) và Condition tùy chọn.",
+      "tip": "Identity policy không có Principal; thấy Principal trong policy là resource policy.",
+      "lessons": [
+        "iam-identity-policies"
+      ]
+    },
+    {
+      "term": "Explicit deny",
+      "full": null,
+      "def": "Statement Effect: Deny khớp với request; luôn thắng mọi Allow ở bất kỳ policy nào (identity, resource, SCP).",
+      "tip": "Thứ tự đánh giá Deny – Allow – Deny: explicit deny → explicit allow → implicit deny.",
+      "lessons": [
+        "iam-identity-policies"
+      ]
+    },
+    {
+      "term": "Implicit deny",
+      "full": null,
+      "def": "Trạng thái mặc định: request không khớp Allow nào thì bị từ chối; mọi identity trừ root user bắt đầu với không có quyền gì.",
+      "tip": "Không có Allow khớp = không có quyền, dù không có Deny nào.",
+      "lessons": [
+        "iam-identity-policies"
+      ]
+    },
+    {
+      "term": "Inline policy",
+      "full": null,
+      "def": "Policy nhúng trực tiếp vào một identity duy nhất, quản lý riêng lẻ và bị xóa cùng identity; khó quản lý khi nhiều người cần cùng quyền.",
+      "tip": "Ngoại lệ cho một người → inline; quyền chung cho nhiều người → managed policy.",
+      "lessons": [
+        "iam-identity-policies"
+      ]
+    },
+    {
+      "term": "Managed policy",
+      "full": null,
+      "def": "Policy là đối tượng độc lập, tái sử dụng, attach vào nhiều identity; có AWS managed (AWS soạn, ví dụ AdministratorAccess) và customer managed (bạn tự soạn).",
+      "tip": "Sửa managed policy một lần là áp cho mọi identity đang dùng nó.",
+      "lessons": [
+        "iam-identity-policies"
+      ]
+    },
+    {
+      "term": "IAM user",
+      "full": null,
+      "def": "Identity cho một người, ứng dụng hoặc service account cần truy cập AWS dài hạn; xác thực bằng long-term credentials (password cho console, access key cho CLI/API).",
+      "tip": "5.000 IAM user/account là hard limit; app hàng triệu user → federation/role, không tạo IAM user mỗi người.",
+      "lessons": [
+        "iam-users-and-arns"
+      ]
+    },
+    {
+      "term": "ARN",
+      "full": "Amazon Resource Name",
+      "def": "Định danh duy nhất của tài nguyên AWS dạng arn:partition:service:region:account-id:resource; dùng trong Resource và Principal của policy.",
+      "tip": "arn:aws:s3:::bucket là bucket, arn:aws:s3:::bucket/* là object bên trong — khác nhau; '::' là trường bỏ trống.",
+      "lessons": [
+        "iam-users-and-arns"
+      ]
+    },
+    {
+      "term": "Principal",
+      "full": null,
+      "def": "Người, ứng dụng hoặc dịch vụ gửi request tới AWS; phải được authenticate thành một identity rồi mới được authorize theo policy.",
+      "tip": "Trong resource policy, Principal có thể là account, user, role, service — không thể là IAM group.",
+      "lessons": [
+        "iam-users-and-arns",
+        "iam-groups"
+      ]
+    },
+    {
+      "term": "IAM group",
+      "full": null,
+      "def": "Container chứa IAM user để gán quyền chung; user kế thừa policy của mọi group mình thuộc. Group không có credentials, không đăng nhập được, không lồng nhau.",
+      "tip": "User ≤ 10 group, 300 group/account (tăng được); không có group 'all users' mặc định.",
+      "lessons": [
+        "iam-groups"
+      ]
+    },
+    {
+      "term": "IAM role",
+      "full": null,
+      "def": "Identity đại diện cho một mức truy cập, được principal hợp lệ assume tạm thời để nhận temporary credentials; dùng khi số principal không xác định, là AWS service hoặc account khác.",
+      "tip": "AWS service cần quyền (EC2, Lambda) → role, không bao giờ hard-code access key.",
+      "lessons": [
+        "iam-roles"
+      ]
+    },
+    {
+      "term": "Trust policy",
+      "full": null,
+      "def": "Policy của role quy định principal nào được assume role đó (user, role, account, AWS service, web hoặc SAML identity).",
+      "tip": "Trust policy = ai được assume; permissions policy = được làm gì.",
+      "lessons": [
+        "iam-roles"
+      ]
+    },
+    {
+      "term": "STS",
+      "full": "Security Token Service",
+      "def": "Dịch vụ cấp temporary security credentials (access key ID, secret access key, session token có thời hạn) khi principal assume role qua sts:AssumeRole và các biến thể.",
+      "tip": "Thấy 'AssumeRole...' trong đề là có role và STS.",
+      "lessons": [
+        "iam-roles"
+      ]
+    },
+    {
+      "term": "Temporary security credentials",
+      "full": null,
+      "def": "Bộ access key ID, secret access key và session token do STS cấp, tự hết hạn (mặc định 1 giờ, tối đa theo max session duration của role, tới 12 giờ); không cần lưu hay rotate.",
+      "tip": "Đề nhấn mạnh bảo mật → temporary credentials (role, Identity Center) thay vì long-term credentials.",
+      "lessons": [
+        "iam-roles",
+        "iam-users-and-arns"
+      ]
+    },
+    {
+      "term": "Cross-account role",
+      "full": null,
+      "def": "Role trong account đích có trust policy tin account/identity ở account nguồn, cho identity bên ngoài assume để truy cập tài nguyên mà không cần IAM user ở account đích.",
+      "tip": "Đối tác/account khác cần truy cập → cross-account role; object upload qua role thuộc về account sở hữu role.",
+      "lessons": [
+        "iam-roles"
+      ]
+    },
+    {
+      "term": "Web Identity Federation",
+      "full": null,
+      "def": "Người dùng đăng nhập bằng identity web (Google, Facebook, Amazon...) rồi đổi token lấy temporary credentials của role qua sts:AssumeRoleWithWebIdentity, thường qua Cognito.",
+      "tip": "App mobile/web hàng triệu người dùng → web identity federation/Cognito, không tạo IAM user.",
+      "lessons": [
+        "iam-roles"
+      ]
+    },
+    {
+      "term": "Service-linked role",
+      "full": null,
+      "def": "Role đặc biệt gắn với một AWS service, quyền do chính service định nghĩa và thường được service tự tạo; không xóa được khi service còn dùng nó.",
+      "tip": "'Role do service tự tạo, quyền do service định nghĩa' → service-linked role; SCP không ảnh hưởng SLR.",
+      "lessons": [
+        "service-linked-roles-and-passrole"
+      ]
+    },
+    {
+      "term": "iam:PassRole",
+      "full": null,
+      "def": "Quyền cho identity gán (pass) một role có sẵn cho AWS service (ví dụ CloudFormation, EC2) mà không cần quyền tạo/sửa role; role và user phải cùng account.",
+      "tip": "User cần cấu hình service với role có sẵn nhưng không được tạo role → cấp iam:PassRole trên ARN role đó.",
+      "lessons": [
+        "service-linked-roles-and-passrole"
+      ]
+    },
+    {
+      "term": "AWS Organizations",
+      "full": null,
+      "def": "Dịch vụ quản lý tập trung nhiều AWS account: cây root → OU → account, consolidated billing, SCP và tạo account mới ngay trong tổ chức.",
+      "tip": "Nhiều account cần một hóa đơn duy nhất hoặc giới hạn quyền tập trung → AWS Organizations.",
+      "lessons": [
+        "aws-organizations"
+      ]
+    },
+    {
+      "term": "Management account",
+      "full": null,
+      "def": "Account tạo organization (còn gọi master/payer account), duy nhất mỗi org, nhận hóa đơn chung; không đổi được sau khi tạo và không bị SCP ảnh hưởng.",
+      "tip": "Không chạy workload ở management account vì SCP không giới hạn được nó.",
+      "lessons": [
+        "aws-organizations",
+        "service-control-policies"
+      ]
+    },
+    {
+      "term": "OrganizationAccountAccessRole",
+      "full": null,
+      "def": "Role admin tự tạo trong member account khi account được tạo từ Organizations, trust management account để admin role switch vào quản lý.",
+      "tip": "Account được invite vào org không có sẵn role này, phải tự tạo.",
+      "lessons": [
+        "aws-organizations"
+      ]
+    },
+    {
+      "term": "OU",
+      "full": "Organizational Unit",
+      "def": "Container trong cây organization để nhóm account (theo môi trường, phòng ban...); OU lồng nhau được và là điểm attach SCP cho mọi account bên dưới.",
+      "tip": "Đừng nhầm organization root (container gốc) với account root user.",
+      "lessons": [
+        "aws-organizations"
+      ]
+    },
+    {
+      "term": "Consolidated billing",
+      "full": null,
+      "def": "Mọi member account gộp hóa đơn về management account với một payment method; usage được cộng dồn để hưởng giảm giá theo volume và chia sẻ RI/Savings Plans.",
+      "tip": "Member account không còn payment method riêng.",
+      "lessons": [
+        "aws-organizations"
+      ]
+    },
+    {
+      "term": "Role switch",
+      "full": null,
+      "def": "Đăng nhập vào một account chứa identity rồi assume role sang các account khác trong org (Switch role trên console) thay vì tạo IAM user ở mỗi account.",
+      "tip": "Truy cập nhiều account: một account identity + role switch.",
+      "lessons": [
+        "aws-organizations",
+        "iam-roles"
+      ]
+    },
+    {
+      "term": "SCP",
+      "full": "Service Control Policy",
+      "def": "Policy JSON của Organizations attach vào root, OU hoặc account để đặt trần quyền tối đa cho account, kể cả root user của member account; SCP không bao giờ cấp quyền.",
+      "tip": "Chặn mọi account dùng region X/service Y → SCP ở root/OU; management account không bị SCP ảnh hưởng.",
+      "lessons": [
+        "service-control-policies"
+      ]
+    },
+    {
+      "term": "FullAWSAccess",
+      "full": null,
+      "def": "SCP mặc định AWS gắn ở mọi tầng, cho phép mọi thứ; nhờ nó mà mô hình mặc định là deny list (chỉ cần thêm SCP Deny).",
+      "tip": "Allow list phải gỡ FullAWSAccess và Allow phải có ở mọi tầng root → OU → account.",
+      "lessons": [
+        "service-control-policies"
+      ]
+    },
+    {
+      "term": "Effective permissions",
+      "full": null,
+      "def": "Quyền thật sự của identity trong member account = giao giữa identity policy và SCP (và các policy khác); explicit deny ở bất kỳ đâu đều thắng.",
+      "tip": "Allow trong SCP không tạo quyền; user vẫn cần identity policy Allow.",
+      "lessons": [
+        "service-control-policies",
+        "iam-identity-policies"
+      ]
+    },
+    {
+      "term": "RCP",
+      "full": "Resource Control Policy",
+      "def": "Loại policy của Organizations (từ cuối 2024) đặt trần quyền cho resource-based policy của tài nguyên trong account, bổ sung cho SCP vốn đặt trần cho principal.",
+      "tip": "SCP = trần cho principal; RCP = trần cho resource.",
+      "lessons": [
+        "service-control-policies"
+      ]
+    },
+    {
+      "term": "CloudWatch Logs",
+      "full": null,
+      "def": "Dịch vụ public, regional để lưu trữ, giám sát, truy vấn log từ dịch vụ AWS, ứng dụng và on-premises; nhiều dịch vụ (Lambda, CloudTrail, VPC Flow Logs, Route 53) đổ log vào đây.",
+      "tip": "Log trong OS của EC2/on-prem → cần CloudWatch Agent.",
+      "lessons": [
+        "cloudwatch-logs"
+      ]
+    },
+    {
+      "term": "Log group",
+      "full": null,
+      "def": "Container chứa các log stream cùng loại; nơi đặt retention (mặc định không bao giờ hết hạn), quyền truy cập, log class, deletion protection và metric filter.",
+      "tip": "Retention và permissions đặt ở log group, không ở từng stream.",
+      "lessons": [
+        "cloudwatch-logs"
+      ]
+    },
+    {
+      "term": "Metric filter",
+      "full": null,
+      "def": "Mẫu khớp trên log group biến sự xuất hiện của một pattern (ví dụ ERROR, mã 403) thành CloudWatch metric để đặt alarm.",
+      "tip": "'Tạo metric/alarm từ nội dung log' → metric filter; không áp ngược cho log đã có.",
+      "lessons": [
+        "cloudwatch-logs"
+      ]
+    },
+    {
+      "term": "CloudWatch Logs Insights",
+      "full": null,
+      "def": "Công cụ truy vấn tương tác bằng ngôn ngữ query riêng để tìm kiếm, phân tích log trên một hoặc nhiều log group.",
+      "tip": "Tìm kiếm/phân tích log ad-hoc → Logs Insights.",
+      "lessons": [
+        "cloudwatch-logs",
+        "cloudwatch-basics"
+      ]
+    },
+    {
+      "term": "Infrequent Access log class",
+      "full": null,
+      "def": "Log class rẻ hơn cho log ít đọc; mất một số tính năng (metric filter, Live Tail, subscription filter), phải chọn lúc tạo log group và không đổi được.",
+      "tip": "Log ít khi đọc, muốn giảm chi phí → Infrequent Access.",
+      "lessons": [
+        "cloudwatch-logs"
+      ]
+    },
+    {
+      "term": "Subscription filter",
+      "full": null,
+      "def": "Stream log của log group gần real-time sang Lambda, Kinesis Data Streams, Firehose hoặc OpenSearch để xử lý tiếp.",
+      "tip": "Xử lý log theo thời gian thực bằng dịch vụ khác → subscription filter tới Lambda/Kinesis.",
+      "lessons": [
+        "cloudwatch-logs",
+        "cloudwatch-basics"
+      ]
+    },
+    {
+      "term": "AWS CloudTrail",
+      "full": null,
+      "def": "Dịch vụ ghi lại API call/hoạt động trong account do user, role hoặc service thực hiện (ai, làm gì, khi nào, từ đâu); là dịch vụ regional.",
+      "tip": "'Ai đã xóa/sửa tài nguyên X?' → CloudTrail; không real-time (log giao khoảng 5 phút).",
+      "lessons": [
+        "cloudtrail"
+      ]
+    },
+    {
+      "term": "CloudTrail Event History",
+      "full": null,
+      "def": "Lịch sử 90 ngày các management event, bật sẵn miễn phí cho mọi account, xem và tìm kiếm trên console.",
+      "tip": "Cần giữ lâu hơn 90 ngày → tạo trail đổ vào S3.",
+      "lessons": [
+        "cloudtrail"
+      ]
+    },
+    {
+      "term": "CloudTrail trail",
+      "full": null,
+      "def": "Cấu hình ghi event liên tục ra S3 (tùy chọn thêm CloudWatch Logs) cho một region hoặc mọi region; có thể là organization trail.",
+      "tip": "Mặc định trail chỉ log management events; muốn search/alarm trên API call → đổ vào CloudWatch Logs.",
+      "lessons": [
+        "cloudtrail"
+      ]
+    },
+    {
+      "term": "Management events",
+      "full": null,
+      "def": "Event về thao tác quản lý tài nguyên (control plane) như tạo/xóa EC2, đổi IAM policy, CreateBucket; được log mặc định.",
+      "tip": null,
+      "lessons": [
+        "cloudtrail"
+      ]
+    },
+    {
+      "term": "Data events",
+      "full": null,
+      "def": "Event về thao tác trên dữ liệu bên trong tài nguyên (data plane) như S3 GetObject/PutObject, Lambda Invoke; số lượng lớn nên mặc định tắt và tính phí.",
+      "tip": "Cần log truy cập object S3/invoke Lambda → bật data events.",
+      "lessons": [
+        "cloudtrail"
+      ]
+    },
+    {
+      "term": "Network activity events",
+      "full": null,
+      "def": "Event ghi API call đi qua VPC endpoint từ VPC tới dịch vụ AWS, giúp phát hiện truy cập bất thường qua endpoint.",
+      "tip": "Hoạt động qua VPC endpoint → network activity events.",
+      "lessons": [
+        "cloudtrail"
+      ]
+    },
+    {
+      "term": "Organization trail",
+      "full": null,
+      "def": "Trail tạo từ management account ghi event của mọi account trong organization về một nơi tập trung.",
+      "tip": "Log tập trung cho mọi account trong tổ chức → organization trail.",
+      "lessons": [
+        "cloudtrail",
+        "aws-organizations"
+      ]
+    },
+    {
+      "term": "Log file integrity validation",
+      "full": null,
+      "def": "Tính năng CloudTrail tạo digest file chứa hash SHA-256 của các log file và ký số, để chứng minh log không bị sửa hay xóa sau khi giao.",
+      "tip": "Phát hiện log CloudTrail bị chỉnh sửa → bật log file validation.",
+      "lessons": [
+        "cloudtrail",
+        "digital-signatures"
+      ]
+    },
+    {
+      "term": "Global service events",
+      "full": null,
+      "def": "Event của dịch vụ global như IAM, STS, CloudFront được ghi ở us-east-1; trail phải bật global service events để thu được chúng.",
+      "tip": "IAM/STS/CloudFront event → us-east-1.",
+      "lessons": [
+        "cloudtrail"
+      ]
+    },
+    {
+      "term": "AWS Service Catalog",
+      "full": null,
+      "def": "Cổng self-service regional cho end user launch product dựng sẵn (CloudFormation/Terraform) do admin định nghĩa và gom trong portfolio, không cần quyền tạo hạ tầng trực tiếp.",
+      "tip": "Team không chuyên tự triển khai theo mẫu đã duyệt mà không cấp quyền hạ tầng → Service Catalog.",
+      "lessons": [
+        "aws-service-catalog"
+      ]
+    },
+    {
+      "term": "Service Catalog portfolio",
+      "full": null,
+      "def": "Nhóm product kèm cấu hình quyền: ai (user/group/role) được xem và launch, và launch constraint/role Service Catalog dùng để tạo hạ tầng thay end user.",
+      "tip": "Quyền tạo hạ tầng nằm ở product/portfolio (giống stack role), không nằm ở user.",
+      "lessons": [
+        "aws-service-catalog"
+      ]
+    },
+    {
+      "term": "AWS Cost Explorer",
+      "full": null,
+      "def": "Công cụ trên console để xem, lọc, group và dự báo chi phí/usage theo service, account, tag, region; granularity monthly/daily miễn phí, hourly có phí.",
+      "tip": "'Phân tích/dự báo chi phí' → Cost Explorer; 'cảnh báo khi sắp vượt' → AWS Budgets.",
+      "lessons": [
+        "aws-cost-management",
+        "aws-budgets"
+      ]
+    },
+    {
+      "term": "CUR",
+      "full": "Cost and Usage Report",
+      "def": "Báo cáo chi phí và usage chi tiết nhất (tới từng resource, theo giờ); CUR 2.0 tạo qua Data Exports, giao vào S3 dạng CSV hoặc Parquet.",
+      "tip": "'Dữ liệu billing chi tiết nhất, phân tích bằng Athena/QuickSight' → CUR.",
+      "lessons": [
+        "aws-cost-management"
+      ]
+    },
+    {
+      "term": "Cost allocation tags",
+      "full": null,
+      "def": "Tag (user-defined hoặc AWS-generated như aws:createdBy) được activate trong Billing để chi phí phân bổ theo phòng ban, dự án, cost center trong Cost Explorer và CUR.",
+      "tip": "Phải activate (ở management account) mới thấy trong báo cáo; chargeback theo phòng ban → cost allocation tags.",
+      "lessons": [
+        "aws-cost-management"
+      ]
+    },
+    {
+      "term": "Identity Federation",
+      "full": null,
+      "def": "Dùng identity từ identity provider bên ngoài AWS (AD, Google...) để truy cập AWS gián tiếp: identity ngoài được đổi lấy temporary credentials của IAM role.",
+      "tip": "Identity ngoài không bao giờ truy cập tài nguyên AWS trực tiếp; luôn đổi qua STS.",
+      "lessons": [
+        "saml-2-0-identity-federation",
+        "iam-roles"
+      ]
+    },
+    {
+      "term": "SAML 2.0",
+      "full": "Security Assertion Markup Language 2.0",
+      "def": "Chuẩn mở để IdP doanh nghiệp (ví dụ Microsoft ADFS) phát hành assertion xác thực người dùng; AWS tin assertion đó để cấp credentials tạm thời của role.",
+      "tip": "Doanh nghiệp có AD/ADFS hoặc IdP SAML 2.0 muốn vào console/CLI → SAML federation (nay ưu tiên Identity Center).",
+      "lessons": [
+        "saml-2-0-identity-federation"
+      ]
+    },
+    {
+      "term": "AssumeRoleWithSAML",
+      "full": null,
+      "def": "API của STS đổi SAML assertion từ IdP đã được trust lấy temporary credentials của IAM role; với console, AWS SAML endpoint còn tạo URL đăng nhập.",
+      "tip": "Credentials SAML mặc định 1 giờ, tối đa 12 giờ; social login cho khách hàng → không phải SAML.",
+      "lessons": [
+        "saml-2-0-identity-federation"
+      ]
+    },
+    {
+      "term": "IAM Identity Center",
+      "full": null,
+      "def": "Dịch vụ SSO (tên cũ AWS SSO) cho nhân viên một identity để đăng nhập mọi account trong AWS Organizations và business app (SAML/OAuth); AWS khuyến nghị cho workforce identity.",
+      "tip": "Workforce SSO nhiều account → Identity Center; customer/web identity → Cognito.",
+      "lessons": [
+        "iam-identity-center"
+      ]
+    },
+    {
+      "term": "Permission set",
+      "full": null,
+      "def": "Tập policy định nghĩa một mức quyền trong Identity Center; gán permission set cho user/group trên từng account, Identity Center tạo role tương ứng trong account đó.",
+      "tip": "Quyền Identity Center = user/group + permission set + account.",
+      "lessons": [
+        "iam-identity-center"
+      ]
+    },
+    {
+      "term": "Identity source",
+      "full": null,
+      "def": "Nơi lưu user/group cho Identity Center: directory có sẵn của Identity Center, Active Directory (AWS Managed Microsoft AD/AD Connector) hoặc IdP ngoài như Okta, Entra ID.",
+      "tip": "IdP ngoài: SAML 2.0 để đăng nhập, SCIM để đồng bộ user/group.",
+      "lessons": [
+        "iam-identity-center"
+      ]
+    },
+    {
+      "term": "Delegated administrator",
+      "full": null,
+      "def": "Member account được management account ủy quyền quản trị một dịch vụ cấp tổ chức (ví dụ Identity Center), để không phải làm việc trực tiếp trong management account.",
+      "tip": "Organization instance của Identity Center nằm ở management account; quản trị từ account khác → delegated administrator.",
+      "lessons": [
+        "iam-identity-center"
+      ]
+    },
+    {
+      "term": "AWS Control Tower",
+      "full": null,
+      "def": "Dịch vụ dựng nhanh và quản trị môi trường multi-account theo best practice, điều phối Organizations, Identity Center, CloudFormation, Config, CloudTrail, CloudWatch, SNS.",
+      "tip": "'Quickly set up / govern a secure multi-account environment', 'landing zone' → Control Tower.",
+      "lessons": [
+        "aws-control-tower"
+      ]
+    },
+    {
+      "term": "Landing Zone",
+      "full": null,
+      "def": "Môi trường multi-account Control Tower dựng sẵn: Security OU với Log Archive và Audit account, Sandbox OU, Identity Center, log tập trung và controls.",
+      "tip": "Log Archive = log tập trung, read-only; Audit = account cho team security.",
+      "lessons": [
+        "aws-control-tower"
+      ]
+    },
+    {
+      "term": "Control Tower controls",
+      "full": null,
+      "def": "Quy tắc quản trị (trước gọi là guardrails): preventative (SCP chặn hành động), detective (AWS Config phát hiện vi phạm), proactive (kiểm tra resource CloudFormation trước khi tạo).",
+      "tip": "Preventative chặn, detective chỉ phát hiện; proactive kiểm tra trước khi deploy.",
+      "lessons": [
+        "aws-control-tower"
+      ]
+    },
+    {
+      "term": "Account Factory",
+      "full": null,
+      "def": "Tính năng Control Tower cho tạo account mới theo mẫu chuẩn (network baseline, cấu hình) một cách tự phục vụ, chạy qua Service Catalog.",
+      "tip": "Terraform + tự động tạo account trong landing zone → Account Factory for Terraform (AFT).",
+      "lessons": [
+        "aws-control-tower",
+        "aws-service-catalog"
+      ]
+    },
+    {
+      "term": "AWS RAM",
+      "full": "AWS Resource Access Manager",
+      "def": "Chia sẻ quyền dùng tài nguyên (subnet, Transit Gateway, dedicated host, prefix list...) với account, OU hoặc organization mà không sao chép; owner vẫn kiểm soát; regional, miễn phí.",
+      "tip": "RAM = chia sẻ, StackSets = sao chép; không re-share được; S3 bucket/secret không share qua RAM.",
+      "lessons": [
+        "aws-resource-access-manager"
+      ]
+    },
+    {
+      "term": "VPC sharing",
+      "full": null,
+      "def": "Network account sở hữu VPC và share subnet qua RAM cho account ứng dụng; bên nhận tạo tài nguyên trong subnet nhưng không sửa route table/NACL, owner không quản lý tài nguyên của họ.",
+      "tip": "Nhiều account dùng chung một VPC tập trung → VPC sharing qua RAM; share cho OU cần bật sharing with AWS Organizations.",
+      "lessons": [
+        "aws-resource-access-manager"
+      ]
+    },
+    {
+      "term": "AWS Artifact",
+      "full": null,
+      "def": "Cổng self-service tải báo cáo compliance của AWS (SOC, PCI, ISO, FedRAMP) và xem/chấp nhận agreement với AWS, phục vụ due diligence và audit.",
+      "tip": "Cần báo cáo compliance của AWS cho auditor → AWS Artifact.",
+      "lessons": [
+        "aws-artifact-and-license-manager"
+      ]
+    },
+    {
+      "term": "AWS License Manager",
+      "full": null,
+      "def": "Quản lý license phần mềm (Windows Server, SQL Server, Oracle BYOL...) trên AWS và on-prem; self-managed license gắn AMI/launch template có thể chặn launch vượt số license.",
+      "tip": "Chỉ self-managed license với EC2 mới chặn được; license theo core/socket → Dedicated Host + License Manager.",
+      "lessons": [
+        "aws-artifact-and-license-manager"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,435 @@
+{
+ "chapter": "11",
+ "cards": [
+  {
+   "term": "Relational Database",
+   "full": null,
+   "def": "Mô hình SQL/RDBMS: dữ liệu trong table với schema và quan hệ cố định định nghĩa trước, primary key, join table cho quan hệ many-to-many; thường tuân thủ ACID.",
+   "tip": "Schema cố định, quan hệ định nghĩa trước, OLTP → relational (RDS/Aurora). Quan hệ thay đổi liên tục → graph.",
+   "lessons": [
+    "database-models"
+   ]
+  },
+  {
+   "term": "Key-Value Store",
+   "full": null,
+   "def": "Mô hình NoSQL chỉ gồm cặp key duy nhất → value opaque, không schema, không quan hệ; rất nhanh, rất scalable, hay dùng cho in-memory caching.",
+   "tip": "Dữ liệu chỉ là name/value, in-memory cache → key-value (ElastiCache, DynamoDB).",
+   "lessons": [
+    "database-models",
+    "elasticache"
+   ]
+  },
+  {
+   "term": "Wide Column Store",
+   "full": null,
+   "def": "Biến thể key-value: mỗi item có partition key (và sort key tùy chọn) với cấu trúc key giống nhau trong table, còn attribute tự do giữa các item. DynamoDB là ví dụ.",
+   "tip": "DynamoDB = wide column store; không cần SQL, cần scale lớn → DynamoDB.",
+   "lessons": [
+    "database-models",
+    "dynamodb-architecture"
+   ]
+  },
+  {
+   "term": "Document Database",
+   "full": null,
+   "def": "Mô hình NoSQL lưu document JSON/XML có ID duy nhất, cấu trúc có thể khác nhau giữa document; DB hiểu nội dung nên index và truy vấn được thuộc tính lồng sâu.",
+   "tip": "Catalog, user profile, CMS, JSON lồng nhau → document DB.",
+   "lessons": [
+    "database-models"
+   ]
+  },
+  {
+   "term": "Column Store",
+   "full": null,
+   "def": "Lưu dữ liệu theo cột trên đĩa thay vì theo row; kém cho giao dịch theo row nhưng rất tốt cho reporting/analytics tổng hợp trên vài cột. Ví dụ AWS: Redshift.",
+   "tip": "Reporting, analytics, data warehouse, column-based → Redshift; transaction/row-based (OLTP) → RDS.",
+   "lessons": [
+    "database-models",
+    "redshift"
+   ]
+  },
+  {
+   "term": "Graph Database",
+   "full": null,
+   "def": "Mô hình lưu node (có properties) và edge (quan hệ có tên, hướng, có thể mang dữ liệu) ngay trong DB, nên truy vấn quan hệ nhanh hơn join của SQL. Ví dụ AWS: Neptune.",
+   "tip": "Social media, quan hệ phức tạp thay đổi liên tục → graph database.",
+   "lessons": [
+    "database-models",
+    "amazon-neptune"
+   ]
+  },
+  {
+   "term": "OLTP",
+   "full": "Online Transaction Processing",
+   "def": "Kiểu workload thao tác theo row (create/update/delete từng bản ghi) như đơn hàng, contact, tồn kho; phù hợp với row store/relational DB.",
+   "tip": "OLTP → RDS/Aurora; OLAP/analytics → Redshift.",
+   "lessons": [
+    "database-models"
+   ]
+  },
+  {
+   "term": "CAP Theorem",
+   "full": null,
+   "def": "Một DB phân tán chỉ đạt tối đa 2 trong 3: Consistency (luôn đọc lần ghi mới nhất hoặc lỗi), Availability (luôn có phản hồi, có thể cũ), Partition tolerance. Khi mạng chia cắt phải chọn C hoặc A.",
+   "tip": "Chọn consistency → ACID; chọn availability → BASE.",
+   "lessons": [
+    "acid-vs-base"
+   ]
+  },
+  {
+   "term": "ACID",
+   "full": null,
+   "def": "Bộ thuộc tính giao dịch Atomic, Consistent, Isolated, Durable mà đa số relational DB tuân thủ: dữ liệu chặt chẽ (hợp ngành tài chính) nhưng hạn chế khả năng scale.",
+   "tip": "Thấy ACID → mặc định RDS. ACID đi cùng DynamoDB → DynamoDB Transactions.",
+   "lessons": [
+    "acid-vs-base"
+   ]
+  },
+  {
+   "term": "BASE",
+   "full": null,
+   "def": "Basically Available, Soft state, Eventually consistent: DB ưu tiên availability và scale, không tự ép consistency mà đẩy cho ứng dụng; đọc mặc định eventually consistent.",
+   "tip": "Thấy BASE → NoSQL/DynamoDB (hỗ trợ cả eventually và strongly consistent read).",
+   "lessons": [
+    "acid-vs-base",
+    "dynamodb-architecture"
+   ]
+  },
+  {
+   "term": "Database on EC2",
+   "full": null,
+   "def": "Tự cài DB trên EC2: phải tự patch, backup, HA, replication và chỉ single AZ (EC2 + EBS). Thường là bad practice, chỉ hợp lệ khi cần OS/root access, engine/version lạ, tổ hợp OS+DB riêng hoặc replication đặc thù.",
+   "tip": "Mặc định chọn managed DB; đề nêu engine/version AWS không hỗ trợ hoặc cần root → DB trên EC2 (hoặc RDS Custom).",
+   "lessons": [
+    "databases-on-ec2"
+   ]
+  },
+  {
+   "term": "RDS",
+   "full": "Relational Database Service",
+   "def": "Database server as a service chạy trong VPC: một instance chứa nhiều database, engine MySQL, MariaDB, PostgreSQL, Oracle, SQL Server, Db2; mỗi instance có EBS riêng, kết nối qua endpoint DNS, không SSH/OS access.",
+   "tip": "Aurora không phải RDS thường: đừng gán EBS riêng/standby cho Aurora. Kiểm soát truy cập RDS bằng Security Group.",
+   "lessons": [
+    "rds-architecture"
+   ]
+  },
+  {
+   "term": "DB Subnet Group",
+   "full": null,
+   "def": "Danh sách subnet trong một VPC (nhiều AZ) mà RDS được phép đặt instance; Multi-AZ chọn một subnet cho primary và một subnet AZ khác cho standby.",
+   "tip": "Private subnet là mặc định nên dùng; public accessibility chỉ khả thi với public subnet và không khuyến khích.",
+   "lessons": [
+    "rds-architecture"
+   ]
+  },
+  {
+   "term": "RDS Multi-AZ Instance",
+   "full": null,
+   "def": "Kiểu Multi-AZ cổ điển: primary replicate synchronous sang một standby ở AZ khác; standby không phục vụ đọc. Failover tự động bằng đổi CNAME, mất 60–120 giây; backup lấy từ standby.",
+   "tip": "Multi-AZ là HA trong một region, không phải scale đọc. Synchronous = Multi-AZ; asynchronous = read replica.",
+   "lessons": [
+    "rds-multi-az"
+   ]
+  },
+  {
+   "term": "RDS Multi-AZ DB Cluster",
+   "full": null,
+   "def": "Kiểu Multi-AZ mới: 1 writer + 2 reader đọc được ở 3 AZ, replication semi-synchronous (commit khi ≥1 reader ack), local NVMe; failover khoảng 35 giây. Chỉ MySQL và PostgreSQL.",
+   "tip": "\"1 writer + 2 readable standby\", \"failover dưới 35 giây\" → Multi-AZ DB Cluster. Có cluster, reader, instance endpoint.",
+   "lessons": [
+    "rds-multi-az"
+   ]
+  },
+  {
+   "term": "RDS Automated Backups",
+   "full": null,
+   "def": "Snapshot tự động mỗi ngày trong backup window cộng transaction log ghi lên S3 mỗi 5 phút, lưu trong S3 do AWS quản lý; retention 0–35 ngày, hết hạn theo retention kể cả khi giữ lại sau xóa instance.",
+   "tip": "Cần giữ > 35 ngày → manual/final snapshot hoặc AWS Backup.",
+   "lessons": [
+    "rds-backups-and-restore"
+   ]
+  },
+  {
+   "term": "RDS Manual Snapshot",
+   "full": null,
+   "def": "Snapshot chạy thủ công/script, incremental như EBS snapshot, chụp cả instance; không bao giờ hết hạn, tồn tại cả sau khi xóa RDS instance cho tới khi bạn tự xóa.",
+   "tip": "Final snapshot khi xóa instance = manual snapshot giữ dữ liệu vô thời hạn.",
+   "lessons": [
+    "rds-backups-and-restore"
+   ]
+  },
+  {
+   "term": "Point-in-Time Restore",
+   "full": null,
+   "def": "Restore RDS về bất kỳ thời điểm nào trong retention (độ mịn 5 phút) bằng snapshot gần nhất cộng replay transaction log. Restore luôn tạo instance mới với endpoint mới.",
+   "tip": "Data corruption → point-in-time restore, không dùng read replica. Restore chậm → RTO cao.",
+   "lessons": [
+    "rds-backups-and-restore"
+   ]
+  },
+  {
+   "term": "Cross-Region Automated Backups",
+   "full": null,
+   "def": "Replicate snapshot và transaction log của RDS sang region khác; phải bật rõ ràng, tính phí transfer + storage, chỉ hỗ trợ single-AZ và Multi-AZ instance (không Multi-AZ DB cluster).",
+   "tip": null,
+   "lessons": [
+    "rds-backups-and-restore"
+   ]
+  },
+  {
+   "term": "RDS Read Replica",
+   "full": null,
+   "def": "Bản sao read-only, asynchronous, là instance riêng với endpoint riêng (ứng dụng phải được sửa để dùng); cùng region hoặc cross-region. Tối đa 15 replica với MySQL/MariaDB/PostgreSQL.",
+   "tip": "Scale read, read-heavy, báo cáo làm chậm DB chính → read replica. Không tự failover; không cứu được data corruption.",
+   "lessons": [
+    "rds-read-replicas"
+   ]
+  },
+  {
+   "term": "Cross-Region Read Replica",
+   "full": null,
+   "def": "Read replica đặt ở region khác, AWS lo networking mã hóa in transit; cho đọc gần người dùng ở region đó và làm DR khi cả region gặp sự cố (promote).",
+   "tip": "DR cross-region/global resilience với RDS → cross-region read replica; với Aurora → Aurora Global Database.",
+   "lessons": [
+    "rds-read-replicas"
+   ]
+  },
+  {
+   "term": "Read Replica Promotion",
+   "full": null,
+   "def": "Biến read replica thành instance đọc/ghi độc lập, nhanh (vài phút) so với restore từ backup, cho RPO gần 0 và RTO thấp khi primary/region lỗi; là thao tác thủ công.",
+   "tip": "RTO thấp khi instance/region lỗi → promote read replica.",
+   "lessons": [
+    "rds-read-replicas"
+   ]
+  },
+  {
+   "term": "RDS Encryption at Rest",
+   "full": null,
+   "def": "Mã hóa do RDS host và EBS đảm nhận bằng KMS key (envelope encryption), áp cho storage, log, backup, snapshot và replica. Chỉ bật được lúc tạo instance và không tắt được.",
+   "tip": "Mã hóa DB đang plaintext → snapshot → copy snapshot có encryption → restore. Cross-region dùng KMS key ở region đích.",
+   "lessons": [
+    "rds-security",
+    "kms"
+   ]
+  },
+  {
+   "term": "TDE",
+   "full": "Transparent Data Encryption",
+   "def": "Mã hóa at rest xảy ra bên trong database engine, khóa nằm trong key store của engine do RDS quản lý; chỉ RDS SQL Server và Oracle hỗ trợ.",
+   "tip": "Mã hóa ngay trong engine → TDE (MSSQL/Oracle). RDS Oracle TDE + CloudHSM nay không còn được hỗ trợ.",
+   "lessons": [
+    "rds-security"
+   ]
+  },
+  {
+   "term": "IAM Database Authentication",
+   "full": null,
+   "def": "Đăng nhập RDS/Aurora (MySQL, MariaDB, PostgreSQL) bằng token từ generate-db-auth-token (hiệu lực 15 phút) thay password; policy ánh xạ IAM identity sang local DB user. Chỉ là authentication.",
+   "tip": "Dùng IAM role của EC2/Lambda để vào DB không cần password → IAM DB auth. IAM không làm authorization trong DB.",
+   "lessons": [
+    "rds-security"
+   ]
+  },
+  {
+   "term": "RDS Encryption in Transit",
+   "full": null,
+   "def": "Mọi engine RDS hỗ trợ SSL/TLS giữa client và endpoint; có thể bắt buộc TLS theo từng database user hoặc cho cả instance tùy engine.",
+   "tip": "Bắt buộc mã hóa kết nối từ client → SSL/TLS (RDS Proxy cũng ép được TLS).",
+   "lessons": [
+    "rds-security"
+   ]
+  },
+  {
+   "term": "RDS Custom",
+   "full": null,
+   "def": "RDS cho SQL Server và Oracle (Oracle tới 31/3/2027) cho phép truy cập OS/engine (SSH, RDP, Session Manager) và tùy biến; EC2, EBS, backup hiện trong account của bạn. Phải pause automation khi tùy chỉnh.",
+   "tip": "Cần managed DB nhưng phải vào OS/cài agent, engine SQL Server/Oracle → RDS Custom. MySQL/PostgreSQL cần OS → DB trên EC2.",
+   "lessons": [
+    "rds-custom"
+   ]
+  },
+  {
+   "term": "Aurora",
+   "full": null,
+   "def": "Engine AWS tự thiết kế tương thích MySQL/PostgreSQL, kiến trúc cluster: 1 writer + tối đa 15 replica đọc được (đều là đích failover) dùng chung cluster volume. Không có free tier; billing theo giây, tối thiểu 10 phút.",
+   "tip": "Vừa HA vừa scale đọc mà không trả tiền standby ngồi không → Aurora.",
+   "lessons": [
+    "aurora"
+   ]
+  },
+  {
+   "term": "Aurora Cluster Volume",
+   "full": null,
+   "def": "Shared storage SSD của Aurora, 6 bản sao trên 3 AZ, replicate ở tầng storage không tốn CPU instance, tự sửa lỗi đĩa; tối đa 256 TiB, trả theo dung lượng thực dùng và co giãn cả lên lẫn xuống.",
+   "tip": "Nhớ: 6 bản / 3 AZ, 256 TiB, 15 replica. \"High watermark\" là hành vi của version cũ.",
+   "lessons": [
+    "aurora"
+   ]
+  },
+  {
+   "term": "Aurora Cluster Endpoint",
+   "full": null,
+   "def": "Endpoint DNS luôn trỏ tới writer (primary) của cluster Aurora, dùng cho đọc và ghi; tự chuyển sang writer mới khi failover.",
+   "tip": null,
+   "lessons": [
+    "aurora"
+   ]
+  },
+  {
+   "term": "Aurora Reader Endpoint",
+   "full": null,
+   "def": "Endpoint DNS cân bằng tải đọc qua các replica của Aurora (chỉ có primary thì trỏ primary); replica mới tự được thêm vào.",
+   "tip": "Scale đọc tự động khi thêm replica, app chỉ cần một địa chỉ đọc → reader endpoint.",
+   "lessons": [
+    "aurora"
+   ]
+  },
+  {
+   "term": "Aurora I/O-Optimized",
+   "full": null,
+   "def": "Storage configuration của Aurora không tính phí I/O, đổi lại giá instance và storage cao hơn; chi phí dễ dự đoán. Aurora Standard thì tính phí theo mỗi I/O request.",
+   "tip": "I/O chiếm từ ~25% hóa đơn Aurora → I/O-Optimized. Đổi sang được 30 ngày một lần, về Standard lúc nào cũng được.",
+   "lessons": [
+    "aurora"
+   ]
+  },
+  {
+   "term": "Aurora Backtrack",
+   "full": null,
+   "def": "Tua lại cả cluster Aurora tại chỗ về một thời điểm trước trong cửa sổ đã cấu hình, không tạo cluster mới, không đổi endpoint; hiện chỉ có ở Aurora MySQL.",
+   "tip": "Rollback DB về vài phút trước khi lỡ xóa bảng, không đổi endpoint → Backtrack.",
+   "lessons": [
+    "aurora"
+   ]
+  },
+  {
+   "term": "Aurora Fast Cloning",
+   "full": null,
+   "def": "Tạo database mới từ cluster có sẵn mà không copy toàn bộ dữ liệu: clone tham chiếu storage gốc và chỉ lưu phần khác biệt (copy-on-write).",
+   "tip": "Tạo bản sao DB production để test thật nhanh, ít tốn storage → fast clone.",
+   "lessons": [
+    "aurora"
+   ]
+  },
+  {
+   "term": "Aurora Serverless v2",
+   "full": null,
+   "def": "Instance Aurora loại db.serverless scale tại chỗ, không gián đoạn trong khoảng min/max ACU đặt ở mức cluster; mỗi instance scale độc lập, trộn được với instance provisioned. v1 đã end of life 3/2025.",
+   "tip": "Workload unpredictable/intermittent, app mới, dev/test, không muốn quản lý capacity → Aurora Serverless.",
+   "lessons": [
+    "aurora-serverless"
+   ]
+  },
+  {
+   "term": "ACU",
+   "full": "Aurora Capacity Unit",
+   "def": "Đơn vị compute của Aurora Serverless, khoảng 2 GiB RAM cùng CPU và network tương ứng; tính tiền theo giây cho ACU đang dùng.",
+   "tip": null,
+   "lessons": [
+    "aurora-serverless"
+   ]
+  },
+  {
+   "term": "Aurora Serverless Auto-pause",
+   "full": null,
+   "def": "Đặt min ACU = 0 để instance serverless tự pause khi không có kết nối, lúc đó chỉ trả tiền storage; kết nối mới tự resume nhưng kết nối đầu tiên chậm hơn.",
+   "tip": "Chỉ trả storage khi không có tải → min ACU 0. Cần latency thấp ngay từ request đầu → min ACU > 0 hoặc provisioned.",
+   "lessons": [
+    "aurora-serverless"
+   ]
+  },
+  {
+   "term": "Aurora Global Database",
+   "full": null,
+   "def": "Aurora replicate tầng storage một chiều từ primary region sang tối đa 10 secondary region read-only (~1 giây, không tốn CPU); mỗi secondary tới 16 replica. Dùng cho cross-region DR và global read.",
+   "tip": "DR cross-region cho DB quan hệ với RPO/RTO rất thấp → Aurora Global Database. Cần ghi nhiều region (NoSQL) → DynamoDB Global Tables.",
+   "lessons": [
+    "aurora-global-database"
+   ]
+  },
+  {
+   "term": "Global Database Switchover",
+   "full": null,
+   "def": "Chuyển primary sang secondary region có kế hoạch, đồng bộ hết trước khi chuyển nên không mất dữ liệu. Failover dùng khi thảm họa: nhanh hơn nhưng có thể mất vài giây dữ liệu.",
+   "tip": "Có kế hoạch, không mất dữ liệu → switchover; thảm họa → failover.",
+   "lessons": [
+    "aurora-global-database"
+   ]
+  },
+  {
+   "term": "Global Database Writer Endpoint",
+   "full": null,
+   "def": "Endpoint toàn cầu luôn trỏ tới writer hiện tại của Aurora Global Database ở bất kỳ region nào, tự cập nhật khi switchover/failover nên app không phải đổi cấu hình.",
+   "tip": null,
+   "lessons": [
+    "aurora-global-database"
+   ]
+  },
+  {
+   "term": "Aurora Multi-Master",
+   "full": null,
+   "def": "Chế độ mọi instance trong cluster đều đọc/ghi, ghi được quyết định bằng quorum của storage node; không có cluster endpoint hay load balancing, app tự quản kết nối; trong một region. Đã ngừng cùng Aurora MySQL v1.",
+   "tip": "Theo khóa học: Aurora cần nhiều writer, failover gần như tức thời → multi-master; cần ghi nhiều region → DynamoDB Global Tables.",
+   "lessons": [
+    "aurora-multi-master"
+   ]
+  },
+  {
+   "term": "RDS Proxy",
+   "full": null,
+   "def": "Proxy managed cho RDS (MySQL, MariaDB, PostgreSQL, SQL Server) và Aurora: connection pooling và multiplexing, che lỗi DB, giảm thời gian failover tới 66%. Chỉ truy cập trong VPC, cùng VPC với DB; không hỗ trợ Oracle/Db2.",
+   "tip": "Lỗi \"too many connections\", Lambda + RDS, failover trong suốt với app → RDS Proxy. Proxy không phải cache.",
+   "lessons": [
+    "rds-proxy",
+    "lambda"
+   ]
+  },
+  {
+   "term": "DMS",
+   "full": "Database Migration Service",
+   "def": "Dịch vụ migrate DB managed: replication instance (hoặc DMS Serverless) chạy task giữa source endpoint và target endpoint; ít nhất một đầu phải ở AWS. Hỗ trợ rất nhiều engine.",
+   "tip": "Câu hỏi migrate database có một đầu ở AWS → mặc định DMS. DMS không migrate giữa hai DB đều on-prem.",
+   "lessons": [
+    "dms"
+   ]
+  },
+  {
+   "term": "DMS Replication Instance",
+   "full": null,
+   "def": "EC2 do DMS quản lý chạy phần mềm migration, chạy được nhiều replication task; mỗi task chứa mọi tùy chọn của một lần migrate (Full load, Full load + CDC, CDC only).",
+   "tip": null,
+   "lessons": [
+    "dms"
+   ]
+  },
+  {
+   "term": "Full Load + CDC",
+   "full": null,
+   "def": "Kiểu task DMS copy toàn bộ dữ liệu hiện có đồng thời ghi lại mọi thay đổi ở source rồi áp vào đích sau khi load xong, cho phép migrate gần như không downtime.",
+   "tip": "No downtime/minimal downtime migration → DMS Full load + CDC. Đã bulk load bằng công cụ native → CDC only.",
+   "lessons": [
+    "dms"
+   ]
+  },
+  {
+   "term": "DMS Serverless",
+   "full": null,
+   "def": "Chạy DMS không cần replication instance: tạo replication với min/max DMS Capacity Unit (DCU), DMS tự lo compute, availability và scale; chưa hỗ trợ mọi loại DB.",
+   "tip": "Không muốn quản lý replication instance/capacity → DMS Serverless.",
+   "lessons": [
+    "dms"
+   ]
+  },
+  {
+   "term": "SCT",
+   "full": "Schema Conversion Tool",
+   "def": "Công cụ chuyển schema giữa engine khác nhau (nay phần lớn có sẵn trong DMS dưới tên DMS Schema Conversion); chỉ chuyển schema, dữ liệu vẫn do DMS chuyển. Không cần khi cùng engine.",
+   "tip": "Oracle/MSSQL → Aurora/MySQL/PostgreSQL → DMS + Schema Conversion. DB OLAP (Teradata, Vertica, Greenplum) → SCT riêng.",
+   "lessons": [
+    "dms"
+   ]
+  }
+ ]
+}

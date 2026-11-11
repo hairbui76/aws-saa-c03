@@ -304,6 +304,32 @@ export function toggleBookmark(lessonId: string) {
 // ---------- "Có gì mới": the last update batch the learner has seen (its id, see updates.json) ----------
 export const updatesSeen = createStore<{ seen: string | null }>('saa.updates.v1', { seen: null });
 
+// ---------- flashcards (#/flashcards): Leitner boxes ----------
+/** box 0 = still learning (comes back in the same session); 1-5 = reviewed after FLASH_DAYS[box] days */
+export type FlashCardState = { box: number; due: number; seen: number; lapses: number; last: number };
+export type FlashRating = 0 | 1 | 2 | 3; // Quên, Khó, Nhớ, Dễ
+export const FLASH_DAYS = [0, 1, 3, 7, 16, 35];
+export const FLASH_KNOWN_BOX = 4; // 16+ days apart = "đã thuộc"
+const DAY = 86_400_000;
+export const flashcards = createStore<{ cards: Record<string, FlashCardState> }>('saa.flash.v1', { cards: {} });
+
+/** The state a rating would give (also used to label the buttons with their next interval). */
+export function nextFlashState(cur: FlashCardState | undefined, r: FlashRating, now = Date.now()): FlashCardState {
+  const box = cur?.box ?? 0;
+  const base = { seen: (cur?.seen ?? 0) + 1, lapses: cur?.lapses ?? 0, last: now };
+  if (r === 0) return { ...base, box: 0, due: now, lapses: base.lapses + (cur ? 1 : 0) };
+  if (r === 1) {
+    const b = Math.max(1, box);
+    return { ...base, box: b, due: now + Math.max(DAY / 2, (FLASH_DAYS[b] * DAY) / 2) };
+  }
+  const b = Math.min(FLASH_DAYS.length - 1, box + (r === 3 ? 2 : 1));
+  return { ...base, box: b, due: now + FLASH_DAYS[b] * DAY * (r === 3 ? 1.3 : 1) };
+}
+
+export function rateFlash(id: string, r: FlashRating) {
+  flashcards.update(({ cards }) => ({ cards: { ...cards, [id]: nextFlashState(cards[id], r) } }));
+}
+
 // ---------- export / import ----------
 type ExportFile = {
   app: 'saa-c03-sketchbook';
@@ -312,6 +338,7 @@ type ExportFile = {
   progress: Progress;
   notes?: Record<string, Note>;
   bookmarks?: Record<string, Bookmark>;
+  flashcards?: Record<string, FlashCardState>;
   marks?: Record<string, Mark[]>;
   ink?: Record<string, Stroke[]>;
   chats?: Record<string, ChatThread>;
@@ -328,6 +355,7 @@ export function exportProgress() {
     progress: progress.get(),
     notes: notes.get().notes,
     bookmarks: bookmarks.get().items,
+    flashcards: flashcards.get().cards,
     marks: marks.get().items,
     ink: ink.get().items,
     chats: chats.get().items,
@@ -357,6 +385,7 @@ function importExtras(data: ExportFile, mode: 'merge' | 'replace') {
   if (mode === 'replace') {
     notes.set({ notes: inNotes });
     bookmarks.set({ items: obj(data.bookmarks) });
+    flashcards.set({ cards: obj(data.flashcards) });
     marks.set({ items: inMarks });
     ink.set({ items: inInk });
     chats.set({ items: inChats });
@@ -368,6 +397,9 @@ function importExtras(data: ExportFile, mode: 'merge' | 'replace') {
     for (const [id, n] of Object.entries(inNotes)) if (!merged[id] || merged[id].at < n.at) merged[id] = n;
     notes.set({ notes: merged });
     bookmarks.set({ items: { ...obj(data.bookmarks), ...bookmarks.get().items } });
+    const fc = { ...flashcards.get().cards };
+    for (const [id, c] of Object.entries(obj(data.flashcards))) if (!fc[id] || fc[id].last < c.last) fc[id] = c;
+    flashcards.set({ cards: fc });
     const mm = { ...marks.get().items };
     for (const [id, list] of Object.entries(inMarks)) {
       const byId = new Map((mm[id] ?? []).map((m) => [m.id, m]));
